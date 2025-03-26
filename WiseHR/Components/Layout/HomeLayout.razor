@@ -1,0 +1,64 @@
+﻿@inherits LayoutComponentBase
+@using WiseHR.Components.sidebar
+
+<MudThemeProvider />
+<MudLayout>
+    <!-- Header Section -->
+    <MudAppBar Elevation="1">
+        <MudItem xs="2" Class="d-flex align-center">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           Edge="Edge.Start"
+                           OnClick="@((e) => sidebar?.ToggleDrawer())"
+                           Class="mr-2" />
+            <MudImage Src="images/logo1.png" Alt="Company Logo" Height="60" Class="ml-4" />
+        </MudItem>
+
+        <MudItem xs="8" Class="d-flex justify-center">
+            <MudTextField @bind-Value="searchQuery"
+                          Placeholder="Search employees..."
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Style="width: 50%; --mud-palette-text-primary: white; --mud-palette-lines-inputs: white; --mud-icon-adornment-color: white;"
+                          InputStyle="color: white;"
+                          Immediate="true"
+                          OnValueChanged="@SearchEmployees" />
+        </MudItem>
+
+        <MudItem xs="2" Class="d-flex justify-end">
+            <MudMenu>
+                <ActivatorContent>
+                    <MudAvatar Color="Color.Primary" Class="mr-4 cursor-pointer" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" />
+                    </MudAvatar>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem>Profile</MudMenuItem>
+                    <MudMenuItem>Settings</MudMenuItem>
+                    <MudMenuItem>Logout</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </MudItem>
+    </MudAppBar>
+
+    <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+
+    <MudMainContent>
+        <MudContainer Class="mt-6" MaxWidth="MaxWidth.ExtraLarge">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool drawerOpen = true;
+    private HomeSidebar? sidebar;
+    private string? searchQuery;
+
+    private void SearchEmployees(string query)
+    {
+        // Placeholder for search logic
+        Console.WriteLine($"Searching for: {query}");
+    }
+}

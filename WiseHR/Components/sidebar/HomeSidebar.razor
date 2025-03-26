@@ -1,0 +1,75 @@
+﻿<MudDrawer @bind-Open="DrawerOpen"
+           Width="@(DrawerOpen ? "250px" : "60px")"
+           Elevation="1"
+           Variant="@DrawerVariant.Responsive"
+           ClipMode="DrawerClipMode.Always">
+    <MudNavMenu Class="pa-2">
+        <MudNavLink Match="NavLinkMatch.All"
+                    Icon="@Icons.Material.Filled.Dashboard"
+                    Href="/home"
+                    ActiveClass="mud-nav-link-active">
+            @if (DrawerOpen)
+            {
+                <span>Dashboard</span>
+            }
+        </MudNavLink>
+
+        <MudNavLink Match="NavLinkMatch.All"
+                    Icon="@Icons.Material.Filled.Settings"
+                    Href="/home/settings">
+            @if (DrawerOpen)
+            {
+                <span>Settings</span>
+            }
+        </MudNavLink>
+
+        <MudNavLink Match="NavLinkMatch.All"
+                    Icon="@Icons.Material.Filled.Assessment"
+                    Href="/home/logs">
+            @if (DrawerOpen)
+            {
+                <span>Logs</span>
+            }
+        </MudNavLink>
+
+        <MudNavLink Match="NavLinkMatch.All"
+                    Icon="@Icons.Material.Filled.People"
+                    Href="/home/employees">
+            @if (DrawerOpen)
+            {
+                <span>Employees</span>
+            }
+        </MudNavLink>
+
+        <MudNavLink Match="NavLinkMatch.All"
+                    Icon="@Icons.Material.Filled.Money"
+                    Href="/home/payroll">
+            @if (DrawerOpen)
+            {
+                <span>Payroll</span>
+            }
+        </MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All"
+                    Icon="@Icons.Material.Filled.People"
+                    Href="/homen/rollmanagement">
+            @if (DrawerOpen)
+            {
+                <span>Role Management</span>
+            }
+        </MudNavLink>
+    </MudNavMenu>
+</MudDrawer>
+
+@code {
+    [Parameter]
+    public bool DrawerOpen { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<bool> DrawerOpenChanged { get; set; }
+
+    public async Task ToggleDrawer()
+    {
+        DrawerOpen = !DrawerOpen;
+        await DrawerOpenChanged.InvokeAsync(DrawerOpen);
+    }
+}
