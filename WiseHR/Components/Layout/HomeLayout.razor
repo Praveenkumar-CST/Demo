@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @using WiseHR.Components.sidebar
+@inject IJSRuntime JSRuntime
+
 
 <MudThemeProvider />
 <MudLayout>
@@ -23,14 +25,19 @@
                           Style="width: 50%; --mud-palette-text-primary: white; --mud-palette-lines-inputs: white; --mud-icon-adornment-color: white;"
                           InputStyle="color: white;"
                           Immediate="true"
+                          DebounceInterval="300"
                           OnValueChanged="@SearchEmployees" />
         </MudItem>
 
         <MudItem xs="2" Class="d-flex justify-end">
             <MudMenu>
-                <ActivatorContent>
-                    <MudAvatar Color="Color.Primary" Class="mr-4 cursor-pointer" Size="Size.Medium">
-                        <MudIcon Icon="@Icons.Material.Filled.Person" />
+                    <ActivatorContent>
+                    <MudAvatar Color="Color.Primary"
+                               Class="mr-4 cursor-pointer user-avatar"
+                               Size="Size.Medium"
+                               BorderColor="Color.Secondary"
+                               BorderWidth="2px">
+                        @userInitials
                     </MudAvatar>
                 </ActivatorContent>
                 <ChildContent>
@@ -43,6 +50,7 @@
     </MudAppBar>
 
     <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+    <MudPopoverProvider />
 
     <MudMainContent>
         <MudContainer Class="mt-6" MaxWidth="MaxWidth.ExtraLarge">
@@ -56,9 +64,38 @@
     private HomeSidebar? sidebar;
     private string? searchQuery;
 
-    private void SearchEmployees(string query)
+    [Parameter]
+    public EventCallback<string> OnSearchQueryChanged { get; set; }
+
+    private async Task SearchEmployees(string query)
     {
-        // Placeholder for search logic
+        searchQuery = query;
+        await JSRuntime.InvokeVoidAsync("console.log", $"Search: {query}");
+
         Console.WriteLine($"Searching for: {query}");
+        if (OnSearchQueryChanged.HasDelegate)
+        {
+            await OnSearchQueryChanged.InvokeAsync(query);
+        }
+    }
+
+    private string? userName = "Jaya Priya"; // Replace with actual logged-in user
+    private string? userInitials;
+
+    protected override void OnInitialized()
+    {
+        userInitials = GetInitials(userName);
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "?"; // Default placeholder
+
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+            return parts[0][0].ToString().ToUpper(); // Single name, take 1st letter
+
+        return (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper(); // First + Last name initials
     }
 }
