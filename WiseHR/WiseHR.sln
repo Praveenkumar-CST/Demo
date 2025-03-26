@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35825.156 d17.13
+VisualStudioVersion = 17.13.35825.156
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WiseHR", "WiseHR.csproj", "{EF73C4DF-03FA-43D8-BB45-A9F14C528FF3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WiseHR", "WiseHR.csproj", "{EF73C4DF-03FA-43D8-BB45-A9F14C528FF3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

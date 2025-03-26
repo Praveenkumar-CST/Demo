@@ -1,12 +1,13 @@
 ﻿<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        <RouteView RouteData="@routeData" DefaultLayout="typeof(MainLayout)" />
     </Found>
     <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
+        <LayoutView Layout="typeof(MainLayout)">
+            <MudContainer Class="mt-8">
+                <MudText Typo="Typo.h3">Not Found</MudText>
+                <MudText>The page you're looking for doesn't exist.</MudText>
+            </MudContainer>
         </LayoutView>
     </NotFound>
 </Router>
