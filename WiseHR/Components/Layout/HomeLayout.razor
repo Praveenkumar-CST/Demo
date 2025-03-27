@@ -1,0 +1,101 @@
+﻿@inherits LayoutComponentBase
+@using WiseHR.Components.sidebar
+@inject IJSRuntime JSRuntime
+
+
+<MudThemeProvider />
+<MudLayout>
+    <!-- Header Section -->
+    <MudAppBar Elevation="1">
+        <MudItem xs="2" Class="d-flex align-center">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           Edge="Edge.Start"
+                           OnClick="@((e) => sidebar?.ToggleDrawer())"
+                           Class="mr-2" />
+            <MudImage Src="images/logo1.png" Alt="Company Logo" Height="60" Class="ml-4" />
+        </MudItem>
+
+        <MudItem xs="8" Class="d-flex justify-center">
+            <MudTextField @bind-Value="searchQuery"
+                          Placeholder="Search employees..."
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Style="width: 50%; --mud-palette-text-primary: white; --mud-palette-lines-inputs: white; --mud-icon-adornment-color: white;"
+                          InputStyle="color: white;"
+                          Immediate="true"
+                          DebounceInterval="300"
+                          OnValueChanged="@SearchEmployees" />
+        </MudItem>
+
+        <MudItem xs="2" Class="d-flex justify-end">
+            <MudMenu>
+                    <ActivatorContent>
+                    <MudAvatar Color="Color.Primary"
+                               Class="mr-4 cursor-pointer user-avatar"
+                               Size="Size.Medium"
+                               BorderColor="Color.Secondary"
+                               BorderWidth="2px">
+                        @userInitials
+                    </MudAvatar>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem>Profile</MudMenuItem>
+                    <MudMenuItem>Settings</MudMenuItem>
+                    <MudMenuItem>Logout</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </MudItem>
+    </MudAppBar>
+
+    <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+    <MudPopoverProvider />
+
+    <MudMainContent>
+        <MudContainer Class="mt-6" MaxWidth="MaxWidth.ExtraLarge">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool drawerOpen = true;
+    private HomeSidebar? sidebar;
+    private string? searchQuery;
+
+    [Parameter]
+    public EventCallback<string> OnSearchQueryChanged { get; set; }
+
+    private async Task SearchEmployees(string query)
+    {
+        searchQuery = query;
+        await JSRuntime.InvokeVoidAsync("console.log", $"Search: {query}");
+
+        Console.WriteLine($"Searching for: {query}");
+        if (OnSearchQueryChanged.HasDelegate)
+        {
+            await OnSearchQueryChanged.InvokeAsync(query);
+        }
+    }
+
+    private string? userName = "Jaya Priya"; // Replace with actual logged-in user
+    private string? userInitials;
+
+    protected override void OnInitialized()
+    {
+        userInitials = GetInitials(userName);
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "?"; // Default placeholder
+
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+            return parts[0][0].ToString().ToUpper(); // Single name, take 1st letter
+
+        return (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper(); // First + Last name initials
+    }
+}
