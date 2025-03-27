@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -11,12 +11,10 @@
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.14" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.3" />
     <PackageReference Include="MongoDB.Bson" Version="3.2.1" />
     <PackageReference Include="MongoDB.Driver" Version="3.2.1" />
     <PackageReference Include="MudBlazor" Version="8.4.0" />
-    <PackageReference Include="supabase-csharp" Version="0.16.2" />
+    <PackageReference Include="Supabase" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup>
