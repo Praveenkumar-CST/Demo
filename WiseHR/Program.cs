@@ -9,13 +9,10 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Use HTTPS endpoint for the backend
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
 
 builder.Services.AddMudServices();
 builder.Services.AddScoped<AuthService>();
 
-await builder.Build().RunAsync();
-builder.Services.AddMudServices();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
 await builder.Build().RunAsync();

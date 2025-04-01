@@ -7,7 +7,6 @@
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 
-
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudText Typo="Typo.h3" GutterBottom="true" Color="Color.Primary">Role Management</MudText>
 
@@ -51,6 +50,7 @@
                                ValueChanged="@(newRole => UpdateRole(context, newRole))"
                                Variant="Variant.Outlined"
                                Dense="true">
+                        <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
                         <MudSelectItem Value="@("Manager")">Manager</MudSelectItem>
                         <MudSelectItem Value="@("Employee")">Employee</MudSelectItem>
                     </MudSelect>
@@ -74,9 +74,8 @@
     private string searchQuery = "";
 
     private IEnumerable<User> FilteredUsers => users?
-        .Where(u => u.Role != "Admin" &&
-                    (string.IsNullOrEmpty(searchQuery) ||
-                     u.Email.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)))
+        .Where(u => string.IsNullOrEmpty(searchQuery) ||
+                    u.Email.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
         .ToList() ?? new List<User>();
 
     protected override async Task OnInitializedAsync()
@@ -119,10 +118,6 @@
         try
         {
             await UserService.UpdateUserRoleAsync(user.Id, user.Role);
-            if (newRole == "Admin" && users != null)
-            {
-                users.RemoveAll(u => u.Id == user.Id);
-            }
             await JS.InvokeVoidAsync("alert", $"Role updated for {user.Email} from {oldRole} to {newRole}");
             StateHasChanged();
         }
