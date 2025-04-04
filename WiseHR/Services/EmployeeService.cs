@@ -27,6 +27,31 @@
         {
             return await _httpClient.GetFromJsonAsync<EmployeeDetails>($"EmployeeDetails/GetEmployeeDetails/{employeeId}");
         }
+        // Get All Employees
+        public async Task<List<EmployeeDetails>> GetAllEmployees()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("EmployeeDetails/GetAllEmployees");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<List<EmployeeDetails>>();
+                }
+                else
+                {
+                    // Handle error accordingly
+                    throw new Exception($"Error fetching employees: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error (if needed) and return an empty list or handle as required
+                Console.WriteLine($"Error: {ex.Message}");
+                return new List<EmployeeDetails>();
+            }
+        }
+
+
 
         // Update Employee Details
         public async Task<bool> UpdateEmployee(EmployeeDetails employee)

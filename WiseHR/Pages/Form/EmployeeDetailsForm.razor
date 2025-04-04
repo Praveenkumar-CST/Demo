@@ -432,18 +432,38 @@
 
     public EmployeeDetails employeeDetails { get; set; } = new EmployeeDetails();
 
+    // Assuming you have a list to store all employees (this could be a local list, or you might pull from a service)
+    private List<EmployeeDetails> allEmployees = new List<EmployeeDetails>();
 
     private async Task SubmitForm()
-
     {
-        if(employeeDetails!=null){
+        // Log the current employee details
+        Console.WriteLine($"Submitting employee: {employeeDetails.FirstName}, Email: {employeeDetails.CurrentEmail}");
+
+        if (employeeDetails != null)
+        {
+            // Add employee to the list (could be a database or memory-based list)
+            allEmployees.Add(employeeDetails);
+
+            // Log all employees
+            Console.WriteLine("All employees:");
+            foreach (var emp in allEmployees)
+            {
+                Console.WriteLine($"Employee: {emp.FirstName}, Email: {emp.CurrentEmail}");
+            }
+
+            // Invoke the OnSubmit callback with the current employee details
             await OnSubmit.InvokeAsync(employeeDetails);
         }
     }
 
     public void Reset()
     {
+        // Reset the employee details
         employeeDetails = new EmployeeDetails();
         StateHasChanged();
+
+        // Log the reset action
+        Console.WriteLine("Employee details have been reset.");
     }
 }

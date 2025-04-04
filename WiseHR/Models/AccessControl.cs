@@ -15,7 +15,7 @@
             },
             { "manager", new List<(string, string)>
                 {
-                      ("Dashboard", "/home"),
+                     ("Dashboard", "/home"),
                     ("Employee Data", "/home/employeeData"),
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
