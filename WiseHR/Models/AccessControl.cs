@@ -17,13 +17,15 @@
                 {
                       ("Dashboard", "/home"),
                     ("Employee Data", "/home/employeeData"),
+                    ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Add Employees", "/home/employees")
                 }
             },
             { "employee", new List<(string, string)>
                 {
-                    ("Dashboard", "/home")
+                    ("Dashboard", "/home"),
+                    ("Registration","/registration"),
                 }
             }
         };

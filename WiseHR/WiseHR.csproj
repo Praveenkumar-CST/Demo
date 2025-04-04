@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Components\Layout\**" />
+    <Content Remove="Components\Layout\**" />
+    <EmbeddedResource Remove="Components\Layout\**" />
+    <None Remove="Components\Layout\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="9.0.3" />
@@ -25,7 +32,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\Layout\" />
     <Folder Include="wwwroot\css\bootstrap\" />
   </ItemGroup>
 

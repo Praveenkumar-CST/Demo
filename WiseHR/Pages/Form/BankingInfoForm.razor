@@ -1,0 +1,124 @@
+﻿@page "/bankingForm"
+ <div class="container">
+    <div style="max-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+
+        <EditForm Model="@bankingInfo" OnValidSubmit="SubmitForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label>Employee ID</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.EmployeeID" />
+                <ValidationMessage For="@(() => bankingInfo.EmployeeID)" />
+            </div>
+
+            <div class="form-group">
+                <label>Bank Name</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.BankName" />
+                <ValidationMessage For="@(() => bankingInfo.BankName)" />
+            </div>
+
+            <div class="form-group">
+                <label>Branch</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.Branch" />
+                <ValidationMessage For="@(() => bankingInfo.Branch)" />
+            </div>
+
+            <div class="form-group">
+                <label>Account Holder Name</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.Name" />
+                <ValidationMessage For="@(() => bankingInfo.Name)" />
+            </div>
+
+            <div class="form-group">
+                <label>Account Number</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.AccountNumber" />
+                <ValidationMessage For="@(() => bankingInfo.AccountNumber)" />
+            </div>
+
+            <div class="form-group">
+                <label>IFSC Code</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.IFSCode" />
+                <ValidationMessage For="@(() => bankingInfo.IFSCode)" />
+            </div>
+
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.Phone" />
+                <ValidationMessage For="@(() => bankingInfo.Phone)" />
+            </div>
+
+            <div class="form-group">
+                <label>PAN Number</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.PANNumber" />
+                <ValidationMessage For="@(() => bankingInfo.PANNumber)" />
+            </div>
+
+            <div class="form-group">
+                <label>Aadhaar Number</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.AadhaarNumber" />
+                <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
+            </div>
+
+            <div class="form-group">
+                <label>Branch State</label>
+                <InputText class="form-control" @bind-Value="bankingInfo.State" />
+                <ValidationMessage For="@(() => bankingInfo.State)" />
+            </div>
+
+            <div class="form-group">
+                <label>Account Type</label>
+                <InputSelect class="form-control" @bind-Value="bankingInfo.AccountType">
+                    <option value="">Select Account Type</option>
+                    <option value="Savings">Savings</option>
+                    <option value="Current">Current</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => bankingInfo.AccountType)" />
+            </div>
+
+            <div class="form-group">
+                <label>Created At</label>
+                <InputDate class="form-control" @bind-Value="bankingInfo.CreatedAt" disabled />
+                <ValidationMessage For="@(() => bankingInfo.CreatedAt)" />
+            </div>
+
+            <div class="form-group">
+                <label>Last Modified At</label>
+                <InputDate class="form-control" @bind-Value="bankingInfo.LastModifiedAt" disabled />
+                <ValidationMessage For="@(() => bankingInfo.LastModifiedAt)" />
+            </div>
+
+            <button type="button" class="btn btn-secondary mt-3 mr-2" @onclick="GoBack">Back</button>
+            <button type="submit" class="btn btn-primary mt-3">Next</button>
+        </EditForm>
+    </div>
+ </div>
+
+@code {
+    [Parameter]
+    public EventCallback<BankingInformation> OnSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+
+    public BankingInformation bankingInfo { get; set; } = new BankingInformation();
+
+    private async Task SubmitForm()
+    {
+        if (bankingInfo != null)
+        {
+            await OnSubmit.InvokeAsync(bankingInfo);
+        }
+    }
+
+    private async Task GoBack()
+    {
+        await OnBack.InvokeAsync();
+    }
+
+    public void Reset()
+    {
+        bankingInfo = new BankingInformation();
+        StateHasChanged();
+    }
+}

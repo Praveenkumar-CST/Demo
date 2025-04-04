@@ -1,0 +1,161 @@
+﻿@page "/workExperience"
+@using WiseHRServer.Models
+
+
+<div class="container">
+    <div style="max-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+
+        <EditForm Model="@experience" OnValidSubmit="SubmitForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label>Employee ID</label>
+                <InputText class="form-control" @bind-Value="experience.EmployeeID" />
+                <ValidationMessage For="@(() => experience.EmployeeID)" />
+            </div>
+
+            <!-- Education Section -->
+            <h4>Education Qualifications</h4>
+            @foreach (var edu in experience.EducationQualifications)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Qualification</label>
+                            <InputText class="form-control" @bind-Value="edu.Qualification" />
+                        </div>
+                        <div class="form-group">
+                            <label>University</label>
+                            <InputText class="form-control" @bind-Value="edu.University" />
+                        </div>
+                        <div class="form-group">
+                            <label>Year of Passing</label>
+                            <InputNumber class="form-control" @bind-Value="edu.YearOfPassing" />
+                        </div>
+                        <div class="form-group">
+                            <label>Percentage</label>
+                            <InputNumber class="form-control" @bind-Value="edu.Percentage" />
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm"
+                        @onclick="() => RemoveEducation(edu)">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            }
+            <button type="button" class="btn btn-secondary mb-3" @onclick="AddEducation">Add Education</button>
+
+            <!-- Work Experience Section -->
+            <h4>Work Experience</h4>
+            @foreach (var work in experience.WorkExperiences)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Employer</label>
+                            <InputText class="form-control" @bind-Value="work.Employer" />
+                        </div>
+                        <div class="form-group">
+                            <label>Location</label>
+                            <InputText class="form-control" @bind-Value="work.Location" />
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Joining</label>
+                            <InputDate class="form-control" @bind-Value="work.DateOfJoining" />
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Leaving</label>
+                            <InputDate class="form-control" @bind-Value="work.DateOfLeaving" />
+                        </div>
+                        <div class="form-group">
+                            <label>Position</label>
+                            <InputText class="form-control" @bind-Value="work.Position" />
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm"
+                        @onclick="() => RemoveWorkExperience(work)">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            }
+            <button type="button" class="btn btn-secondary mb-3" @onclick="AddWorkExperience">Add Work Experience</button>
+
+            <!-- System Fields -->
+            <div class="form-group">
+                <label>Created At</label>
+                <InputDate class="form-control" @bind-Value="experience.CreatedAt" disabled />
+                <ValidationMessage For="@(() => experience.CreatedAt)" />
+            </div>
+
+            <div class="form-group">
+                <label>Last Modified At</label>
+                <InputDate class="form-control" @bind-Value="experience.LastModifiedAt" disabled />
+                <ValidationMessage For="@(() => experience.LastModifiedAt)" />
+            </div>
+
+            <button type="button" class="btn btn-secondary mt-3 mr-2" @onclick="GoBack">Back</button>
+            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+        </EditForm>
+    </div>
+</div>
+}
+
+@code {
+    [Parameter]
+    public EventCallback<Experience> OnSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+
+    public Experience experience { get; set; } = new Experience
+        {
+            EducationQualifications = new List<Education>(),
+            WorkExperiences = new List<WorkExperience>()
+        };
+
+    private async Task SubmitForm()
+
+    {
+        if (experience!=null){
+            await OnSubmit.InvokeAsync(experience);
+
+        }
+    }
+
+    private async Task GoBack()
+    {
+        await OnBack.InvokeAsync();
+    }
+
+    private void AddEducation()
+    {
+        experience.EducationQualifications.Add(new Education());
+        StateHasChanged();  // Ensures UI updates
+    }
+
+    private void RemoveEducation(Education education)
+    {
+        experience.EducationQualifications.Remove(education);
+        StateHasChanged();  // Ensures UI updates
+    }
+
+    private void AddWorkExperience()
+    {
+        experience.WorkExperiences.Add(new WorkExperience());
+        StateHasChanged();  // Ensures UI updates
+    }
+
+    private void RemoveWorkExperience(WorkExperience work)
+    {
+        experience.WorkExperiences.Remove(work);
+        StateHasChanged();  // Ensures UI updates
+    }
+
+
+    public void Reset()
+    {
+        experience = new Experience();
+        StateHasChanged();
+    }
+}

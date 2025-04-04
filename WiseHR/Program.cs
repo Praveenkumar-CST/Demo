@@ -12,6 +12,9 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddMudServices();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<EmployeeService>();
+builder.Services.AddScoped<BankingService>();
+
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });

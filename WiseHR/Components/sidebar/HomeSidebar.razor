@@ -2,18 +2,19 @@
 @inject AuthService AuthService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager 
-
 <MudDrawer @bind-Open="DrawerOpen"
+           Class="mud-drawer"
            Width="@(DrawerOpen ? "250px" : "60px")"
            Elevation="1"
            Variant="@DrawerVariant.Responsive"
            ClipMode="DrawerClipMode.Always">
-    <MudNavMenu Class="pa-2">
+    <MudNavMenu Class="mud-nav-menu">
         @if (accessibleMenuItems != null && accessibleMenuItems.Count > 0)
         {
             @foreach (var item in accessibleMenuItems)
             {
-                <MudNavLink Match="NavLinkMatch.All"
+                <MudNavLink Class="mud-nav-link"
+                            Match="NavLinkMatch.All"
                             Icon="@Icons.Material.Filled.Dashboard"
                             Href="@item.Url"
                             ActiveClass="mud-nav-link-active">
@@ -24,15 +25,14 @@
                 </MudNavLink>
             }
         }
-        else
+        else if (!string.IsNullOrEmpty(errorMessage))
         {
-            @if (errorMessage != null)
-            {
-                <p>@errorMessage</p>
-            }
+            <p>@errorMessage</p>
         }
     </MudNavMenu>
 </MudDrawer>
+
+
 
 @code {
     [Parameter]

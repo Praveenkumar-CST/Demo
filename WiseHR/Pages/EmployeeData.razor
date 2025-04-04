@@ -1,8 +1,72 @@
 ﻿@page "/home/employeeData"
 @using Components.sidebar
 @layout HomeLayout
-<h3>EmployeeData</h3>
+@inject EmployeeService EmployeeService
+
+<h3>All Employees</h3>
+
+<button class="btn btn-primary mb-3" @onclick="LoadAllEmployees">Load All Employees</button>
+
+@if (isLoading)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else if (employees != null && employees.Count > 0)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <!-- Add more columns as needed -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var emp in employees)
+            {
+                <tr>
+                    <td>@emp.EmployeeID</td>
+                    <td>@($"{emp.FirstName} {emp.LastName}")</td>
+                    <td>@emp.CurrentEmail</td>
+                    <td>@emp.Designation</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (hasError)
+{
+    <div class="alert alert-danger">Failed to load employee data.</div>
+}
+else if (employees != null && employees.Count == 0)
+{
+    <div class="alert alert-info">No employees found.</div>
+}
 
 @code {
+    private List<EmployeeDetails> employees;
+    private bool isLoading = false;
+    private bool hasError = false;
 
+    private async Task LoadAllEmployees()
+    {
+        isLoading = true;
+        hasError = false;
+        employees = null;
+
+        try
+        {
+            employees = await EmployeeService.GetAllEmployees();
+        }
+        catch
+        {
+            hasError = true;
+        }
+
+        isLoading = false;
+    }
 }

@@ -1,0 +1,449 @@
+﻿@page "/employee-form"
+@using WiseHRServer.Models
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Employee Information Form</h3>
+        </div>
+        <div class="card-body">
+        <EditForm Model="@employeeDetails" OnValidSubmit="SubmitForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Personal Information -->
+            <h5>Personal Information</h5>
+
+            <div class="form-group">
+                <label>Employee ID</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.EmployeeID" />
+            </div>
+
+            <div class="form-group">
+                <label>First Name</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.FirstName" />        
+                    <ValidationMessage For="@(() => employeeDetails.FirstName)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Middle Name</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.MiddleName" />
+                    <ValidationMessage For="@(() => employeeDetails.MiddleName)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Last Name</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.LastName" />
+                    <ValidationMessage For="@(() => employeeDetails.LastName)" />
+
+            </div>
+                <div class="form-group">
+                    <label>Father's Name</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.FatherName" />
+                    <ValidationMessage For="@(() => employeeDetails.FatherName)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Mother's Name</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.MotherName" />
+                    <ValidationMessage For="@(() => employeeDetails.MotherName)" />
+
+                </div>
+
+            <div class="form-group">
+                <label>Date of Birth</label>
+                <InputDate class="form-control" @bind-Value="employeeDetails.DateOfBirth" />
+                    <ValidationMessage For="@(() => employeeDetails.DateOfBirth)" />
+
+            </div>
+
+             <div class="form-group">
+                <label>Gender</label>
+                <InputSelect class="form-control" @bind-Value="employeeDetails.Gender">
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </InputSelect>
+                    <ValidationMessage For="@(() => employeeDetails.Gender)" />
+
+            </div>
+                <div class="form-group">
+                    <label>Physically Challenged</label>
+                    <InputSelect class="form-control" @bind-Value="employeeDetails.PhysicallyChallenged">
+                        <option value="">Select Status</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => employeeDetails.PhysicallyChallenged)" />
+
+                </div>
+            <div class="form-group">
+                <label>Marital Status</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.MaritalStatus" />
+                    <ValidationMessage For="@(() => employeeDetails.MaritalStatus)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Blood Group</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.BloodGroup" />
+                    <ValidationMessage For="@(() => employeeDetails.BloodGroup)" />
+
+            </div>
+
+                <div class="form-group">
+                    <label>Nationality</label>
+                    <InputSelect class="form-control" @bind-Value="employeeDetails.Nationality">
+                        <option value="">Select Nationality</option>
+                        <option value="Indian">Indian</option>
+                        <option value="American">American</option>
+                        <option value="Other">Other</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => employeeDetails.Nationality)" />
+                </div>
+
+            <!-- Work Information -->
+            <h5>Work Information</h5>
+
+            <div class="form-group">
+                <label>Designation</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.Designation" />
+                    <ValidationMessage For="@(() => employeeDetails.Designation)" />
+
+            </div>
+                <div class="form-group">
+                    <label>Passport Full Name</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.PassportFullName" />
+                    <ValidationMessage For="@(() => employeeDetails.PassportFullName)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Passport No</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.PassportNo" />
+                    <ValidationMessage For="@(() => employeeDetails.PassportNo)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Passport Nationality</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.PassportNationality" />
+                    <ValidationMessage For="@(() => employeeDetails.PassportNationality)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Passport Place of Issue</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.PassportPlaceOfIssue" />
+                    <ValidationMessage For="@(() => employeeDetails.PassportPlaceOfIssue)" />
+
+                </div>
+
+            <div class="form-group">
+                <label>Joining Location</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.JoiningLocation" />
+                    <ValidationMessage For="@(() => employeeDetails.JoiningLocation)" />
+
+
+            </div>
+
+            <div class="form-group">
+                <label>Type of Employment</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.TypeOfEmployment" />
+                    <ValidationMessage For="@(() => employeeDetails.TypeOfEmployment)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Level</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.Level" />
+                    <ValidationMessage For="@(() => employeeDetails.Level)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Date of Joining</label>
+                <InputDate class="form-control" @bind-Value="employeeDetails.DateOfJoining" />
+                    <ValidationMessage For="@(() => employeeDetails.DateOfJoining)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Date of Relieving</label>
+                <InputDate class="form-control" @bind-Value="employeeDetails.DateOfRelieving" />
+                    <ValidationMessage For="@(() => employeeDetails.DateOfRelieving)" />
+
+            </div>
+
+            <!-- Address Information -->
+            <h5>Current Address</h5>
+
+            <div class="form-group">
+                <label>Address</label>
+                <InputTextArea class="form-control" @bind-Value="employeeDetails.CurrentAddress" />
+                    <ValidationMessage For="@(() => employeeDetails.CurrentAddress)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>City</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.CurrentCity" />
+                    <ValidationMessage For="@(() => employeeDetails.CurrentCity)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>State</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.CurrentState" />
+                    <ValidationMessage For="@(() => employeeDetails.CurrentState)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Zip/Pin Code</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.CurrentZip" />
+                    <ValidationMessage For="@(() => employeeDetails.CurrentZip)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Mobile No</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.CurrentMobile" />
+                    <ValidationMessage For="@(() => employeeDetails.CurrentMobile)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.CurrentEmail" />
+                    <ValidationMessage For="@(() => employeeDetails.CurrentEmail)" />
+
+            </div>
+
+            <h5>Permanent Address</h5>
+
+            <div class="form-group">
+                <label>Address</label>
+                <InputTextArea class="form-control" @bind-Value="employeeDetails.PermanentAddress" />
+                    <ValidationMessage For="@(() => employeeDetails.PermanentAddress)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>City</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.PermanentCity" />
+                    <ValidationMessage For="@(() => employeeDetails.PermanentCity)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>State</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.PermanentState" />
+                    <ValidationMessage For="@(() => employeeDetails.PermanentState)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Zip/Pin Code</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.PermanentZip" />
+                    <ValidationMessage For="@(() => employeeDetails.PermanentZip)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Mobile No</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.PermanentMobile" />
+                    <ValidationMessage For="@(() => employeeDetails.PermanentMobile)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.PermanentEmail" />
+                    <ValidationMessage For="@(() => employeeDetails.PermanentEmail)" />
+
+            </div>
+
+            <!-- Emergency Contact Information -->
+            <h5>Emergency Contact Information</h5>
+
+            <div class="form-group">
+                <label>Emergency Contact 1 Name</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1Name" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Name)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Relationship</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1Relationship" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Mobile No</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1Mobile" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Mobile)" />
+
+            </div>
+                <div class="form-group">
+                    <label>Emergency Contact 1 Address</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1Address" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Address)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Emergency Contact 1 City</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1City" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1City)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Emergency Contact 1 State</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1State" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1ZipCode)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Emergency Contact 1 Zip/Pin Code</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1ZipCode" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" />
+
+                </div>
+            <div class="form-group">
+                <label>Emergency Contact 2 Name</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2Name" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Name)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Relationship</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2Relationship" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Mobile No</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2Mobile" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" />
+
+            </div>
+                <div class="form-group">
+                    <label>Emergency Contact 2 Address</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2Address" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Emergency Contact 2 City</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2City" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Emergency Contact 2 State</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2State" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2State)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Emergency Contact 2 Zip/Pin Code</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2ZipCode" />
+                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2ZipCode)" />
+
+                </div>
+
+
+            <!-- Nominee Information -->
+            <h5>Nominee Information</h5>
+
+            <div class="form-group">
+                <label>Nominee Name</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.NomineeName" />
+                    <ValidationMessage For="@(() => employeeDetails.NomineeName)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Relationship</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.NomineeRelationship" />
+                    <ValidationMessage For="@(() => employeeDetails.NomineeRelationship)" />
+
+            </div>
+
+            <div class="form-group">
+                <label>Mobile No</label>
+                <InputText class="form-control" @bind-Value="employeeDetails.NomineeMobile" />
+                    <ValidationMessage For="@(() => employeeDetails.NomineeMobile)" />
+
+            </div>
+                <div class="form-group">
+                    <label>Nominee Address</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeAddress" />
+                    <ValidationMessage For="@(() => employeeDetails.NomineeAddress)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Nominee City</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeCity" />
+                    <ValidationMessage For="@(() => employeeDetails.NomineeCity)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Nominee State</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeState" />
+                    <ValidationMessage For="@(() => employeeDetails.NomineeState)" />
+
+                </div>
+
+                <div class="form-group">
+                    <label>Nominee Zip/Pin Code</label>
+                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeZipCode" />
+                    <ValidationMessage For="@(() => employeeDetails.NomineeZipCode)" />
+
+                </div>
+            <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
+                <button type="submit" class="btn btn-primary">Next</button>
+            </div>
+        </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<EmployeeDetails> OnSubmit { get; set; }
+
+    public EmployeeDetails employeeDetails { get; set; } = new EmployeeDetails();
+
+
+    private async Task SubmitForm()
+
+    {
+        if(employeeDetails!=null){
+            await OnSubmit.InvokeAsync(employeeDetails);
+        }
+    }
+
+    public void Reset()
+    {
+        employeeDetails = new EmployeeDetails();
+        StateHasChanged();
+    }
+}
