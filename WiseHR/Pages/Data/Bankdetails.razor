@@ -1,0 +1,58 @@
+﻿@page "/bankDetails/{EmployeeId}"
+@inject BankingService BankingService
+@using MudBlazor
+
+<h3 class="bank-details-heading">Bank Details</h3>
+
+@if (bankDetails != null && bankDetails.Count > 0)
+{
+    <MudPaper Class="bank-details-container" Elevation="4" Style="padding: 16px;">
+        <MudTable T="KeyValuePair<string, string>" Items="bankDetails" Bordered="true" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>Field</MudTh>
+                <MudTh>Value</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Field">@context.Key</MudTd>
+                <MudTd DataLabel="Value">@context.Value</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+}
+else
+{
+    <MudText Typo="Typo.h6" Align="Align.Center">Loading bank details...</MudText>
+}
+
+@code {
+    [Parameter] public string EmployeeId { get; set; }
+
+    private BankingInformation bankingInfo;
+    private List<KeyValuePair<string, string>> bankDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        bankingInfo = await BankingService.GetBankingInfo(EmployeeId);
+
+        if (bankingInfo != null)
+        {
+            bankDetails = new List<KeyValuePair<string, string>>
+            {
+                new("Employee ID", bankingInfo.EmployeeID),
+                new("Account Holder Name", bankingInfo.Name),
+                new("Account Number", bankingInfo.AccountNumber),
+                new("Account Type", bankingInfo.AccountType),
+                new("Bank Name", bankingInfo.BankName),
+                new("Branch", bankingInfo.Branch),
+                new("IFSC Code", bankingInfo.IFSCode),
+                new("Mobile Number", bankingInfo.Phone),
+                new("PAN Number", bankingInfo.PANNumber),
+                new("Aadhaar Number", bankingInfo.AadhaarNumber),
+                new("Branch State", bankingInfo.State),
+                 new("Created At", bankingInfo.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"),
+                new("Last Modified At", bankingInfo.LastModifiedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A")
+
+            };
+        }
+    }
+}

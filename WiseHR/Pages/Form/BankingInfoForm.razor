@@ -1,99 +1,147 @@
 ﻿@page "/bankingForm"
- <div class="container">
-    <div style="max-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+@inject BankingService bankingService
+@inject IJSRuntime JSRuntime
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
 
-        <EditForm Model="@bankingInfo" OnValidSubmit="SubmitForm">
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    <MudCard Elevation="2" Style="max-height: 600px; overflow-y: auto;" Class="pa-3">
+        <EditForm Model="@bankingInfo" OnValidSubmit="GoToNextPage">
             <DataAnnotationsValidator />
-            <ValidationSummary />
+            <MudGrid>
+                <!-- Employee ID -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.EmployeeID"
+                                  Label="Employee ID"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Enter your employee ID" />
+                    <ValidationMessage For="@(() => bankingInfo.EmployeeID)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>Employee ID</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.EmployeeID" />
-                <ValidationMessage For="@(() => bankingInfo.EmployeeID)" />
-            </div>
+                <!-- Bank Name -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.BankName"
+                                  Label="Bank Name"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <ValidationMessage For="@(() => bankingInfo.BankName)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>Bank Name</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.BankName" />
-                <ValidationMessage For="@(() => bankingInfo.BankName)" />
-            </div>
+                <!-- Branch -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.Branch"
+                                  Label="Branch"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <ValidationMessage For="@(() => bankingInfo.Branch)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>Branch</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.Branch" />
-                <ValidationMessage For="@(() => bankingInfo.Branch)" />
-            </div>
+                <!-- Account Holder Name -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.Name"
+                                  Label="Account Holder Name"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <ValidationMessage For="@(() => bankingInfo.Name)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>Account Holder Name</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.Name" />
-                <ValidationMessage For="@(() => bankingInfo.Name)" />
-            </div>
+                <!-- Account Number -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.AccountNumber"
+                                  Label="Account Number"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <ValidationMessage For="@(() => bankingInfo.AccountNumber)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>Account Number</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.AccountNumber" />
-                <ValidationMessage For="@(() => bankingInfo.AccountNumber)" />
-            </div>
+                <!-- IFSC Code -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.IFSCode"
+                                  Label="IFSC Code"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <ValidationMessage For="@(() => bankingInfo.IFSCode)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>IFSC Code</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.IFSCode" />
-                <ValidationMessage For="@(() => bankingInfo.IFSCode)" />
-            </div>
+                <!-- Mobile Number -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.Phone"
+                                  Label="Mobile Number"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <ValidationMessage For="@(() => bankingInfo.Phone)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>Mobile Number</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.Phone" />
-                <ValidationMessage For="@(() => bankingInfo.Phone)" />
-            </div>
+                <!-- PAN Number -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.PANNumber"
+                                  Label="PAN Number"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <ValidationMessage For="@(() => bankingInfo.PANNumber)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>PAN Number</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.PANNumber" />
-                <ValidationMessage For="@(() => bankingInfo.PANNumber)" />
-            </div>
+                <!-- Aadhaar Number -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.AadhaarNumber"
+                                  Label="Aadhaar Number"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>Aadhaar Number</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.AadhaarNumber" />
-                <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
-            </div>
+                <!-- Branch State -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="bankingInfo.State"
+                                  Label="Branch State"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <ValidationMessage For="@(() => bankingInfo.State)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>Branch State</label>
-                <InputText class="form-control" @bind-Value="bankingInfo.State" />
-                <ValidationMessage For="@(() => bankingInfo.State)" />
-            </div>
+                <!-- Account Type -->
+                <MudItem xs="12" sm="6">
+                    <MudSelect @bind-Value="bankingInfo.AccountType"
+                               Label="Account Type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="@("")">Select Account Type</MudSelectItem>
+                        <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
+                        <MudSelectItem Value="@("Current")">Current</MudSelectItem>
+                    </MudSelect>
+                    <ValidationMessage For="@(() => bankingInfo.AccountType)" />
+                </MudItem>
 
-            <div class="form-group">
-                <label>Account Type</label>
-                <InputSelect class="form-control" @bind-Value="bankingInfo.AccountType">
-                    <option value="">Select Account Type</option>
-                    <option value="Savings">Savings</option>
-                    <option value="Current">Current</option>
-                </InputSelect>
-                <ValidationMessage For="@(() => bankingInfo.AccountType)" />
-            </div>
+                <MudDatePicker @bind-Date="bankingInfo.CreatedAt"
+                               Label="Created At"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Disabled="true" />
 
-            <div class="form-group">
-                <label>Created At</label>
-                <InputDate class="form-control" @bind-Value="bankingInfo.CreatedAt" disabled />
-                <ValidationMessage For="@(() => bankingInfo.CreatedAt)" />
-            </div>
+                <MudDatePicker @bind-Date="bankingInfo.LastModifiedAt"
+                               Label="Last Modified At"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Disabled="true" />
 
-            <div class="form-group">
-                <label>Last Modified At</label>
-                <InputDate class="form-control" @bind-Value="bankingInfo.LastModifiedAt" disabled />
-                <ValidationMessage For="@(() => bankingInfo.LastModifiedAt)" />
-            </div>
-
-            <button type="button" class="btn btn-secondary mt-3 mr-2" @onclick="GoBack">Back</button>
-            <button type="submit" class="btn btn-primary mt-3">Next</button>
+                <!-- Buttons -->
+                <MudItem xs="12" Class="d-flex justify-end gap-2 mt-4">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               OnClick="GoBack">
+                        Back
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               ButtonType="ButtonType.Submit">
+                        Next
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
         </EditForm>
-    </div>
- </div>
-
+    </MudCard>
+</MudContainer>
 @code {
     [Parameter]
     public EventCallback<BankingInformation> OnSubmit { get; set; }
@@ -101,18 +149,47 @@
     [Parameter]
     public EventCallback OnBack { get; set; }
 
+
+
     public BankingInformation bankingInfo { get; set; } = new BankingInformation();
 
-    private async Task SubmitForm()
+    [Parameter]
+    public BankingInformation InitialData { get; set; }
+
+    protected async override void OnInitialized()
     {
-        if (bankingInfo != null)
+        await LoadBankingInfo();
+        if (InitialData != null)
         {
-            await OnSubmit.InvokeAsync(bankingInfo);
+            bankingInfo = InitialData;
         }
     }
 
+    private async Task GoToNextPage()
+    {
+        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+
+        await OnSubmit.InvokeAsync(bankingInfo);
+    }
+
+    private async Task LoadBankingInfo()
+    {
+        // Retrieve the banking info from local storage
+        var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
+
+        if (!string.IsNullOrEmpty(bankingInfoJson))
+        {
+            bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
+            StateHasChanged(); // Force UI update if necessary
+
+        }
+    }
+
+
     private async Task GoBack()
     {
+        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+
         await OnBack.InvokeAsync();
     }
 
@@ -120,5 +197,7 @@
     {
         bankingInfo = new BankingInformation();
         StateHasChanged();
+
+        Console.WriteLine("Employee details have been reset.");
     }
 }

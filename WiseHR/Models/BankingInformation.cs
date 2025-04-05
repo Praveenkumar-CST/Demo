@@ -47,10 +47,10 @@ namespace WiseHR.Models
             public string AccountType { get; set; } // "Savings" or "Current"
 
             [Required]
-            public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+            public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
             [Required]
-            public DateTime LastModifiedAt { get; set; } = DateTime.UtcNow;
+            public DateTime? LastModifiedAt { get; set; } = DateTime.UtcNow;
         }
     }
 

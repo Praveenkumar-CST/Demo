@@ -154,3 +154,193 @@ input, select, textarea {
     ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
     }
+
+
+
+/*    employlist*/
+.section-title {
+    font-size: var(--font-size-h2);
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.employee-card {
+    border-radius: var(--border-radius-card);
+    padding: var(--card-padding);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: var(--background);
+    border: 1px solid var(--border-color);
+}
+
+    .employee-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-card);
+        border-color: var(--accent);
+    }
+
+    .employee-card .card-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: var(--font-size-h2);
+    }
+
+    .employee-card .card-subtitle {
+        font-size: var(--font-size-small);
+        color: var(--text-secondary);
+    }
+
+    .employee-card .card-text {
+        font-size: var(--font-size-body);
+        color: var(--text-secondary);
+    }
+
+.custom-alert {
+    font-family: var(--font-family);
+    font-size: var(--font-size-body);
+}
+/*bank*/
+.bank-details-heading {
+    font-size: var(--font-size-h2);
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.bank-details-container {
+    background: var(--background);
+    padding: var(--container-padding);
+    border-radius: var(--border-radius-card);
+    box-shadow: var(--shadow-card);
+    max-width: 800px;
+    margin: auto;
+    overflow-x: auto;
+}
+
+.bank-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-family);
+    font-size: var(--font-size-body);
+    color: var(--text-primary);
+}
+
+    .bank-details-table th {
+        text-align: left;
+        padding: var(--table-cell-padding);
+        background-color: var(--secondary);
+        border-bottom: 1px solid var(--border-color);
+        width: 40%;
+        white-space: nowrap;
+    }
+
+    .bank-details-table td {
+        padding: var(--table-cell-padding);
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        background-color: var(--background);
+    }
+    
+/*    form*/
+.form-container {
+    padding: var(--container-padding);
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-card);
+    box-shadow: var(--shadow-card);
+    max-width: 1000px;
+    margin: auto;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+    .form-group label {
+        margin-bottom: 4px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+.input {
+    padding: var(--form-padding);
+    font-size: var(--font-size-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-input);
+    background: var(--background);
+    color: var(--text-primary);
+}
+
+    .input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(77, 157, 224, 0.2);
+        outline: none;
+    }
+
+.text-error {
+    color: var(--error);
+    font-size: var(--font-size-small);
+}
+
+.form-section {
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-card);
+    margin-bottom: 1rem;
+    background: var(--secondary);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.form-subtitle {
+    font-size: var(--font-size-h2);
+    color: var(--primary);
+    margin: 1.5rem 0 1rem;
+}
+
+.align-end {
+    display: flex;
+    align-items: flex-end;
+}
+
+.button {
+    padding: var(--button-padding);
+    border-radius: var(--border-radius-button);
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+    .button.primary {
+        background-color: var(--accent);
+        color: white;
+    }
+
+    .button.secondary {
+        background-color: white;
+        color: var(--primary);
+        border: 1px solid var(--border-color);
+    }
+
+    .button.danger {
+        background-color: var(--error);
+        color: white;
+    }
+
+    .button:hover {
+        box-shadow: var(--shadow-button-hover);
+    }
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}

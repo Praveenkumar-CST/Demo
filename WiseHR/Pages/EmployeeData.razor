@@ -1,7 +1,12 @@
 ﻿@page "/home/employeeData"
 @using Components.sidebar
+@using WiseHRServer.Models
 @layout HomeLayout
 @inject EmployeeService EmployeeService
+@inject BankingService BankingService
+@inject ExperienceService ExperienceService
+
+
 
 <h3>All Employees</h3>
 
@@ -83,6 +88,8 @@ else if (employees != null && employees.Count > 0)
                 <th>Nominee State</th>
                 <th>Nominee Zip Code</th>
                 <th>Nominee Mobile</th>
+                <th>Bank Details</th>
+                <th>Experience</th>
                 <th>Created At</th>
                 <th>Last Modified At</th>
                 <!-- Add more columns as needed -->
@@ -91,6 +98,8 @@ else if (employees != null && employees.Count > 0)
         <tbody>
             @foreach (var emp in employees)
             {
+                var bankingInfo = bankingInfos.ContainsKey(emp.EmployeeID) ? bankingInfos[emp.EmployeeID] : null;
+
                 <tr>
                     <td>@emp.EmployeeID</td>
                     <td>@($"{emp.FirstName} {emp.LastName}")</td>
@@ -153,6 +162,52 @@ else if (employees != null && employees.Count > 0)
                     <td>@emp.NomineeState</td>
                     <td>@emp.NomineeZipCode</td>
                     <td>@emp.NomineeMobile</td>
+                    <td>
+                        @if (bankingInfo != null)
+                        {
+                            <div>
+                                <strong>Account Number:</strong> @bankingInfo.AccountNumber
+                                <br />
+                                <strong>Account Type:</strong> @bankingInfo.AccountType
+                                <br />
+                               
+                                <strong>Bank Name:</strong> @bankingInfo.BankName
+                                <strong>Branch:</strong> @bankingInfo.Branch
+                                <br />
+                                <strong>IFSC Code:</strong> @bankingInfo.IFSCode
+                                <br />
+                                <strong>Bank Name:</strong> @bankingInfo.BankName
+                            </div>
+                        }
+                        else
+                        {
+                            <span>No banking information available</span>
+                        }
+                    </td>
+                    <td>
+                        @if (experienceInfos.ContainsKey(emp.EmployeeID) && experienceInfos[emp.EmployeeID].Any())
+                        {
+                            foreach (var experience in experienceInfos[emp.EmployeeID])
+                            {
+                                <div>
+                                    <strong>Qualification:</strong> @experience.EducationQualifications?.FirstOrDefault()?.Qualification
+                                    <br />
+                                    <strong>University:</strong> @experience.EducationQualifications?.FirstOrDefault()?.University
+                                    <br />
+                                    <strong>Year of Passing:</strong> @experience.EducationQualifications?.FirstOrDefault()?.YearOfPassing
+                                    <br />
+                                    <strong>Percentage:</strong> @experience.EducationQualifications?.FirstOrDefault()?.Percentage
+                                    <br /><br />
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <span>No education information available</span>
+                        }
+                    </td>
+
+
                     <td>@emp.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
                     <td>@emp.LastModifiedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
                 </tr>
@@ -167,6 +222,9 @@ else if (employees != null && employees.Count == 0)
 
 @code {
     private List<EmployeeDetails> employees;
+    private Dictionary<string, BankingInformation> bankingInfos = new();
+    private Dictionary<string, List<Experience>> experienceInfos = new();
+
     private bool isLoading = false;
     private bool hasError = false;
 
@@ -175,14 +233,31 @@ else if (employees != null && employees.Count == 0)
         isLoading = true;
         hasError = false;
         employees = null;
+        bankingInfos.Clear();
+        experienceInfos.Clear();
+
 
         try
         {
             // Call the service method to get all employees
             employees = await EmployeeService.GetAllEmployees();
+            var allExperiences = await ExperienceService.GetAllExperience();
+            experienceInfos = allExperiences
+              .GroupBy(exp => exp.EmployeeID)
+              .ToDictionary(group => group.Key, group => group.ToList());
+            foreach (var emp in employees)
+            {
+                var bankingInfo = await BankingService.GetBankingInfo(emp.EmployeeID);
+                if (bankingInfo != null)
+                {
+                    bankingInfos[emp.EmployeeID] = bankingInfo;
+                }
+          
+            }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine($"Error loading employees: {ex.Message}");
             // If there's an error fetching the data, set hasError to true
             hasError = true;
         }
