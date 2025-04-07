@@ -11,7 +11,7 @@
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Add Employees", "/home/employees"),
-                    ("employeeDetailsData", "/employeeDetailsData/.*")  // You can match the pattern here
+                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*")  // You can match the pattern here
                 }
             },
             { "manager", new List<(string, string)>
@@ -21,7 +21,7 @@
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Add Employees", "/home/employees"),
-                    ("employeeDetailsData", "/employeeDetailsData/.*")  // You can match the pattern here
+                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*")  // You can match the pattern here
 
                 }
             },
@@ -29,7 +29,7 @@
                 {
                     ("Dashboard", "/home"),
                     ("Registration","/registration"),
-                    ("confirmationPage","/confirmation")
+                    ("HIDE_confirmationPage","/confirmation")
 
                 }
             }

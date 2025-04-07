@@ -11,7 +11,7 @@
 
     <!-- Employee ID -->
     <div class="form-group mb-4">
-        <label class="fw-bold">Employee ID</label>
+        <label class="fw-bold">Employee ID<span style="color: red;">*</span></label>
         <InputText class="form-control" @bind-Value="experience.EmployeeID" />
         <ValidationMessage For="@(() => experience.EmployeeID)" class="text-danger" />
     </div>
@@ -89,8 +89,6 @@
         </div>
     </div>
 </EditForm>
-
-
 @code {
     private Experience experience = new Experience();
     private List<Education> educationList = new List<Education>();
@@ -104,6 +102,7 @@
 
     [Parameter]
     public EventCallback OnBack { get; set; }
+
     [Parameter]
     public Experience InitialData { get; set; }
 
@@ -119,18 +118,15 @@
 
     private async Task SubmitForm()
     {
-        await JSRuntime.InvokeVoidAsync("console.log", JsonSerializer.Serialize(experience));
-        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
-        await Task.Delay(500);
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = workList;
 
-
+        var json = JsonSerializer.Serialize(experience);
+        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", json);
         Console.WriteLine("HandleValidSubmit called");
 
-        NavigationManager.NavigateTo($"/confirmation");
-
+        NavigationManager.NavigateTo("/confirmation");
     }
-
-   
 
     private void AddEducation()
     {
@@ -152,26 +148,32 @@
         workList.Remove(work);
     }
 
-
     private async Task LoadExperienceInfo()
     {
-        // Retrieve the experience details from local storage
         var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
 
         if (!string.IsNullOrEmpty(experienceJson))
         {
             experience = JsonSerializer.Deserialize<Experience>(experienceJson);
-            StateHasChanged(); // Force UI update if necessary
 
+            educationList = experience.EducationQualifications ?? new List<Education>();
+            workList = experience.WorkExperiences ?? new List<WorkExperience>();
+
+            StateHasChanged(); // update UI
+        }
+        else
+        {
+            AddEducation();
+            AddWork();
         }
     }
 
-
-
     private async Task GoBack()
     {
-        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = workList;
 
+        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
         await OnBack.InvokeAsync();
     }
 

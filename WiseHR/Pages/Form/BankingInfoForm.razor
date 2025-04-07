@@ -2,6 +2,7 @@
 @inject BankingService bankingService
 @inject IJSRuntime JSRuntime
 @using System.Text.Json;
+@using static WiseHR.Models.BankingInformation
 @inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
@@ -15,6 +16,7 @@
                                   Label="Employee ID"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Required="true"
                                   HelperText="Enter your employee ID" />
                     <ValidationMessage For="@(() => bankingInfo.EmployeeID)" />
                 </MudItem>
@@ -24,6 +26,7 @@
                     <MudTextField @bind-Value="bankingInfo.BankName"
                                   Label="Bank Name"
                                   Variant="Variant.Outlined"
+                                  Required="true"
                                   Margin="Margin.Dense" />
                     <ValidationMessage For="@(() => bankingInfo.BankName)" />
                 </MudItem>
@@ -33,6 +36,7 @@
                     <MudTextField @bind-Value="bankingInfo.Branch"
                                   Label="Branch"
                                   Variant="Variant.Outlined"
+                                  Required="true"
                                   Margin="Margin.Dense" />
                     <ValidationMessage For="@(() => bankingInfo.Branch)" />
                 </MudItem>
@@ -42,6 +46,7 @@
                     <MudTextField @bind-Value="bankingInfo.Name"
                                   Label="Account Holder Name"
                                   Variant="Variant.Outlined"
+                                  Required="true"
                                   Margin="Margin.Dense" />
                     <ValidationMessage For="@(() => bankingInfo.Name)" />
                 </MudItem>
@@ -51,6 +56,7 @@
                     <MudTextField @bind-Value="bankingInfo.AccountNumber"
                                   Label="Account Number"
                                   Variant="Variant.Outlined"
+                                  Required="true"
                                   Margin="Margin.Dense" />
                     <ValidationMessage For="@(() => bankingInfo.AccountNumber)" />
                 </MudItem>
@@ -60,6 +66,7 @@
                     <MudTextField @bind-Value="bankingInfo.IFSCode"
                                   Label="IFSC Code"
                                   Variant="Variant.Outlined"
+                                  Required="true"
                                   Margin="Margin.Dense" />
                     <ValidationMessage For="@(() => bankingInfo.IFSCode)" />
                 </MudItem>
@@ -69,6 +76,7 @@
                     <MudTextField @bind-Value="bankingInfo.Phone"
                                   Label="Mobile Number"
                                   Variant="Variant.Outlined"
+                                  Required="true"
                                   Margin="Margin.Dense" />
                     <ValidationMessage For="@(() => bankingInfo.Phone)" />
                 </MudItem>
@@ -78,6 +86,7 @@
                     <MudTextField @bind-Value="bankingInfo.PANNumber"
                                   Label="PAN Number"
                                   Variant="Variant.Outlined"
+                                  Required="true"
                                   Margin="Margin.Dense" />
                     <ValidationMessage For="@(() => bankingInfo.PANNumber)" />
                 </MudItem>
@@ -87,6 +96,7 @@
                     <MudTextField @bind-Value="bankingInfo.AadhaarNumber"
                                   Label="Aadhaar Number"
                                   Variant="Variant.Outlined"
+                                  Required="true"
                                   Margin="Margin.Dense" />
                     <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
                 </MudItem>
@@ -96,6 +106,7 @@
                     <MudTextField @bind-Value="bankingInfo.State"
                                   Label="Branch State"
                                   Variant="Variant.Outlined"
+                                  Required="true"
                                   Margin="Margin.Dense" />
                     <ValidationMessage For="@(() => bankingInfo.State)" />
                 </MudItem>
@@ -104,6 +115,7 @@
                 <MudItem xs="12" sm="6">
                     <MudSelect @bind-Value="bankingInfo.AccountType"
                                Label="Account Type"
+                               Required="true"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense">
                         <MudSelectItem Value="@("")">Select Account Type</MudSelectItem>
@@ -112,10 +124,12 @@
                     </MudSelect>
                     <ValidationMessage For="@(() => bankingInfo.AccountType)" />
                 </MudItem>
-
+            
+                @* date *@
                 <MudDatePicker @bind-Date="bankingInfo.CreatedAt"
                                Label="Created At"
                                Variant="Variant.Outlined"
+                               Required="true"
                                Margin="Margin.Dense"
                                Disabled="true" />
 
@@ -123,12 +137,14 @@
                                Label="Last Modified At"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
+                               Required="true"
                                Disabled="true" />
 
                 <!-- Buttons -->
                 <MudItem xs="12" Class="d-flex justify-end gap-2 mt-4">
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Default"
+
                                OnClick="GoBack">
                         Back
                     </MudButton>
@@ -158,6 +174,7 @@
 
     protected async override void OnInitialized()
     {
+
         await LoadBankingInfo();
         if (InitialData != null)
         {
@@ -174,25 +191,27 @@
 
     private async Task LoadBankingInfo()
     {
-        // Retrieve the banking info from local storage
+        // Retrieve the banking information from localStorage
         var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
 
         if (!string.IsNullOrEmpty(bankingInfoJson))
         {
-            bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
-            StateHasChanged(); // Force UI update if necessary
+            // Deserialize the retrieved JSON into a BankingInformation object
+            var deserialized = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
 
+            // Ensure file objects are initialized
+            bankingInfo = deserialized;
+
+            // Re-render the component
+            StateHasChanged();
         }
     }
-
-
     private async Task GoBack()
     {
         await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
 
         await OnBack.InvokeAsync();
     }
-
     public void Reset()
     {
         bankingInfo = new BankingInformation();
@@ -200,4 +219,6 @@
 
         Console.WriteLine("Employee details have been reset.");
     }
+    
 }
+    

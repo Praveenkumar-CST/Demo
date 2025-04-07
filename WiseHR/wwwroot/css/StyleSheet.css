@@ -84,23 +84,51 @@ button {
     border-radius: var(--border-radius-button);
     font-weight: 500;
     transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
 }
 
     button.primary {
-        background-color: var(--accent);
-        color: #fff;
+        background-color: var(--primary); /* Deep Navy */
+        color: var(--background); /* White */
     }
 
     button.secondary {
-        background-color: #fff;
-        border: 1px solid var(--border-color);
-        color: var(--primary);
+        background-color: var(--secondary); /* Light Gray */
+        border: 1px solid var(--border-color); /* Light Border */
+        color: var(--text-primary); /* Dark Slate */
+    }
+
+    button.accent {
+        background-color: var(--accent); /* Soft Blue */
+        color: var(--background); /* White */
     }
 
     button.danger {
-        background-color: var(--error);
-        color: #fff;
+        background-color: var(--error); /* Red */
+        color: var(--background); /* White */
     }
+
+    button.success {
+        background-color: var(--success); /* Green */
+        color: var(--background); /* White */
+    }
+
+    button.warning {
+        background-color: var(--warning); /* Amber */
+        color: var(--background); /* White */
+    }
+
+    /* Hover and Focus States */
+    button:hover {
+        opacity: 0.8;
+    }
+
+    button:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+    }
+
 
 /* Forms */
 input, select, textarea {
@@ -344,3 +372,108 @@ input, select, textarea {
     gap: 1rem;
     margin-top: 2rem;
 }
+
+.card-wrapper {
+    padding: 1.5rem;
+    background: var(--background);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+/* Inputs and Fields */
+.input-field {
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+    .input-field:focus {
+        border-color: var(--accent);
+        outline: none;
+    }
+
+.required {
+    color: var(--error);
+}
+
+/* Buttons */
+.btn {
+    padding: 0.8rem 1.2rem;
+    border-radius: 5px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    color: white;
+}
+
+.btn-reset {
+    background-color: var(--light-gray);
+    color: var(--primary);
+}
+
+.btn-danger {
+    background-color: var(--error);
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+/* Layout */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.col-6 {
+    flex: 0 0 48%;
+}
+
+.col-3 {
+    flex: 0 0 23%;
+}
+
+.col-2 {
+    flex: 0 0 15%;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mt-4 {
+    margin-top: 2rem;
+}
+
+/* Dynamic Field Removal */
+.d-flex {
+    display: flex;
+    align-items: center;
+}
+
+    .d-flex .btn-danger {
+        margin-left: auto;
+    }

@@ -14,22 +14,33 @@
         {
             @foreach (var item in accessibleMenuItems)
             {
-                <MudNavLink Class="mud-nav-link"
-                            Match="NavLinkMatch.All"
-                            Icon="@Icons.Material.Filled.Dashboard"
-                            Href="@item.Url"
-                            ActiveClass="mud-nav-link-active">
-                    @if (DrawerOpen)
-                    {
-                        <span>@item.Name</span>
-                    }
-                </MudNavLink>
+                if (!item.Name.StartsWith("HIDE_"))
+                {
+                    <MudNavLink Class="mud-nav-link"
+                                Match="NavLinkMatch.All"
+                                Icon="@Icons.Material.Filled.Dashboard"
+                                Href="@item.Url"
+                                ActiveClass="mud-nav-link-active">
+                        @if (DrawerOpen)
+                        {
+                            var displayName = item.Name.Replace("HIDE_", "");
+                            <span>@displayName</span>
+                        }
+
+                    </MudNavLink>
+                }
             }
+
         }
         else if (!string.IsNullOrEmpty(errorMessage))
         {
             <p>@errorMessage</p>
         }
+        else
+        {
+            <p>No menu items available.</p>
+        }
+
     </MudNavMenu>
 </MudDrawer>
 
@@ -85,7 +96,7 @@
         {
             accessibleMenuItems = new List<(string Name, string Url)>();
             errorMessage = $"No role assigned to the user. Error: {error ?? "Unknown"}";
-            NavigationManager.NavigateTo("/"); // Redirect to login if no role
+            NavigationManager.NavigateTo("/l"); // Redirect to login if no role
         }
 
         // Subscribe to location changes
@@ -97,7 +108,7 @@
         var currentUrl = NavigationManager.Uri.Replace(NavigationManager.BaseUri, "/").TrimEnd('/');
         Console.WriteLine($"Current URL: {currentUrl}");
         bool isAllowed = accessibleMenuItems.Any(item =>
-        Regex.IsMatch(currentUrl, $"^{item.Url}$", RegexOptions.IgnoreCase));
+        Regex.IsMatch(currentUrl, item.Url, RegexOptions.IgnoreCase));
 
         if (!isAllowed && currentUrl != "/")
         {

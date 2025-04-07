@@ -1,9 +1,13 @@
 ﻿namespace WiseHR.Services
 {
+    using Microsoft.AspNetCore.Components.Forms;
     using System.Net.Http;
+    using System.Net.Http.Headers;
     using System.Net.Http.Json;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using WiseHR.Models;
+    using static WiseHR.Models.BankingInformation;
 
     public class BankingService
     {
@@ -14,7 +18,8 @@
             _httpClient = httpClient;
         }
 
-        // Register Banking Info
+
+        //Register Banking Info
         public async Task<bool> RegisterBankingInfo(BankingInformation bankingInfo)
         {
             var response = await _httpClient.PostAsJsonAsync("BankingInformation/BankingInfoRegistry", bankingInfo);
@@ -34,8 +39,35 @@
         // Get Banking Info by Employee ID
         public async Task<BankingInformation?> GetBankingInfo(string employeeId)
         {
-            return await _httpClient.GetFromJsonAsync<BankingInformation>($"BankingInformation/GetBankingInfo/{employeeId}");
+            var response = await _httpClient.GetAsync($"BankingInformation/GetBankingInfo/{employeeId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Failed to fetch banking info: {response.StatusCode}");
+                return null;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                Console.WriteLine("Received empty response for banking info.");
+                return null;
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<BankingInformation>(content, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Deserialization failed: " + ex.Message);
+                return null;
+            }
         }
+
 
         // Delete Banking Info
         public async Task<bool> DeleteBankingInfo(string employeeId)
@@ -50,5 +82,11 @@
             var response = await _httpClient.PostAsJsonAsync("BankingInformation/UpdateBankingInfo", bankingInfo);
             return response.IsSuccessStatusCode;
         }
+        // Check if Banking Info Exists
+       
+      
     }
 }
+
+
+
