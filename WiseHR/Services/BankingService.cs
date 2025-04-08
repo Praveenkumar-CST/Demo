@@ -17,9 +17,6 @@
         {
             _httpClient = httpClient;
         }
-
-
-        //Register Banking Info
         public async Task<bool> RegisterBankingInfo(BankingInformation bankingInfo)
         {
             var response = await _httpClient.PostAsJsonAsync("BankingInformation/BankingInfoRegistry", bankingInfo);
@@ -39,31 +36,13 @@
         // Get Banking Info by Employee ID
         public async Task<BankingInformation?> GetBankingInfo(string employeeId)
         {
-            var response = await _httpClient.GetAsync($"BankingInformation/GetBankingInfo/{employeeId}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"Failed to fetch banking info: {response.StatusCode}");
-                return null;
-            }
-
-            var content = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                Console.WriteLine("Received empty response for banking info.");
-                return null;
-            }
-
             try
             {
-                return JsonSerializer.Deserialize<BankingInformation>(content, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                return await _httpClient.GetFromJsonAsync<BankingInformation>($"BankingInformation/GetBankingInfo/{employeeId}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Deserialization failed: " + ex.Message);
+                Console.WriteLine($"Error fetching banking info: {ex.Message}");
                 return null;
             }
         }
@@ -82,9 +61,31 @@
             var response = await _httpClient.PostAsJsonAsync("BankingInformation/UpdateBankingInfo", bankingInfo);
             return response.IsSuccessStatusCode;
         }
-        // Check if Banking Info Exists
-       
-      
+        public async Task<bool> UploadDocumentAsync(IBrowserFile file, string employeeId, string documentType)
+        {
+            try
+            {
+                var content = new MultipartFormDataContent();
+
+                var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10_000_000)); // 10MB max
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+
+                content.Add(fileContent, "file", file.Name);
+                content.Add(new StringContent(employeeId), "employeeId");
+                content.Add(new StringContent(documentType), "documentType");
+
+                var response = await _httpClient.PostAsync("BankingInformation/UploadDocument", content);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"File upload failed: {ex.Message}");
+                return false;
+            }
+        }
+
+
     }
 }
 

@@ -89,6 +89,7 @@
         </div>
     </div>
 </EditForm>
+
 @code {
     private Experience experience = new Experience();
     private List<Education> educationList = new List<Education>();
@@ -106,7 +107,7 @@
     [Parameter]
     public Experience InitialData { get; set; }
 
-    protected async override void OnInitialized()
+    protected async override Task OnInitializedAsync()
     {
         await LoadExperienceInfo();
 
@@ -121,11 +122,15 @@
         experience.EducationQualifications = educationList;
         experience.WorkExperiences = workList;
 
-        var json = JsonSerializer.Serialize(experience);
-        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", json);
-        Console.WriteLine("HandleValidSubmit called");
+        Console.WriteLine($"Education List: {JsonSerializer.Serialize(educationList)}");
+        Console.WriteLine($"Work Experience List: {JsonSerializer.Serialize(workList)}");
 
-        NavigationManager.NavigateTo("/confirmation");
+        // Serialize the Experience object and save it to localStorage
+        var json = JsonSerializer.Serialize(experience);  // Serialize the entire Experience object, including the lists
+        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", json); // Save to localStorage
+        Console.WriteLine("Form submitted and data saved to localStorage");
+
+        NavigationManager.NavigateTo("/confirmation");  // Navigate to a confirmation page or another step
     }
 
     private void AddEducation()
@@ -156,15 +161,15 @@
         {
             experience = JsonSerializer.Deserialize<Experience>(experienceJson);
 
-            educationList = experience.EducationQualifications ?? new List<Education>();
-            workList = experience.WorkExperiences ?? new List<WorkExperience>();
+            educationList = experience.EducationQualifications ?? new List<Education>();  // Deserialize Education list
+            workList = experience.WorkExperiences ?? new List<WorkExperience>();  // Deserialize Work Experience list
 
-            StateHasChanged(); // update UI
+            StateHasChanged();  // Ensure UI updates with the deserialized data
         }
         else
         {
-            AddEducation();
-            AddWork();
+            AddEducation();  // If no data found, add a default education entry
+            AddWork();  // If no data found, add a default work entry
         }
     }
 
@@ -173,8 +178,9 @@
         experience.EducationQualifications = educationList;
         experience.WorkExperiences = workList;
 
+        // Store updated experience data in localStorage
         await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
-        await OnBack.InvokeAsync();
+        await OnBack.InvokeAsync();  // Trigger the OnBack callback
     }
 
     public void Reset()
@@ -184,5 +190,7 @@
         workList = new List<WorkExperience>();
         AddEducation();
         AddWork();
+        JSRuntime.InvokeVoidAsync("localStorageHelper.removeItem", "experienceDetails");
+
     }
 }

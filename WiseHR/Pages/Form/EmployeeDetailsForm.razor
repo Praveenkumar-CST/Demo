@@ -3,501 +3,399 @@
 @inject EmployeeService employeeService
 @inject IJSRuntime JSRuntime
 @using System.Text.Json;
+<div class="mt-4">
+    <h3 class="mb-4 text-primary">Add Details</h3>
 
-
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">Employee Information Form</h3>
-        </div>
-        <div class="card-body">
+    @* <MudCard Elevation="2"> *@
+    @*     <MudCardHeader Class="bg-primary text-white"> *@
+    @*         <CardHeaderContent> *@
+    @*             <MudText Typo="Typo.h6">Employee Information Form</MudText> *@
+    @*         </CardHeaderContent> *@
+    @*     </MudCardHeader> *@
+        <MudCardContent Style="max-height: 900px; overflow-y: auto;">
             <EditForm Model="@employeeDetails" OnValidSubmit="GoToNextPage">
                 <DataAnnotationsValidator />
+                <ValidationSummary />
 
                 <!-- Personal Information -->
-                <h5>Personal Information</h5>
+                <MudText Typo="Typo.h6" Class="mb-4">Personal Information</MudText>
+                <MudGrid>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="First Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FirstName" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.FirstName)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Middle Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MiddleName">
+                            <ValidationMessage For="@(() => employeeDetails.MiddleName)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Last Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.LastName" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.LastName)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Father's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FatherName" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.FatherName)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Mother's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MotherName" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.MotherName)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudDatePicker Label="Date of Birth" Variant="Variant.Outlined" @bind-Date="employeeDetails.DateOfBirth" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfBirth)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" @bind-Value="employeeDetails.Gender" Required="true">
+                            <MudSelectItem Value="@("")">Select Gender</MudSelectItem>
+                            <MudSelectItem Value="@("Male")">Male</MudSelectItem>
+                            <MudSelectItem Value="@("Female")">Female</MudSelectItem>
+                            <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                       </MudGrid>
+                       @* break *@
+                    <MudGrid>
 
-                <div class="form-group">
-                    <label>Employee ID<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmployeeID" />
-                </div>
-
-                <div class="form-group">
-                    <label>First Name<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.FirstName" />        
-                    <ValidationMessage For="@(() => employeeDetails.FirstName)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Middle Name</label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.MiddleName" />
-                    <ValidationMessage For="@(() => employeeDetails.MiddleName)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Last Name<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.LastName" />
-                    <ValidationMessage For="@(() => employeeDetails.LastName)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Father's Name<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.FatherName" />
-                    <ValidationMessage For="@(() => employeeDetails.FatherName)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        Mother's Name<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.MotherName" />
-                    <ValidationMessage For="@(() => employeeDetails.MotherName)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Date of Birth<span style="color: red;">*</span></label>
-                    <InputDate class="form-control" @bind-Value="employeeDetails.DateOfBirth" />
-                    <ValidationMessage For="@(() => employeeDetails.DateOfBirth)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Gender<span style="color: red;">*</span></label>
-                    <InputSelect class="form-control" @bind-Value="employeeDetails.Gender">
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => employeeDetails.Gender)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Physically Challenged<span style="color: red;">*</span></label>
-                    <InputSelect class="form-control" @bind-Value="employeeDetails.PhysicallyChallenged">
-                        <option value="">Select Status</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => employeeDetails.PhysicallyChallenged)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Allergies</label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.Allergies" />
-                    <ValidationMessage For="@(() => employeeDetails.Allergies)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Medications</label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.Medications" />
-                    <ValidationMessage For="@(() => employeeDetails.Medications)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Marital Status<span style="color: red;">*</span></label>
-                    <select class="form-control" @bind="employeeDetails.MaritalStatus">
-                        <option value="">Select Marital Status</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                        <option value="Divorced">Divorced</option>
-                        <option value="Widowed">Widowed</option>
-                    </select>
-                    <ValidationMessage For="@(() => employeeDetails.MaritalStatus)" />
-                </div>
-
-                @if (employeeDetails.MaritalStatus != "Single")
-                {
-                    <div class="form-group">
-                        <label>No of Sons<span style="color: red;">*</span></label>
-                        <InputText class="form-control" @bind-Value="employeeDetails.Sons" />
-                        <ValidationMessage For="@(() => employeeDetails.Sons)" />
-                    </div>
-
-                    <div class="form-group">
-                        <label>No of Daughters<span style="color: red;">*</span></label>
-                        <InputText class="form-control" @bind-Value="employeeDetails.Daughters" />
-                        <ValidationMessage For="@(() => employeeDetails.Daughters)" />
-                    </div>
-                }
-
-                <div class="form-group">
-                    <label>Blood Group<span style="color: red;">*</span></label>
-                    <InputSelect class="form-control" @bind-Value="employeeDetails.BloodGroup">
-                        <option value="">-- Select Blood Group --</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => employeeDetails.BloodGroup)" />
-                </div>
-
-                <div class="form-group">
-                    <label>Nationality<span style="color: red;">*</span></label>
-                    <InputSelect class="form-control" @bind-Value="employeeDetails.Nationality">
-                        <option value="">Select Nationality</option>
-                        <option value="Indian">Indian</option>
-                        <option value="American">American</option>
-                        <option value="Other">Other</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => employeeDetails.Nationality)" />
-                </div>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudSelect T="string" Label="Physically Challenged" Variant="Variant.Outlined" @bind-Value="employeeDetails.PhysicallyChallenged" Required="true">
+                            <MudSelectItem Value="@("")">Select Status</MudSelectItem>
+                            <MudSelectItem Value="@("Yes")">Yes</MudSelectItem>
+                            <MudSelectItem Value="@("No")">No</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Allergies" Variant="Variant.Outlined" @bind-Value="employeeDetails.Allergies">
+                            <ValidationMessage For="@(() => employeeDetails.Allergies)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Medications" Variant="Variant.Outlined" @bind-Value="employeeDetails.Medications">
+                            <ValidationMessage For="@(() => employeeDetails.Medications)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudSelect T="string" Label="Marital Status" Variant="Variant.Outlined" @bind-Value="employeeDetails.MaritalStatus" Required="true">
+                            <MudSelectItem Value="@("")">Select Marital Status</MudSelectItem>
+                            <MudSelectItem Value="@("Single")">Single</MudSelectItem>
+                            <MudSelectItem Value="@("Married")">Married</MudSelectItem>
+                            <MudSelectItem Value="@("Divorced")">Divorced</MudSelectItem>
+                            <MudSelectItem Value="@("Widowed")">Widowed</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    @if (employeeDetails.MaritalStatus != "Single")
+                    {
+                    <MudItem xs="12" sm="4" md="3">
+                            <MudTextField Label="No of Sons" Variant="Variant.Outlined" @bind-Value="employeeDetails.Sons" >
+                                <ValidationMessage For="@(() => employeeDetails.Sons)" />
+                            </MudTextField>
+                        </MudItem>
+                        <MudItem xs="12" sm="4" md="3">
+                            <MudTextField Label="No of Daughters" Variant="Variant.Outlined" @bind-Value="employeeDetails.Daughters" >
+                                <ValidationMessage For="@(() => employeeDetails.Daughters)" />
+                            </MudTextField>
+                        </MudItem>
+                    }
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" @bind-Value="employeeDetails.BloodGroup" Required="true">
+                            <MudSelectItem Value="@("")">-- Select Blood Group --</MudSelectItem>
+                            <MudSelectItem Value="@("A+")">A+</MudSelectItem>
+                            <MudSelectItem Value="@("A-")">A-</MudSelectItem>
+                            <MudSelectItem Value="@("B+")">B+</MudSelectItem>
+                            <MudSelectItem Value="@("B-")">B-</MudSelectItem>
+                            <MudSelectItem Value="@("O+")">O+</MudSelectItem>
+                            <MudSelectItem Value="@("O-")">O-</MudSelectItem>
+                            <MudSelectItem Value="@("AB+")">AB+</MudSelectItem>
+                            <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined" @bind-Value="employeeDetails.Nationality" Required="true">
+                            <MudSelectItem Value="@("")">Select Nationality</MudSelectItem>
+                            <MudSelectItem Value="@("Indian")">Indian</MudSelectItem>
+                            <MudSelectItem Value="@("American")">American</MudSelectItem>
+                            <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
 
                 <!-- Work Information -->
-                <h5>Work Information</h5>
+                <MudText Typo="Typo.h6" Class="mb-4 mt-6">Work Information</MudText>
+                <MudGrid>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudSelect T="string" Label="Type of Employment" Variant="Variant.Outlined" @bind-Value="employeeDetails.TypeOfEmployment">
+                            <MudSelectItem Value="@("")">-- Select Employment Type --</MudSelectItem>
+                            <MudSelectItem Value="@("Full-Time")">Full-Time</MudSelectItem>
+                            <MudSelectItem Value="@("Part-Time")">Part-Time</MudSelectItem>
+                            <MudSelectItem Value="@("Contract")">Contract</MudSelectItem>
+                            <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudSelect T="string" Label="Level" Variant="Variant.Outlined" @bind-Value="employeeDetails.Level">
+                            <MudSelectItem Value="@("")">-- Select Level --</MudSelectItem>
+                            <MudSelectItem Value="@("Junior")">Junior</MudSelectItem>
+                            <MudSelectItem Value="@("Mid")">Mid</MudSelectItem>
+                            <MudSelectItem Value="@("Senior")">Senior</MudSelectItem>
+                            <MudSelectItem Value="@("Lead")">Lead</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Designation" Variant="Variant.Outlined" @bind-Value="employeeDetails.Designation">
+                            <ValidationMessage For="@(() => employeeDetails.Designation)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Joining Location" Variant="Variant.Outlined" @bind-Value="employeeDetails.JoiningLocation" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.JoiningLocation)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudDatePicker Label="Date of Joining" Variant="Variant.Outlined" @bind-Date="employeeDetails.DateOfJoining" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfJoining)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudDatePicker Label="Date of Relieving" Variant="Variant.Outlined" @bind-Date="employeeDetails.DateOfRelieving" Required="true" MinDate="@employeeDetails.DateOfJoining" For="@(() => employeeDetails.DateOfRelieving)" />
+                    </MudItem>
+                </MudGrid>
+                @* break *@
+                <MudGrid>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Passport Full Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.PassportFullName" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.PassportFullName)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Passport No" Variant="Variant.Outlined" @bind-Value="employeeDetails.PassportNo" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.PassportNo)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Passport Nationality" Variant="Variant.Outlined" @bind-Value="employeeDetails.PassportNationality" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.PassportNationality)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudDatePicker Label="Date of Issue" Variant="Variant.Outlined" @bind-Date="employeeDetails.PassportIssueDate" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.PassportIssueDate)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudDatePicker Label="Date of Expiry" Variant="Variant.Outlined" @bind-Date="employeeDetails.PassportExpiryDate" Required="true" MinDate="@employeeDetails.PassportIssueDate" For="@(() => employeeDetails.PassportExpiryDate)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Passport Place of Issue" Variant="Variant.Outlined" @bind-Value="employeeDetails.PassportPlaceOfIssue" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.PassportPlaceOfIssue)" />
+                        </MudTextField>
+                    </MudItem>
+                   </MudGrid>
+                       @* break *@
 
-             
+                <!-- Current Address -->
+                <MudText Typo="Typo.h6" Class="mb-4 mt-6">Current Address</MudText>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentAddress" Required="true" Lines="3">
+                            <ValidationMessage For="@(() => employeeDetails.CurrentAddress)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentCity" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.CurrentCity)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentState" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.CurrentState)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentZip" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.CurrentZip)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentMobile" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.CurrentMobile)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Email" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentEmail" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.CurrentEmail)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudCheckBox T="bool" @bind-Checked="IsSameAsCurrentAddress" Label="Same as Current Address" Color="Color.Primary" ValueChanged="CopyAddress" />
+                    </MudItem>
+                </MudGrid>
 
-                <div class="form-group">
-                    <label>Type of Employment</label>
-                    <InputSelect class="form-control" @bind-Value="employeeDetails.TypeOfEmployment">
-                        <option value="">-- Select Employment Type --</option>
-                        <option value="Full-Time">Full-Time</option>
-                        <option value="Part-Time">Part-Time</option>
-                        <option value="Contract">Contract</option>
-                        <option value="Internship">Internship</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => employeeDetails.TypeOfEmployment)" />
-                </div>
-
-                <div class="form-group">
-                    <label>Level</label>
-                    <InputSelect class="form-control" @bind-Value="employeeDetails.Level">
-                        <option value="">-- Select Level --</option>
-                        <option value="Junior">Junior</option>
-                        <option value="Mid">Mid</option>
-                        <option value="Senior">Senior</option>
-                        <option value="Lead">Lead</option>
-                    </InputSelect>
-                    <ValidationMessage For="@(() => employeeDetails.Level)" />
-                </div>
-                <div class="form-group">
-                    <label>Designation</label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.Designation" />
-                    <ValidationMessage For="@(() => employeeDetails.Designation)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Joining Location<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.JoiningLocation" />
-                    <ValidationMessage For="@(() => employeeDetails.JoiningLocation)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Date of Joining<span style="color: red;">*</span></label>
-                    <InputDate class="form-control" @bind-Value="employeeDetails.DateOfJoining" />
-                    <ValidationMessage For="@(() => employeeDetails.DateOfJoining)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Date of Relieving<span style="color: red;">*</span></label>
-                    <InputDate class="form-control" @bind-Value="employeeDetails.DateOfRelieving" />
-                    <ValidationMessage For="@(() => employeeDetails.DateOfRelieving)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Passport Full Name<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.PassportFullName" />
-                    <ValidationMessage For="@(() => employeeDetails.PassportFullName)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Passport No<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.PassportNo" />
-                    <ValidationMessage For="@(() => employeeDetails.PassportNo)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Passport Nationality<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.PassportNationality" />
-                    <ValidationMessage For="@(() => employeeDetails.PassportNationality)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Date of Issue <span style="color: red;">*</span></label>
-                    <InputDate class="form-control" @bind-Value="employeeDetails.PassportIssueDate" />
-                    <ValidationMessage For="@(() => employeeDetails.PassportIssueDate)" />
-                </div>
-
-                <div class="form-group">
-                    <label>Date of Expiry <span style="color: red;">*</span></label>
-                    <InputDate class="form-control" @bind-Value="employeeDetails.PassportExpiryDate" />
-                    <ValidationMessage For="@(() => employeeDetails.PassportExpiryDate)" />
-                </div>
-
-                <div class="form-group">
-                    <label>Passport Place of Issue<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.PassportPlaceOfIssue" />
-                    <ValidationMessage For="@(() => employeeDetails.PassportPlaceOfIssue)" />
-
-                </div>
-                
-                <!-- Address Information -->
-                <h5>Current Address</h5>
-
-                <div class="form-group">
-                    <label>Address<span style="color: red;">*</span></label>
-                    <InputTextArea class="form-control" @bind-Value="employeeDetails.CurrentAddress" />
-                    <ValidationMessage For="@(() => employeeDetails.CurrentAddress)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>City<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.CurrentCity" />
-                    <ValidationMessage For="@(() => employeeDetails.CurrentCity)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>State<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.CurrentState" />
-                    <ValidationMessage For="@(() => employeeDetails.CurrentState)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Zip/Pin Code<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.CurrentZip" />
-                    <ValidationMessage For="@(() => employeeDetails.CurrentZip)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Mobile No<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.CurrentMobile" />
-                    <ValidationMessage For="@(() => employeeDetails.CurrentMobile)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Email<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.CurrentEmail" />
-                    <ValidationMessage For="@(() => employeeDetails.CurrentEmail)" />
-
-                </div>
-                <div class="form-group form-check">
-                    <InputCheckbox class="form-check-input" @bind-Value="IsSameAsCurrentAddress" @onchange="CopyAddress" />
-                    <label class="form-check-label">Same as Current Address</label>
-                </div>
-
-
-                <h5>Permanent Address</h5>
-
-                <div class="form-group">
-                    <label>Address<span style="color: red;">*</span></label>
-                    <InputTextArea class="form-control" @bind-Value="employeeDetails.PermanentAddress" />
-                    <ValidationMessage For="@(() => employeeDetails.PermanentAddress)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>City<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.PermanentCity" />
-                    <ValidationMessage For="@(() => employeeDetails.PermanentCity)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>State<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.PermanentState" />
-                    <ValidationMessage For="@(() => employeeDetails.PermanentState)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Zip/Pin Code<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.PermanentZip" />
-                    <ValidationMessage For="@(() => employeeDetails.PermanentZip)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Mobile No<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.PermanentMobile" />
-                    <ValidationMessage For="@(() => employeeDetails.PermanentMobile)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Email<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.PermanentEmail" />
-                    <ValidationMessage For="@(() => employeeDetails.PermanentEmail)" />
-
-                </div>
+                <!-- Permanent Address -->
+                <MudText Typo="Typo.h6" Class="mb-4 mt-6">Permanent Address</MudText>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentAddress" Required="true" Lines="3">
+                            <ValidationMessage For="@(() => employeeDetails.PermanentAddress)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentCity" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.PermanentCity)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentState" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.PermanentState)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentZip" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.PermanentZip)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentMobile" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.PermanentMobile)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Email" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentEmail" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.PermanentEmail)" />
+                        </MudTextField>
+                    </MudItem>
+                </MudGrid>
 
                 <!-- Emergency Contact Information -->
-                <h5>Emergency Contact Information</h5>
-
-                <div class="form-group">
-                    <label>Emergency Contact 1 Name<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1Name" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Name)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Relationship<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1Relationship" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" />
-
-                </div>
-
-               
-                <div class="form-group">
-                    <label>Emergency Contact 1 Address<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1Address" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Address)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Emergency Contact 1 City<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1City" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1City)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Emergency Contact 1 State<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1State" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1ZipCode)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Emergency Contact 1 Zip/Pin Code<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1ZipCode" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Mobile No<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact1Mobile" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Mobile)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Emergency Contact 2 Name<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2Name" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Name)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Relationship<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2Relationship" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" />
-
-                </div>
-
-               
-                <div class="form-group">
-                    <label>Emergency Contact 2 Address<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2Address" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Emergency Contact 2 City<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2City" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Emergency Contact 2 State</label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2State" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2State)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Emergency Contact 2 Zip/Pin Code<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2ZipCode" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2ZipCode)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Mobile No<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.EmergencyContact2Mobile" />
-                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" />
-
-                </div>
+                <MudText Typo="Typo.h6" Class="mb-4 mt-6">Emergency Contact Information</MudText>
+                <MudGrid>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Emergency Contact 1 Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1Name" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Name)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Relationship" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1Relationship" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1Address" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Address)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1City" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1City)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1State" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1State)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1ZipCode" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1ZipCode)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1Mobile" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Mobile)" />
+                        </MudTextField>
+                    </MudItem>
+                    </MudGrid>
+                    @* break *@
+                    <MudGrid>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Emergency Contact 2 Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2Name" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Name)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Relationship" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2Relationship" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Relationship)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2Address" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2City" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2City)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2State">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2State)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2ZipCode" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2ZipCode)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2Mobile" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" />
+                        </MudTextField>
+                    </MudItem>
+                </MudGrid>
 
                 <!-- Nominee Information -->
-                <h5>Nominee Information</h5>
+                <MudText Typo="Typo.h6" Class="mb-4 mt-6">Nominee Information</MudText>
+                <MudGrid>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Nominee Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeName" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.NomineeName)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Relationship" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeRelationship" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.NomineeRelationship)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeAddress" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.NomineeAddress)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeCity" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.NomineeCity)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeState" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.NomineeState)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeZipCode" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.NomineeZipCode)" />
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeMobile" Required="true">
+                            <ValidationMessage For="@(() => employeeDetails.NomineeMobile)" />
+                        </MudTextField>
+                    </MudItem>
+                </MudGrid>
 
-                <div class="form-group">
-                    <label>Nominee Name<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeName" />
-                    <ValidationMessage For="@(() => employeeDetails.NomineeName)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Relationship<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeRelationship" />
-                    <ValidationMessage For="@(() => employeeDetails.NomineeRelationship)" />
-
-                </div>
-
-               
-                <div class="form-group">
-                    <label>Nominee Address<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeAddress" />
-                    <ValidationMessage For="@(() => employeeDetails.NomineeAddress)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Nominee City<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeCity" />
-                    <ValidationMessage For="@(() => employeeDetails.NomineeCity)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Nominee State<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeState" />
-                    <ValidationMessage For="@(() => employeeDetails.NomineeState)" />
-
-                </div>
-
-                <div class="form-group">
-                    <label>Nominee Zip/Pin Code<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeZipCode" />
-                    <ValidationMessage For="@(() => employeeDetails.NomineeZipCode)" />
-
-                </div>
-                <div class="form-group">
-                    <label>Mobile No<span style="color: red;">*</span></label>
-                    <InputText class="form-control" @bind-Value="employeeDetails.NomineeMobile" />
-                    <ValidationMessage For="@(() => employeeDetails.NomineeMobile)" />
-
-                </div>
-                <div class="d-flex justify-content-between mt-3">
-                    <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
-                    <button type="submit" class="btn btn-primary" >Next</button>
-                </div>
+                <!-- Buttons -->
+                    <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Reset">Reset</MudButton>                       
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
+                            Next
+                        </MudButton>
+                    </MudItem>
             </EditForm>
-        </div>
-    </div>
+        </MudCardContent>
 </div>
+
 
 @code {
     [Parameter]
@@ -515,11 +413,11 @@
             employeeDetails = InitialData;
         }
     }
-    public bool IsSameAsCurrentAddress { get; set; } = false;
-    private void CopyAddress(ChangeEventArgs e)
-    {
-        IsSameAsCurrentAddress = (bool)e.Value; // Update the boolean based on checkbox state
+    private bool IsSameAsCurrentAddress { get; set; }
 
+    private void CopyAddress(bool value)
+    {
+        IsSameAsCurrentAddress = value;
         if (IsSameAsCurrentAddress)
         {
             employeeDetails.PermanentAddress = employeeDetails.CurrentAddress;
@@ -529,18 +427,8 @@
             employeeDetails.PermanentMobile = employeeDetails.CurrentMobile;
             employeeDetails.PermanentEmail = employeeDetails.CurrentEmail;
         }
-        else
-        {
-            employeeDetails.PermanentAddress = string.Empty;
-            employeeDetails.PermanentCity = string.Empty;
-            employeeDetails.PermanentState = string.Empty;
-            employeeDetails.PermanentZip = string.Empty;
-            employeeDetails.PermanentMobile = string.Empty;
-            employeeDetails.PermanentEmail = string.Empty;
-        }
-
-        StateHasChanged(); // Refresh the UI
     }
+
 
     // Assuming you have a list to store all employees (this could be a local list, or you might pull from a service)
     private List<EmployeeDetails> allEmployees = new List<EmployeeDetails>();

@@ -111,15 +111,18 @@ else if (employees != null && employees.Count > 0)
                     <td>@emp.MaritalStatus</td>
                     <td>@emp.BloodGroup</td>
                     <td>@emp.Nationality</td>
-                    <td>@emp.DateOfBirth.ToString("yyyy-MM-dd")</td>
+                    <td>@emp.DateOfBirth.HasValue ? emp.DateOfBirth.Value.ToString("yyyy-MM-dd")</td>
                     <td>@emp.Sons</td>
                     <td>@emp.Daughters</td>
                     <td>@emp.TypeOfEmployment</td>
                     <td>@emp.Level</td>
                     <td>@emp.Designation</td>
                     <td>@emp.JoiningLocation</td>
-                    <td>@emp.DateOfJoining.ToString("yyyy-MM-dd")</td>
-                    <td>@emp.DateOfRelieving.ToString("yyyy-MM-dd")</td>
+                
+                    <td>@(emp.DateOfJoining.HasValue ? emp.DateOfJoining.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
+               
+                    <td>@(emp.DateOfRelieving.HasValue ? emp.DateOfRelieving.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
+             
                     <td>@emp.Allergies</td>
                     <td>@emp.Medications</td>
                     <td>@emp.PhysicallyChallenged</td>
@@ -138,8 +141,9 @@ else if (employees != null && employees.Count > 0)
                     <td>@emp.PassportFullName</td>
                     <td>@emp.PassportNo</td>
                     <td>@emp.PassportNationality</td>
-                    <td>@emp.PassportIssueDate.ToString("yyyy-MM-dd")</td>
-                    <td>@emp.PassportExpiryDate.ToString("yyyy-MM-dd")</td>
+                    <td>@(emp.PassportIssueDate.HasValue ? emp.PassportIssueDate.Value.ToShortDateString() : "Not Set")</td>
+               
+                    <td>@(emp.PassportExpiryDate.HasValue ? emp.PassportExpiryDate.Value.ToShortDateString() : "Not Set")</td>
                     <td>@emp.PassportPlaceOfIssue</td>
                     <td>@emp.EmergencyContact1Name</td>
                     <td>@emp.EmergencyContact1Relationship</td>

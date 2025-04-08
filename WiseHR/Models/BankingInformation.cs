@@ -52,8 +52,20 @@ namespace WiseHR.Models
 
         [Required]
         public DateTime? LastModifiedAt { get; set; } = DateTime.UtcNow;
-        
 
+        public string AadhaarFileName { get; set; }
+        public string? AadhaarBase64Content { get; set; }
+        public string? AadhaarContentType { get; set; }
+
+        // PAN File Properties
+        public string PanFileName { get; set; }
+        public string? PanBase64Content { get; set; }
+        public string? PanContentType { get; set; }
+
+        // Passbook File Properties
+        public string PassbookFileName { get; set; }
+        public string? PassbookBase64Content { get; set; }
+        public string? PassbookContentType { get; set; }
     }
 }
 

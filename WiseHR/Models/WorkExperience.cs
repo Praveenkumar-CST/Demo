@@ -10,7 +10,7 @@ namespace WiseHRServer.Models
     {
         public string Employer { get; set; }
         public string Location { get; set; }
-        public DateTime DateOfJoining { get; set; }
+        public DateTime? DateOfJoining { get; set; }
         public DateTime? DateOfLeaving { get; set; }
         public string Position { get; set; }
     }

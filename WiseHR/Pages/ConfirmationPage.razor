@@ -49,16 +49,16 @@
                 </tr>
                 <tr>
                     <td>Date of Birth</td>
-                    <td>@employeeDetails.DateOfBirth.ToString("yyyy-MM-dd")</td>
-                </tr>
-                <tr>
-                    <td>Date of Joining</td>
-                    <td>@employeeDetails.DateOfJoining.ToString("yyyy-MM-dd")</td>
-                </tr>
-                <tr>
-                    <td>Date of Relieving</td>
-                    <td>@employeeDetails.DateOfRelieving.ToString("yyyy-MM-dd")</td>
-                </tr>
+                <td>@(employeeDetails.DateOfBirth.HasValue ? employeeDetails.DateOfBirth.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
+            </tr>
+            <tr>
+                <td>Date of Joining</td>
+                <td>@(employeeDetails.DateOfJoining.HasValue ? employeeDetails.DateOfJoining.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
+            </tr>
+            <tr>
+                <td>Date of Relieving</td>
+                <td>@(employeeDetails.DateOfRelieving.HasValue ? employeeDetails.DateOfRelieving.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
+            </tr>
                 <tr>
                     <td>Type of Employment</td>
                     <td>@employeeDetails.TypeOfEmployment</td>
@@ -103,10 +103,7 @@
                     <td>Physically Challenged</td>
                     <td>@employeeDetails.PhysicallyChallenged</td>
                 </tr>
-                <tr>
-                    <td>Number of Children</td>
-                    <td>@employeeDetails.NoOfChildren</td>
-                </tr>
+       
                 <tr>
                     <td>Sons</td>
                     <td>@employeeDetails.Sons</td>
@@ -177,14 +174,15 @@
                     <td>Passport Nationality</td>
                     <td>@employeeDetails.PassportNationality</td>
                 </tr>
-                <tr>
-                    <td>Passport Issue Date</td>
-                    <td>@employeeDetails.PassportIssueDate.ToString("yyyy-MM-dd")</td>
-                </tr>
-                <tr>
-                    <td>Passport Expiry Date</td>
-                    <td>@employeeDetails.PassportExpiryDate.ToString("yyyy-MM-dd")</td>
-                </tr>
+            <tr>
+                <td>Passport Issue Date</td>
+                <td>@(employeeDetails.PassportIssueDate.HasValue ? employeeDetails.PassportIssueDate.Value.ToString("yyyy-MM-dd") : "Not set")</td>
+            </tr>
+            <tr>
+                <td>Passport Expiry Date</td>
+                <td>@(employeeDetails.PassportExpiryDate.HasValue ? employeeDetails.PassportExpiryDate.Value.ToString("yyyy-MM-dd") : "Not set")</td>
+            </tr>
+
                 <tr>
                     <td>Passport Place of Issue</td>
                     <td>@employeeDetails.PassportPlaceOfIssue</td>
@@ -333,6 +331,18 @@
                 <td>@bankingInfo.AccountType</td>
             </tr>
             <tr>
+                <td>PAN File</td>
+                <td>@bankingInfo.PanFileName</td>
+            </tr>
+            <tr>
+                <td>Aadhaar File</td>
+                <td>@bankingInfo.AadhaarFileName</td>
+            </tr>
+            <tr>
+                <td>Passbook File</td>
+                <td>@bankingInfo.PassbookFileName</td>
+            </tr>
+            <tr>
                 <td>Created At</td>
                 <td>@bankingInfo.CreatedAt</td>
             </tr>
@@ -386,7 +396,7 @@
                 <tr>
                     <td>@work.Employer</td>
                     <td>@work.Location</td>
-                    <td>@work.DateOfJoining.ToShortDateString()</td>
+                    <td>@work.DateOfJoining?.ToShortDateString()</td>
                     <td>@(work.DateOfLeaving.HasValue ? work.DateOfLeaving.Value.ToShortDateString() : "Present")</td>
                     <td>@work.Position</td>
                 </tr>
@@ -462,6 +472,10 @@
             bool isEmployeeSaved = await EmployeeService.RegisterEmployee(employeeDetails);
             Console.WriteLine(isEmployeeSaved ? "Employee saved." : "Error saving employee.");
         }
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = workList;
+        Console.WriteLine($"Education: {JsonSerializer.Serialize(experience.EducationQualifications)}");
+        Console.WriteLine($"Work Experience: {JsonSerializer.Serialize(experience.WorkExperiences)}");
 
         // Submit Experience Info
         if (experience != null)

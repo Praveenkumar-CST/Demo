@@ -4,160 +4,187 @@
 @using System.Text.Json;
 @using static WiseHR.Models.BankingInformation
 @inject NavigationManager NavigationManager
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-6">
+    <MudCard Elevation="2" Class="p-6">
+        @* <MudCardContent Style="max-height: 600px; overflow-y: auto;"> *@
+            <MudCardContent >
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
-    <MudCard Elevation="2" Style="max-height: 600px; overflow-y: auto;" Class="pa-3">
-        <EditForm Model="@bankingInfo" OnValidSubmit="GoToNextPage">
-            <DataAnnotationsValidator />
-            <MudGrid>
-                <!-- Employee ID -->
+            <EditForm Model="@bankingInfo" OnValidSubmit="GoToNextPage">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <MudGrid Gutter="3">
+
+                    <!-- Employee ID -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.EmployeeID"
+                                      Label="Employee ID"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Required="true"
+                                      HelperText="Enter your employee ID" />
+                        <ValidationMessage For="@(() => bankingInfo.EmployeeID)" />
+                    </MudItem>
+
+                    <!-- Bank Name -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.BankName"
+                                      Label="Bank Name"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Margin="Margin.Dense" />
+                        <ValidationMessage For="@(() => bankingInfo.BankName)" />
+                    </MudItem>
+
+                    <!-- Branch -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.Branch"
+                                      Label="Branch"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Margin="Margin.Dense" />
+                        <ValidationMessage For="@(() => bankingInfo.Branch)" />
+                    </MudItem>
+
+                    <!-- Account Holder Name -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.Name"
+                                      Label="Account Holder Name"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Margin="Margin.Dense" />
+                        <ValidationMessage For="@(() => bankingInfo.Name)" />
+                    </MudItem>
+
+                    <!-- Account Number -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.AccountNumber"
+                                      Label="Account Number"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Margin="Margin.Dense" />
+                        <ValidationMessage For="@(() => bankingInfo.AccountNumber)" />
+                    </MudItem>
+
+                    <!-- IFSC Code -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.IFSCode"
+                                      Label="IFSC Code"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Margin="Margin.Dense" />
+                        <ValidationMessage For="@(() => bankingInfo.IFSCode)" />
+                    </MudItem>
+
+                    <!-- Mobile Number -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.Phone"
+                                      Label="Mobile Number"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Margin="Margin.Dense" />
+                        <ValidationMessage For="@(() => bankingInfo.Phone)" />
+                    </MudItem>
+
+                    <!-- PAN Number -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.PANNumber"
+                                      Label="PAN Number"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Margin="Margin.Dense" />
+                        <ValidationMessage For="@(() => bankingInfo.PANNumber)" />
+                    </MudItem>
+
+                    <!-- Aadhaar Number -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.AadhaarNumber"
+                                      Label="Aadhaar Number"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Margin="Margin.Dense" />
+                        <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
+                    </MudItem>
+
+                    <!-- Branch State -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.State"
+                                      Label="Branch State"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Margin="Margin.Dense" />
+                        <ValidationMessage For="@(() => bankingInfo.State)" />
+                    </MudItem>
+
+                    <!-- Account Type -->
+                    <MudItem xs="12" sm="6">
+                        <MudSelect @bind-Value="bankingInfo.AccountType"
+                                   Label="Account Type"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense">
+                            <MudSelectItem Value="@("")">Select Account Type</MudSelectItem>
+                            <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
+                            <MudSelectItem Value="@("Current")">Current</MudSelectItem>
+                        </MudSelect>
+                        <ValidationMessage For="@(() => bankingInfo.AccountType)" />
+                    </MudItem>
+                       <!-- Aadhaar File Upload -->
                 <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.EmployeeID"
-                                  Label="Employee ID"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Required="true"
-                                  HelperText="Enter your employee ID" />
-                    <ValidationMessage For="@(() => bankingInfo.EmployeeID)" />
+                    <MudText Typo="Typo.body1">Aadhaar Document</MudText>
+                        <InputFile OnChange="@(async e => await HandleFileSelected(e, "aadhar"))" accept=".pdf,.jpg,.jpeg,.png" />
+                        <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : "File selected")</MudText>
+                    <ValidationMessage For="@(() => bankingInfo.AadhaarBase64Content)" />
                 </MudItem>
 
-                <!-- Bank Name -->
+                <!-- PAN File Upload -->
                 <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.BankName"
-                                  Label="Bank Name"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  Margin="Margin.Dense" />
-                    <ValidationMessage For="@(() => bankingInfo.BankName)" />
+                    <MudText Typo="Typo.body1">PAN Document</MudText>
+                        <InputFile OnChange="@(async e => await HandleFileSelected(e, "pan"))" accept=".pdf,.jpg,.jpeg,.png" />
+                    <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PanBase64Content) ? "No file selected" : "File selected")</MudText>
+                    <ValidationMessage For="@(() => bankingInfo.PanBase64Content)" />
                 </MudItem>
 
-                <!-- Branch -->
+                <!-- Passbook File Upload -->
                 <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.Branch"
-                                  Label="Branch"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  Margin="Margin.Dense" />
-                    <ValidationMessage For="@(() => bankingInfo.Branch)" />
+                    <MudText Typo="Typo.body1">Passbook Document</MudText>
+                        <InputFile OnChange="@(async e => await HandleFileSelected(e, "passbook"))" accept=".pdf,.jpg,.jpeg,.png" />
+                    <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) ? "No file selected" : "File selected")</MudText>
+                    <ValidationMessage For="@(() => bankingInfo.PassbookBase64Content)" />
                 </MudItem>
+                    <!-- Created At -->
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker @bind-Date="bankingInfo.CreatedAt"
+                                       Label="Created At"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       Disabled="true" />
+                    </MudItem>
 
-                <!-- Account Holder Name -->
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.Name"
-                                  Label="Account Holder Name"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  Margin="Margin.Dense" />
-                    <ValidationMessage For="@(() => bankingInfo.Name)" />
-                </MudItem>
+                    <!-- Last Modified -->
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker @bind-Date="bankingInfo.LastModifiedAt"
+                                       Label="Last Modified At"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       Disabled="true" />
+                    </MudItem>
 
-                <!-- Account Number -->
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.AccountNumber"
-                                  Label="Account Number"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  Margin="Margin.Dense" />
-                    <ValidationMessage For="@(() => bankingInfo.AccountNumber)" />
-                </MudItem>
-
-                <!-- IFSC Code -->
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.IFSCode"
-                                  Label="IFSC Code"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  Margin="Margin.Dense" />
-                    <ValidationMessage For="@(() => bankingInfo.IFSCode)" />
-                </MudItem>
-
-                <!-- Mobile Number -->
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.Phone"
-                                  Label="Mobile Number"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  Margin="Margin.Dense" />
-                    <ValidationMessage For="@(() => bankingInfo.Phone)" />
-                </MudItem>
-
-                <!-- PAN Number -->
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.PANNumber"
-                                  Label="PAN Number"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  Margin="Margin.Dense" />
-                    <ValidationMessage For="@(() => bankingInfo.PANNumber)" />
-                </MudItem>
-
-                <!-- Aadhaar Number -->
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.AadhaarNumber"
-                                  Label="Aadhaar Number"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  Margin="Margin.Dense" />
-                    <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
-                </MudItem>
-
-                <!-- Branch State -->
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="bankingInfo.State"
-                                  Label="Branch State"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  Margin="Margin.Dense" />
-                    <ValidationMessage For="@(() => bankingInfo.State)" />
-                </MudItem>
-
-                <!-- Account Type -->
-                <MudItem xs="12" sm="6">
-                    <MudSelect @bind-Value="bankingInfo.AccountType"
-                               Label="Account Type"
-                               Required="true"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense">
-                        <MudSelectItem Value="@("")">Select Account Type</MudSelectItem>
-                        <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
-                        <MudSelectItem Value="@("Current")">Current</MudSelectItem>
-                    </MudSelect>
-                    <ValidationMessage For="@(() => bankingInfo.AccountType)" />
-                </MudItem>
-            
-                @* date *@
-                <MudDatePicker @bind-Date="bankingInfo.CreatedAt"
-                               Label="Created At"
-                               Variant="Variant.Outlined"
-                               Required="true"
-                               Margin="Margin.Dense"
-                               Disabled="true" />
-
-                <MudDatePicker @bind-Date="bankingInfo.LastModifiedAt"
-                               Label="Last Modified At"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Required="true"
-                               Disabled="true" />
-
-                <!-- Buttons -->
-                <MudItem xs="12" Class="d-flex justify-end gap-2 mt-4">
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Default"
-
-                               OnClick="GoBack">
-                        Back
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               ButtonType="ButtonType.Submit">
-                        Next
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </EditForm>
+                    <!-- Action Buttons -->
+                    <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GoBack">
+                            Back
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
+                            Next
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </EditForm>
+        </MudCardContent>
     </MudCard>
 </MudContainer>
+
 @code {
     [Parameter]
     public EventCallback<BankingInformation> OnSubmit { get; set; }
@@ -174,38 +201,85 @@
 
     protected async override void OnInitialized()
     {
-
+        EditContext = new EditContext(bankingInfo);
         await LoadBankingInfo();
         if (InitialData != null)
         {
             bankingInfo = InitialData;
         }
     }
+    // private async Task GoToNextPage()
+    // {
+    //     await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
 
+    //     await OnSubmit.InvokeAsync(bankingInfo);
+    // }
+    private EditContext EditContext;
+
+   
     private async Task GoToNextPage()
     {
-        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+        if (bankingInfo == null)
+        {
+            Console.WriteLine("Banking information is null");
+            return;
+        }
 
-        await OnSubmit.InvokeAsync(bankingInfo);
+        if (EditContext.Validate())
+        {
+            Console.WriteLine("Form is valid, submitting...");
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+                await OnSubmit.InvokeAsync(bankingInfo);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving to local storage: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Form is not valid");
+        }
     }
 
+
+    // private async Task LoadBankingInfo()
+    // {
+    //     Retrieve the banking information from localStorage
+    //     var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
+
+    //     if (!string.IsNullOrEmpty(bankingInfoJson))
+    //     {
+    //         Deserialize the retrieved JSON into a BankingInformation object
+    //         var deserialized = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
+
+    //         Ensure file objects are initialized
+    //         bankingInfo = deserialized;
+
+    //         Re-render the component
+    //         StateHasChanged();
+    //     }
+    // }
     private async Task LoadBankingInfo()
     {
-        // Retrieve the banking information from localStorage
         var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
 
         if (!string.IsNullOrEmpty(bankingInfoJson))
         {
-            // Deserialize the retrieved JSON into a BankingInformation object
             var deserialized = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
-
-            // Ensure file objects are initialized
             bankingInfo = deserialized;
-
-            // Re-render the component
-            StateHasChanged();
+            Console.WriteLine("Loaded banking info: " + JsonSerializer.Serialize(bankingInfo));
         }
+        else
+        {
+            Console.WriteLine("No banking info found in localStorage");
+        }
+
+        StateHasChanged();
     }
+
     private async Task GoBack()
     {
         await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
@@ -219,6 +293,58 @@
 
         Console.WriteLine("Employee details have been reset.");
     }
-    
+    private async Task HandleFileSelected(InputFileChangeEventArgs e, string fileType)
+    {
+        var file = e.File;
+        var fileName = file.Name;
+
+        if (file != null)
+        {
+            try
+            {
+                if (file.Size > 20 * 1024 * 1024) // 20 MB
+                {
+                    Console.WriteLine("File is too large! Please upload a file smaller than 20 MB.");
+                    return;
+                }
+
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024).ReadAsync(buffer);
+                var base64String = Convert.ToBase64String(buffer);
+
+                Console.WriteLine($"File uploaded: {file.Name}, Type: {fileType}");
+
+                switch (fileType.ToLower())
+                {
+                    case "aadhar":
+                        bankingInfo.AadhaarBase64Content = base64String;
+                        bankingInfo.AadhaarContentType = file.ContentType;
+                        bankingInfo.AadhaarFileName = fileName;  // Corrected for Aadhaar
+                        break;
+
+                    case "pan":
+                        bankingInfo.PanBase64Content = base64String;
+                        bankingInfo.PanContentType = file.ContentType;
+                        bankingInfo.PanFileName = fileName;  // Corrected for Pan
+                        break;
+
+                    case "passbook":
+                        bankingInfo.PassbookBase64Content = base64String;
+                        bankingInfo.PassbookContentType = file.ContentType;
+                        bankingInfo.PassbookFileName = fileName;  // Corrected for Passbook
+                        break;
+                }
+
+                // 🔁 Update localStorage immediately
+                await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading file: {ex.Message}");
+            }
+        }
+    }
 }
+
+
     

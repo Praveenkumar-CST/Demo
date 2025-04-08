@@ -2,9 +2,6 @@
 @using WiseHR.Models
 @inject ExperienceService ExperienceService
 @using MudBlazor
-
-<h3>Experience</h3>
-
 @if (experience != null)
 {
     <div>
@@ -46,7 +43,7 @@
                     <MudTd>@context.Employer</MudTd>
                     <MudTd>@context.Location</MudTd>
                     <MudTd>@context.Position</MudTd>
-                    <MudTd>@context.DateOfJoining.ToString("d")</MudTd>
+                    <MudTd>@context.DateOfJoining?.ToString("d")</MudTd>
                     <MudTd>@(context.DateOfLeaving?.ToString("d") ?? "Present")</MudTd>
                 </RowTemplate>
             </MudTable>

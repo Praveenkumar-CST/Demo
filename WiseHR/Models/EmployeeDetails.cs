@@ -2,7 +2,7 @@
 
 namespace WiseHR.Models
 {
-    public class EmployeeDetails : IValidatableObject
+    public class EmployeeDetails
     {
         [Key]
         public int Id { get; set; }
@@ -25,36 +25,13 @@ namespace WiseHR.Models
         public string MotherName { get; set; }
 
         [Required(ErrorMessage = "Date of Joining is required")]
-        public DateTime DateOfJoining { get; set; }
+        public DateTime? DateOfJoining { get; set; }
 
         [Required(ErrorMessage = "Date of Relieving is required")]
-        public DateTime DateOfRelieving { get; set; }
-
-
-
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (DateOfJoining > DateTime.Today)
-            {
-                yield return new ValidationResult(
-                    "Date of Joining cannot be in the future.",
-                    new[] { nameof(DateOfJoining) });
-            }
-
-            if (DateOfRelieving <= DateTime.Today)
-            {
-                yield return new ValidationResult(
-                    "Date of Relieving must be in the future.",
-                    new[] { nameof(DateOfRelieving) });
-            }
-        }
-
-
-
+        public DateTime? DateOfRelieving { get; set; }
 
         [Required(ErrorMessage = "Date of Birth is required")]
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
 
         public string TypeOfEmployment { get; set; } = string.Empty;
 
@@ -77,18 +54,46 @@ namespace WiseHR.Models
         [Required(ErrorMessage = "Nationality is required")]
         public string Nationality { get; set; }
 
-        public string Allergies { get; set; } = string.Empty;
+        public string? Allergies { get; set; } = string.Empty;
 
-        public string Medications { get; set; } = string.Empty;
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (MaritalStatus == "Single")
+            {
+                Sons = "Nill";
+                Daughters = "Nill";
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(Sons))
+                    yield return new ValidationResult("The Sons field is required.", new[] { nameof(Sons) });
+
+                if (string.IsNullOrWhiteSpace(Daughters))
+                    yield return new ValidationResult("The Daughters field is required.", new[] { nameof(Daughters) });
+            }
+
+            if (DateOfJoining > DateTime.Today)
+            {
+                yield return new ValidationResult(
+                    "Date of Joining cannot be in the future.",
+                    new[] { nameof(DateOfJoining) });
+            }
+
+            if (DateOfRelieving <= DateTime.Today)
+            {
+                yield return new ValidationResult(
+                    "Date of Relieving must be in the future.",
+                    new[] { nameof(DateOfRelieving) });
+            }
+        }
+        public string? Medications { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Physically Challenged status is required")]
         public string PhysicallyChallenged { get; set; }
 
-        public int NoOfChildren { get; set; }
+        public string? Sons { get; set; }
 
-        public string Sons { get; set; }
-
-        public string Daughters { get; set; }
+        public string? Daughters { get; set; }
 
         [Required(ErrorMessage = "Current Address is required")]
         public string CurrentAddress { get; set; }
@@ -151,10 +156,10 @@ namespace WiseHR.Models
         public string PassportNationality { get; set; }
 
         [Required(ErrorMessage = "Date of Issue is required")]
-        public DateTime PassportIssueDate { get; set; }
+        public DateTime? PassportIssueDate { get; set; }
 
         [Required(ErrorMessage = "Date of Expiry is required")]
-        public DateTime PassportExpiryDate { get; set; }
+        public DateTime? PassportExpiryDate { get; set; }
 
         [Required(ErrorMessage = "Place of Issue is required")]
         public string PassportPlaceOfIssue { get; set; }

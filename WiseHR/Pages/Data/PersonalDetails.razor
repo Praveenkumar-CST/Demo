@@ -1,9 +1,6 @@
 ﻿@page "/employeeDetails/{EmployeeId}"
 
 @inject EmployeeService EmployeeService
-
-<h3>Employee Details</h3>
-
 @if (employee != null)
 {
     <div class="card">
@@ -21,7 +18,7 @@
                     <tr><td>Email</td><td>@employee.CurrentEmail</td></tr>
                     <tr><td>Gender</td><td>@employee.Gender</td></tr>
                     <tr><td>Marital Status</td><td>@employee.MaritalStatus</td></tr>
-                    <tr><td>Date of Birth</td><td>@employee.DateOfBirth.ToShortDateString()</td></tr>
+                    <tr><td>Date of Birth</td><td>@employee.DateOfBirth.Value.ToShortDateString()</td></tr>
                     <tr><td>Blood Group</td><td>@employee.BloodGroup</td></tr>
                     <tr><td>Nationality</td><td>@employee.Nationality</td></tr>
                     <tr><td>Father's Name</td><td>@employee.FatherName</td></tr>
@@ -31,7 +28,6 @@
                     <tr><td>Allergies</td><td>@employee.Allergies</td></tr>
                     <tr><td>Medications</td><td>@employee.Medications</td></tr>
                     <tr><td>Physically Challenged</td><td>@employee.PhysicallyChallenged</td></tr>
-                    <tr><td>No of Children</td><td>@employee.NoOfChildren</td></tr>
                 </tbody>
 
                 <thead class="table-light">
@@ -45,8 +41,8 @@
                     <tr><td>Level</td><td>@employee.Level</td></tr>
                     <tr><td>Designation</td><td>@employee.Designation</td></tr>
                     <tr><td>Joining Location</td><td>@employee.JoiningLocation</td></tr>
-                    <tr><td>Date of Joining</td><td>@employee.DateOfJoining.ToShortDateString()</td></tr>
-                    <tr><td>Date of Relieving</td><td>@employee.DateOfRelieving.ToShortDateString()</td></tr>
+                    <tr><td>Date of Joining</td><td>@employee.DateOfJoining.Value.ToShortDateString()</td></tr>
+                    <tr><td>Date of Relieving</td><td>@employee.DateOfRelieving.Value.ToShortDateString()</td></tr>
                 </tbody>
 
                 <thead class="table-light">
@@ -74,8 +70,8 @@
                     <tr><td>Full Name</td><td>@employee.PassportFullName</td></tr>
                     <tr><td>Passport No</td><td>@employee.PassportNo</td></tr>
                     <tr><td>Nationality</td><td>@employee.PassportNationality</td></tr>
-                    <tr><td>Issue Date</td><td>@employee.PassportIssueDate.ToShortDateString()</td></tr>
-                    <tr><td>Expiry Date</td><td>@employee.PassportExpiryDate.ToShortDateString()</td></tr>
+                    <tr><td>Issue Date</td><td>@employee.PassportIssueDate.Value.ToShortDateString()</td></tr>
+                    <tr><td>Expiry Date</td><td>@employee.PassportExpiryDate.Value.ToShortDateString()</td></tr>
                     <tr><td>Place of Issue</td><td>@employee.PassportPlaceOfIssue</td></tr>
                 </tbody>
 
