@@ -1,0 +1,378 @@
+﻿/* MudDrawer Custom Styling */
+.mud-drawer {
+    background-color: var(--primary);
+    color: var(--text-secondary);
+    transition: width 0.3s ease-in-out;
+}
+
+.mud-nav-menu {
+    padding: var(--container-padding);
+}
+
+.mud-nav-link-active {
+    font-weight: 600;
+    color: var(--accent);
+    background-color: var(--secondary);
+    border-radius: var(--border-radius-card);
+}
+
+.mud-nav-link {
+    padding: var(--button-padding);
+    transition: background 0.2s ease;
+}
+
+    .mud-nav-link:hover {
+        background-color: var(--secondary);
+        color: var(--text-primary);
+    }
+
+/* Sidebar Toggle */
+.mud-drawer-toggle {
+    cursor: pointer;
+    padding: var(--button-padding);
+    border-radius: var(--border-radius-button);
+    background-color: var(--accent);
+    color: white;
+}
+
+    .mud-drawer-toggle:hover {
+        background-color: var(--primary);
+    }
+/* Role Management Page Styling for WiseHR */
+
+/* Container styles */
+.mud-container {
+    padding: var(--container-padding);
+    margin-top: 24px;
+}
+
+/* Page heading */
+.mud-typography-h3 {
+    color: var(--primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-h1);
+    font-weight: 600;
+    margin-bottom: 24px;
+    letter-spacing: -0.3px;
+}
+
+/* Add New Employee button */
+.mud-button.mud-button-filled.mud-button-filled-primary {
+    background-color: var(--accent);
+    color: #ffffff;
+    border-radius: var(--border-radius-button);
+    font-family: var(--font-family);
+    font-weight: 500;
+    padding: var(--button-padding);
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-card);
+}
+
+    .mud-button.mud-button-filled.mud-button-filled-primary:hover {
+        background-color: #3d87c4;
+        box-shadow: var(--shadow-button-hover);
+    }
+
+/* Grid spacing */
+.mud-grid.mb-4 {
+    margin-bottom: 24px;
+}
+
+/* Table styles */
+.mud-table {
+    border-radius: var(--border-radius-card);
+    overflow: hidden;
+    font-family: var(--font-family);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+}
+
+.mud-table-container {
+    background-color: var(--background);
+}
+
+/* Table head */
+.mud-table-head {
+    background-color: var(--secondary);
+}
+
+.mud-table-cell {
+    font-family: var(--font-family);
+    padding: var(--table-cell-padding);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Table headers */
+.mud-table-head .mud-table-cell {
+    color: var(--primary);
+    font-weight: 600;
+    font-size: var(--font-size-small);
+}
+
+/* Table rows */
+.mud-table-row {
+    transition: background-color 0.2s ease;
+}
+
+    .mud-table-row:hover {
+        background-color: rgba(77, 157, 224, 0.05);
+    }
+
+/* Striped rows */
+.mud-table-striped .mud-table-body .mud-table-row:nth-of-type(odd) {
+    background-color: var(--secondary);
+}
+
+    .mud-table-striped .mud-table-body .mud-table-row:nth-of-type(odd):hover {
+        background-color: rgba(77, 157, 224, 0.1);
+    }
+
+/* Select dropdown */
+.mud-select {
+    width: 100%;
+}
+
+.mud-select-input {
+    font-family: var(--font-family);
+    font-size: var(--font-size-body);
+    border-radius: var(--border-radius-input);
+    border-color: var(--border-color);
+}
+
+.mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: var(--accent);
+}
+
+/* Delete button */
+.mud-button.mud-button-filled.mud-button-filled-error {
+    background-color: var(--error);
+    color: #ffffff;
+    font-size: var(--font-size-small);
+    padding: 6px 12px;
+    border-radius: var(--border-radius-button);
+    transition: all 0.2s ease;
+}
+
+    .mud-button.mud-button-filled.mud-button-filled-error:hover {
+        background-color: #dc2626;
+    }
+
+/* Loading spinner */
+.mud-progress-circular {
+    color: var(--accent);
+}
+
+    .mud-progress-circular.d-flex {
+        margin: 40px auto;
+    }
+
+/* Responsiveness */
+@media (max-width: 600px) {
+    .mud-table-cell {
+        padding: 8px 12px;
+    }
+
+    .mud-button {
+        padding: 6px 12px;
+    }
+
+    .mud-typography-h3 {
+        font-size: calc(var(--font-size-h1) - 2px);
+    }
+}
+
+/* Dropdown menu styling */
+.mud-select-menu {
+    border-radius: var(--border-radius-card);
+    box-shadow: var(--shadow-dropdown);
+    overflow: hidden;
+}
+
+.mud-list {
+    padding: 0;
+}
+
+.mud-list-item {
+    font-family: var(--font-family);
+    font-size: var(--font-size-body);
+    padding: 8px 16px;
+}
+
+.mud-list-item-selected {
+    background-color: rgba(77, 157, 224, 0.1);
+    color: var(--accent);
+}
+
+.mud-list-item:hover {
+    background-color: var(--secondary);
+}
+/* Role Management Page Styling for WiseHR */
+
+/* Container styles */
+.mud-container {
+    padding: var(--container-padding);
+    margin-top: 24px;
+}
+
+/* Page heading */
+.mud-typography-h3 {
+    color: var(--primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-h1);
+    font-weight: 600;
+    margin-bottom: 24px;
+    letter-spacing: -0.3px;
+}
+
+/* Add New Employee button */
+.mud-button.mud-button-filled.mud-button-filled-primary {
+    background-color: var(--accent);
+    color: #ffffff;
+    border-radius: var(--border-radius-button);
+    font-family: var(--font-family);
+    font-weight: 500;
+    padding: var(--button-padding);
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-card);
+}
+
+    .mud-button.mud-button-filled.mud-button-filled-primary:hover {
+        background-color: #3d87c4;
+        box-shadow: var(--shadow-button-hover);
+    }
+
+/* Grid spacing */
+.mud-grid.mb-4 {
+    margin-bottom: 24px;
+}
+
+/* Table styles */
+.mud-table {
+    border-radius: var(--border-radius-card);
+    overflow: hidden;
+    font-family: var(--font-family);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color);
+}
+
+.mud-table-container {
+    background-color: var(--background);
+}
+
+/* Table head */
+.mud-table-head {
+    background-color: var(--secondary);
+}
+
+.mud-table-cell {
+    font-family: var(--font-family);
+    padding: var(--table-cell-padding);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Table headers */
+.mud-table-head .mud-table-cell {
+    color: var(--primary);
+    font-weight: 600;
+    font-size: var(--font-size-small);
+}
+
+/* Table rows */
+.mud-table-row {
+    transition: background-color 0.2s ease;
+}
+
+    .mud-table-row:hover {
+        background-color: rgba(77, 157, 224, 0.05);
+    }
+
+/* Striped rows */
+.mud-table-striped .mud-table-body .mud-table-row:nth-of-type(odd) {
+    background-color: var(--secondary);
+}
+
+    .mud-table-striped .mud-table-body .mud-table-row:nth-of-type(odd):hover {
+        background-color: rgba(77, 157, 224, 0.1);
+    }
+
+/* Select dropdown */
+.mud-select {
+    width: 100%;
+}
+
+.mud-select-input {
+    font-family: var(--font-family);
+    font-size: var(--font-size-body);
+    border-radius: var(--border-radius-input);
+    border-color: var(--border-color);
+}
+
+.mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: var(--accent);
+}
+
+/* Delete button */
+.mud-button.mud-button-filled.mud-button-filled-error {
+    background-color: var(--error);
+    color: #ffffff;
+    font-size: var(--font-size-small);
+    padding: 6px 12px;
+    border-radius: var(--border-radius-button);
+    transition: all 0.2s ease;
+}
+
+    .mud-button.mud-button-filled.mud-button-filled-error:hover {
+        background-color: #dc2626;
+    }
+
+/* Loading spinner */
+.mud-progress-circular {
+    color: var(--accent);
+}
+
+    .mud-progress-circular.d-flex {
+        margin: 40px auto;
+    }
+
+/* Responsiveness */
+@media (max-width: 600px) {
+    .mud-table-cell {
+        padding: 8px 12px;
+    }
+
+    .mud-button {
+        padding: 6px 12px;
+    }
+
+    .mud-typography-h3 {
+        font-size: calc(var(--font-size-h1) - 2px);
+    }
+}
+
+/* Dropdown menu styling */
+.mud-select-menu {
+    border-radius: var(--border-radius-card);
+    box-shadow: var(--shadow-dropdown);
+    overflow: hidden;
+}
+
+.mud-list {
+    padding: 0;
+}
+
+.mud-list-item {
+    font-family: var(--font-family);
+    font-size: var(--font-size-body);
+    padding: 8px 16px;
+}
+
+.mud-list-item-selected {
+    background-color: rgba(77, 157, 224, 0.1);
+    color: var(--accent);
+}
+
+.mud-list-item:hover {
+    background-color: var(--secondary);
+}

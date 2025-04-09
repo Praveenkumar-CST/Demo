@@ -1,0 +1,196 @@
+﻿@page "/workExperience"
+@using WiseHRServer.Models
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Text.Json;
+<h3 class="mb-4 text-primary">Add Experience</h3>
+
+<EditForm Model="@experience" OnValidSubmit="@SubmitForm" class="shadow p-4 bg-white rounded">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <!-- Employee ID -->
+    <div class="form-group mb-4">
+        <label class="fw-bold">Employee ID<span style="color: red;">*</span></label>
+        <InputText class="form-control" @bind-Value="experience.EmployeeID" />
+        <ValidationMessage For="@(() => experience.EmployeeID)" class="text-danger" />
+    </div>
+
+    <!-- Education Qualifications Section -->
+    <h4 class="text-secondary mt-4">Education Qualifications</h4>
+    @foreach (var edu in educationList)
+    {
+        <div class="border p-3 mb-3 bg-light rounded">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label>Qualification</label>
+                    <InputText class="form-control" @bind-Value="edu.Qualification" />
+                </div>
+                <div class="col-md-3">
+                    <label>University</label>
+                    <InputText class="form-control" @bind-Value="edu.University" />
+                </div>
+                <div class="col-md-2">
+                    <label>Year</label>
+                    <InputNumber class="form-control" @bind-Value="edu.YearOfPassing" />
+                </div>
+                <div class="col-md-2">
+                    <label>Percentage</label>
+                    <InputNumber class="form-control" @bind-Value="edu.Percentage" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger w-100" @onclick="() => RemoveEducation(edu)">Remove</button>
+                </div>
+            </div>
+        </div>
+    }
+    <button type="button" class="btn btn-outline-primary mb-4" @onclick="AddEducation">+ Add Education</button>
+
+    <!-- Work Experience Section -->
+    <h4 class="text-secondary mt-4">Work Experience</h4>
+    @foreach (var work in workList)
+    {
+        <div class="border p-3 mb-3 bg-light rounded">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label>Employer</label>
+                    <InputText class="form-control" @bind-Value="work.Employer" />
+                </div>
+                <div class="col-md-3">
+                    <label>Location</label>
+                    <InputText class="form-control" @bind-Value="work.Location" />
+                </div>
+                <div class="col-md-2">
+                    <label>Join Date</label>
+                    <InputDate class="form-control" @bind-Value="work.DateOfJoining" />
+                </div>
+                <div class="col-md-2">
+                    <label>Leave Date</label>
+                    <InputDate class="form-control" @bind-Value="work.DateOfLeaving" />
+                </div>
+                <div class="col-md-2">
+                    <label>Position</label>
+                    <InputText class="form-control" @bind-Value="work.Position" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger w-100" @onclick="() => RemoveWork(work)">Remove</button>
+                </div>
+            </div>
+        </div>
+    }
+    <button type="button" class="btn btn-outline-primary mb-4" @onclick="AddWork">+ Add Work Experience</button>
+
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-outline-secondary" @onclick="GoBack">← Back</button>
+        <div>
+            <button type="submit" class="btn btn-success me-2">Submit</button>
+            <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private Experience experience = new Experience();
+    private List<Education> educationList = new List<Education>();
+    private List<WorkExperience> workList = new List<WorkExperience>();
+
+    [Inject]
+    private ExperienceService ExperienceService { get; set; }
+
+    [Parameter]
+    public EventCallback<Experience> OnSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+
+    [Parameter]
+    public Experience InitialData { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await LoadExperienceInfo();
+
+        if (InitialData != null)
+        {
+            experience = InitialData;
+        }
+    }
+
+    private async Task SubmitForm()
+    {
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = workList;
+
+        Console.WriteLine($"Education List: {JsonSerializer.Serialize(educationList)}");
+        Console.WriteLine($"Work Experience List: {JsonSerializer.Serialize(workList)}");
+
+        // Serialize the Experience object and save it to localStorage
+        var json = JsonSerializer.Serialize(experience);  // Serialize the entire Experience object, including the lists
+        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", json); // Save to localStorage
+        Console.WriteLine("Form submitted and data saved to localStorage");
+
+        NavigationManager.NavigateTo("/confirmation");  // Navigate to a confirmation page or another step
+    }
+
+    private void AddEducation()
+    {
+        educationList.Add(new Education());
+    }
+
+    private void RemoveEducation(Education education)
+    {
+        educationList.Remove(education);
+    }
+
+    private void AddWork()
+    {
+        workList.Add(new WorkExperience());
+    }
+
+    private void RemoveWork(WorkExperience work)
+    {
+        workList.Remove(work);
+    }
+
+    private async Task LoadExperienceInfo()
+    {
+        var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
+
+        if (!string.IsNullOrEmpty(experienceJson))
+        {
+            experience = JsonSerializer.Deserialize<Experience>(experienceJson);
+
+            educationList = experience.EducationQualifications ?? new List<Education>();  // Deserialize Education list
+            workList = experience.WorkExperiences ?? new List<WorkExperience>();  // Deserialize Work Experience list
+
+            StateHasChanged();  // Ensure UI updates with the deserialized data
+        }
+        else
+        {
+            AddEducation();  // If no data found, add a default education entry
+            AddWork();  // If no data found, add a default work entry
+        }
+    }
+
+    private async Task GoBack()
+    {
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = workList;
+
+        // Store updated experience data in localStorage
+        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
+        await OnBack.InvokeAsync();  // Trigger the OnBack callback
+    }
+
+    public void Reset()
+    {
+        experience = new Experience();
+        educationList = new List<Education>();
+        workList = new List<WorkExperience>();
+        AddEducation();
+        AddWork();
+        JSRuntime.InvokeVoidAsync("localStorageHelper.removeItem", "experienceDetails");
+
+    }
+}

@@ -1,0 +1,44 @@
+﻿@page "/employeeDetailsData/{EmployeeID}"
+@using WiseHRServer.Models
+@inject EmployeeService EmployeeService
+@inject BankingService BankingService
+@inject ExperienceService ExperienceService
+@inject NavigationManager NavigationManager
+@using WiseHRServer.Models
+@layout HomeLayout
+<h3>Employee Details</h3>
+
+<!-- Container holding buttons -->
+<div class="container">
+    <div class="btn-group" role="group" aria-label="Employee Details">
+        <button class="btn btn-primary" @onclick="() => ShowSection(1)">Personal Details</button>
+        <button class="btn btn-success" @onclick="() => ShowSection(2)">Banking Details</button>
+        <button class="btn btn-primary" @onclick="() => ShowSection(3)">Experience</button>
+    </div>
+</div>
+
+<!-- Container showing different components based on the current section -->
+<div class="container mt-3">
+    @if (currentSection == 1)
+    {
+        <PersonalDetails EmployeeID="@EmployeeID" />
+    }
+    else if (currentSection == 2)
+    {
+        <Bankdetails EmployeeID="@EmployeeID" />
+    }
+    else if (currentSection == 3)
+    {
+        <Experienceinfo EmployeeID="@EmployeeID" />
+    }
+</div>
+
+@code {
+    [Parameter] public string EmployeeID { get; set; }
+    private int currentSection = 1; // Default to Personal Details
+
+    private void ShowSection(int section)
+    {
+        currentSection = section;
+    }
+}

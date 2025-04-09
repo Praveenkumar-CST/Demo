@@ -1,0 +1,71 @@
+﻿@page "/experience/{EmployeeId}"
+@using WiseHR.Models
+@inject ExperienceService ExperienceService
+@using MudBlazor
+@if (experience != null)
+{
+    <div>
+        <h4>Education Details</h4>
+        @if (experience.EducationQualifications?.Any() == true)
+        {
+            <MudTable Items="experience.EducationQualifications" Bordered="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Qualification</MudTh>
+                    <MudTh>University</MudTh>
+                    <MudTh>Year of Passing</MudTh>
+                    <MudTh>Percentage</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Qualification</MudTd>
+                    <MudTd>@context.University</MudTd>
+                    <MudTd>@context.YearOfPassing</MudTd>
+                    <MudTd>@context.Percentage</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        else
+        {
+            <MudText>No education details available.</MudText>
+        }
+
+        <h4>Work Experience Details</h4>
+        @if (experience.WorkExperiences?.Any() == true)
+        {
+            <MudTable Items="experience.WorkExperiences" Bordered="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Employer</MudTh>
+                    <MudTh>Location</MudTh>
+                    <MudTh>Position</MudTh>
+                    <MudTh>Date of Joining</MudTh>
+                    <MudTh>Date of Leaving</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Employer</MudTd>
+                    <MudTd>@context.Location</MudTd>
+                    <MudTd>@context.Position</MudTd>
+                    <MudTd>@context.DateOfJoining?.ToString("d")</MudTd>
+                    <MudTd>@(context.DateOfLeaving?.ToString("d") ?? "Present")</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        else
+        {
+            <MudText>No work experience details available.</MudText>
+        }
+    </div>
+}
+else
+{
+    <MudText>No experience information available.</MudText>
+}
+
+@code {
+    [Parameter] public string EmployeeId { get; set; }
+
+    private WiseHRServer.Models.Experience experience;
+
+    protected override async Task OnInitializedAsync()
+    {
+        experience = await ExperienceService.GetExperienceDetails(EmployeeId);
+    }
+}
