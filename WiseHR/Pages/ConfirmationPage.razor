@@ -8,172 +8,172 @@
 @inject EmployeeService EmployeeService
 @inject BankingService BankingService
 @inject ExperienceService ExperienceService
+@inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
-
 
 <h3>Confirmation Page</h3>
 
 <div class="container">
-    <h4>Employee Details</h4>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Field</th>
-                    <th>Value</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Employee ID</td>
-                    <td>@employeeDetails.EmployeeID</td>
-                </tr>
-                <tr>
-                    <td>First Name</td>
-                    <td>@employeeDetails.FirstName</td>
-                </tr>
-                <tr>
-                    <td>Middle Name</td>
-                    <td>@employeeDetails.MiddleName</td>
-                </tr>
-                <tr>
-                    <td>Last Name</td>
-                    <td>@employeeDetails.LastName</td>
-                </tr>
-                <tr>
-                    <td>Father's Name</td>
-                    <td>@employeeDetails.FatherName</td>
-                </tr>
-                <tr>
-                    <td>Mother's Name</td>
-                    <td>@employeeDetails.MotherName</td>
-                </tr>
-                <tr>
-                    <td>Date of Birth</td>
+    <h4 class="d-flex justify-content-between align-items-center">
+        <MudText Typo="Typo.h6">Employee Details</MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToEmployeepage">Edit Employee Details</MudButton>
+    </h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Employee ID</td>
+                <td>@employeeDetails.EmployeeID</td>
+            </tr>
+            <tr>
+                <td>First Name</td>
+                <td>@employeeDetails.FirstName</td>
+            </tr>
+            <tr>
+                <td>Middle Name</td>
+                <td>@employeeDetails.MiddleName</td>
+            </tr>
+            <tr>
+                <td>Last Name</td>
+                <td>@employeeDetails.LastName</td>
+            </tr>
+            <tr>
+                <td>Father's Name</td>
+                <td>@employeeDetails.FatherName</td>
+            </tr>
+            <tr>
+                <td>Mother's Name</td>
+                <td>@employeeDetails.MotherName</td>
+            </tr>
+            <tr>
+                <td>Date of Birth</td>
                 <td>@(employeeDetails.DateOfBirth.HasValue ? employeeDetails.DateOfBirth.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
             </tr>
             <tr>
                 <td>Date of Joining</td>
                 <td>@(employeeDetails.DateOfJoining.HasValue ? employeeDetails.DateOfJoining.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
             </tr>
-            <tr>
-                <td>Date of Relieving</td>
-                <td>@(employeeDetails.DateOfRelieving.HasValue ? employeeDetails.DateOfRelieving.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
-            </tr>
-                <tr>
-                    <td>Type of Employment</td>
-                    <td>@employeeDetails.TypeOfEmployment</td>
-                </tr>
-                <tr>
-                    <td>Level</td>
-                    <td>@employeeDetails.Level</td>
-                </tr>
-                <tr>
-                    <td>Designation</td>
-                    <td>@employeeDetails.Designation</td>
-                </tr>
-                <tr>
-                    <td>Joining Location</td>
-                    <td>@employeeDetails.JoiningLocation</td>
-                </tr>
-                <tr>
-                    <td>Gender</td>
-                    <td>@employeeDetails.Gender</td>
-                </tr>
-                <tr>
-                    <td>Marital Status</td>
-                    <td>@employeeDetails.MaritalStatus</td>
-                </tr>
-                <tr>
-                    <td>Blood Group</td>
-                    <td>@employeeDetails.BloodGroup</td>
-                </tr>
-                <tr>
-                    <td>Nationality</td>
-                    <td>@employeeDetails.Nationality</td>
-                </tr>
-                <tr>
-                    <td>Allergies</td>
-                    <td>@employeeDetails.Allergies</td>
-                </tr>
-                <tr>
-                    <td>Medications</td>
-                    <td>@employeeDetails.Medications</td>
-                </tr>
-                <tr>
-                    <td>Physically Challenged</td>
-                    <td>@employeeDetails.PhysicallyChallenged</td>
-                </tr>
        
-                <tr>
-                    <td>Sons</td>
-                    <td>@employeeDetails.Sons</td>
-                </tr>
-                <tr>
-                    <td>Daughters</td>
-                    <td>@employeeDetails.Daughters</td>
-                </tr>
-                <tr>
-                    <td>Current Address</td>
-                    <td>@employeeDetails.CurrentAddress</td>
-                </tr>
-                <tr>
-                    <td>Current City</td>
-                    <td>@employeeDetails.CurrentCity</td>
-                </tr>
-                <tr>
-                    <td>Current State</td>
-                    <td>@employeeDetails.CurrentState</td>
-                </tr>
-                <tr>
-                    <td>Current Zip</td>
-                    <td>@employeeDetails.CurrentZip</td>
-                </tr>
-                <tr>
-                    <td>Current Mobile</td>
-                    <td>@employeeDetails.CurrentMobile</td>
-                </tr>
-                <tr>
-                    <td>Current Email</td>
-                    <td>@employeeDetails.CurrentEmail</td>
-                </tr>
-                <!-- Permanent Address Fields -->
-                <tr>
-                    <td>Permanent Address</td>
-                    <td>@employeeDetails.PermanentAddress</td>
-                </tr>
-                <tr>
-                    <td>Permanent City</td>
-                    <td>@employeeDetails.PermanentCity</td>
-                </tr>
-                <tr>
-                    <td>Permanent State</td>
-                    <td>@employeeDetails.PermanentState</td>
-                </tr>
-                <tr>
-                    <td>Permanent Zip</td>
-                    <td>@employeeDetails.PermanentZip</td>
-                </tr>
-                <tr>
-                    <td>Permanent Mobile</td>
-                    <td>@employeeDetails.PermanentMobile</td>
-                </tr>
-                <tr>
-                    <td>Permanent Email</td>
-                    <td>@employeeDetails.PermanentEmail</td>
-                </tr>
-                <!-- Passport Details -->
-                <tr>
-                    <td>Passport Full Name</td>
-                    <td>@employeeDetails.PassportFullName</td>
-                </tr>
-                <tr>
-                    <td>Passport No</td>
-                    <td>@employeeDetails.PassportNo</td>
-                </tr>
-                <tr>
-                    <td>Passport Nationality</td>
-                    <td>@employeeDetails.PassportNationality</td>
-                </tr>
+            <tr>
+                <td>Type of Employment</td>
+                <td>@employeeDetails.TypeOfEmployment</td>
+            </tr>
+            <tr>
+                <td>Level</td>
+                <td>@employeeDetails.Level</td>
+            </tr>
+            <tr>
+                <td>Designation</td>
+                <td>@employeeDetails.Designation</td>
+            </tr>
+            <tr>
+                <td>Joining Location</td>
+                <td>@employeeDetails.JoiningLocation</td>
+            </tr>
+            <tr>
+                <td>Gender</td>
+                <td>@employeeDetails.Gender</td>
+            </tr>
+            <tr>
+                <td>Marital Status</td>
+                <td>@employeeDetails.MaritalStatus</td>
+            </tr>
+            <tr>
+                <td>Blood Group</td>
+                <td>@employeeDetails.BloodGroup</td>
+            </tr>
+            <tr>
+                <td>Nationality</td>
+                <td>@employeeDetails.Nationality</td>
+            </tr>
+            <tr>
+                <td>Allergies</td>
+                <td>@employeeDetails.Allergies</td>
+            </tr>
+            <tr>
+                <td>Medications</td>
+                <td>@employeeDetails.Medications</td>
+            </tr>
+            <tr>
+                <td>Physically Challenged</td>
+                <td>@employeeDetails.PhysicallyChallenged</td>
+            </tr>
+
+            <tr>
+                <td>Sons</td>
+                <td>@employeeDetails.Sons</td>
+            </tr>
+            <tr>
+                <td>Daughters</td>
+                <td>@employeeDetails.Daughters</td>
+            </tr>
+            <tr>
+                <td>Current Address</td>
+                <td>@employeeDetails.CurrentAddress</td>
+            </tr>
+            <tr>
+                <td>Current City</td>
+                <td>@employeeDetails.CurrentCity</td>
+            </tr>
+            <tr>
+                <td>Current State</td>
+                <td>@employeeDetails.CurrentState</td>
+            </tr>
+            <tr>
+                <td>Current Zip</td>
+                <td>@employeeDetails.CurrentZip</td>
+            </tr>
+            <tr>
+                <td>Current Mobile</td>
+                <td>@employeeDetails.CurrentMobile</td>
+            </tr>
+            <tr>
+                <td>Current Email</td>
+                <td>@employeeDetails.CurrentEmail</td>
+            </tr>
+            <!-- Permanent Address Fields -->
+            <tr>
+                <td>Permanent Address</td>
+                <td>@employeeDetails.PermanentAddress</td>
+            </tr>
+            <tr>
+                <td>Permanent City</td>
+                <td>@employeeDetails.PermanentCity</td>
+            </tr>
+            <tr>
+                <td>Permanent State</td>
+                <td>@employeeDetails.PermanentState</td>
+            </tr>
+            <tr>
+                <td>Permanent Zip</td>
+                <td>@employeeDetails.PermanentZip</td>
+            </tr>
+            <tr>
+                <td>Permanent Mobile</td>
+                <td>@employeeDetails.PermanentMobile</td>
+            </tr>
+            <tr>
+                <td>Permanent Email</td>
+                <td>@employeeDetails.PermanentEmail</td>
+            </tr>
+            <!-- Passport Details -->
+            <tr>
+                <td>Passport Full Name</td>
+                <td>@employeeDetails.PassportFullName</td>
+            </tr>
+            <tr>
+                <td>Passport No</td>
+                <td>@employeeDetails.PassportNo</td>
+            </tr>
+            <tr>
+                <td>Passport Nationality</td>
+                <td>@employeeDetails.PassportNationality</td>
+            </tr>
             <tr>
                 <td>Passport Issue Date</td>
                 <td>@(employeeDetails.PassportIssueDate.HasValue ? employeeDetails.PassportIssueDate.Value.ToString("yyyy-MM-dd") : "Not set")</td>
@@ -183,101 +183,104 @@
                 <td>@(employeeDetails.PassportExpiryDate.HasValue ? employeeDetails.PassportExpiryDate.Value.ToString("yyyy-MM-dd") : "Not set")</td>
             </tr>
 
-                <tr>
-                    <td>Passport Place of Issue</td>
-                    <td>@employeeDetails.PassportPlaceOfIssue</td>
-                </tr>
-                <!-- Emergency Contacts -->
-                <tr>
-                    <td>Emergency Contact 1 Name</td>
-                    <td>@employeeDetails.EmergencyContact1Name</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 1 Relationship</td>
-                    <td>@employeeDetails.EmergencyContact1Relationship</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 1 Address</td>
-                    <td>@employeeDetails.EmergencyContact1Address</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 1 City</td>
-                    <td>@employeeDetails.EmergencyContact1City</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 1 State</td>
-                    <td>@employeeDetails.EmergencyContact1State</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 1 Zip Code</td>
-                    <td>@employeeDetails.EmergencyContact1ZipCode</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 1 Mobile</td>
-                    <td>@employeeDetails.EmergencyContact1Mobile</td>
-                </tr>
-                <!-- Emergency Contact 2 Fields -->
-                <tr>
-                    <td>Emergency Contact 2 Name</td>
-                    <td>@employeeDetails.EmergencyContact2Name</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 2 Relationship</td>
-                    <td>@employeeDetails.EmergencyContact2Relationship</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 2 Address</td>
-                    <td>@employeeDetails.EmergencyContact2Address</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 2 City</td>
-                    <td>@employeeDetails.EmergencyContact2City</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 2 State</td>
-                    <td>@employeeDetails.EmergencyContact2State</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 2 Zip Code</td>
-                    <td>@employeeDetails.EmergencyContact2ZipCode</td>
-                </tr>
-                <tr>
-                    <td>Emergency Contact 2 Mobile</td>
-                    <td>@employeeDetails.EmergencyContact2Mobile</td>
-                </tr>
-                <!-- Nominee Details -->
-                <tr>
-                    <td>Nominee Name</td>
-                    <td>@employeeDetails.NomineeName</td>
-                </tr>
-                <tr>
-                    <td>Nominee Relationship</td>
-                    <td>@employeeDetails.NomineeRelationship</td>
-                </tr>
-                <tr>
-                    <td>Nominee Address</td>
-                    <td>@employeeDetails.NomineeAddress</td>
-                </tr>
-                <tr>
-                    <td>Nominee City</td>
-                    <td>@employeeDetails.NomineeCity</td>
-                </tr>
-                <tr>
-                    <td>Nominee State</td>
-                    <td>@employeeDetails.NomineeState</td>
-                </tr>
-                <tr>
-                    <td>Nominee Zip Code</td>
-                    <td>@employeeDetails.NomineeZipCode</td>
-                </tr>
-                <tr>
-                    <td>Nominee Mobile</td>
-                    <td>@employeeDetails.NomineeMobile</td>
-                </tr>
-            </tbody>
-        </table>
+            <tr>
+                <td>Passport Place of Issue</td>
+                <td>@employeeDetails.PassportPlaceOfIssue</td>
+            </tr>
+            <!-- Emergency Contacts -->
+            <tr>
+                <td>Emergency Contact 1 Name</td>
+                <td>@employeeDetails.EmergencyContact1Name</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 Relationship</td>
+                <td>@employeeDetails.EmergencyContact1Relationship</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 Address</td>
+                <td>@employeeDetails.EmergencyContact1Address</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 City</td>
+                <td>@employeeDetails.EmergencyContact1City</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 State</td>
+                <td>@employeeDetails.EmergencyContact1State</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 Zip Code</td>
+                <td>@employeeDetails.EmergencyContact1ZipCode</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 Mobile</td>
+                <td>@employeeDetails.EmergencyContact1Mobile</td>
+            </tr>
+            <!-- Emergency Contact 2 Fields -->
+            <tr>
+                <td>Emergency Contact 2 Name</td>
+                <td>@employeeDetails.EmergencyContact2Name</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 Relationship</td>
+                <td>@employeeDetails.EmergencyContact2Relationship</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 Address</td>
+                <td>@employeeDetails.EmergencyContact2Address</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 City</td>
+                <td>@employeeDetails.EmergencyContact2City</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 State</td>
+                <td>@employeeDetails.EmergencyContact2State</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 Zip Code</td>
+                <td>@employeeDetails.EmergencyContact2ZipCode</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 Mobile</td>
+                <td>@employeeDetails.EmergencyContact2Mobile</td>
+            </tr>
+            <!-- Nominee Details -->
+            <tr>
+                <td>Nominee Name</td>
+                <td>@employeeDetails.NomineeName</td>
+            </tr>
+            <tr>
+                <td>Nominee Relationship</td>
+                <td>@employeeDetails.NomineeRelationship</td>
+            </tr>
+            <tr>
+                <td>Nominee Address</td>
+                <td>@employeeDetails.NomineeAddress</td>
+            </tr>
+            <tr>
+                <td>Nominee City</td>
+                <td>@employeeDetails.NomineeCity</td>
+            </tr>
+            <tr>
+                <td>Nominee State</td>
+                <td>@employeeDetails.NomineeState</td>
+            </tr>
+            <tr>
+                <td>Nominee Zip Code</td>
+                <td>@employeeDetails.NomineeZipCode</td>
+            </tr>
+            <tr>
+                <td>Nominee Mobile</td>
+                <td>@employeeDetails.NomineeMobile</td>
+            </tr>
+        </tbody>
+    </table>
 
-    <h4>Banking Information</h4>
+    <h4 class="d-flex justify-content-between align-items-center">
+        <MudText Typo="Typo.h6">Bank Information</MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToBankingpage">Edit Banking Details</MudButton>
+    </h4>
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -342,20 +345,17 @@
                 <td>Passbook File</td>
                 <td>@bankingInfo.PassbookFileName</td>
             </tr>
-            <tr>
-                <td>Created At</td>
-                <td>@bankingInfo.CreatedAt</td>
-            </tr>
-            <tr>
-                <td>Last Modified At</td>
-                <td>@bankingInfo.LastModifiedAt</td>
-            </tr>
+        
             <!-- File Listings -->
- 
+
         </tbody>
     </table>
-       <!-- Education Qualifications Table -->
-    <h4>Education Qualifications</h4>
+    <!-- Education Qualifications Table -->
+    <h4 class="d-flex justify-content-between align-items-center">
+        <MudText Typo="Typo.h6">Work Experiences</MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToExperiencepage">Edit Work Experience</MudButton>
+    </h4>
+
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -377,9 +377,9 @@
             }
         </tbody>
     </table>
-
-    <h4>Experience Information</h4>
+    
     <h4>Work Experiences</h4>
+
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -387,7 +387,7 @@
                 <th>Location</th>
                 <th>Date of Joining</th>
                 <th>Date of Leaving</th>
-                <th>Position</th>
+                <th>Designation</th>
             </tr>
         </thead>
         <tbody>
@@ -398,11 +398,12 @@
                     <td>@work.Location</td>
                     <td>@work.DateOfJoining?.ToShortDateString()</td>
                     <td>@(work.DateOfLeaving.HasValue ? work.DateOfLeaving.Value.ToShortDateString() : "Present")</td>
-                    <td>@work.Position</td>
+                    <td>@work.Designation</td>
                 </tr>
             }
         </tbody>
     </table>
+
     @if (isSubmitted)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -410,9 +411,10 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
-
-
+    <div class="text-center mt-3">
         <button type="submit" class="btn btn-primary" @onclick="SubmitForm">Submit</button>
+    </div>
+
 
 </div>
 
@@ -498,14 +500,35 @@
         await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "bankingInfo");
         await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "employeeDetails");
         await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "experienceDetails");
+
+        // Trigger callback
+        await OnSubmit.InvokeAsync("All data submitted");
+
+        // ✅ Show Snackbar
+        Snackbar.Add("✅ Successfully submitted all information!", Severity.Success);
+
+        await Task.Delay(5000); // Wait for 2 seconds
+
         NavigationManager.NavigateTo($"/home");
+        Snackbar.Add("✅ Successfully submitted information!", Severity.Success);
+
 
         isSubmitted = true;
 
     }
-
+    private void NavigateToExperiencepage()
+    {
+        // Navigate to the edit form page
+        NavigationManager.NavigateTo("/workExperience");
     }
-
-
-
-
+    private void NavigateToBankingpage()
+    {
+        // Navigate to the edit form page
+        NavigationManager.NavigateTo("/bankingForm");
+    }
+    private void NavigateToEmployeepage()
+    {
+        // Navigate to the edit form page
+        NavigationManager.NavigateTo("/employee-form");
+    }
+}

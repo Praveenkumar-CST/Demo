@@ -46,13 +46,6 @@ namespace WiseHR.Models
         [Required(ErrorMessage = "Salary Account Type is required")]
         public string AccountType { get; set; } // "Savings" or "Current"
 
-
-        [Required]
-        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        public DateTime? LastModifiedAt { get; set; } = DateTime.UtcNow;
-
         public string AadhaarFileName { get; set; }
         public string? AadhaarBase64Content { get; set; }
         public string? AadhaarContentType { get; set; }

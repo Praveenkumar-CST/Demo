@@ -2,9 +2,13 @@
 @inject BankingService bankingService
 @inject IJSRuntime JSRuntime
 @using System.Text.Json;
+@using Components.sidebar
+@layout HomeLayout
 @using static WiseHR.Models.BankingInformation
 @inject NavigationManager NavigationManager
-<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-6">
+<h3 class="mb-1 text-primary">ADD BANK DETAILS</h3>
+<div class="mt-1">
+<MudContainer MaxWidth="MaxWidth.Large" >
     <MudCard Elevation="2" Class="p-6">
         @* <MudCardContent Style="max-height: 600px; overflow-y: auto;"> *@
             <MudCardContent >
@@ -103,7 +107,8 @@
                                       Variant="Variant.Outlined"
                                       Required="true"
                                       Margin="Margin.Dense" />
-                        <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
+               
+                     <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
                     </MudItem>
 
                     <!-- Branch State -->
@@ -132,44 +137,39 @@
                        <!-- Aadhaar File Upload -->
                 <MudItem xs="12" sm="6">
                     <MudText Typo="Typo.body1">Aadhaar Document</MudText>
-                        <InputFile OnChange="@(async e => await HandleFileSelected(e, "aadhar"))" accept=".pdf,.jpg,.jpeg,.png" />
+                <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" />
                         <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : "File selected")</MudText>
+                          @if (!string.IsNullOrEmpty(AadhaarUploadError))
+                    {
+                        <MudText Color="Color.Error">@AadhaarUploadError</MudText>
+                    }
                     <ValidationMessage For="@(() => bankingInfo.AadhaarBase64Content)" />
                 </MudItem>
 
                 <!-- PAN File Upload -->
                 <MudItem xs="12" sm="6">
                     <MudText Typo="Typo.body1">PAN Document</MudText>
-                        <InputFile OnChange="@(async e => await HandleFileSelected(e, "pan"))" accept=".pdf,.jpg,.jpeg,.png" />
+                    <InputFile OnChange="HandlePanFileChange" accept=".pdf,.jpg,.jpeg,.png" />
                     <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PanBase64Content) ? "No file selected" : "File selected")</MudText>
+                        @if (!string.IsNullOrEmpty(PanUploadError))
+                    {
+                            <MudText Color="Color.Error">@PanUploadError</MudText>
+                    }
                     <ValidationMessage For="@(() => bankingInfo.PanBase64Content)" />
                 </MudItem>
 
                 <!-- Passbook File Upload -->
                 <MudItem xs="12" sm="6">
                     <MudText Typo="Typo.body1">Passbook Document</MudText>
-                        <InputFile OnChange="@(async e => await HandleFileSelected(e, "passbook"))" accept=".pdf,.jpg,.jpeg,.png" />
+                <InputFile OnChange="OnPassbookFileChanged" accept=".pdf,.jpg,.jpeg,.png" />
                     <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) ? "No file selected" : "File selected")</MudText>
+                        @if (!string.IsNullOrEmpty(PassbookUploadError))
+                    {
+                            <MudText Color="Color.Error">@PassbookUploadError</MudText>
+                    }
                     <ValidationMessage For="@(() => bankingInfo.PassbookBase64Content)" />
                 </MudItem>
-                    <!-- Created At -->
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="bankingInfo.CreatedAt"
-                                       Label="Created At"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense"
-                                       Disabled="true" />
-                    </MudItem>
-
-                    <!-- Last Modified -->
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="bankingInfo.LastModifiedAt"
-                                       Label="Last Modified At"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense"
-                                       Disabled="true" />
-                    </MudItem>
-
+            
                     <!-- Action Buttons -->
                     <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
                         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GoBack">
@@ -179,12 +179,13 @@
                             Next
                         </MudButton>
                     </MudItem>
+
                 </MudGrid>
             </EditForm>
         </MudCardContent>
     </MudCard>
 </MudContainer>
-
+</div>
 @code {
     [Parameter]
     public EventCallback<BankingInformation> OnSubmit { get; set; }
@@ -237,6 +238,8 @@
             {
                 Console.WriteLine($"Error saving to local storage: {ex.Message}");
             }
+            NavigationManager.NavigateTo("/workExperience");
+
         }
         else
         {
@@ -262,6 +265,20 @@
     //         StateHasChanged();
     //     }
     // }
+    private async Task OnPassbookFileChanged(InputFileChangeEventArgs e)
+    {
+        await HandleFileSelected(e, "passbook");
+    }
+    private async Task HandlePanFileChange(InputFileChangeEventArgs e)
+    {
+        await HandleFileSelected(e, "pan");
+    }
+
+    private async Task HandleAadharFileChange(InputFileChangeEventArgs e)
+    {
+        await HandleFileSelected(e, "aadhar");
+    }
+
     private async Task LoadBankingInfo()
     {
         var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
@@ -342,6 +359,29 @@
             {
                 Console.WriteLine($"Error reading file: {ex.Message}");
             }
+        }
+        else{
+            SetUploadError(fileType, "File is required.");
+            return;
+        }
+    }
+    private string AadhaarUploadError;
+    private string PanUploadError;
+    private string PassbookUploadError;
+
+    private void SetUploadError(string fileType, string message)
+    {
+        switch (fileType.ToLower())
+        {
+            case "aadhar":
+                AadhaarUploadError = message;
+                break;
+            case "pan":
+                PanUploadError = message;
+                break;
+            case "passbook":
+                PassbookUploadError = message;
+                break;
         }
     }
 }

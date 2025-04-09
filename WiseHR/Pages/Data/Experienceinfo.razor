@@ -27,7 +27,6 @@
         {
             <MudText>No education details available.</MudText>
         }
-
         <h4>Work Experience Details</h4>
         @if (experience.WorkExperiences?.Any() == true)
         {
@@ -42,7 +41,7 @@
                 <RowTemplate>
                     <MudTd>@context.Employer</MudTd>
                     <MudTd>@context.Location</MudTd>
-                    <MudTd>@context.Position</MudTd>
+                    <MudTd>@context.Designation</MudTd>
                     <MudTd>@context.DateOfJoining?.ToString("d")</MudTd>
                     <MudTd>@(context.DateOfLeaving?.ToString("d") ?? "Present")</MudTd>
                 </RowTemplate>

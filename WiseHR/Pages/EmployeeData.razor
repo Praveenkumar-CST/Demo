@@ -120,9 +120,7 @@ else if (employees != null && employees.Count > 0)
                     <td>@emp.JoiningLocation</td>
                 
                     <td>@(emp.DateOfJoining.HasValue ? emp.DateOfJoining.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
-               
-                    <td>@(emp.DateOfRelieving.HasValue ? emp.DateOfRelieving.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
-             
+                            
                     <td>@emp.Allergies</td>
                     <td>@emp.Medications</td>
                     <td>@emp.PhysicallyChallenged</td>

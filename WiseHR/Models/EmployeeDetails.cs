@@ -27,9 +27,6 @@ namespace WiseHR.Models
         [Required(ErrorMessage = "Date of Joining is required")]
         public DateTime? DateOfJoining { get; set; }
 
-        [Required(ErrorMessage = "Date of Relieving is required")]
-        public DateTime? DateOfRelieving { get; set; }
-
         [Required(ErrorMessage = "Date of Birth is required")]
         public DateTime? DateOfBirth { get; set; }
 
@@ -79,12 +76,6 @@ namespace WiseHR.Models
                     new[] { nameof(DateOfJoining) });
             }
 
-            if (DateOfRelieving <= DateTime.Today)
-            {
-                yield return new ValidationResult(
-                    "Date of Relieving must be in the future.",
-                    new[] { nameof(DateOfRelieving) });
-            }
         }
         public string? Medications { get; set; } = string.Empty;
 
