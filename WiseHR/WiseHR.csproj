@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\css\bootstrap\" />
+    <Folder Include="wwwroot\pdfs\" />
   </ItemGroup>
 
 </Project>

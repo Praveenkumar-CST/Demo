@@ -14,7 +14,7 @@
 
         <EditForm Model="@experience" OnValidSubmit="@SubmitForm">
             <DataAnnotationsValidator />
-            <ValidationSummary />
+            @* <ValidationSummary /> *@
             <!-- Employee ID -->    <!-- Employee ID -->
     <MudGrid Gutter="3">
         <MudItem xs="12">
@@ -59,7 +59,7 @@
             </div>
         </div>
     }
-    <button type="button" class="btn btn-outline-primary mb-4" @onclick="AddEducation">+ Add Education</button>
+    <button type="button" class="btn btn-outline-primary mb-4 mt-1" @onclick="AddEducation">+ Add Education</button>
 
     <!-- Work Experience Section -->
     <h4 class="text-secondary mt-1">Work Experience</h4>
@@ -87,15 +87,15 @@
                     <label>Designation</label>
                     <InputText class="form-control" @bind-Value="work.Designation" />
                 </div>
-                <div class="d-flex align-items-end">
-                    <span class="text-danger fs-1 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
+                <div class="col-1 d-flex align-items-end">
+                    <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
                         &times;
                     </span>
                 </div>
             </div>
         </div>
     }
-    <button type="button" class="btn btn-outline-primary mb-4" @onclick="AddWork">+ Add Work Experience</button>
+    <button type="button" class="btn btn-outline-primary mb-4 mt-1" @onclick="AddWork">+ Add Work Experience</button>
     <!-- Action Buttons -->
       <MudItem xs="12" Class="d-flex justify-end mt-2 gap-3">
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GoBack">
@@ -130,7 +130,9 @@
 
     protected async override Task OnInitializedAsync()
     {
-        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "employeeDetails");
+        //var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
+        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
+
 
         if (!string.IsNullOrEmpty(employeeDetailsJson))
         {
@@ -192,8 +194,8 @@
 
     private async Task LoadExperienceInfo()
     {
-        // var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
-        var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
+       //  var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
+       var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
 
 
         if (!string.IsNullOrEmpty(experienceJson))
@@ -220,7 +222,7 @@
         // Store updated experience data in localStorage
         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
 
-       // await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
+       //await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
         await OnBack.InvokeAsync();  // Trigger the OnBack callback
         NavigationManager.NavigateTo("/bankingForm");
 

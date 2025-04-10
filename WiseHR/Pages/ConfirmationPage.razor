@@ -352,7 +352,7 @@
     </table>
     <!-- Education Qualifications Table -->
     <h4 class="d-flex justify-content-between align-items-center">
-        <MudText Typo="Typo.h6">Work Experiences</MudText>
+        <MudText Typo="Typo.h6">Education Qualification</MudText>
         <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToExperiencepage">Edit Work Experience</MudButton>
     </h4>
 
@@ -402,17 +402,67 @@
                 </tr>
             }
         </tbody>
-    </table>
 
-    @if (isSubmitted)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ Form submitted successfully!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </table>
+    <div class="container">
+        <h4>Policies & Coding Standards</h4>
+
+        <!-- Table for displaying policies -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Policy Name</th>
+                    <th>Preview</th>
+                    <th>Agree</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in policyDocuments)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>
+                            <button class="btn btn-link" @onclick="() => PreviewPolicy(item)">Preview</button>
+                        </td>
+                        <td>
+                            <!-- Enable checkbox only if the item has been previewed -->
+                            <input type="checkbox" @bind="item.IsChecked" disabled="@(item.HasPreviewed == false)" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Preview of selected PDF in a small container -->
+        @if (!string.IsNullOrEmpty(activePdfUrl))
+        {
+            <div class="pdf-preview-container">
+                <h5>Preview of @activePdfUrl</h5>
+                <!-- Display the PDF in a small container using an <object> element -->
+                <object data="@activePdfUrl" type="application/pdf" width="80%" height="400px">
+                    <p>Your browser does not support PDFs. Please download the PDF to view it: <a href="@activePdfUrl">Download PDF</a>.</p>
+                </object>
+                <button class="btn btn-p" @onclick="ClosePreview">Close Preview</button>
+            </div>
+        }
+
+        <!-- Form submission alert -->
+        @if (isSubmitted)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                ✅ Form submitted successfully!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Submit button -->
+        <div class="text-center mt-3">
+            <button type="button" class="btn btn-primary"
+                    @onclick="SubmitForm"
+                    disabled="@(!CanSubmit)">
+                Submit
+            </button>
         </div>
-    }
-    <div class="text-center mt-3">
-        <button type="submit" class="btn btn-primary" @onclick="SubmitForm">Submit</button>
     </div>
 
 
@@ -431,31 +481,61 @@
 
     // protected override async Task OnInitializedAsync()
     // {
-    //     Retrieve Banking Info from localStorage
     //     var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
     //     if (!string.IsNullOrEmpty(bankingInfoJson))
     //     {
     //         bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
     //     }
 
-    //     Retrieve Experience Info from localStorage
     //     var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
     //     if (!string.IsNullOrEmpty(experienceJson))
     //     {
     //         experience = JsonSerializer.Deserialize<Experience>(experienceJson);
     //     }
 
-    //     Retrieve Employee Info from localStorage
     //     var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
     //     if (!string.IsNullOrEmpty(employeeDetailsJson))
     //     {
     //         employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
     //     }
     // }
+    private List<PolicyItem> policyDocuments = new()
+        {
+        new PolicyItem { Name = "Attendance Policy", Url = "/pdfs/Wise Work Attendance Policy v3.pdf" },
+        new PolicyItem { Name = "Git Guidelines", Url = "/pdfs/Git Guidelines.pdf" },
+        new PolicyItem { Name = "Code of Conduct", Url = "/pdfs/Wise Work Code of Conduct v1.pdf" },
+        new PolicyItem { Name = "CSharp Coding Guidelines", Url = "/pdfs/CSharp Coding Guidelines.pdf" },
+        new PolicyItem { Name = "Json Coding Guidelines", Url = "/pdfs/Json Coding Guidelines.pdf" },
+        new PolicyItem { Name = "MongoDB Coding Guidelines", Url = "/pdfs/MongoDB Coding Guidelines.pdf" },
+        new PolicyItem { Name = "Python Coding Guidelines", Url = "/pdfs/Python Coding Guidelines.pdf" }
 
+    };//E:\Pugazh\new\InF\InF\WiseHR\wwwroot\pdfs\Python Coding Guidelines.pdf
+
+    private string? activePdfUrl = null;
+
+    private bool CanSubmit =>
+        policyDocuments.All(p => p.HasPreviewed && p.IsChecked);
+
+    private void PreviewPolicy(PolicyItem item)
+    {
+        activePdfUrl = item.Url;
+        item.HasPreviewed = true;
+    }
+
+    private void ClosePreview()
+    {
+        activePdfUrl = null; // Close the preview when the close button is clicked
+    }
+
+    public class PolicyItem
+    {
+        public string Name { get; set; } = "";
+        public string Url { get; set; } = "";
+        public bool HasPreviewed { get; set; } = false;
+        public bool IsChecked { get; set; } = false;
+    }
     protected override async Task OnInitializedAsync()
     {
-        // Retrieve data from sessionStorage
         var bankingInfoJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "bankingInfo");
         var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
         var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
@@ -473,7 +553,6 @@
             employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
         }
 
-        // Perform any necessary validation or transformation here
         StateHasChanged();
     }
     private bool isSubmitted = false;
@@ -518,7 +597,6 @@
         employeeDetails = new EmployeeDetails();
         experience = new Experience();
 
-        // Trigger any callback
         await OnSubmit.InvokeAsync("All data submitted");
         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "bankingInfo");
         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "experienceDetails");
