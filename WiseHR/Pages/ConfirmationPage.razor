@@ -429,28 +429,52 @@
     [Parameter]
     public EventCallback<string> OnSubmit { get; set; }
 
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     Retrieve Banking Info from localStorage
+    //     var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
+    //     if (!string.IsNullOrEmpty(bankingInfoJson))
+    //     {
+    //         bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
+    //     }
+
+    //     Retrieve Experience Info from localStorage
+    //     var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
+    //     if (!string.IsNullOrEmpty(experienceJson))
+    //     {
+    //         experience = JsonSerializer.Deserialize<Experience>(experienceJson);
+    //     }
+
+    //     Retrieve Employee Info from localStorage
+    //     var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
+    //     if (!string.IsNullOrEmpty(employeeDetailsJson))
+    //     {
+    //         employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
+    //     }
+    // }
+
     protected override async Task OnInitializedAsync()
     {
-        // Retrieve Banking Info from localStorage
-        var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
+        // Retrieve data from sessionStorage
+        var bankingInfoJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "bankingInfo");
+        var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
+        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
+
         if (!string.IsNullOrEmpty(bankingInfoJson))
         {
             bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
         }
-
-        // Retrieve Experience Info from localStorage
-        var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
         if (!string.IsNullOrEmpty(experienceJson))
         {
             experience = JsonSerializer.Deserialize<Experience>(experienceJson);
         }
-
-        // Retrieve Employee Info from localStorage
-        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
         if (!string.IsNullOrEmpty(employeeDetailsJson))
         {
             employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
         }
+
+        // Perform any necessary validation or transformation here
+        StateHasChanged();
     }
     private bool isSubmitted = false;
 
@@ -496,22 +520,23 @@
 
         // Trigger any callback
         await OnSubmit.InvokeAsync("All data submitted");
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "bankingInfo");
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "experienceDetails");
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "employeeDetails");
 
-        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "bankingInfo");
-        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "employeeDetails");
-        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "experienceDetails");
+
+        // await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "bankingInfo");
+        // await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "employeeDetails");
+        // await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "experienceDetails");
 
         // Trigger callback
         await OnSubmit.InvokeAsync("All data submitted");
 
+       
+
         // ✅ Show Snackbar
         Snackbar.Add("✅ Successfully submitted all information!", Severity.Success);
-
-        await Task.Delay(5000); // Wait for 2 seconds
-
         NavigationManager.NavigateTo($"/home");
-        Snackbar.Add("✅ Successfully submitted information!", Severity.Success);
-
 
         isSubmitted = true;
 

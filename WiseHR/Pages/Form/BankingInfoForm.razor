@@ -6,10 +6,10 @@
 @layout HomeLayout
 @using static WiseHR.Models.BankingInformation
 @inject NavigationManager NavigationManager
-<h3 class="mb-1 text-primary">ADD BANK DETAILS</h3>
-<div class="mt-1">
-<MudContainer MaxWidth="MaxWidth.Large" >
-    <MudCard Elevation="2" Class="p-6">
+<h3 class="mb-1 text-primary">BANK DETAILS</h3>
+<div >
+<MudContainer MaxWidth="MaxWidth.Medium" >
+    <MudCard Elevation="2" Class="p-3">
         @* <MudCardContent Style="max-height: 600px; overflow-y: auto;"> *@
             <MudCardContent >
 
@@ -20,16 +20,16 @@
                 <MudGrid Gutter="3">
 
                     <!-- Employee ID -->
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="bankingInfo.EmployeeID"
-                                      Label="Employee ID"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Required="true"
-                                      HelperText="Enter your employee ID" />
-                        <ValidationMessage For="@(() => bankingInfo.EmployeeID)" />
-                    </MudItem>
-
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="bankingInfo.EmployeeID"
+                                          Label="Employee ID"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Required="true"
+                                          Disabled="true"
+                                          HelperText="Enter your employee ID" />
+                            <ValidationMessage For="@(() => bankingInfo.EmployeeID)" />
+                        </MudItem>
                     <!-- Bank Name -->
                     <MudItem xs="12" sm="6">
                         <MudTextField @bind-Value="bankingInfo.BankName"
@@ -137,7 +137,7 @@
                        <!-- Aadhaar File Upload -->
                 <MudItem xs="12" sm="6">
                     <MudText Typo="Typo.body1">Aadhaar Document</MudText>
-                <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" />
+                <InputFile   OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" />
                         <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : "File selected")</MudText>
                           @if (!string.IsNullOrEmpty(AadhaarUploadError))
                     {
@@ -200,8 +200,21 @@
     [Parameter]
     public BankingInformation InitialData { get; set; }
 
-    protected async override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "employeeDetails");
+
+        if (!string.IsNullOrEmpty(employeeDetailsJson))
+        {
+            var employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
+
+            if (employeeDetails != null)
+            {
+                string employeeId = employeeDetails.EmployeeID;
+                bankingInfo.EmployeeID = employeeId;
+            }
+        }
+
         EditContext = new EditContext(bankingInfo);
         await LoadBankingInfo();
         if (InitialData != null)
@@ -231,7 +244,8 @@
             Console.WriteLine("Form is valid, submitting...");
             try
             {
-                await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+                //await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
                 await OnSubmit.InvokeAsync(bankingInfo);
             }
             catch (Exception ex)
@@ -281,7 +295,9 @@
 
     private async Task LoadBankingInfo()
     {
-        var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
+        //var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
+        var bankingInfoJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "bankingInfo");
+
 
         if (!string.IsNullOrEmpty(bankingInfoJson))
         {
@@ -299,9 +315,12 @@
 
     private async Task GoBack()
     {
-        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+        // await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
 
         await OnBack.InvokeAsync();
+        NavigationManager.NavigateTo("/employee-form");
+
     }
     public void Reset()
     {

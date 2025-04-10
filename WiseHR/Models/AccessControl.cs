@@ -28,9 +28,8 @@
             { "employee", new List<(string, string)>
                 {
                     ("Dashboard", "/home"),
-                    ("Registration","/registration"),
+                    ("HIDE_Registration","/registration"),
                     ("HIDE_confirmationPage","/confirmation"),
-                    ("Fortnight Report", "/fortnight-report"),
                     ("HIDE_workExperience","/workExperience"),
                     ("HIDE_employee-form","/employee-form"),
                     ("HIDE_bankingForm","/bankingForm"),

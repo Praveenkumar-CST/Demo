@@ -6,10 +6,10 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @using System.Text.Json;
-<div class="mt-1">
-    <h3 class="mb-1 text-primary">ADD EMPLOYEE DETAILS</h3>
-    <MudContainer MaxWidth="MaxWidth.Large" >
-    <MudCard Elevation="2" Class="p-6">
+<div >
+    <h3 class="mb-1 text-primary">EMPLOYEE DETAILS</h3>
+    <MudContainer MaxWidth="MaxWidth.Medium" >
+    <MudCard Elevation="2" Class="p-3">
     <MudCardContent  Margin="Margin.Dense" Dense="true">
 
             <EditForm Model="@employeeDetails" OnValidSubmit="GoToNextPage">
@@ -51,7 +51,9 @@
                         <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Gender" Required="true">
                             <MudSelectItem Value="@("Male")">Male</MudSelectItem>
                             <MudSelectItem Value="@("Female")">Female</MudSelectItem>
-                            <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                            <MudSelectItem Value="@("Other")">Other</udSelectItem>
+                            <MudSelectItem Value="@("Perfer not to say")">perfer not to say</MudSelectItem>
+
                         </MudSelect>
                     </MudItem>
                        </MudGrid>
@@ -69,7 +71,7 @@
                             <ValidationMessage For="@(() => employeeDetails.Allergies)" />
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Medications" Variant="Variant.Outlined" @bind-Value="employeeDetails.Medications"/>
+                        <MudTextField Label="Medications" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Medications"/>
                             <ValidationMessage For="@(() => employeeDetails.Medications)" />
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
@@ -146,6 +148,7 @@
                 </MudGrid>
                 @* break *@
                     <!-- passport Information -->
+                    <MudText Typo="Typo.h6" Class="mb-4 mt-6">Passport  Information</MudText>
 
                 <MudGrid>
                     <MudItem xs="12" sm="4" md="3">
@@ -177,7 +180,7 @@
                 <MudText Typo="Typo.h6" Class="mb-4 mt-6">Current Address</MudText>
                 <MudGrid>
                     <MudItem xs="12">
-                        <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentAddress" Required="true" Lines="3"/>
+                        <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentAddress" Required="true" Lines="2"/>
                             <ValidationMessage For="@(() => employeeDetails.CurrentAddress)" />
                        
                     </MudItem>
@@ -215,7 +218,7 @@
                 <MudText Typo="Typo.h6" Class="mb-4 mt-6">Permanent Address</MudText>
                 <MudGrid>
                     <MudItem xs="12">
-                        <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentAddress" Required="true" Lines="3"/>
+                        <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentAddress" Required="true" Lines="2"/>
                             <ValidationMessage For="@(() => employeeDetails.PermanentAddress)" />
                         
                     </MudItem>
@@ -286,7 +289,7 @@
                     </MudItem>
                     </MudGrid>
                     @* break *@
-                    <b><hr /></b>
+                    <strong> <b><hr  style="color:black";/></b></strong>
                     <MudGrid>
                     <MudItem xs="12" sm="4" md="3">
                         <MudTextField Label="Emergency Contact 2 Name" Variant="Variant.Outlined"Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Name" Required="true"/>
@@ -417,8 +420,8 @@
 
     private async Task GoToNextPage()
     {
-        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
-
+        // await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
         await OnSubmit.InvokeAsync(employeeDetails); // Pass data to parent to hold
         Console.WriteLine("Navigating to next step without saving to database.");
         NavigationManager.NavigateTo("/bankingForm");
@@ -428,7 +431,9 @@
     private async Task LoadEmployeeInfo()
     {
         // Retrieve the employee details from local storage
-        var employeeJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
+       // var employeeJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
+        var employeeJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
+
 
         if (!string.IsNullOrEmpty(employeeJson))
         {

@@ -6,9 +6,9 @@
 @using Components.sidebar
 @layout HomeLayout
 
-<h3 class="mb-1" text-primary">ADD EXPERIENCE DETAILS</h3>
-<div class="mt-1">
-<MudContainer MaxWidth="MaxWidth.Large"  >
+<h3 class="mb-1" text-primary">EXPERIENCE DETAILS</h3>
+<div >
+<MudContainer MaxWidth="MaxWidth.Medium"  >
     <MudCard Elevation="2" Class="p-2">
     <MudCardContent   Margin="Margin.Dense" Dense="true">
 
@@ -18,11 +18,13 @@
             <!-- Employee ID -->    <!-- Employee ID -->
     <MudGrid Gutter="3">
         <MudItem xs="12">
-            <MudTextField Label="Employee ID"
-                          @bind-Value="experience.EmployeeID"
-                          Variant="Variant.Outlined"
-                          Required="true"
-                          HelperText="Enter your Employee ID" />
+                            <MudTextField Label="Employee ID"
+                                          @bind-Value="experience.EmployeeID"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          Disabled="true"
+                                          Margin="Margin.Dense"
+                                          HelperText="Enter your Employee ID" />
             <ValidationMessage For="@(() => experience.EmployeeID)" class="text-danger" />
         </MudItem>
     </MudGrid>
@@ -49,8 +51,10 @@
                     <label>Percentage</label>
                     <InputNumber class="form-control" @bind-Value="edu.Percentage" />
                 </div>
-                <div class=" col-1 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger w-60" @onclick="() => RemoveEducation(edu)">Remove</button>
+                <div class="col-1 d-flex align-items-end">
+                    <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveEducation(edu)">
+                        &times;
+                    </span>
                 </div>
             </div>
         </div>
@@ -83,15 +87,17 @@
                     <label>Designation</label>
                     <InputText class="form-control" @bind-Value="work.Designation" />
                 </div>
-                <div class="col-1 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger w-70" @onclick="() => RemoveWork(work)">Remove</button>
+                <div class="d-flex align-items-end">
+                    <span class="text-danger fs-1 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
+                        &times;
+                    </span>
                 </div>
             </div>
         </div>
     }
     <button type="button" class="btn btn-outline-primary mb-4" @onclick="AddWork">+ Add Work Experience</button>
     <!-- Action Buttons -->
-      <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+      <MudItem xs="12" Class="d-flex justify-end mt-2 gap-3">
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GoBack">
                 Back
             </MudButton>
@@ -120,9 +126,24 @@
 
     [Parameter]
     public Experience InitialData { get; set; }
+    private EditContext editContext;
 
     protected async override Task OnInitializedAsync()
     {
+        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "employeeDetails");
+
+        if (!string.IsNullOrEmpty(employeeDetailsJson))
+        {
+            var employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
+
+            if (employeeDetails != null)
+            {
+                string employeeId = employeeDetails.EmployeeID;
+                experience.EmployeeID = employeeId;
+            }
+        }
+        editContext = new EditContext(experience);  // Initialize EditContext for validation
+
         await LoadExperienceInfo();
 
         if (InitialData != null)
@@ -141,7 +162,9 @@
 
         // Serialize the Experience object and save it to localStorage
         var json = JsonSerializer.Serialize(experience);  // Serialize the entire Experience object, including the lists
-        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", json); // Save to localStorage
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "experienceDetails", json);
+
+        //await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", json); // Save to localStorage
         Console.WriteLine("Form submitted and data saved to localStorage");
 
         NavigationManager.NavigateTo("/confirmation");  // Navigate to a confirmation page or another step
@@ -169,7 +192,9 @@
 
     private async Task LoadExperienceInfo()
     {
-        var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
+        // var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
+        var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
+
 
         if (!string.IsNullOrEmpty(experienceJson))
         {
@@ -193,10 +218,13 @@
         experience.WorkExperiences = workList;
 
         // Store updated experience data in localStorage
-        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
-        await OnBack.InvokeAsync();  // Trigger the OnBack callback
-    }
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
 
+       // await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
+        await OnBack.InvokeAsync();  // Trigger the OnBack callback
+        NavigationManager.NavigateTo("/bankingForm");
+
+    }
     public void Reset()
     {
         experience = new Experience();

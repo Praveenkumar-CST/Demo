@@ -107,7 +107,6 @@ namespace WiseHR.Models
 
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Enter a valid email address")]
-        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@gmail\.com$", ErrorMessage = "Email must be a valid Gmail address")]
         public string CurrentEmail { get; set; }
 
         // Permanent Address Fields
