@@ -1,0 +1,120 @@
+﻿@page "/fortnight-report"
+@inject NavigationManager Navigation
+@using Components.sidebar
+@layout HomeLayout
+@inject EmployeeService EmployeeService
+
+<MudPaper Class="p-4 mx-auto mt-6" MaxWidth="800px">
+    <MudText Typo="Typo.h5">Submit Fortnight Report</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (hasError)
+    {
+        <MudText Color="Color.Error">Failed to load employee data.</MudText>
+    }
+    else if (!IsWithinFortnightPeriod)
+    {
+        <MudText Color="Color.Error">Submissions are only allowed during the fortnight reporting period.</MudText>
+    }
+    else
+    {
+        <EditForm Model="@report" OnValidSubmit="HandleValidSubmit">
+            <MudSelect @bind-Value="selectedMenteeName" Label="Select Mentee Name" Required="true" T="string" OnValueChanged="OnMenteeNameChanged">
+                @foreach (var emp in employees)
+                {
+                    <MudSelectItem Value="@emp.FirstName">@($"{emp.FirstName} {emp.LastName}")</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect @bind-Value="selectedMenteeEmail" Label="Select Mentee Email" Required="true" T="string" OnValueChanged="OnMenteeEmailChanged">
+                @foreach (var emp in employees)
+                {
+                    <MudSelectItem Value="@emp.CurrentEmail">@($"{emp.CurrentEmail}")</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField @bind-Value="report.ProgressNote" Label="Progress Note" Lines="4" Required="true" TextFieldStyle="TextFieldStyle.Outlined" />
+            <MudText Class="mb-2" Typo="Typo.subtitle2">Progress %</MudText>
+            <MudSlider @bind-Value="report.ProgressPercentage" Min="0" Max="100" Step="1" />
+
+            <MudText Typo="Typo.subtitle2">Upload Supporting File</MudText>
+            <InputFile OnChange="HandleFileChange" />
+
+            <MudButton Type="Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">Submit Report</MudButton>
+        </EditForm>
+    }
+</MudPaper>
+
+@code {
+    private ReportModel report = new();
+    private List<EmployeeDetails> employees;
+    private string selectedMenteeName;
+    private string selectedMenteeEmail;
+    private bool isLoading = true;
+    private bool hasError = false;
+    private bool IsWithinFortnightPeriod => CheckFortnightPeriod();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            employees = await EmployeeService.GetAllEmployees();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employees: {ex.Message}");
+            hasError = true;
+        }
+        isLoading = false;
+    }
+
+    private void OnMenteeNameChanged(string name)
+    {
+        var selected = employees.FirstOrDefault(e => e.FirstName == name);
+        if (selected != null)
+        {
+            report.MenteeName = $"{selected.FirstName} {selected.LastName}";
+            report.MenteeEmail = selected.CurrentEmail;
+            selectedMenteeEmail = selected.CurrentEmail;
+        }
+    }
+
+    private void OnMenteeEmailChanged(string email)
+    {
+        var selected = employees.FirstOrDefault(e => e.CurrentEmail == email);
+        if (selected != null)
+        {
+            report.MenteeName = $"{selected.FirstName} {selected.LastName}";
+            report.MenteeEmail = selected.CurrentEmail;
+            selectedMenteeName = selected.FirstName;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        report.SubmittedOn = DateTime.UtcNow;
+        // TODO: Save to database
+    }
+
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var buffer = new byte[file.Size];
+        await file.OpenReadStream().ReadAsync(buffer);
+        report.UploadedFile = buffer;
+        report.FileName = file.Name;
+    }
+
+    private bool CheckFortnightPeriod()
+    {
+        var today = DateTime.UtcNow.Date;
+        var start = new DateTime(today.Year, today.Month, 1);
+        var mid = start.AddDays(14);
+        var end = start.AddMonths(1).AddDays(-1);
+
+        return (today >= start && today <= mid) || (today > mid && today <= end);
+    }
+}

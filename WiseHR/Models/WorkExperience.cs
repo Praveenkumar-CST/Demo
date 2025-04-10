@@ -12,7 +12,7 @@ namespace WiseHRServer.Models
         public string Location { get; set; }
         public DateTime? DateOfJoining { get; set; }
         public DateTime? DateOfLeaving { get; set; }
-        public string Position { get; set; }
+        public string Designation { get; set; }
     }
     public class Education
     {
@@ -38,12 +38,6 @@ namespace WiseHRServer.Models
         [JsonIgnore]
         [Column(TypeName = "nvarchar(max)")]
         public string WorkExperienceJson { get; set; }
-
-        [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        public DateTime LastModifiedAt { get; set; } = DateTime.UtcNow;
 
         [NotMapped]
         public List<Education> EducationQualifications

@@ -46,24 +46,24 @@ namespace WiseHR.Models
         [Required(ErrorMessage = "Salary Account Type is required")]
         public string AccountType { get; set; } // "Savings" or "Current"
 
-
-        [Required]
-        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        public DateTime? LastModifiedAt { get; set; } = DateTime.UtcNow;
-
         public string AadhaarFileName { get; set; }
-        public string? AadhaarBase64Content { get; set; }
+
+        [Required(ErrorMessage = "Aadhaar document is required")]
+        public string AadhaarBase64Content { get; set; }
+
         public string? AadhaarContentType { get; set; }
 
         // PAN File Properties
         public string PanFileName { get; set; }
+
+        [Required(ErrorMessage = "Pan document is required")]
         public string? PanBase64Content { get; set; }
         public string? PanContentType { get; set; }
 
         // Passbook File Properties
         public string PassbookFileName { get; set; }
+
+        [Required(ErrorMessage = "Passbook document is required")]
         public string? PassbookBase64Content { get; set; }
         public string? PassbookContentType { get; set; }
     }

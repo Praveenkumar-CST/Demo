@@ -38,9 +38,11 @@
     <script>navigator.serviceWorker.register('service-worker.js');</script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="scripts/localStorage.js"></script>
+    <script src="scripts/sessionStorage.js"></script>
+
 
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="scripts/storage.js"></script>
+    <script type="module" src="storage.js"></script>
     <script>
         window.downloadBase64File = (contentType, base64Data, fileName) => {
             const linkSource = `data:${contentType};base64,${base64Data}`;

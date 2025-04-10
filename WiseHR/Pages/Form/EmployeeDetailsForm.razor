@@ -1,62 +1,59 @@
 ﻿@page "/employee-form"
 @using WiseHRServer.Models
 @inject EmployeeService employeeService
+@using Components.sidebar
+@layout HomeLayout
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 @using System.Text.Json;
-<div class="mt-4">
-    <h3 class="mb-4 text-primary">Add Details</h3>
+<div >
+    <h3 class="mb-1 text-primary">EMPLOYEE DETAILS</h3>
+    <MudContainer MaxWidth="MaxWidth.Medium" >
+    <MudCard Elevation="2" Class="p-3">
+    <MudCardContent  Margin="Margin.Dense" Dense="true">
 
-    @* <MudCard Elevation="2"> *@
-    @*     <MudCardHeader Class="bg-primary text-white"> *@
-    @*         <CardHeaderContent> *@
-    @*             <MudText Typo="Typo.h6">Employee Information Form</MudText> *@
-    @*         </CardHeaderContent> *@
-    @*     </MudCardHeader> *@
-        <MudCardContent Style="max-height: 900px; overflow-y: auto;">
             <EditForm Model="@employeeDetails" OnValidSubmit="GoToNextPage">
                 <DataAnnotationsValidator />
-                <ValidationSummary />
+                @* <ValidationSummary /> *@
 
                 <!-- Personal Information -->
                 <MudText Typo="Typo.h6" Class="mb-4">Personal Information</MudText>
-                <MudGrid>
+                <MudGrid Margin="Margin.Dense">
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID" Required="true" />
+                        <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID" Required="true"Margin="Margin.Dense" />
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="First Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FirstName" Required="true">
+                        <MudTextField Label="First Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FirstName" Required="true"Margin="Margin.Dense"/>
                             <ValidationMessage For="@(() => employeeDetails.FirstName)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Middle Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MiddleName">
+                        <MudTextField Label="Middle Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MiddleName" Margin="Margin.Dense"/>
                             <ValidationMessage For="@(() => employeeDetails.MiddleName)" />
-                        </MudTextField>
+                       
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Last Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.LastName" Required="true">
+                        <MudTextField Label="Last Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.LastName" Required="true"Margin="Margin.Dense"/>
                             <ValidationMessage For="@(() => employeeDetails.LastName)" />
-                        </MudTextField>
+                      
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Father's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FatherName" Required="true">
+                        <MudTextField Label="Father's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FatherName" Required="true" Margin="Margin.Dense"/>
                             <ValidationMessage For="@(() => employeeDetails.FatherName)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Mother's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MotherName" Required="true">
+                        <MudTextField Label="Mother's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MotherName" Required="true" Margin="Margin.Dense"/>
                             <ValidationMessage For="@(() => employeeDetails.MotherName)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudDatePicker Label="Date of Birth" Variant="Variant.Outlined" @bind-Date="employeeDetails.DateOfBirth" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfBirth)" />
+                        <MudDatePicker Label="Date of Birth" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.DateOfBirth" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfBirth)" />
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" @bind-Value="employeeDetails.Gender" Required="true">
-                            <MudSelectItem Value="@("")">Select Gender</MudSelectItem>
+                        <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Gender" Required="true">
                             <MudSelectItem Value="@("Male")">Male</MudSelectItem>
                             <MudSelectItem Value="@("Female")">Female</MudSelectItem>
-                            <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                            <MudSelectItem Value="@("Other")">Other</udSelectItem>
+                            <MudSelectItem Value="@("Perfer not to say")">perfer not to say</MudSelectItem>
+
                         </MudSelect>
                     </MudItem>
                        </MudGrid>
@@ -64,25 +61,21 @@
                     <MudGrid>
 
                     <MudItem xs="12" sm="4" md="3">
-                        <MudSelect T="string" Label="Physically Challenged" Variant="Variant.Outlined" @bind-Value="employeeDetails.PhysicallyChallenged" Required="true">
-                            <MudSelectItem Value="@("")">Select Status</MudSelectItem>
+                        <MudSelect T="string" Label="Physically Challenged" Margin="Margin.Dense" Variant="Variant.Outlined" @bind-Value="employeeDetails.PhysicallyChallenged" Required="true">
                             <MudSelectItem Value="@("Yes")">Yes</MudSelectItem>
                             <MudSelectItem Value="@("No")">No</MudSelectItem>
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Allergies" Variant="Variant.Outlined" @bind-Value="employeeDetails.Allergies">
+                        <MudTextField Label="Allergies" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Allergies"/>
                             <ValidationMessage For="@(() => employeeDetails.Allergies)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Medications" Variant="Variant.Outlined" @bind-Value="employeeDetails.Medications">
+                        <MudTextField Label="Medications" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Medications"/>
                             <ValidationMessage For="@(() => employeeDetails.Medications)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudSelect T="string" Label="Marital Status" Variant="Variant.Outlined" @bind-Value="employeeDetails.MaritalStatus" Required="true">
-                            <MudSelectItem Value="@("")">Select Marital Status</MudSelectItem>
+                        <MudSelect T="string" Label="Marital Status" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.MaritalStatus" Required="true">
                             <MudSelectItem Value="@("Single")">Single</MudSelectItem>
                             <MudSelectItem Value="@("Married")">Married</MudSelectItem>
                             <MudSelectItem Value="@("Divorced")">Divorced</MudSelectItem>
@@ -92,19 +85,16 @@
                     @if (employeeDetails.MaritalStatus != "Single")
                     {
                     <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="No of Sons" Variant="Variant.Outlined" @bind-Value="employeeDetails.Sons" >
+                            <MudTextField Label="No of Sons" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Sons" />
                                 <ValidationMessage For="@(() => employeeDetails.Sons)" />
-                            </MudTextField>
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="No of Daughters" Variant="Variant.Outlined" @bind-Value="employeeDetails.Daughters" >
+                            <MudTextField Label="No of Daughters" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Daughters" />
                                 <ValidationMessage For="@(() => employeeDetails.Daughters)" />
-                            </MudTextField>
                         </MudItem>
                     }
                     <MudItem xs="12" sm="4" md="3">
-                        <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" @bind-Value="employeeDetails.BloodGroup" Required="true">
-                            <MudSelectItem Value="@("")">-- Select Blood Group --</MudSelectItem>
+                        <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.BloodGroup" Required="true">
                             <MudSelectItem Value="@("A+")">A+</MudSelectItem>
                             <MudSelectItem Value="@("A-")">A-</MudSelectItem>
                             <MudSelectItem Value="@("B+")">B+</MudSelectItem>
@@ -116,8 +106,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined" @bind-Value="employeeDetails.Nationality" Required="true">
-                            <MudSelectItem Value="@("")">Select Nationality</MudSelectItem>
+                        <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined"  Margin="Margin.Dense" @bind-Value="employeeDetails.Nationality" Required="true">
                             <MudSelectItem Value="@("Indian")">Indian</MudSelectItem>
                             <MudSelectItem Value="@("American")">American</MudSelectItem>
                             <MudSelectItem Value="@("Other")">Other</MudSelectItem>
@@ -129,8 +118,7 @@
                 <MudText Typo="Typo.h6" Class="mb-4 mt-6">Work Information</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudSelect T="string" Label="Type of Employment" Variant="Variant.Outlined" @bind-Value="employeeDetails.TypeOfEmployment">
-                            <MudSelectItem Value="@("")">-- Select Employment Type --</MudSelectItem>
+                        <MudSelect T="string" Label="Type of Employment" Variant="Variant.Outlined" Margin="Margin.Dense"@bind-Value="employeeDetails.TypeOfEmployment">
                             <MudSelectItem Value="@("Full-Time")">Full-Time</MudSelectItem>
                             <MudSelectItem Value="@("Part-Time")">Part-Time</MudSelectItem>
                             <MudSelectItem Value="@("Contract")">Contract</MudSelectItem>
@@ -138,8 +126,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudSelect T="string" Label="Level" Variant="Variant.Outlined" @bind-Value="employeeDetails.Level">
-                            <MudSelectItem Value="@("")">-- Select Level --</MudSelectItem>
+                        <MudSelect T="string" Label="Level" Variant="Variant.Outlined"Margin="Margin.Dense" @bind-Value="employeeDetails.Level">
                             <MudSelectItem Value="@("Junior")">Junior</MudSelectItem>
                             <MudSelectItem Value="@("Mid")">Mid</MudSelectItem>
                             <MudSelectItem Value="@("Senior")">Senior</MudSelectItem>
@@ -147,49 +134,44 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Designation" Variant="Variant.Outlined" @bind-Value="employeeDetails.Designation">
+                        <MudTextField Label="Designation" Variant="Variant.Outlined" Margin="Margin.Dense"@bind-Value="employeeDetails.Designation"/>
                             <ValidationMessage For="@(() => employeeDetails.Designation)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Joining Location" Variant="Variant.Outlined" @bind-Value="employeeDetails.JoiningLocation" Required="true">
+                        <MudTextField Label="Joining Location" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.JoiningLocation" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.JoiningLocation)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudDatePicker Label="Date of Joining" Variant="Variant.Outlined" @bind-Date="employeeDetails.DateOfJoining" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfJoining)" />
+                        <MudDatePicker Label="Date of Joining" Variant="Variant.Outlined" Margin="Margin.Dense"  @bind-Date="employeeDetails.DateOfJoining" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfJoining)" />
                     </MudItem>
-                    <MudItem xs="12" sm="4" md="3">
-                        <MudDatePicker Label="Date of Relieving" Variant="Variant.Outlined" @bind-Date="employeeDetails.DateOfRelieving" Required="true" MinDate="@employeeDetails.DateOfJoining" For="@(() => employeeDetails.DateOfRelieving)" />
-                    </MudItem>
+                
                 </MudGrid>
                 @* break *@
+                    <!-- passport Information -->
+                    <MudText Typo="Typo.h6" Class="mb-4 mt-6">Passport  Information</MudText>
+
                 <MudGrid>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Passport Full Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.PassportFullName" Required="true">
+                        <MudTextField Label="Passport Full Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportFullName" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PassportFullName)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Passport No" Variant="Variant.Outlined" @bind-Value="employeeDetails.PassportNo" Required="true">
+                        <MudTextField Label="Passport No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportNo" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PassportNo)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Passport Nationality" Variant="Variant.Outlined" @bind-Value="employeeDetails.PassportNationality" Required="true">
+                        <MudTextField Label="Passport Nationality" Variant="Variant.Outlined" Margin="Margin.Dense"  @bind-Value="employeeDetails.PassportNationality" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PassportNationality)" />
-                        </MudTextField>
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudDatePicker Label="Date of Issue" Variant="Variant.Outlined" @bind-Date="employeeDetails.PassportIssueDate" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.PassportIssueDate)" />
+                        <MudDatePicker Label="Date of Issue" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.PassportIssueDate" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.PassportIssueDate)" />
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudDatePicker Label="Date of Expiry" Variant="Variant.Outlined" @bind-Date="employeeDetails.PassportExpiryDate" Required="true" MinDate="@employeeDetails.PassportIssueDate" For="@(() => employeeDetails.PassportExpiryDate)" />
+                        <MudDatePicker Label="Date of Expiry" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.PassportExpiryDate" Required="true" MinDate="@employeeDetails.PassportIssueDate" For="@(() => employeeDetails.PassportExpiryDate)" />
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Passport Place of Issue" Variant="Variant.Outlined" @bind-Value="employeeDetails.PassportPlaceOfIssue" Required="true">
+                        <MudTextField Label="Passport Place of Issue" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportPlaceOfIssue" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PassportPlaceOfIssue)" />
-                        </MudTextField>
                     </MudItem>
                    </MudGrid>
                        @* break *@
@@ -198,37 +180,37 @@
                 <MudText Typo="Typo.h6" Class="mb-4 mt-6">Current Address</MudText>
                 <MudGrid>
                     <MudItem xs="12">
-                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentAddress" Required="true" Lines="3">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentAddress" Required="true" Lines="2"/>
                             <ValidationMessage For="@(() => employeeDetails.CurrentAddress)" />
-                        </MudTextField>
+                       
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentCity" Required="true">
+                        <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentCity" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.CurrentCity)" />
-                        </MudTextField>
+                     
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentState" Required="true">
+                        <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentState" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.CurrentState)" />
-                        </MudTextField>
+                    
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentZip" Required="true">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentZip" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.CurrentZip)" />
-                        </MudTextField>
+                      
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentMobile" Required="true">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentMobile" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.CurrentMobile)" />
-                        </MudTextField>
+                      
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Email" Variant="Variant.Outlined" @bind-Value="employeeDetails.CurrentEmail" Required="true">
+                        <MudTextField Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentEmail" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.CurrentEmail)" />
-                        </MudTextField>
+                      
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudCheckBox T="bool" @bind-Checked="IsSameAsCurrentAddress" Label="Same as Current Address" Color="Color.Primary" ValueChanged="CopyAddress" />
+                        <MudCheckBox T="bool" @bind-Checked="IsSameAsCurrentAddress" Margin="Margin.Dense" Label="Same as Current Address" Color="Color.Primary" ValueChanged="CopyAddress" />
                     </MudItem>
                 </MudGrid>
 
@@ -236,34 +218,34 @@
                 <MudText Typo="Typo.h6" Class="mb-4 mt-6">Permanent Address</MudText>
                 <MudGrid>
                     <MudItem xs="12">
-                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentAddress" Required="true" Lines="3">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentAddress" Required="true" Lines="2"/>
                             <ValidationMessage For="@(() => employeeDetails.PermanentAddress)" />
-                        </MudTextField>
+                        
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentCity" Required="true">
+                        <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentCity" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PermanentCity)" />
-                        </MudTextField>
+                       
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentState" Required="true">
+                        <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentState" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PermanentState)" />
-                        </MudTextField>
+                   
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentZip" Required="true">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentZip" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PermanentZip)" />
-                        </MudTextField>
+                   
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentMobile" Required="true">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentMobile" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PermanentMobile)" />
-                        </MudTextField>
+                      
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Email" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentEmail" Required="true">
+                        <MudTextField Label="Email" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentEmail" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PermanentEmail)" />
-                        </MudTextField>
+                     
                     </MudItem>
                 </MudGrid>
 
@@ -271,77 +253,78 @@
                 <MudText Typo="Typo.h6" Class="mb-4 mt-6">Emergency Contact Information</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Emergency Contact 1 Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1Name" Required="true">
+                        <MudTextField Label="Emergency Contact 1 Name" Variant="Variant.Outlined"Margin="Margin.Dense"  @bind-Value="employeeDetails.EmergencyContact1Name" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Name)" />
-                        </MudTextField>
+                   
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Relationship" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1Relationship" Required="true">
+                        <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Relationship" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" />
-                        </MudTextField>
+                   
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1Address" Required="true">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Address" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Address)" />
-                        </MudTextField>
+                  
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1City" Required="true">
+                        <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1City" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact1City)" />
-                        </MudTextField>
+                       
                     </MudItem>
                     <MudItem xs="12" sm="6" md="4">
-                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1State" Required="true">
+                        <MudTextField Label="State" Variant="Variant.Outlined"Margin="Margin.Dense"  @bind-Value="employeeDetails.EmergencyContact1State" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact1State)" />
-                        </MudTextField>
+                        
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1ZipCode" Required="true">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1ZipCode" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact1ZipCode)" />
-                        </MudTextField>
+                      
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact1Mobile" Required="true">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined"Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Mobile" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Mobile)" />
-                        </MudTextField>
+                    
                     </MudItem>
                     </MudGrid>
                     @* break *@
+                    <strong> <b><hr  style="color:black";/></b></strong>
                     <MudGrid>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Emergency Contact 2 Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2Name" Required="true">
+                        <MudTextField Label="Emergency Contact 2 Name" Variant="Variant.Outlined"Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Name" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Name)" />
-                        </MudTextField>
+                    
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Relationship" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2Relationship" Required="true">
+                        <MudTextField Label="Relationship" Variant="Variant.Outlined "Margin="Margin.Dense"@bind-Value="employeeDetails.EmergencyContact2Relationship" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Relationship)" />
-                        </MudTextField>
+                     
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2Address" Required="true">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Address" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" />
-                        </MudTextField>
+                        
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2City" Required="true">
+                        <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense"@bind-Value="employeeDetails.EmergencyContact2City" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact2City)" />
-                        </MudTextField>
+                     
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2State">
+                        <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2State"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact2State)" />
-                        </MudTextField>
+                      
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2ZipCode" Required="true">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2ZipCode" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact2ZipCode)" />
-                        </MudTextField>
+                    
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmergencyContact2Mobile" Required="true">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Mobile" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" />
-                        </MudTextField>
+                   
                     </MudItem>
                 </MudGrid>
 
@@ -349,39 +332,39 @@
                 <MudText Typo="Typo.h6" Class="mb-4 mt-6">Nominee Information</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Nominee Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeName" Required="true">
+                        <MudTextField Label="Nominee Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeName" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.NomineeName)" />
-                        </MudTextField>
+                  
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Relationship" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeRelationship" Required="true">
+                        <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeRelationship" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.NomineeRelationship)" />
-                        </MudTextField>
+                
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Address" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeAddress" Required="true">
+                        <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeAddress" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.NomineeAddress)" />
-                        </MudTextField>
+                      
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="City" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeCity" Required="true">
+                        <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeCity" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.NomineeCity)" />
-                        </MudTextField>
+                        
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="State" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeState" Required="true">
+                        <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeState" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.NomineeState)" />
-                        </MudTextField>
+                     
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeZipCode" Required="true">
+                        <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeZipCode" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.NomineeZipCode)" />
-                        </MudTextField>
+                       
                     </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeDetails.NomineeMobile" Required="true">
+                        <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeMobile" Required="true"/>
                             <ValidationMessage For="@(() => employeeDetails.NomineeMobile)" />
-                        </MudTextField>
+                 
                     </MudItem>
                 </MudGrid>
 
@@ -393,7 +376,9 @@
                         </MudButton>
                     </MudItem>
             </EditForm>
-        </MudCardContent>
+            </MudCardContent>
+        </MudCard>
+    </MudContainer>
 </div>
 
 
@@ -435,16 +420,20 @@
 
     private async Task GoToNextPage()
     {
-        await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
-
+        // await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
         await OnSubmit.InvokeAsync(employeeDetails); // Pass data to parent to hold
         Console.WriteLine("Navigating to next step without saving to database.");
+        NavigationManager.NavigateTo("/bankingForm");
+
 
     }
     private async Task LoadEmployeeInfo()
     {
         // Retrieve the employee details from local storage
-        var employeeJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
+       // var employeeJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
+        var employeeJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
+
 
         if (!string.IsNullOrEmpty(employeeJson))
         {

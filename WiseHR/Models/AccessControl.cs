@@ -28,11 +28,23 @@
             { "employee", new List<(string, string)>
                 {
                     ("Dashboard", "/home"),
-                    ("Registration","/registration"),
-                    ("HIDE_confirmationPage","/confirmation")
+                    ("HIDE_Registration","/registration"),
+                    ("HIDE_confirmationPage","/confirmation"),
+                    ("HIDE_workExperience","/workExperience"),
+                    ("HIDE_employee-form","/employee-form"),
+                    ("HIDE_bankingForm","/bankingForm"),
+
+
 
                 }
+            },
+            { "mentor", new List<(string, string)>
+                {
+                    ("Dashboard", "/home"),
+                    ("Fortnight Report", "/fortnight-report")
+                }
             }
+
         };
 
         public static List<(string Name, string Url)> GetMenuForRole(string role)

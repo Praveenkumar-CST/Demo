@@ -17,7 +17,7 @@
             <MudImage Src="images/logo1.png"
                       Alt="Company Logo"
                       Height="60"
-                      Style="margin-left: 120px;" />
+                      Style="margin-left: 220px;" />
         </MudItem>
 
         <MudItem xs="8" Class="d-flex justify-center align-center">
@@ -26,12 +26,12 @@
                           Variant="Variant.Outlined"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Search"
-                          Style="width: 100%; background-color: var(--secondary);
+                          Style="width: 50%;  margin-left: 260px; background-color: var(--secondary);
                              border-radius: var(--border-radius-input);
                              --mud-palette-text-primary: var(--text-primary);
                              --mud-icon-adornment-color: var(--primary);"
                           Immediate="true"
-                          DebounceInterval="300"
+                          DebounceInterval="100"
                           OnValueChanged="SearchEmployees" />
         </MudItem>
 
@@ -43,7 +43,7 @@
                                Size="Size.Medium"
                                BorderColor="Color.Secondary"
                                BorderWidth="2px"
-                               Style="background-color: var(--secondary); color: var(--text-primary);">
+                               Style="background-color: var(--secondary); color: var(--text-primary); margin-left: 180px; ">
                         @userInitials
                     </MudAvatar>
                 </ActivatorContent>
