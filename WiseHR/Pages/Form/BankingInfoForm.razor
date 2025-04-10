@@ -6,12 +6,13 @@
 @layout HomeLayout
 @using static WiseHR.Models.BankingInformation
 @inject NavigationManager NavigationManager
-<h3 class="mb-1 text-primary">BANK DETAILS</h3>
-<div>
     <MudContainer MaxWidth="MaxWidth.Medium">
         <MudCard Elevation="2" Class="p-3">
-            @* <MudCardContent Style="max-height: 600px; overflow-y: auto;"> *@
-            <MudCardContent>
+            <MudCardHeader>
+                <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                    BANK DETAILS
+                </MudText>
+            </MudCardHeader>            <MudCardContent>
 
                 <EditForm Model="@bankingInfo" OnValidSubmit="GoToNextPage">
                     <DataAnnotationsValidator />
@@ -19,19 +20,18 @@
 
                     <MudGrid Gutter="3">
 
-                        <!-- Employee ID -->
-                        <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="bankingInfo.EmployeeID"
-                                          Label="Employee ID"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Required="true"
-                                          Disabled="true"
-                                          HelperText="Enter your employee ID" />
-                            <ValidationMessage For="@(() => bankingInfo.EmployeeID)" />
-                            <MudText Typo="Typo.body2" Color="Color.Primary">Fill Details as per passbook.</MudText>
+                        @* <!-- Employee ID --> *@
+                        @* <MudItem xs="12" sm="6"> *@
+                        @*     <MudTextField @bind-Value="bankingInfo.EmployeeID" *@
+                        @*                   Label="Employee ID" *@
+                        @*                   Variant="Variant.Outlined" *@
+                        @*                   Margin="Margin.Dense" *@
+                        @*                   Required="true" *@
+                        @*                   Disabled="true" *@
+                        @*                   HelperText="Enter your employee ID" /> *@
+                        @*     <ValidationMessage For="@(() => bankingInfo.EmployeeID)" /> *@
 
-                        </MudItem>
+                        @* </MudItem> *@
 
                         <!-- Bank Name -->
                         <MudItem xs="12" sm="6">
@@ -41,6 +41,8 @@
                                           Required="true"
                                           Margin="Margin.Dense" />
                             <ValidationMessage For="@(() => bankingInfo.BankName)" />
+                        <MudText Typo="Typo.body2" Color="Color.Primary">As per passbook.</MudText>
+
                         </MudItem>
 
                         <!-- Branch -->
@@ -131,7 +133,6 @@
                                        Required="true"
                                        Variant="Variant.Outlined"
                                        Margin="Margin.Dense">
-                                <MudSelectItem Value="@("")">Select Account Type</MudSelectItem>
                                 <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
                                 <MudSelectItem Value="@("Current")">Current</MudSelectItem>
                             </MudSelect>
@@ -141,7 +142,7 @@
                         <MudItem xs="12" sm="6">
                             <MudText Typo="Typo.body1">Aadhaar Document</MudText>
                             <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" />
-                            <MudText Typo="Typo.body2" Color="Color.Primary">Please upload a clear image or PDF. Ensure that the document is legible and within the size limit of 20MB.</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
 
                             <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : "File selected")</MudText>
                             @if (!string.IsNullOrEmpty(AadhaarUploadError))
@@ -155,7 +156,7 @@
                         <MudItem xs="12" sm="6">
                             <MudText Typo="Typo.body1">PAN Document</MudText>
                             <InputFile OnChange="HandlePanFileChange" accept=".pdf,.jpg,.jpeg,.png" />
-                            <MudText Typo="Typo.body2" Color="Color.Primary">Please upload a clear image or PDF. Ensure that the document is legible and within the size limit of 20MB.</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
 
                             <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PanBase64Content) ? "No file selected" : "File selected")</MudText>
                             @if (!string.IsNullOrEmpty(PanUploadError))
@@ -169,7 +170,7 @@
                         <MudItem xs="12" sm="6">
                             <MudText Typo="Typo.body1">Passbook Document</MudText>
                             <InputFile OnChange="OnPassbookFileChanged" accept=".pdf,.jpg,.jpeg,.png" />
-                            <MudText Typo="Typo.body2" Color="Color.Primary">Please upload a clear image or PDF. Ensure that the document is legible and within the size limit of 20MB.</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
 
                             <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) ? "No file selected" : "File selected")</MudText>
                             @if (!string.IsNullOrEmpty(PassbookUploadError))
@@ -194,7 +195,6 @@
             </MudCardContent>
         </MudCard>
     </MudContainer>
-</div>
 @code {
     [Parameter]
     public EventCallback<BankingInformation> OnSubmit { get; set; }

@@ -58,7 +58,7 @@
                 <td>Date of Joining</td>
                 <td>@(employeeDetails.DateOfJoining.HasValue ? employeeDetails.DateOfJoining.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
             </tr>
-       
+
             <tr>
                 <td>Type of Employment</td>
                 <td>@employeeDetails.TypeOfEmployment</td>
@@ -274,6 +274,10 @@
                 <td>Nominee Mobile</td>
                 <td>@employeeDetails.NomineeMobile</td>
             </tr>
+            <tr>
+                <td>Photo File</td>
+                <td>@employeeDetails.PhotoFileName</td>
+            </tr>
         </tbody>
     </table>
 
@@ -289,10 +293,10 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Employee ID</td>
-                <td>@bankingInfo.EmployeeID</td>
-            </tr>
+            @* <tr> *@
+            @*     <td>Employee ID</td> *@
+            @*     <td>@bankingInfo.EmployeeID</td> *@
+            @* </tr> *@
             <tr>
                 <td>Bank Name</td>
                 <td>@bankingInfo.BankName</td>
@@ -345,7 +349,7 @@
                 <td>Passbook File</td>
                 <td>@bankingInfo.PassbookFileName</td>
             </tr>
-        
+
             <!-- File Listings -->
 
         </tbody>
@@ -377,7 +381,7 @@
             }
         </tbody>
     </table>
-    
+
     <h4>Work Experiences</h4>
 
     <table class="table table-bordered">
@@ -458,8 +462,8 @@
         <!-- Submit button -->
         <div class="text-center mt-3">
             <button type="button" class="btn btn-primary"
-                    @onclick="SubmitForm"
-                    disabled="@(!CanSubmit)">
+            @onclick="SubmitForm"
+            disabled="@(!CanSubmit)">
                 Submit
             </button>
         </div>
@@ -585,12 +589,20 @@
         // Submit Experience Info
         if (experience != null)
         {
-            experience.EducationQualifications = educationList;
-            experience.WorkExperiences = workList;
+            
+            // Load experience from session storage before saving
+            var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
+            if (!string.IsNullOrEmpty(experienceJson))
+            {
+                experience = JsonSerializer.Deserialize<Experience>(experienceJson);
+            }
+            experience.EducationQualifications = experience.EducationQualifications ?? new List<Education>();
+            experience.WorkExperiences = experience.WorkExperiences ?? new List<WorkExperience>();
 
             bool isExperienceSaved = await ExperienceService.RegisterExperienceAsync(experience);
             Console.WriteLine(isExperienceSaved ? "Experience saved." : "Error saving experience.");
         }
+        Snackbar.Add(" Successfully submitted all information!", Severity.Success);
 
         // Reset objects after save
         bankingInfo = new BankingInformation();
@@ -610,8 +622,8 @@
         // Trigger callback
         await OnSubmit.InvokeAsync("All data submitted");
 
-       
 
+        Snackbar.Add("✅ Successfully submitted  information!", Severity.Success);
         // ✅ Show Snackbar
         Snackbar.Add("✅ Successfully submitted all information!", Severity.Success);
         NavigationManager.NavigateTo($"/home");

@@ -6,10 +6,13 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @using System.Text.Json;
-<div>
-    <h3 class="mb-1 text-primary">EMPLOYEE DETAILS</h3>
     <MudContainer MaxWidth="MaxWidth.Medium">
         <MudCard Elevation="2" Class="p-3">
+             <MudCardHeader>
+                <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                    PERSONAL DETAILS
+                </MudText>
+            </MudCardHeader>
             <MudCardContent Margin="Margin.Dense" Dense="true">
 
                 <EditForm Model="@employeeDetails" OnValidSubmit="GoToNextPage">
@@ -367,6 +370,30 @@
                             <ValidationMessage For="@(() => employeeDetails.NomineeMobile)" />
 
                         </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.body1">Image Upload</MudText>
+
+                            <InputFile OnChange="HandlePhotoFileChange" accept=".jpg,.jpeg,.png,.pdf" />
+
+                            <MudText Typo="Typo.body2" Color="Color.Primary">
+                                Max 20MB. Ensure clarity.
+                            </MudText>
+
+                            <MudText Typo="Typo.caption" Class="mt-1">
+                                @(string.IsNullOrEmpty(employeeDetails.PhotoBase64Content)
+                                    ? "No file selected"
+                                    : $"File selected: {employeeDetails.PhotoFileName}")
+                            </MudText>
+
+                            @if (!string.IsNullOrEmpty(PhotoUploadError))
+                            {
+                                <MudText Color="Color.Error">@PhotoUploadError</MudText>
+                            }
+
+                            <ValidationMessage For="@(() => employeeDetails.PhotoBase64Content)" />
+                        </MudItem>
+
                     </MudGrid>
 
                     <!-- Buttons -->
@@ -380,13 +407,13 @@
             </MudCardContent>
         </MudCard>
     </MudContainer>
-</div>
+
 
 
 @code {
     [Parameter]
     public EventCallback<EmployeeDetails> OnSubmit { get; set; }
-
+    private string? PhotoUploadError;
     public EmployeeDetails employeeDetails { get; set; } = new EmployeeDetails();
     [Parameter]
     public EmployeeDetails InitialData { get; set; }
@@ -414,6 +441,7 @@
             employeeDetails.PermanentEmail = employeeDetails.CurrentEmail;
         }
     }
+   
 
 
     // Assuming you have a list to store all employees (this could be a local list, or you might pull from a service)
@@ -454,4 +482,46 @@
         // Log the reset action
         Console.WriteLine("Employee details have been reset.");
     }
+    private async Task HandlePhotoFileChange(InputFileChangeEventArgs e)
+    {
+        PhotoUploadError = null;
+
+        var file = e.File;
+        if (file == null)
+        {
+            PhotoUploadError = "No file selected.";
+            return;
+        }
+
+        // Size check: max 20 MB
+        if (file.Size > 20 * 1024 * 1024)
+        {
+            PhotoUploadError = "File size exceeds 20MB limit.";
+            return;
+        }
+
+        // Acceptable formats
+        var allowedTypes = new[] { "image/jpeg", "image/png", "application/pdf" };
+        if (!allowedTypes.Contains(file.ContentType))
+        {
+            PhotoUploadError = "Invalid file format. Please upload JPG, PNG, or PDF.";
+            return;
+        }
+
+        // Read file content
+        var buffer = new byte[file.Size];
+        await file.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024).ReadAsync(buffer);
+
+        // Assign to model
+        employeeDetails.PhotoFileName = file.Name;
+        employeeDetails.PhotoContentType = file.ContentType;
+        employeeDetails.PhotoBase64Content = Convert.ToBase64String(buffer);
+    }
+
+    private bool IsImageFile(string? contentType)
+    {
+        return contentType != null &&
+               (contentType.StartsWith("image/jpeg") || contentType.StartsWith("image/png"));
+    }
+
 }

@@ -231,6 +231,14 @@ namespace WiseHR.Models
 
         public string NomineeMobile { get; set; }
 
+        public string PhotoFileName { get; set; }
+
+        [Required(ErrorMessage = "Photo is required")]
+        public string? PhotoBase64Content { get; set; }
+
+        public string? PhotoContentType { get; set; }
+
+
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
