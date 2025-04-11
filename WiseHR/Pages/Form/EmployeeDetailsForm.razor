@@ -55,7 +55,7 @@
                                 <MudSelectItem Value="@("Male")">Male</MudSelectItem>
                                 <MudSelectItem Value="@("Female")">Female</MudSelectItem>
                                 <MudSelectItem Value="@("Other")">Other</MudSelectItem>
-                                <MudSelectItem Value="@("Perfer not to mention")">Perfer not tp mention</MudSelectItem>
+                                <MudSelectItem Value="@("Pefer not to mention")">Perfer not to mention</MudSelectItem>
                             </MudSelect>
                         </MudItem>
                     </MudGrid>
@@ -116,6 +116,29 @@
                                 <MudSelectItem Value="@("Other")">Other</MudSelectItem>
                             </MudSelect>
                         </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudText Typo="Typo.body1">Upload Image </MudText>
+
+                        <InputFile OnChange="HandlePhotoFileChange" accept=".jpg,.jpeg,.png,.pdf" />
+
+                        <MudText Typo="Typo.body2" Color="Color.Primary">
+                            Max 20MB. Ensure clarity.
+                        </MudText>
+
+                        <MudText Typo="Typo.caption" Class="mt-1">
+                            @(string.IsNullOrEmpty(employeeDetails.PhotoBase64Content)
+                                ? "No file selected"
+                                : $"File selected: {employeeDetails.PhotoFileName}")
+                        </MudText>
+
+                        @if (!string.IsNullOrEmpty(PhotoUploadError))
+                        {
+                            <MudText Color="Color.Error">@PhotoUploadError</MudText>
+                        }
+
+                        <ValidationMessage For="@(() => employeeDetails.PhotoBase64Content)" />
+                    </MudItem>
                     </MudGrid>
 
                     <!-- Work Information -->
@@ -134,8 +157,8 @@
                                               Label="Level"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              @bind-Value="employeeDetails.Level"
-                                              Placeholder="Enter Level " />
+                                      @bind-Value="employeeDetails.Level" />
+                                            
                             </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Designation" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Designation" />
@@ -257,7 +280,7 @@
                     <MudText Typo="Typo.h6" Class="mb-4 mt-6">Emergency Contact Information</MudText>
                     <MudGrid>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Emergency Contact 1 Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Name" Required="true" />
+                            <MudTextField Label="Contact 1 Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Name" Required="true" />
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Name)" />
 
                         </MudItem>
@@ -296,7 +319,7 @@
                     <strong> <b><hr style="color:black" ; /></b></strong>
                     <MudGrid>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Emergency Contact 2 Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Name" Required="true" />
+                            <MudTextField Label="Contact 2 Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Name" Required="true" />
                             <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Name)" />
 
                         </MudItem>
@@ -371,28 +394,7 @@
 
                         </MudItem>
 
-                        <MudItem xs="12" sm="6">
-                            <MudText Typo="Typo.body1">Image Upload</MudText>
-
-                            <InputFile OnChange="HandlePhotoFileChange" accept=".jpg,.jpeg,.png,.pdf" />
-
-                            <MudText Typo="Typo.body2" Color="Color.Primary">
-                                Max 20MB. Ensure clarity.
-                            </MudText>
-
-                            <MudText Typo="Typo.caption" Class="mt-1">
-                                @(string.IsNullOrEmpty(employeeDetails.PhotoBase64Content)
-                                    ? "No file selected"
-                                    : $"File selected: {employeeDetails.PhotoFileName}")
-                            </MudText>
-
-                            @if (!string.IsNullOrEmpty(PhotoUploadError))
-                            {
-                                <MudText Color="Color.Error">@PhotoUploadError</MudText>
-                            }
-
-                            <ValidationMessage For="@(() => employeeDetails.PhotoBase64Content)" />
-                        </MudItem>
+                      
 
                     </MudGrid>
 

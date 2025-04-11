@@ -47,10 +47,17 @@
                     <label>University</label>
                     <InputText class="form-control" @bind-Value="edu.University" />
                 </div>
-                <div class="col-md-2">
-                    <label>Year</label>
-                    <InputNumber class="form-control" @bind-Value="edu.YearOfPassing" />
-                </div>
+                            <div class="col-md-2">
+                                <label>Year</label>
+                                <InputSelect class="form-control" @bind-Value="edu.YearOfPassing">
+                                    <option value="">Select Year</option>
+                                    @foreach (var year in YearList)
+                                    {
+                                        <option value="@year">@year</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
                 <div class="col-md-2">
                     <label>Percentage</label>
                     <InputNumber class="form-control" @bind-Value="edu.Percentage" />
@@ -130,6 +137,16 @@
     [Parameter]
     public Experience InitialData { get; set; }
     private EditContext editContext;
+    private List<int> YearList = new();
+
+    protected override void OnInitialized()
+    {
+        int currentYear = DateTime.Now.Year;
+        for (int year = currentYear; year >= 1980; year--)
+        {
+            YearList.Add(year);
+        }
+    }
 
     protected async override Task OnInitializedAsync()
     {

@@ -11,6 +11,8 @@
             <MudCardHeader>
                 <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
                     BANK DETAILS
+                <MudText Typo="Typo.body2" Color="Color.Info">As per passbook.</MudText>
+
                 </MudText>
             </MudCardHeader>            <MudCardContent>
 
@@ -40,18 +42,17 @@
                                           Variant="Variant.Outlined"
                                           Required="true"
                                           Margin="Margin.Dense" />
+
                             <ValidationMessage For="@(() => bankingInfo.BankName)" />
-                        <MudText Typo="Typo.body2" Color="Color.Primary">As per passbook.</MudText>
-
                         </MudItem>
-
                         <!-- Branch -->
                         <MudItem xs="12" sm="6">
                             <MudTextField @bind-Value="bankingInfo.Branch"
                                           Label="Branch"
                                           Variant="Variant.Outlined"
                                           Required="true"
-                                          Margin="Margin.Dense" />
+                                 style="text-transform:capitalize"
+                                      Margin="Margin.Dense" />
                             <ValidationMessage For="@(() => bankingInfo.Branch)" />
                         </MudItem>
 
@@ -61,7 +62,8 @@
                                           Label="Account Holder Name"
                                           Variant="Variant.Outlined"
                                           Required="true"
-                                          Margin="Margin.Dense" />
+                                      style="text-transform:capitalize"
+                                      Margin="Margin.Dense" />
                             <ValidationMessage For="@(() => bankingInfo.Name)" />
                         </MudItem>
 
@@ -78,7 +80,7 @@
                         <!-- IFSC Code -->
                         <MudItem xs="12" sm="6">
                             <MudTextField @bind-Value="bankingInfo.IFSCode"
-                                          Label="IFSC Code"
+                                          Label="IFSCode"
                                           Variant="Variant.Outlined"
                                           Required="true"
                                           Margin="Margin.Dense" />
@@ -121,7 +123,8 @@
                             <MudTextField @bind-Value="bankingInfo.State"
                                           Label="Branch State"
                                           Variant="Variant.Outlined"
-                                          Required="true"
+                                      style="text-transform:capitalize"
+                                      Required="true"
                                           Margin="Margin.Dense" />
                             <ValidationMessage For="@(() => bankingInfo.State)" />
                         </MudItem>
@@ -290,6 +293,14 @@
     //         StateHasChanged();
     //     }
     // }
+   
+
+    private string CapitalizeWords(string text)
+    {
+        return string.Join(" ", text.Split(' ')
+            .Where(word => !string.IsNullOrWhiteSpace(word))
+            .Select(word => char.ToUpper(word[0]) + word.Substring(1).ToLower()));
+    }
     private async Task OnPassbookFileChanged(InputFileChangeEventArgs e)
     {
         await HandleFileSelected(e, "passbook");

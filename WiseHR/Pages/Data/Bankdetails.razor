@@ -6,12 +6,12 @@
     <MudPaper Class="bank-details-container" Elevation="4" Style="padding: 16px;">
         <MudTable T="KeyValuePair<string, string>" Items="bankDetails" Bordered="true" Dense="true" Hover="true">
             <HeaderContent>
-                <MudTh>Field</MudTh>
-                <MudTh>Value</MudTh>
+                <MudTh >Banking Field</MudTh>
+                <MudTh>Account Details</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Field">@context.Key</MudTd>
-                <MudTd DataLabel="Value">@context.Value</MudTd>
+                <MudTd Style="text-transform: capitalize;" DataLabel="Field">@context.Key</MudTd>
+                <MudTd Style="text-transform: capitalize;" DataLabel="Value">@context.Value</MudTd>
             </RowTemplate>
         </MudTable>
     </MudPaper>
@@ -133,7 +133,7 @@ else
                 new("Account Type", bankingInfo.AccountType),
                 new("Bank Name", bankingInfo.BankName),
                 new("Branch", bankingInfo.Branch),
-                new("IFSC Code", bankingInfo.IFSCode),
+                new("IFSCode", bankingInfo.IFSCode),
                 new("Mobile Number", bankingInfo.Phone),
                 new("PAN Number", bankingInfo.PANNumber),
                 new("Aadhaar Number", bankingInfo.AadhaarNumber),

@@ -3,7 +3,7 @@
 @inject EmployeeService EmployeeService
 @if (employee != null)
 {
-    <div class="card">
+    <div class="card" style="text-transform:capitalize;">
         <div class="card-body">
             <h5 class="card-title">@($"{employee.FirstName} {employee.LastName}")</h5>
             <h6 class="card-subtitle mb-3 text-muted">@employee.Designation</h6>
@@ -112,15 +112,15 @@
                     <tr><td>Mobile</td><td>@employee.NomineeMobile</td></tr>
                 </tbody>
 
-                <thead class="table-light">
-                    <tr>
-                        <th colspan="2">Timestamps</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>Created At</td><td>@employee.CreatedAt.ToShortDateString()</td></tr>
-                    <tr><td>Last Modified At</td><td>@employee.LastModifiedAt.ToShortDateString()</td></tr>
-                </tbody>
+                @* <thead class="table-light"> *@
+                @*     <tr> *@
+                @*         <th colspan="2">Timestamps</th> *@
+                @*     </tr> *@
+                @* </thead> *@
+                @* <tbody> *@
+                @*     <tr><td>Created At</td><td>@employee.CreatedAt.ToShortDateString()</td></tr> *@
+                @*     <tr><td>Last Modified At</td><td>@employee.LastModifiedAt.ToShortDateString()</td></tr> *@
+                @* </tbody> *@
             </table>
         </div>
     </div>
