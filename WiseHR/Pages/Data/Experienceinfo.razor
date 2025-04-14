@@ -2,6 +2,10 @@
 @using WiseHR.Models
 @inject ExperienceService ExperienceService
 @using MudBlazor
+@inject NavigationManager NavigationManager
+<div class="text-end">
+    <button class="btn btn-primary btn-sm" @onclick="NavigateToExpEditForm">Edit</button>
+</div>
 @if (experience != null)
 {
     <div>
@@ -62,6 +66,13 @@ else
     [Parameter] public string EmployeeId { get; set; }
 
     private WiseHRServer.Models.Experience experience;
+
+    private void NavigateToExpEditForm()
+    {
+        // Navigate to edit page, optionally passing the employee ID
+        NavigationManager.NavigateTo($"/experienceEditForm/{experience.EmployeeID}");
+    }
+
 
     protected override async Task OnInitializedAsync()
     {

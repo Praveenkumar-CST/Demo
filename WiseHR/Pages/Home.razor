@@ -258,11 +258,11 @@
                 var (role, verifyError) = await AuthService.VerifyToken();
                 if (!string.IsNullOrEmpty(role))
                 {
-                    if (role == "admin")
+                    if (role == "Admin")
                     {
                         NavigationManager.NavigateTo("/home");
                     }
-                    if (role == "employee")
+                    if (role == "Employee")
                     {
                         NavigationManager.NavigateTo("/registration");
                     }

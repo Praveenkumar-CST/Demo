@@ -11,7 +11,12 @@
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Add Employees", "/home/employees"),
-                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*")  // You can match the pattern here
+                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*") , // You can match the pattern here
+                    ("HIDE_personalEditForm", "/personalEditForm/.*"),  // You can match the pattern here
+                    ("HIDE_bankEditForm", "/bankEditForm/.*"),
+                    ("HIDE_experienceEditForm", "/experienceEditForm/.*")
+
+
                 }
             },
             { "manager", new List<(string, string)>
@@ -21,7 +26,11 @@
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Add Employees", "/home/employees"),
-                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*")  // You can match the pattern here
+                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"), 
+                    ("HIDE_personalEditForm", "/personalEditForm/.*"),
+                    ("HIDE_bankEditForm", "/bankEditForm/.*"),
+                     ("HIDE_experienceEditForm", "/experienceEditForm/.*")
+
 
                 }
             },
@@ -33,8 +42,6 @@
                     ("HIDE_workExperience","/workExperience"),
                     ("HIDE_employee-form","/employee-form"),
                     ("HIDE_bankingForm","/bankingForm"),
-
-
 
                 }
             },

@@ -1,6 +1,11 @@
 ﻿@page "/bankDetails/{EmployeeId}"
 @inject BankingService BankingService
 @using MudBlazor
+@inject NavigationManager NavigationManager
+<div class="text-end">
+    <button class="btn btn-primary btn-sm" @onclick="NavigateToBankEditForm">Edit</button>
+</div>
+
 @if (bankDetails != null && bankDetails.Count > 0)
 {
     <MudPaper Class="bank-details-container" Elevation="4" Style="padding: 16px;">
@@ -10,7 +15,7 @@
                 <MudTh>Account Details</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd Style="text-transform: capitalize;" DataLabel="Field">@context.Key</MudTd>
+                <MudTd Style="text-transform: capitalize;"DataLabel="Field">@context.Key</MudTd>
                 <MudTd Style="text-transform: capitalize;" DataLabel="Value">@context.Value</MudTd>
             </RowTemplate>
         </MudTable>
@@ -118,6 +123,19 @@ else
 
     private BankingInformation bankingInfo;
     private List<KeyValuePair<string, string>> bankDetails;
+    private void NavigateToBankEditForm()
+    {
+        if (bankingInfo != null && !string.IsNullOrEmpty(bankingInfo.EmployeeID))
+        {
+            // Navigate to edit page, passing the employee ID
+            NavigationManager.NavigateTo($"/bankEditForm/{bankingInfo.EmployeeID}");
+        }
+        else
+        {
+            // Optional: Handle the case when bankingInfo is null or EmployeeID is not available
+            Console.WriteLine("Banking info or EmployeeID is not available.");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
