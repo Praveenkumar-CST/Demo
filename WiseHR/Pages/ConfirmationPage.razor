@@ -1,5 +1,6 @@
 ﻿@page "/confirmation"
 @using Components.sidebar
+@inject IDialogService DialogService
 @layout HomeLayout
 @inject IJSRuntime JSRuntime
 @using System.Text.Json
@@ -410,6 +411,7 @@
 
     </table>
 
+
     <div class="container mt-4">
         <h4>Policies & Guidelines</h4>
         <div class="card shadow-sm">
@@ -451,7 +453,7 @@
         <!-- PDF Preview Modal -->
         @if (!string.IsNullOrEmpty(activePdfUrl))
         {
-            <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true">
+            <div class="modal fade show" style="display: block; margin-top:50px" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -459,7 +461,7 @@
                             <button type="button" class="btn-close" @onclick="ClosePreview" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <object data="@activePdfUrl" type="application/pdf" width="100%" height="500px">
+                            <object data="@activePdfUrl" type="application/pdf" width="100%" height="450px" >
                                 <p>PDF preview not supported. <a href="@activePdfUrl" class="text-primary">Download PDF</a>.</p>
                             </object>
                         </div>
@@ -474,7 +476,7 @@
         <!-- Confirmation Dialog Modal -->
         @if (showConfirmDialog)
         {
-            <div class="modal fade show" style="display: block; margin-top:250px" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+            <div class="modal fade show" style="display: block; margin-top:250px; margin-left:20px;"  tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-sm">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -493,12 +495,14 @@
             </div>
             <div class="modal-backdrop fade show"></div>
         }
+
     </div>
 
 
 </div>
 
 @code {
+
     private BankingInformation bankingInfo = new BankingInformation();
     private Experience experience = new Experience();
     private EmployeeDetails employeeDetails = new EmployeeDetails(); // Add EmployeeDetails model
@@ -604,6 +608,8 @@
         showConfirmDialog = false;
         await SubmitForm();
     }
+    private string? SuccessMessage;
+
     private async Task SubmitForm()
     {
         Console.WriteLine("Submitting all data to the database...");
@@ -645,7 +651,9 @@
             bool isExperienceSaved = await ExperienceService.RegisterExperienceAsync(experience);
             Console.WriteLine(isExperienceSaved ? "Experience saved." : "Error saving experience.");
         }
-        Snackbar.Add(" Successfully submitted all information!", Severity.Success);
+
+
+        // Navigate or show a success message
 
         // Reset objects after save
         bankingInfo = new BankingInformation();
@@ -664,15 +672,22 @@
 
         // Trigger callback
         await OnSubmit.InvokeAsync("All data submitted");
+        SuccessMessage = "All details submitted successfully!";
 
+        var parameters = new DialogParameters
+        {
+        { "Message", SuccessMessage },
+        { "OnClose", EventCallback.Factory.Create(this, NavigateToHome) }
+        };
 
-        Snackbar.Add("✅ Successfully submitted  information!", Severity.Success);
-        // ✅ Show Snackbar
-        Snackbar.Add("✅ Successfully submitted all information!", Severity.Success);
-        NavigationManager.NavigateTo($"/home");
+        DialogService.Show<SubmitSuccessDialog>("Success", parameters);
 
         isSubmitted = true;
 
+    }
+    private void NavigateToHome()
+    {
+        NavigationManager.NavigateTo("/home");
     }
     private void NavigateToExperiencepage()
     {

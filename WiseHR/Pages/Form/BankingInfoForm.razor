@@ -6,6 +6,7 @@
 @layout HomeLayout
 @using static WiseHR.Models.BankingInformation
 @inject NavigationManager NavigationManager
+
     <MudContainer MaxWidth="MaxWidth.Medium">
         <MudCard Elevation="2" Class="p-3">
             <MudCardHeader>
@@ -41,10 +42,12 @@
                                           Label="Bank Name"
                                           Variant="Variant.Outlined"
                                           Required="true"
-                                          Margin="Margin.Dense" />
+                                      Margin="Margin.Dense" />
 
                             <ValidationMessage For="@(() => bankingInfo.BankName)" />
+
                         </MudItem>
+
                         <!-- Branch -->
                         <MudItem xs="12" sm="6">
                             <MudTextField @bind-Value="bankingInfo.Branch"
