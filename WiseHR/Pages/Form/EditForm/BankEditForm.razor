@@ -3,6 +3,7 @@
 @inject NavigationManager NavigationManager
 @inject BankingService BankingService
 @using Components.sidebar
+@inject IDialogService DialogService
 @layout HomeLayout
 @if (bankingInfo != null)
 {
@@ -291,7 +292,14 @@ else
  
     private void CloseForm()
     {
-        NavigationManager.NavigateTo("/home/employeeList");
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }
     }
 
     private async Task HandleUpdateBank()
@@ -299,15 +307,33 @@ else
         bool result = await BankingService.UpdateBankingInfo(bankingInfo);
         if (result)
         {
-            SuccessMessage = "Employee details updated successfully!";
-            await Task.Delay(2000);
+            SuccessMessage = "Bank details updated successfully!";
+
+            var parameters = new DialogParameters
+        {
+            { "Message", SuccessMessage },
+            { "OnClose", EventCallback.Factory.Create(this, NavigateToList) }
+        };
+
+            DialogService.Show<SubmitSuccessDialog>("Success", parameters);
             // Navigate or show a success message
-            NavigationManager.NavigateTo("/home/employeeList");
+            //NavigationManager.NavigateTo("/home/employeeList");
         }
         else
         {
             // Show an error message
             Console.WriteLine("Update failed");
+        }
+    }
+    private void NavigateToList()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
         }
     }
 

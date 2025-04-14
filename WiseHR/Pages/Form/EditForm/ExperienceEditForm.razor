@@ -1,6 +1,7 @@
 ﻿@page "/experienceEditForm/{EmployeeId}"
 @using WiseHRServer.Models
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
@@ -148,6 +149,8 @@
             }
         }
     }
+    private string? SuccessMessage;
+
     private async Task HandleValidSubmit()
     {
         experience.EducationQualifications = educationList;
@@ -159,8 +162,18 @@
 
         if (result)
         {
+            SuccessMessage = "Experience details updated successfully!";
+
+            var parameters = new DialogParameters
+        {
+            { "Message", SuccessMessage },
+            { "OnClose", EventCallback.Factory.Create(this, NavigateToList) }
+        };
+
+            DialogService.Show<SubmitSuccessDialog>("Success", parameters);
+        
+
             Snackbar.Add("Updated successfully!", Severity.Success); // ✅ Success message
-            NavigationManager.NavigateTo("/home/employeeList");
         }
         else
         {
@@ -168,10 +181,26 @@
             Console.WriteLine("Update failed!");
         }
     }
-
+    private void NavigateToList()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }
+    }
     private void CloseForm()
     {
-        NavigationManager.NavigateTo("/home/employeeList");
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }
     }
 
     private void AddEducation() => educationList.Add(new Education());

@@ -4,6 +4,7 @@
 @using Components.sidebar
 @layout HomeLayout
 @inject EmployeeService EmployeeService
+@inject IDialogService DialogService
 
 <h3>Edit Personal Details</h3>
 
@@ -126,8 +127,8 @@ else
 
                 <MudText Typo="Typo.caption" Class="mt-1">
                     @(string.IsNullOrEmpty(employeeDetails.PhotoBase64Content)
-                        ? "No file selected"
-                        : $"File selected: {employeeDetails.PhotoFileName}")
+                            ? "No file selected"
+                            : $"File selected: {employeeDetails.PhotoFileName}")
                 </MudText>
 
                 @if (!string.IsNullOrEmpty(PhotoUploadError))
@@ -152,10 +153,10 @@ else
             </MudItem>
             <MudItem xs="12" sm="4" md="3">
                 <MudTextField T="string"
-                              Label="Level"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              @bind-Value="employeeDetails.Level" />
+                Label="Level"
+                Variant="Variant.Outlined"
+                Margin="Margin.Dense"
+                @bind-Value="employeeDetails.Level" />
 
             </MudItem>
             <MudItem xs="12" sm="4" md="3">
@@ -403,7 +404,7 @@ else
         <!-- Buttons -->
         <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
-               update
+                update
             </MudButton>
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@CloseForm">
                 Close
@@ -416,7 +417,7 @@ else
     [Parameter]
     public string EmployeeId { get; set; }
 
- 
+
     [Parameter]
     public EventCallback<EmployeeDetails> OnSubmit { get; set; }
     private string? PhotoUploadError;
@@ -490,9 +491,16 @@ else
                (contentType.StartsWith("image/jpeg") || contentType.StartsWith("image/png"));
     }
     private void CloseForm()
-{
-    NavigationManager.NavigateTo("/home/employeeList");
-}
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }
+    }
 
     private async Task HandleUpdateEmployee()
     {
@@ -500,16 +508,34 @@ else
 
         if (result)
         {
+
             SuccessMessage = "Employee details updated successfully!";
-            await Task.Delay(2000);
+
+            var parameters = new DialogParameters
+        {
+            { "Message", SuccessMessage },
+            { "OnClose", EventCallback.Factory.Create(this, NavigateToList) }
+        };
+
+            DialogService.Show<SubmitSuccessDialog>("Success", parameters);
             // Navigate or show a success message
-            NavigationManager.NavigateTo("/home/employeeList");
         }
         else
         {
             // Show an error message
             Console.WriteLine("Update failed");
         }
+    }
+    private void NavigateToList()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }   
     }
 
 }

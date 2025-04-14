@@ -22,9 +22,10 @@
                     <!-- Personal Information -->
                     <MudText Typo="Typo.h6" Class="mb-4">Personal Information</MudText>
                     <MudGrid Margin="Margin.Dense">
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID" Required="true" Margin="Margin.Dense" />
-                        </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID"
+                                      Required="true" Margin="Margin.Dense" Disabled="true" />
+                    </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="First Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FirstName" Required="true" Margin="Margin.Dense" />
                             <ValidationMessage For="@(() => employeeDetails.FirstName)" />
@@ -231,11 +232,12 @@
                             <ValidationMessage For="@(() => employeeDetails.CurrentMobile)" />
 
                         </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentEmail" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.CurrentEmail)" />
+                          <MudItem xs="12" sm="4" md="3">
+                        <MudTextField Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                      @bind-Value="employeeDetails.CurrentEmail" Required="true" Disabled="true" />
+                        <ValidationMessage For="@(() => employeeDetails.CurrentEmail)" />
+                    </MudItem>
 
-                        </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudCheckBox T="bool" @bind-Checked="IsSameAsCurrentAddress" Margin="Margin.Dense" Label="Same as Current Address" Color="Color.Primary" ValueChanged="CopyAddress" />
                         </MudItem>
@@ -422,12 +424,50 @@
 
     protected async override void OnInitialized()
     {
+        await LoadFromLocalStorage();
         await LoadEmployeeInfo();
         if (InitialData != null)
         {
             employeeDetails = InitialData;
         }
     }
+    private async Task LoadFromLocalStorage()
+    {
+        // Load EmpId and Email from localStorage (set during signup/login)
+        var empId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
+        var email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+
+        if (!string.IsNullOrEmpty(empId))
+        {
+            employeeDetails.EmployeeID = empId;
+        }
+        if (!string.IsNullOrEmpty(email))
+        {
+            employeeDetails.CurrentEmail = email;
+        }
+        StateHasChanged();
+    }
+    private async Task LoadEmployeeInfo()
+    {
+        // Load existing employee details from sessionStorage, preserving EmpId and Email
+        var employeeJson = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "employeeDetails");
+        if (!string.IsNullOrEmpty(employeeJson))
+        {
+            var storedDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeJson);
+            if (storedDetails != null)
+            {
+                // Merge stored data, but keep EmployeeID and CurrentEmail from localStorage
+                employeeDetails = storedDetails;
+                var empId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
+                var email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+                if (!string.IsNullOrEmpty(empId)) employeeDetails.EmployeeID = empId;
+                if (!string.IsNullOrEmpty(email)) employeeDetails.CurrentEmail = email;
+            }
+            StateHasChanged();
+        }
+    }
+
+
     private bool IsSameAsCurrentAddress { get; set; }
 
     private void CopyAddress(bool value)
@@ -461,20 +501,20 @@
 
 
     }
-    private async Task LoadEmployeeInfo()
-    {
-        // Retrieve the employee details from local storage
-        // var employeeJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
-        var employeeJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
+    // private async Task LoadEmployeeInfo()
+    // {
+    //     Retrieve the employee details from local storage
+    //     var employeeJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
+    //     var employeeJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
 
 
-        if (!string.IsNullOrEmpty(employeeJson))
-        {
-            employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeJson);
-            StateHasChanged(); // Force UI update if necessary
+    //     if (!string.IsNullOrEmpty(employeeJson))
+    //     {
+    //         employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeJson);
+    //         StateHasChanged(); Force UI update if necessary
 
-        }
-    }
+    //     }
+    // }
     public void Reset()
     {
         // Reset the employee details
