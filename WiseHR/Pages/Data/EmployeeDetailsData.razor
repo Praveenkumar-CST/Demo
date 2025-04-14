@@ -6,19 +6,18 @@
 @inject NavigationManager NavigationManager
 @using WiseHRServer.Models
 @layout HomeLayout
+
 <h3>Employee Details</h3>
 
-<!-- Container holding buttons -->
-<div class="container">
-    <div class="btn-group" role="group" aria-label="Employee Details">
-        <button class="btn btn-primary" @onclick="() => ShowSection(1)">Personal Details</button>
-        <button class="btn btn-success" @onclick="() => ShowSection(2)">Banking Details</button>
-        <button class="btn btn-primary" @onclick="() => ShowSection(3)">Experience</button>
-    </div>
-</div>
+<MudPaper Class="pa-4">
+    <MudButtonGroup Class="custom-btn-group" Exclusive="true" Color="Color.Primary" Elevation="1">
+        <MudButton OnClick="@(() => ShowSection(1))" Color=Color.Primary  Class="@GetButtonClass(1)">Personal Details</MudButton>
+        <MudButton OnClick="@(() => ShowSection(2))"  Color=Color.Primary  Class="@GetButtonClass(2)">Banking Details</MudButton>
+        <MudButton OnClick="@(() => ShowSection(3))" Color=Color.Primary  Class="@GetButtonClass(3)">Experience</MudButton>
+    </MudButtonGroup>
 
-<!-- Container showing different components based on the current section -->
-<div class="container mt-3">
+    <MudDivider Class="my-3" />
+
     @if (currentSection == 1)
     {
         <PersonalDetails EmployeeID="@EmployeeID" />
@@ -31,14 +30,31 @@
     {
         <Experienceinfo EmployeeID="@EmployeeID" />
     }
-</div>
+</MudPaper>
+<style>
+    .custom-btn-group .mud-button-root {
+        border-radius: 0;
+        padding-bottom: 6px;
+        margin-right: 10px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+        .custom-btn-group .mud-button-root.active-tab-button {
+            border-bottom: 3px solid #1976d2; /* Primary color underline */
+            font-weight: bold;
+        }
+</style>
 
 @code {
     [Parameter] public string EmployeeID { get; set; }
-    private int currentSection = 1; // Default to Personal Details
+    private int currentSection = 1;
 
     private void ShowSection(int section)
     {
         currentSection = section;
     }
+
+    private string GetButtonClass(int section) =>
+        currentSection == section ? "active-tab-button" : "";
 }

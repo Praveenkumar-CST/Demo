@@ -26,10 +26,16 @@ else if (employees != null && employees.Count > 0)
             <div class="col-md-4 mb-4">
                 <div class="employee-card card shadow-sm"
                      @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
-                    <div class="card-body">
-                        <h5 class="card-title">@($"{emp.FirstName} {emp.LastName}")</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">@emp.EmployeeID</h6>
-                        <p class="card-text">@emp.CurrentEmail</p>
+                    <div class="card-body d-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(emp.PhotoBase64Content))
+                        {
+                            <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content" class="rounded-circle" alt="Employee Photo" style="width: 80px; height: 80px; object-fit: cover;" />
+                        }
+                        <div class="ms-3">
+                            <h5 class="card-title">@($"{emp.FirstName} {emp.LastName}")</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@emp.EmployeeID</h6>
+                            <p class="card-text">@emp.CurrentEmail</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -40,6 +46,7 @@ else if (employees != null && employees.Count == 0)
 {
     <div class="alert alert-info custom-alert">No employees found.</div>
 }
+
 
 @code {
     private List<EmployeeDetails> employees;

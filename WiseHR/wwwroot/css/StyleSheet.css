@@ -39,6 +39,9 @@
     --shadow-dropdown: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-button-hover: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
 }
+.capitalize-input {
+    text-transform: capitalize;
+}
 
 /* Base Styles */
 body {
@@ -48,6 +51,11 @@ body {
     background-color: var(--background);
     margin: 0;
     padding: 0;
+    text-transform: capitalize;
+}
+.active-button {
+    border-bottom: 2px solid #1976d2; /* MudBlazor primary color */
+    font-weight: bold;
 }
 
 /* Global Focus Styles */

@@ -13,7 +13,7 @@
 
 <h3>Confirmation Page</h3>
 
-<div class="container">
+<div class="container" style="text-transform:capitalize;">
     <h4 class="d-flex justify-content-between align-items-center">
         <MudText Typo="Typo.h6">Employee Details</MudText>
         <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToEmployeepage">Edit Employee Details</MudButton>
@@ -58,7 +58,7 @@
                 <td>Date of Joining</td>
                 <td>@(employeeDetails.DateOfJoining.HasValue ? employeeDetails.DateOfJoining.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
             </tr>
-       
+
             <tr>
                 <td>Type of Employment</td>
                 <td>@employeeDetails.TypeOfEmployment</td>
@@ -274,6 +274,10 @@
                 <td>Nominee Mobile</td>
                 <td>@employeeDetails.NomineeMobile</td>
             </tr>
+            <tr>
+                <td>Photo File</td>
+                <td>@employeeDetails.PhotoFileName</td>
+            </tr>
         </tbody>
     </table>
 
@@ -284,15 +288,16 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Field</th>
-                <th>Value</th>
+                <th>Banking Field</th>
+                <th>Account Details</th>
+
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Employee ID</td>
-                <td>@bankingInfo.EmployeeID</td>
-            </tr>
+            @* <tr> *@
+            @*     <td>Employee ID</td> *@
+            @*     <td>@bankingInfo.EmployeeID</td> *@
+            @* </tr> *@
             <tr>
                 <td>Bank Name</td>
                 <td>@bankingInfo.BankName</td>
@@ -310,7 +315,7 @@
                 <td>@bankingInfo.AccountNumber</td>
             </tr>
             <tr>
-                <td>IFSC Code</td>
+                <td>IFSCode</td>
                 <td>@bankingInfo.IFSCode</td>
             </tr>
             <tr>
@@ -345,14 +350,14 @@
                 <td>Passbook File</td>
                 <td>@bankingInfo.PassbookFileName</td>
             </tr>
-        
+
             <!-- File Listings -->
 
         </tbody>
     </table>
     <!-- Education Qualifications Table -->
     <h4 class="d-flex justify-content-between align-items-center">
-        <MudText Typo="Typo.h6">Work Experiences</MudText>
+        <MudText Typo="Typo.h6">Education Qualification</MudText>
         <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToExperiencepage">Edit Work Experience</MudButton>
     </h4>
 
@@ -377,7 +382,7 @@
             }
         </tbody>
     </table>
-    
+
     <h4>Work Experiences</h4>
 
     <table class="table table-bordered">
@@ -402,17 +407,92 @@
                 </tr>
             }
         </tbody>
+
     </table>
 
-    @if (isSubmitted)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ Form submitted successfully!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="container mt-4">
+        <h4>Policies & Guidelines</h4>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <!-- Policy List -->
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in policyDocuments)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span>@item.Name</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => PreviewPolicy(item)">Preview</button>
+                                <input type="checkbox" @bind="item.IsChecked" disabled="@(!item.HasPreviewed)" />
+                            </div>
+                        </li>
+                    }
+                </ul>
+
+                <!-- Submission Alert -->
+                @if (isSubmitted)
+                {
+                    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                        Form submitted successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <!-- Submit Button -->
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-primary" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)">
+                        Submit
+                    </button>
+                </div>
+            </div>
         </div>
-    }
-    <div class="text-center mt-3">
-        <button type="submit" class="btn btn-primary" @onclick="SubmitForm">Submit</button>
+
+        <!-- PDF Preview Modal -->
+        @if (!string.IsNullOrEmpty(activePdfUrl))
+        {
+            <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="pdfModalLabel">Preview: @activePdfName</h5>
+                            <button type="button" class="btn-close" @onclick="ClosePreview" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <object data="@activePdfUrl" type="application/pdf" width="100%" height="500px">
+                                <p>PDF preview not supported. <a href="@activePdfUrl" class="text-primary">Download PDF</a>.</p>
+                            </object>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" @onclick="ClosePreview">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        }
+        <!-- Confirmation Dialog Modal -->
+        @if (showConfirmDialog)
+        {
+            <div class="modal fade show" style="display: block; margin-top:250px" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmModalLabel">Confirm Submission</h5>
+                            <button type="button" class="btn-close" @onclick="CloseConfirmDialog" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to submit the details? Once submitted it need EditRequest to modify.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" @onclick="CloseConfirmDialog">Cancel</button>
+                            <button type="button" class="btn btn-info" @onclick="ConfirmSubmit">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        }
     </div>
 
 
@@ -431,31 +511,63 @@
 
     // protected override async Task OnInitializedAsync()
     // {
-    //     Retrieve Banking Info from localStorage
     //     var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
     //     if (!string.IsNullOrEmpty(bankingInfoJson))
     //     {
     //         bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
     //     }
 
-    //     Retrieve Experience Info from localStorage
     //     var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
     //     if (!string.IsNullOrEmpty(experienceJson))
     //     {
     //         experience = JsonSerializer.Deserialize<Experience>(experienceJson);
     //     }
 
-    //     Retrieve Employee Info from localStorage
     //     var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
     //     if (!string.IsNullOrEmpty(employeeDetailsJson))
     //     {
     //         employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
     //     }
     // }
+    private List<PolicyItem> policyDocuments = new()
+        {
+        new PolicyItem { Name = "Attendance Policy", Url = "/pdfs/Wise Work Attendance Policy v3.pdf" },
+        new PolicyItem { Name = "Git Guidelines", Url = "/pdfs/Git Guidelines.pdf" },
+        new PolicyItem { Name = "Code of Conduct", Url = "/pdfs/Wise Work Code of Conduct v1.pdf" },
+        new PolicyItem { Name = "CSharp Coding Guidelines", Url = "/pdfs/CSharp Coding Guidelines.pdf" },
+        new PolicyItem { Name = "Json Coding Guidelines", Url = "/pdfs/Json Coding Guidelines.pdf" },
+        new PolicyItem { Name = "MongoDB Coding Guidelines", Url = "/pdfs/MongoDB Coding Guidelines.pdf" },
+        new PolicyItem { Name = "Python Coding Guidelines", Url = "/pdfs/Python Coding Guidelines.pdf" }
 
+    };//E:\Pugazh\new\InF\InF\WiseHR\wwwroot\pdfs\Python Coding Guidelines.pdf
+
+    private string? activePdfUrl = null;
+    private string? activePdfName = null;
+
+    private bool CanSubmit =>
+        policyDocuments.All(p => p.HasPreviewed && p.IsChecked);
+
+    private void PreviewPolicy(PolicyItem item)
+    {
+        activePdfUrl = item.Url;
+        activePdfName = item.Name;
+        item.HasPreviewed = true;
+    }
+
+    private void ClosePreview()
+    {
+        activePdfUrl = null; // Close the preview when the close button is clicked
+    }
+
+    public class PolicyItem
+    {
+        public string Name { get; set; } = "";
+        public string Url { get; set; } = "";
+        public bool HasPreviewed { get; set; } = false;
+        public bool IsChecked { get; set; } = false;
+    }
     protected override async Task OnInitializedAsync()
     {
-        // Retrieve data from sessionStorage
         var bankingInfoJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "bankingInfo");
         var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
         var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
@@ -473,11 +585,25 @@
             employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
         }
 
-        // Perform any necessary validation or transformation here
         StateHasChanged();
     }
     private bool isSubmitted = false;
+    private bool showConfirmDialog = false;
+    private void ShowConfirmDialog()
+    {
+        showConfirmDialog = true;
+    }
 
+    private void CloseConfirmDialog()
+    {
+        showConfirmDialog = false;
+    }
+
+    private async Task ConfirmSubmit()
+    {
+        showConfirmDialog = false;
+        await SubmitForm();
+    }
     private async Task SubmitForm()
     {
         Console.WriteLine("Submitting all data to the database...");
@@ -506,19 +632,26 @@
         // Submit Experience Info
         if (experience != null)
         {
-            experience.EducationQualifications = educationList;
-            experience.WorkExperiences = workList;
+            
+            // Load experience from session storage before saving
+            var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
+            if (!string.IsNullOrEmpty(experienceJson))
+            {
+                experience = JsonSerializer.Deserialize<Experience>(experienceJson);
+            }
+            experience.EducationQualifications = experience.EducationQualifications ?? new List<Education>();
+            experience.WorkExperiences = experience.WorkExperiences ?? new List<WorkExperience>();
 
             bool isExperienceSaved = await ExperienceService.RegisterExperienceAsync(experience);
             Console.WriteLine(isExperienceSaved ? "Experience saved." : "Error saving experience.");
         }
+        Snackbar.Add(" Successfully submitted all information!", Severity.Success);
 
         // Reset objects after save
         bankingInfo = new BankingInformation();
         employeeDetails = new EmployeeDetails();
         experience = new Experience();
 
-        // Trigger any callback
         await OnSubmit.InvokeAsync("All data submitted");
         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "bankingInfo");
         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "experienceDetails");
@@ -532,8 +665,8 @@
         // Trigger callback
         await OnSubmit.InvokeAsync("All data submitted");
 
-       
 
+        Snackbar.Add("✅ Successfully submitted  information!", Severity.Success);
         // ✅ Show Snackbar
         Snackbar.Add("✅ Successfully submitted all information!", Severity.Success);
         NavigationManager.NavigateTo($"/home");

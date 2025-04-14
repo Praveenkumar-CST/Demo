@@ -24,7 +24,7 @@ namespace WiseHR.Models
         [RegularExpression(@"^\d{9,18}$", ErrorMessage = "Enter a valid account number (9-18 digits)")]
         public string AccountNumber { get; set; }
 
-        [Required(ErrorMessage = "IFSC Code is required")]
+        [Required(ErrorMessage = "IFSCode is required")]
         [RegularExpression(@"^[A-Z]{4}0[A-Z0-9]{6}$", ErrorMessage = "Enter a valid IFSC code")]
         public string IFSCode { get; set; }
 

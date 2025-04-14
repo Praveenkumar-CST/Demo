@@ -6,31 +6,35 @@
 @using Components.sidebar
 @layout HomeLayout
 
-<h3 class="mb-1" text-primary">EXPERIENCE DETAILS</h3>
-<div >
 <MudContainer MaxWidth="MaxWidth.Medium"  >
     <MudCard Elevation="2" Class="p-2">
+            <MudCardHeader>
+                <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                    EXPERIENCE DETAILS
+                </MudText>
+            </MudCardHeader>
+
     <MudCardContent   Margin="Margin.Dense" Dense="true">
 
         <EditForm Model="@experience" OnValidSubmit="@SubmitForm">
             <DataAnnotationsValidator />
-            <ValidationSummary />
+            @* <ValidationSummary /> *@
             <!-- Employee ID -->    <!-- Employee ID -->
-    <MudGrid Gutter="3">
-        <MudItem xs="12">
-                            <MudTextField Label="Employee ID"
-                                          @bind-Value="experience.EmployeeID"
-                                          Variant="Variant.Outlined"
-                                          Required="true"
-                                          Disabled="true"
-                                          Margin="Margin.Dense"
-                                          HelperText="Enter your Employee ID" />
-            <ValidationMessage For="@(() => experience.EmployeeID)" class="text-danger" />
-        </MudItem>
-    </MudGrid>
+    @* <MudGrid Gutter="3"> *@
+    @*     <MudItem xs="12"> *@
+    @*                         <MudTextField Label="Employee ID" *@
+    @*                                       @bind-Value="experience.EmployeeID" *@
+    @*                                       Variant="Variant.Outlined" *@
+    @*                                       Required="true" *@
+    @*                                       Disabled="true" *@
+    @*                                       Margin="Margin.Dense" *@
+    @*                                       HelperText="Enter your Employee ID" /> *@
+    @*         <ValidationMessage For="@(() => experience.EmployeeID)" class="text-danger" /> *@
+    @*     </MudItem> *@
+    @* </MudGrid> *@
 
 <!-- Education Qualifications Section -->
-    <h4 class="text-secondary mt-4">Education Qualifications</h4>
+    <h4 class="text-secondary mt-2">Education Qualifications</h4>
     @foreach (var edu in educationList)
     {
         <div class="border p-2 mb-1 bg-light rounded">
@@ -43,10 +47,17 @@
                     <label>University</label>
                     <InputText class="form-control" @bind-Value="edu.University" />
                 </div>
-                <div class="col-md-2">
-                    <label>Year</label>
-                    <InputNumber class="form-control" @bind-Value="edu.YearOfPassing" />
-                </div>
+                            <div class="col-md-2">
+                                <label>Year</label>
+                                <InputSelect class="form-control" @bind-Value="edu.YearOfPassing">
+                                    <option value="">Select Year</option>
+                                    @foreach (var year in YearList)
+                                    {
+                                        <option value="@year">@year</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
                 <div class="col-md-2">
                     <label>Percentage</label>
                     <InputNumber class="form-control" @bind-Value="edu.Percentage" />
@@ -59,7 +70,7 @@
             </div>
         </div>
     }
-    <button type="button" class="btn btn-outline-primary mb-4" @onclick="AddEducation">+ Add Education</button>
+    <button type="button" class="btn btn-outline-primary mb-4 mt-1" @onclick="AddEducation">+ Add Education</button>
 
     <!-- Work Experience Section -->
     <h4 class="text-secondary mt-1">Work Experience</h4>
@@ -67,11 +78,11 @@
     {
         <div class="border p-2 mb-2 bg-light rounded">
             <div class="row g-1">
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label>Employer</label>
                     <InputText class="form-control" @bind-Value="work.Employer" />
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label>Location</label>
                     <InputText class="form-control" @bind-Value="work.Location" />
                 </div>
@@ -83,21 +94,21 @@
                     <label>Leave Date</label>
                     <InputDate class="form-control" @bind-Value="work.DateOfLeaving" />
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label>Designation</label>
                     <InputText class="form-control" @bind-Value="work.Designation" />
                 </div>
-                <div class="d-flex align-items-end">
-                    <span class="text-danger fs-1 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
+                <div class="col-1 d-flex align-items-end">
+                    <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
                         &times;
                     </span>
                 </div>
             </div>
         </div>
     }
-    <button type="button" class="btn btn-outline-primary mb-4" @onclick="AddWork">+ Add Work Experience</button>
+    <button type="button" class="btn btn-outline-primary mb-1 mt-1" @onclick="AddWork">+ Add Work Experience</button>
     <!-- Action Buttons -->
-      <MudItem xs="12" Class="d-flex justify-end mt-2 gap-3">
+      <MudItem xs="12" Class="d-flex justify-end mt-1 gap-3">
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GoBack">
                 Back
             </MudButton>
@@ -109,7 +120,6 @@
         </MudCardContent>
     </MudCard>
 </MudContainer>
-</div>
 @code {
     private Experience experience = new Experience();
     private List<Education> educationList = new List<Education>();
@@ -127,10 +137,22 @@
     [Parameter]
     public Experience InitialData { get; set; }
     private EditContext editContext;
+    private List<int> YearList = new();
+
+    protected override void OnInitialized()
+    {
+        int currentYear = DateTime.Now.Year;
+        for (int year = currentYear; year >= 1980; year--)
+        {
+            YearList.Add(year);
+        }
+    }
 
     protected async override Task OnInitializedAsync()
     {
-        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "employeeDetails");
+        //var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
+        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
+
 
         if (!string.IsNullOrEmpty(employeeDetailsJson))
         {
@@ -192,8 +214,8 @@
 
     private async Task LoadExperienceInfo()
     {
-        // var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
-        var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
+       //  var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
+       var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
 
 
         if (!string.IsNullOrEmpty(experienceJson))
@@ -220,7 +242,7 @@
         // Store updated experience data in localStorage
         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
 
-       // await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
+       //await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
         await OnBack.InvokeAsync();  // Trigger the OnBack callback
         NavigationManager.NavigateTo("/bankingForm");
 
