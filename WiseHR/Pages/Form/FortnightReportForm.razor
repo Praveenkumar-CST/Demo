@@ -1,0 +1,229 @@
+﻿@page "/fortnight-report"
+@inject NavigationManager Navigation
+@using Components.sidebar
+@layout HomeLayout
+@inject IJSRuntime JS
+@inject ReportService ReportService
+@inject EmployeeService EmployeeService
+@inject ISnackbar Snackbar
+
+<MudPaper Class="p-4 mx-auto mt-6" MaxWidth="800px" Style="height: 100%; width: 100%;">
+    @* <MudText Typo="Typo.h5">Submit Fortnight Report</MudText> *@
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (hasError)
+    {
+        <MudText Color="Color.Error">Failed to load employee data.</MudText>
+    }
+    else if (!IsWithinFortnightPeriod)
+    {
+        <MudText Color="Color.Error">Submissions are only allowed during the fortnight reporting period.</MudText>
+    }
+    else
+    {
+        <EditForm Model="@report" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <MudTextField @bind-Value="report.MentorName" Label="Mentor Name" Required="true" Disabled="true" />
+            <MudTextField @bind-Value="report.MentorEmail" Label="Mentor Email" Required="true" Disabled="true" />
+
+            <MudTextField @bind-Value="report.MentorDesignation" Label="Mentor Designation" Required="true" Disabled="true" />
+            <MudSelect T="string" @bind-Value="selectedMenteeName" Label="Select Mentee Name" Required="true" OnValueChanged="OnMenteeNameChanged">
+                @foreach (var emp in employees)
+                {
+                    var fullName = $"{emp.FirstName} {emp.LastName}";
+                    <MudSelectItem Value="@fullName">@fullName</MudSelectItem>
+                }
+            </MudSelect>
+
+            @* <MudSelect T="string" @bind-Value="selectedMenteeEmail" Label="Select Mentee Email" Required="true" OnValueChanged="OnMenteeEmailChanged"> *@
+            @*     @foreach (var emp in employees) *@
+            @*     { *@
+            @*         <MudSelectItem Value="@emp.CurrentEmail">@emp.CurrentEmail</MudSelectItem> *@
+            @*     } *@
+            @* </MudSelect> *@
+
+            <MudTextField @bind-Value="report.ProjectsWorkedOn" Label="Projects Worked On" Lines="1" Required="true" />
+            <MudSelect T="string" @bind-Value="report.ProgressStage" Label="Progress Stage" Required="true">
+                <MudSelectItem Value=@("Planning")>Planning</MudSelectItem>
+                <MudSelectItem Value=@("In Progress")>In Progress</MudSelectItem>
+                <MudSelectItem Value=@("Completed")>Completed</MudSelectItem>
+            </MudSelect>
+            <MudText Typo="Typo.subtitle2">
+                Progress % — <span class="text-primary">@report.ProgressPercentage%</span>
+            </MudText>
+            <MudSlider @bind-Value="report.ProgressPercentage" Min="0" Max="100" Step="1" />
+
+            <MudSelect T="int" @bind-Value="report.FortnightNumber" Label="Select Fortnight" Required="true">
+
+                <MudSelectItem Value="1">Fortnight 1 (1st - 14th)</MudSelectItem>
+                <MudSelectItem Value="2">Fortnight 2 (15th - End)</MudSelectItem>
+            </MudSelect>
+
+            <MudTextField @bind-Value="report.FortnightRemarks" Label="Fortnight Remarks" Lines="3" Required="true" />
+
+            <MudText Typo="Typo.subtitle2">Upload Supporting File</MudText>
+            <InputFile OnChange="HandleFileChange" />
+
+            <MudText Typo="Typo.subtitle2">Rate Mentee's Overall Performance</MudText>
+            <MudRating @bind-Value="report.PerformanceRating" MaxValue="5" Color="Color.Primary" />
+
+            <!-- Preview Section -->
+            <MudPaper Class="p-4 mx-auto mt-6" MaxWidth="800px">
+                <MudText Typo="Typo.h6">Preview Submission</MudText>
+                <MudText>Mentor Name: @report.MentorName</MudText>
+                <MudText>Mentor Email: @report.MentorEmail</MudText>
+                <MudText>Mentor Designation: @report.MentorDesignation</MudText>
+                <MudText>Mentee Name: @report.MenteeName</MudText>
+                <MudText>Mentee Email: @report.MenteeEmail</MudText>
+                <MudText>Projects Worked On: @report.ProjectsWorkedOn</MudText>
+                <MudText>Progress Stage: @report.ProgressStage</MudText>
+                <MudText>Progress Percentage: @report.ProgressPercentage%</MudText>
+                <MudText>Fortnight: @report.FortnightNumber</MudText>
+                <MudText>Fortnight Remarks: @report.FortnightRemarks</MudText>
+                <MudText>File Name: @report.UploadedFile</MudText>
+                <MudText>Performance Rating: @report.PerformanceRating</MudText>
+            </MudPaper>
+            <MudButton Type="Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">Submit Report</MudButton>
+        </EditForm>
+    }
+</MudPaper>
+@code {
+    private ReportModel report = new() { PerformanceRating = 1 }; // or any default
+
+    private List<EmployeeDetails> employees = new();
+    private string selectedMenteeName;
+    private string selectedMenteeEmail;
+
+    private bool isLoading = true;
+    private bool hasError = false;
+
+    private bool IsWithinFortnightPeriod => CheckFortnightPeriod();
+
+    private void OnMenteeNameChanged(string name)
+    {
+        selectedMenteeName = name;
+
+        var emp = employees.FirstOrDefault(e => $"{e.FirstName} {e.LastName}" == name);
+        if (emp != null)
+        {
+            report.MenteeName = name;
+            report.MenteeEmail = emp.CurrentEmail;
+            selectedMenteeEmail = emp.CurrentEmail;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get mentor email and empId from localStorage
+            var email = await JS.InvokeAsync<string>("localStorage.getItem", "email");
+            var empId = await JS.InvokeAsync<string>("localStorage.getItem", "empId");
+
+            // Set the mentor email
+            report.MentorEmail = email;
+
+            // Fetch mentor details using empId
+            if (!string.IsNullOrWhiteSpace(empId))
+            {
+                var mentorDetails = await EmployeeService.GetEmployeeDetails(empId);
+                if (mentorDetails != null)
+                {
+                    report.MentorName = $"{mentorDetails.FirstName} {mentorDetails.LastName}";
+                    report.MentorDesignation = mentorDetails.Designation;
+                }
+            }
+
+            // Fetch all employees for mentee dropdowns
+            employees = await EmployeeService.GetAllEmployees();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employee data: {ex.Message}");
+            hasError = true;
+        }
+
+        isLoading = false;
+    }
+
+    private void OnMenteeEmailChanged(string email)
+    {
+        if (selectedMenteeEmail != email)
+        {
+            Console.WriteLine($"Mentee Email: {report.MenteeEmail}");
+
+            selectedMenteeEmail = email;
+            var emp = employees.FirstOrDefault(e => e.CurrentEmail == email);
+            if (emp != null)
+            {
+                var fullName = $"{emp.FirstName} {emp.LastName}";
+                report.MenteeName = fullName;
+                report.MenteeEmail = emp.CurrentEmail;
+                selectedMenteeName = fullName;
+            }
+        }
+    }
+
+
+
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream().ReadAsync(buffer);
+
+            // Convert to base64 string
+            string base64 = Convert.ToBase64String(buffer);
+
+            // Assign base64 string to the model
+            report.UploadedFile = base64;
+            report.FileName = file.Name;
+
+            Console.WriteLine($"Base64 File Stored in Report: {base64.Substring(0, 50)}..."); // preview
+        }
+    }
+
+
+    private async Task HandleValidSubmit()
+    {
+        Console.WriteLine("Submit triggered");
+
+        var now = DateTime.UtcNow;
+        report.SubmittedOn = now;
+        report.Month = now.Month;
+        report.Year = now.Year;
+
+        try
+        {
+            var response = await ReportService.CreateReportAsync(report);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Report submitted successfully!", Severity.Success);
+                Navigation.NavigateTo("/reports");
+            }
+            else
+            {
+                Snackbar.Add("Failed to submit the report. Please try again.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Submission Error: {ex.Message}");
+        }
+    }
+
+private bool CheckFortnightPeriod()
+{
+    var today = DateTime.UtcNow.Date;
+    int day = today.Day;
+    return (day >= 1 && day <= 14) || (day >= 15 && day <= DateTime.DaysInMonth(today.Year, today.Month));
+}
+
+}
