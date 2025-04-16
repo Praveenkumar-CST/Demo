@@ -1,0 +1,160 @@
+﻿@inherits LayoutComponentBase
+@using WiseHR.Components.sidebar
+@using MudBlazor
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+
+<MudThemeProvider />
+<MudLayout>
+
+    <MudAppBar Elevation="1" Style="background-color: var(--primary);">
+        <MudItem xs="2" Class="d-flex align-center">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           Edge="Edge.Start"
+                           OnClick="@(() => sidebar?.ToggleDrawer())"
+                           Class="mr-2" />
+            <MudImage Src="images/logo1.png"
+                      Alt="Company Logo"
+                      Height="60"
+                       
+                      Style="margin-left: 60px; color:white;" />
+        </MudItem>
+
+        <MudItem xs="8" Class="d-flex justify-center align-center">
+            <MudTextField @bind-Value="searchQuery"
+                          Placeholder="Search employees..."
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Style="width: 50%;  margin-left: 260px; background-color: var(--secondary);
+                             border-radius: var(--border-radius-input);
+                             --mud-palette-text-primary: var(--text-primary);
+                             --mud-icon-adornment-color: var(--primary);"
+                          Immediate="true"
+                          DebounceInterval="100"
+                          OnValueChanged="SearchEmployees" />
+        </MudItem>
+
+        <MudItem xs="2" Style="padding: 8px;">
+            <MudMenu>
+                <ActivatorContent>
+                    <MudAvatar Color="Color.Dark"
+                               Class="cursor-pointer user-avatar"
+                               Size="Size.Medium"
+                               BorderColor="Color.Secondary"
+                               BorderWidth="2px"
+                               Style="background-color: var(--secondary); color: var(--text-primary); margin-left: 180px; ">
+                        @userInitials
+                    </MudAvatar>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Style="color: var(--text-primary);">Profile</MudMenuItem>
+                    <MudMenuItem Style="color: var(--text-primary);">Settings</MudMenuItem>
+                    <MudMenuItem Style="color: var(--error);">Logout</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </MudItem>
+    </MudAppBar>
+
+
+    <!-- Sidebar -->
+    <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+    
+    <!-- Content -->
+    <MudMainContent Style="flex-grow: 1;">
+        <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+
+    <!-- MudPopoverProvider (Must be inside MudLayout) -->
+    <MudPopoverProvider />
+
+</MudLayout>
+
+@code {
+    private bool drawerOpen = true;
+    private HomeSidebar? sidebar;
+    private string? searchQuery;
+
+    [Parameter]
+    public EventCallback<string> OnSearchQueryChanged { get; set; }
+
+    private async Task SearchEmployees(string query)
+    {
+        searchQuery = query;
+        await JSRuntime.InvokeVoidAsync("console.log", $"Search: {query}");
+        Console.WriteLine($"Searching for: {query}");
+        if (OnSearchQueryChanged.HasDelegate)
+        {
+            await OnSearchQueryChanged.InvokeAsync(query);
+        }
+    }
+
+    private string? userName;
+    private string? userInitials;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserDetails();
+    }
+
+    private async Task LoadUserDetails()
+    {
+        // Get token from localStorage
+        var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+        if (string.IsNullOrEmpty(token))
+        {
+            Console.WriteLine("No token found in localStorage.");
+            userName = "Guest"; // Default user
+            userInitials = "?";
+            return;
+        }
+
+        try
+        {
+            // Fetch user details from Supabase Auth
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            var response = await Http.GetAsync("https://xnibymvrmxhralsrggau.supabase.co/auth/v1/user");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var userData = await response.Content.ReadFromJsonAsync<UserResponse>();
+                userName = userData?.FullName ?? "Unknown User";  // Set username
+                userInitials = GetInitials(userName);             // Generate initials
+            }
+            else
+            {
+                Console.WriteLine($"Error fetching user details: {response.StatusCode}");
+                userName = "Unknown";
+                userInitials = "?";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception occurred: {ex.Message}");
+            userName = "Unknown";
+            userInitials = "?";
+        }
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "?";
+
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+            return parts[0][0].ToString().ToUpper();
+
+        return (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper();
+    }
+
+    private class UserResponse
+    {
+        public string Id { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+    }
+}

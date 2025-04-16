@@ -1,0 +1,189 @@
+﻿@page "/bankDetails/{EmployeeId}"
+@inject BankingService BankingService
+@using MudBlazor
+@inject NavigationManager NavigationManager
+<div class="text-end">
+    <button class="btn btn-primary btn-sm" @onclick="NavigateToBankEditForm">Edit</button>
+</div>
+
+@if (bankDetails != null && bankDetails.Count > 0)
+{
+    <MudPaper Class="bank-details-container" Elevation="4" Style="padding: 16px;">
+        <MudTable T="KeyValuePair<string, string>" Items="bankDetails" Bordered="true" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh >Banking Field</MudTh>
+                <MudTh>Account Details</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd Style="text-transform: capitalize;"DataLabel="Field">@context.Key</MudTd>
+                <MudTd Style="text-transform: capitalize;" DataLabel="Value">@context.Value</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+
+    <MudText Typo="Typo.h6" Class="mb-2">Uploaded Documents</MudText>
+    <MudGrid Spacing="3">
+        <!-- Aadhaar Document -->
+        @if (!string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content))
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="3" Class="d-flex flex-column" Style="height: 100%;">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.subtitle1">Aadhaar</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="flex-grow-1 d-flex align-center justify-center">
+                        @ViewDocument(bankingInfo.AadhaarBase64Content, bankingInfo.AadhaarContentType)
+                    </MudCardContent>
+                    <MudCardActions Class="pa-4">
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   OnClick="@(() => DownloadFile(bankingInfo.AadhaarBase64Content, bankingInfo.AadhaarContentType, bankingInfo.AadhaarFileName))"
+                                   FullWidth="true">
+                            Download
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+
+        <!-- PAN Document -->
+        @if (!string.IsNullOrEmpty(bankingInfo.PanBase64Content))
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="3" Class="d-flex flex-column" Style="height: 100%;">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.subtitle1">PAN</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="flex-grow-1 d-flex align-center justify-center">
+                        @ViewDocument(bankingInfo.PanBase64Content, bankingInfo.PanContentType)
+                    </MudCardContent>
+                    <MudCardActions Class="pa-4">
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   OnClick="@(() => DownloadFile(bankingInfo.PanBase64Content, bankingInfo.PanContentType, bankingInfo.PanFileName))"
+                                   FullWidth="true">
+                            Download
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+
+        <!-- Passbook Document -->
+        @if (!string.IsNullOrEmpty(bankingInfo.PassbookBase64Content))
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="3" Class="d-flex flex-column" Style="height: 100%;">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.subtitle1">Passbook</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="flex-grow-1 d-flex align-center justify-center">
+                        @ViewDocument(bankingInfo.PassbookBase64Content, bankingInfo.PassbookContentType)
+                    </MudCardContent>
+                    <MudCardActions Class="pa-4">
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   OnClick="@(() => DownloadFile(bankingInfo.PassbookBase64Content, bankingInfo.PassbookContentType, bankingInfo.PassbookFileName))"
+                                   FullWidth="true">
+                            Download
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+
+        <!-- Placeholder if no documents -->
+        @if (string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) &&
+       string.IsNullOrEmpty(bankingInfo.PanBase64Content) &&
+       string.IsNullOrEmpty(bankingInfo.PassbookBase64Content))
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">
+                    No documents uploaded yet.
+                </MudText>
+            </MudItem>
+        }
+    </MudGrid>
+}
+else
+{
+    <MudText Typo="Typo.h6" Align="Align.Center" Class="mt-4">Loading bank details...</MudText>
+}
+@code {
+    [Parameter] public string EmployeeId { get; set; }
+
+    private BankingInformation bankingInfo;
+    private List<KeyValuePair<string, string>> bankDetails;
+    private void NavigateToBankEditForm()
+    {
+        if (bankingInfo != null && !string.IsNullOrEmpty(bankingInfo.EmployeeID))
+        {
+            // Navigate to edit page, passing the employee ID
+            NavigationManager.NavigateTo($"/bankEditForm/{bankingInfo.EmployeeID}");
+        }
+        else
+        {
+            // Optional: Handle the case when bankingInfo is null or EmployeeID is not available
+            Console.WriteLine("Banking info or EmployeeID is not available.");
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        bankingInfo = await BankingService.GetBankingInfo(EmployeeId);
+
+        if (bankingInfo != null)
+        {
+            bankDetails = new List<KeyValuePair<string, string>>
+            {
+                new("Employee ID", bankingInfo.EmployeeID),
+                new("Account Holder Name", bankingInfo.Name),
+                new("Account Number", bankingInfo.AccountNumber),
+                new("Account Type", bankingInfo.AccountType),
+                new("Bank Name", bankingInfo.BankName),
+                new("Branch", bankingInfo.Branch),
+                new("IFSCode", bankingInfo.IFSCode),
+                new("Mobile Number", bankingInfo.Phone),
+                new("PAN Number", bankingInfo.PANNumber),
+                new("Aadhaar Number", bankingInfo.AadhaarNumber),
+                new("Branch State", bankingInfo.State),
+              
+            };
+        }
+    }
+
+    RenderFragment ViewDocument(string base64Content, string contentType) => __builder =>
+    {
+        string dataUrl = $"data:{contentType};base64,{base64Content}";
+
+        if (contentType == "application/pdf")
+        {
+            __builder.AddMarkupContent(0, $"<iframe src=\"{dataUrl}\" width=\"100%\" height=\"600px\" style=\"border: 1px solid #ccc; margin-bottom: 16px;\"></iframe>");
+        }
+        else if (contentType.StartsWith("image/"))
+        {
+            __builder.AddMarkupContent(0, $"<img src=\"{dataUrl}\" alt=\"Document Image\" style=\"max-width: 100%; height: auto; border: 1px solid #ccc; margin-bottom: 16px;\" />");
+        }
+        else
+        {
+            __builder.AddMarkupContent(0, $"<p>Unsupported file type: {contentType}</p>");
+        }
+    };
+
+    private async Task DownloadFile(string base64Content, string contentType, string fileName)
+    {
+        var dataUrl = $"data:{contentType};base64,{base64Content}";
+        await JSRuntime.InvokeVoidAsync("downloadBase64File", contentType, base64Content, fileName);
+    }
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+}

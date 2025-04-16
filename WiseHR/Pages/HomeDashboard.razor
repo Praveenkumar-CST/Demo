@@ -1,0 +1,31 @@
+﻿@page "/home"
+@using Components.sidebar
+@layout HomeLayout
+@inject AuthService AuthService
+
+<MudText Typo="Typo.h4">Dashboard</MudText>
+
+@* Displaying the role-based welcome message *@
+@if (!string.IsNullOrEmpty(userRole))
+{
+    <MudText>Welcome, @userRole!</MudText>
+}
+else
+{
+    <MudText>Welcome to the dashboard!</MudText>
+}
+
+@code {
+    private string userRole;
+
+    protected override async Task OnInitializedAsync()
+    {
+        userRole = await GetUserRoleFromSupabase();
+    }
+
+    private async Task<string> GetUserRoleFromSupabase()
+    {
+        var (role, error) = await AuthService.VerifyToken();
+        return !string.IsNullOrEmpty(role) ? role : "Unknown";
+    }
+}

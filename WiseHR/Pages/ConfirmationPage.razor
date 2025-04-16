@@ -1,0 +1,707 @@
+﻿@page "/confirmation"
+@using Components.sidebar
+@inject IDialogService DialogService
+@layout HomeLayout
+@inject IJSRuntime JSRuntime
+@using System.Text.Json
+@using Components.sidebar
+@using WiseHRServer.Models
+@inject EmployeeService EmployeeService
+@inject BankingService BankingService
+@inject ExperienceService ExperienceService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<h3>Confirmation Page</h3>
+
+<div class="container" style="text-transform:capitalize;">
+    <h4 class="d-flex justify-content-between align-items-center">
+        <MudText Typo="Typo.h6">Employee Details</MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToEmployeepage">Edit Employee Details</MudButton>
+    </h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Employee ID</td>
+                <td>@employeeDetails.EmployeeID</td>
+            </tr>
+            <tr>
+                <td>First Name</td>
+                <td>@employeeDetails.FirstName</td>
+            </tr>
+            <tr>
+                <td>Middle Name</td>
+                <td>@employeeDetails.MiddleName</td>
+            </tr>
+            <tr>
+                <td>Last Name</td>
+                <td>@employeeDetails.LastName</td>
+            </tr>
+            <tr>
+                <td>Father's Name</td>
+                <td>@employeeDetails.FatherName</td>
+            </tr>
+            <tr>
+                <td>Mother's Name</td>
+                <td>@employeeDetails.MotherName</td>
+            </tr>
+            <tr>
+                <td>Date of Birth</td>
+                <td>@(employeeDetails.DateOfBirth.HasValue ? employeeDetails.DateOfBirth.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
+            </tr>
+            <tr>
+                <td>Date of Joining</td>
+                <td>@(employeeDetails.DateOfJoining.HasValue ? employeeDetails.DateOfJoining.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
+            </tr>
+
+            <tr>
+                <td>Type of Employment</td>
+                <td>@employeeDetails.TypeOfEmployment</td>
+            </tr>
+            <tr>
+                <td>Level</td>
+                <td>@employeeDetails.Level</td>
+            </tr>
+            <tr>
+                <td>Designation</td>
+                <td>@employeeDetails.Designation</td>
+            </tr>
+            <tr>
+                <td>Joining Location</td>
+                <td>@employeeDetails.JoiningLocation</td>
+            </tr>
+            <tr>
+                <td>Gender</td>
+                <td>@employeeDetails.Gender</td>
+            </tr>
+            <tr>
+                <td>Marital Status</td>
+                <td>@employeeDetails.MaritalStatus</td>
+            </tr>
+            <tr>
+                <td>Blood Group</td>
+                <td>@employeeDetails.BloodGroup</td>
+            </tr>
+            <tr>
+                <td>Nationality</td>
+                <td>@employeeDetails.Nationality</td>
+            </tr>
+            <tr>
+                <td>Allergies</td>
+                <td>@employeeDetails.Allergies</td>
+            </tr>
+            <tr>
+                <td>Medications</td>
+                <td>@employeeDetails.Medications</td>
+            </tr>
+            <tr>
+                <td>Physically Challenged</td>
+                <td>@employeeDetails.PhysicallyChallenged</td>
+            </tr>
+
+            <tr>
+                <td>Sons</td>
+                <td>@employeeDetails.Sons</td>
+            </tr>
+            <tr>
+                <td>Daughters</td>
+                <td>@employeeDetails.Daughters</td>
+            </tr>
+            <tr>
+                <td>Current Address</td>
+                <td>@employeeDetails.CurrentAddress</td>
+            </tr>
+            <tr>
+                <td>Current City</td>
+                <td>@employeeDetails.CurrentCity</td>
+            </tr>
+            <tr>
+                <td>Current State</td>
+                <td>@employeeDetails.CurrentState</td>
+            </tr>
+            <tr>
+                <td>Current Zip</td>
+                <td>@employeeDetails.CurrentZip</td>
+            </tr>
+            <tr>
+                <td>Current Mobile</td>
+                <td>@employeeDetails.CurrentMobile</td>
+            </tr>
+            <tr>
+                <td>Current Email</td>
+                <td>@employeeDetails.CurrentEmail</td>
+            </tr>
+            <!-- Permanent Address Fields -->
+            <tr>
+                <td>Permanent Address</td>
+                <td>@employeeDetails.PermanentAddress</td>
+            </tr>
+            <tr>
+                <td>Permanent City</td>
+                <td>@employeeDetails.PermanentCity</td>
+            </tr>
+            <tr>
+                <td>Permanent State</td>
+                <td>@employeeDetails.PermanentState</td>
+            </tr>
+            <tr>
+                <td>Permanent Zip</td>
+                <td>@employeeDetails.PermanentZip</td>
+            </tr>
+            <tr>
+                <td>Permanent Mobile</td>
+                <td>@employeeDetails.PermanentMobile</td>
+            </tr>
+            <tr>
+                <td>Permanent Email</td>
+                <td>@employeeDetails.PermanentEmail</td>
+            </tr>
+            <!-- Passport Details -->
+            <tr>
+                <td>Passport Full Name</td>
+                <td>@employeeDetails.PassportFullName</td>
+            </tr>
+            <tr>
+                <td>Passport No</td>
+                <td>@employeeDetails.PassportNo</td>
+            </tr>
+            <tr>
+                <td>Passport Nationality</td>
+                <td>@employeeDetails.PassportNationality</td>
+            </tr>
+            <tr>
+                <td>Passport Issue Date</td>
+                <td>@(employeeDetails.PassportIssueDate.HasValue ? employeeDetails.PassportIssueDate.Value.ToString("yyyy-MM-dd") : "Not set")</td>
+            </tr>
+            <tr>
+                <td>Passport Expiry Date</td>
+                <td>@(employeeDetails.PassportExpiryDate.HasValue ? employeeDetails.PassportExpiryDate.Value.ToString("yyyy-MM-dd") : "Not set")</td>
+            </tr>
+
+            <tr>
+                <td>Passport Place of Issue</td>
+                <td>@employeeDetails.PassportPlaceOfIssue</td>
+            </tr>
+            <!-- Emergency Contacts -->
+            <tr>
+                <td>Emergency Contact 1 Name</td>
+                <td>@employeeDetails.EmergencyContact1Name</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 Relationship</td>
+                <td>@employeeDetails.EmergencyContact1Relationship</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 Address</td>
+                <td>@employeeDetails.EmergencyContact1Address</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 City</td>
+                <td>@employeeDetails.EmergencyContact1City</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 State</td>
+                <td>@employeeDetails.EmergencyContact1State</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 Zip Code</td>
+                <td>@employeeDetails.EmergencyContact1ZipCode</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 1 Mobile</td>
+                <td>@employeeDetails.EmergencyContact1Mobile</td>
+            </tr>
+            <!-- Emergency Contact 2 Fields -->
+            <tr>
+                <td>Emergency Contact 2 Name</td>
+                <td>@employeeDetails.EmergencyContact2Name</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 Relationship</td>
+                <td>@employeeDetails.EmergencyContact2Relationship</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 Address</td>
+                <td>@employeeDetails.EmergencyContact2Address</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 City</td>
+                <td>@employeeDetails.EmergencyContact2City</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 State</td>
+                <td>@employeeDetails.EmergencyContact2State</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 Zip Code</td>
+                <td>@employeeDetails.EmergencyContact2ZipCode</td>
+            </tr>
+            <tr>
+                <td>Emergency Contact 2 Mobile</td>
+                <td>@employeeDetails.EmergencyContact2Mobile</td>
+            </tr>
+            <!-- Nominee Details -->
+            <tr>
+                <td>Nominee Name</td>
+                <td>@employeeDetails.NomineeName</td>
+            </tr>
+            <tr>
+                <td>Nominee Relationship</td>
+                <td>@employeeDetails.NomineeRelationship</td>
+            </tr>
+            <tr>
+                <td>Nominee Address</td>
+                <td>@employeeDetails.NomineeAddress</td>
+            </tr>
+            <tr>
+                <td>Nominee City</td>
+                <td>@employeeDetails.NomineeCity</td>
+            </tr>
+            <tr>
+                <td>Nominee State</td>
+                <td>@employeeDetails.NomineeState</td>
+            </tr>
+            <tr>
+                <td>Nominee Zip Code</td>
+                <td>@employeeDetails.NomineeZipCode</td>
+            </tr>
+            <tr>
+                <td>Nominee Mobile</td>
+                <td>@employeeDetails.NomineeMobile</td>
+            </tr>
+            <tr>
+                <td>Photo File</td>
+                <td>@employeeDetails.PhotoFileName</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4 class="d-flex justify-content-between align-items-center">
+        <MudText Typo="Typo.h6">Bank Information</MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToBankingpage">Edit Banking Details</MudButton>
+    </h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Banking Field</th>
+                <th>Account Details</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @* <tr> *@
+            @*     <td>Employee ID</td> *@
+            @*     <td>@bankingInfo.EmployeeID</td> *@
+            @* </tr> *@
+            <tr>
+                <td>Bank Name</td>
+                <td>@bankingInfo.BankName</td>
+            </tr>
+            <tr>
+                <td>Branch</td>
+                <td>@bankingInfo.Branch</td>
+            </tr>
+            <tr>
+                <td>Account Holder Name</td>
+                <td>@bankingInfo.Name</td>
+            </tr>
+            <tr>
+                <td>Account Number</td>
+                <td>@bankingInfo.AccountNumber</td>
+            </tr>
+            <tr>
+                <td>IFSCode</td>
+                <td>@bankingInfo.IFSCode</td>
+            </tr>
+            <tr>
+                <td>Mobile Number</td>
+                <td>@bankingInfo.Phone</td>
+            </tr>
+            <tr>
+                <td>PAN Number</td>
+                <td>@bankingInfo.PANNumber</td>
+            </tr>
+            <tr>
+                <td>Aadhaar Number</td>
+                <td>@bankingInfo.AadhaarNumber</td>
+            </tr>
+            <tr>
+                <td>Branch State</td>
+                <td>@bankingInfo.State</td>
+            </tr>
+            <tr>
+                <td>Account Type</td>
+                <td>@bankingInfo.AccountType</td>
+            </tr>
+            <tr>
+                <td>PAN File</td>
+                <td>@bankingInfo.PanFileName</td>
+            </tr>
+            <tr>
+                <td>Aadhaar File</td>
+                <td>@bankingInfo.AadhaarFileName</td>
+            </tr>
+            <tr>
+                <td>Passbook File</td>
+                <td>@bankingInfo.PassbookFileName</td>
+            </tr>
+
+            <!-- File Listings -->
+
+        </tbody>
+    </table>
+    <!-- Education Qualifications Table -->
+    <h4 class="d-flex justify-content-between align-items-center">
+        <MudText Typo="Typo.h6">Education Qualification</MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToExperiencepage">Edit Work Experience</MudButton>
+    </h4>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Qualification</th>
+                <th>University</th>
+                <th>Year of Passing</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var edu in experience.EducationQualifications)
+            {
+                <tr>
+                    <td>@edu.Qualification</td>
+                    <td>@edu.University</td>
+                    <td>@edu.YearOfPassing</td>
+                    <td>@edu.Percentage</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h4>Work Experiences</h4>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Employer</th>
+                <th>Location</th>
+                <th>Date of Joining</th>
+                <th>Date of Leaving</th>
+                <th>Designation</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var work in experience.WorkExperiences)
+            {
+                <tr>
+                    <td>@work.Employer</td>
+                    <td>@work.Location</td>
+                    <td>@work.DateOfJoining?.ToShortDateString()</td>
+                    <td>@(work.DateOfLeaving.HasValue ? work.DateOfLeaving.Value.ToShortDateString() : "Present")</td>
+                    <td>@work.Designation</td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+
+
+    <div class="container mt-4">
+        <h4>Policies & Guidelines</h4>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <!-- Policy List -->
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in policyDocuments)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span>@item.Name</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => PreviewPolicy(item)">Preview</button>
+                                <input type="checkbox" @bind="item.IsChecked" disabled="@(!item.HasPreviewed)" />
+                            </div>
+                        </li>
+                    }
+                </ul>
+
+                <!-- Submission Alert -->
+                @if (isSubmitted)
+                {
+                    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                        Form submitted successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <!-- Submit Button -->
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-primary" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)">
+                        Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PDF Preview Modal -->
+        @if (!string.IsNullOrEmpty(activePdfUrl))
+        {
+            <div class="modal fade show" style="display: block; margin-top:50px" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="pdfModalLabel">Preview: @activePdfName</h5>
+                            <button type="button" class="btn-close" @onclick="ClosePreview" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <object data="@activePdfUrl" type="application/pdf" width="100%" height="450px" >
+                                <p>PDF preview not supported. <a href="@activePdfUrl" class="text-primary">Download PDF</a>.</p>
+                            </object>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" @onclick="ClosePreview">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        }
+        <!-- Confirmation Dialog Modal -->
+        @if (showConfirmDialog)
+        {
+            <div class="modal fade show" style="display: block; margin-top:250px; margin-left:20px;"  tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmModalLabel">Confirm Submission</h5>
+                            <button type="button" class="btn-close" @onclick="CloseConfirmDialog" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to submit the details? Once submitted it need EditRequest to modify.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" @onclick="CloseConfirmDialog">Cancel</button>
+                            <button type="button" class="btn btn-info" @onclick="ConfirmSubmit">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        }
+
+    </div>
+
+
+</div>
+
+@code {
+
+    private BankingInformation bankingInfo = new BankingInformation();
+    private Experience experience = new Experience();
+    private EmployeeDetails employeeDetails = new EmployeeDetails(); // Add EmployeeDetails model
+    private List<Education> educationList = new();
+    private List<WorkExperience> workList = new();
+    private List<EmployeeDetails> allEmployees = new();
+
+    [Parameter]
+    public EventCallback<string> OnSubmit { get; set; }
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
+    //     if (!string.IsNullOrEmpty(bankingInfoJson))
+    //     {
+    //         bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
+    //     }
+
+    //     var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
+    //     if (!string.IsNullOrEmpty(experienceJson))
+    //     {
+    //         experience = JsonSerializer.Deserialize<Experience>(experienceJson);
+    //     }
+
+    //     var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
+    //     if (!string.IsNullOrEmpty(employeeDetailsJson))
+    //     {
+    //         employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
+    //     }
+    // }
+    private List<PolicyItem> policyDocuments = new()
+        {
+        new PolicyItem { Name = "Attendance Policy", Url = "/pdfs/Wise Work Attendance Policy v3.pdf" },
+        new PolicyItem { Name = "Git Guidelines", Url = "/pdfs/Git Guidelines.pdf" },
+        new PolicyItem { Name = "Code of Conduct", Url = "/pdfs/Wise Work Code of Conduct v1.pdf" },
+        new PolicyItem { Name = "CSharp Coding Guidelines", Url = "/pdfs/CSharp Coding Guidelines.pdf" },
+        new PolicyItem { Name = "Json Coding Guidelines", Url = "/pdfs/Json Coding Guidelines.pdf" },
+        new PolicyItem { Name = "MongoDB Coding Guidelines", Url = "/pdfs/MongoDB Coding Guidelines.pdf" },
+        new PolicyItem { Name = "Python Coding Guidelines", Url = "/pdfs/Python Coding Guidelines.pdf" }
+
+    };//E:\Pugazh\new\InF\InF\WiseHR\wwwroot\pdfs\Python Coding Guidelines.pdf
+
+    private string? activePdfUrl = null;
+    private string? activePdfName = null;
+
+    private bool CanSubmit =>
+        policyDocuments.All(p => p.HasPreviewed && p.IsChecked);
+
+    private void PreviewPolicy(PolicyItem item)
+    {
+        activePdfUrl = item.Url;
+        activePdfName = item.Name;
+        item.HasPreviewed = true;
+    }
+
+    private void ClosePreview()
+    {
+        activePdfUrl = null; // Close the preview when the close button is clicked
+    }
+
+    public class PolicyItem
+    {
+        public string Name { get; set; } = "";
+        public string Url { get; set; } = "";
+        public bool HasPreviewed { get; set; } = false;
+        public bool IsChecked { get; set; } = false;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var bankingInfoJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "bankingInfo");
+        var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
+        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
+
+        if (!string.IsNullOrEmpty(bankingInfoJson))
+        {
+            bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
+        }
+        if (!string.IsNullOrEmpty(experienceJson))
+        {
+            experience = JsonSerializer.Deserialize<Experience>(experienceJson);
+        }
+        if (!string.IsNullOrEmpty(employeeDetailsJson))
+        {
+            employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
+        }
+
+        StateHasChanged();
+    }
+    private bool isSubmitted = false;
+    private bool showConfirmDialog = false;
+    private void ShowConfirmDialog()
+    {
+        showConfirmDialog = true;
+    }
+
+    private void CloseConfirmDialog()
+    {
+        showConfirmDialog = false;
+    }
+
+    private async Task ConfirmSubmit()
+    {
+        showConfirmDialog = false;
+        await SubmitForm();
+    }
+    private string? SuccessMessage;
+
+    private async Task SubmitForm()
+    {
+        Console.WriteLine("Submitting all data to the database...");
+
+        // Submit Banking Info
+        if (bankingInfo != null)
+        {
+            bool isBankSaved = await BankingService.RegisterBankingInfo(bankingInfo);
+            Console.WriteLine(isBankSaved ? "Bank details saved." : "Error saving bank details.");
+        }
+
+        // Submit Employee Info
+        if (employeeDetails != null)
+        {
+            allEmployees.Add(employeeDetails);
+            Console.WriteLine($"Employee: {employeeDetails.FirstName}, Email: {employeeDetails.CurrentEmail}");
+
+            bool isEmployeeSaved = await EmployeeService.RegisterEmployee(employeeDetails);
+            Console.WriteLine(isEmployeeSaved ? "Employee saved." : "Error saving employee.");
+        }
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = workList;
+        Console.WriteLine($"Education: {JsonSerializer.Serialize(experience.EducationQualifications)}");
+        Console.WriteLine($"Work Experience: {JsonSerializer.Serialize(experience.WorkExperiences)}");
+
+        // Submit Experience Info
+        if (experience != null)
+        {
+            
+            // Load experience from session storage before saving
+            var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
+            if (!string.IsNullOrEmpty(experienceJson))
+            {
+                experience = JsonSerializer.Deserialize<Experience>(experienceJson);
+            }
+            experience.EducationQualifications = experience.EducationQualifications ?? new List<Education>();
+            experience.WorkExperiences = experience.WorkExperiences ?? new List<WorkExperience>();
+
+            bool isExperienceSaved = await ExperienceService.RegisterExperienceAsync(experience);
+            Console.WriteLine(isExperienceSaved ? "Experience saved." : "Error saving experience.");
+        }
+
+
+        // Navigate or show a success message
+
+        // Reset objects after save
+        bankingInfo = new BankingInformation();
+        employeeDetails = new EmployeeDetails();
+        experience = new Experience();
+
+        await OnSubmit.InvokeAsync("All data submitted");
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "bankingInfo");
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "experienceDetails");
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.removeItem", "employeeDetails");
+
+
+        // await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "bankingInfo");
+        // await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "employeeDetails");
+        // await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "experienceDetails");
+
+        // Trigger callback
+        await OnSubmit.InvokeAsync("All data submitted");
+        SuccessMessage = "All details submitted successfully!";
+
+        var parameters = new DialogParameters
+        {
+        { "Message", SuccessMessage },
+        { "OnClose", EventCallback.Factory.Create(this, NavigateToHome) }
+        };
+
+        DialogService.Show<SubmitSuccessDialog>("Success", parameters);
+
+        isSubmitted = true;
+
+    }
+    private void NavigateToHome()
+    {
+        NavigationManager.NavigateTo("/home");
+    }
+    private void NavigateToExperiencepage()
+    {
+        // Navigate to the edit form page
+        NavigationManager.NavigateTo("/workExperience");
+    }
+    private void NavigateToBankingpage()
+    {
+        // Navigate to the edit form page
+        NavigationManager.NavigateTo("/bankingForm");
+    }
+    private void NavigateToEmployeepage()
+    {
+        // Navigate to the edit form page
+        NavigationManager.NavigateTo("/employee-form");
+    }
+}
