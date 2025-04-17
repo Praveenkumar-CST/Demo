@@ -8,18 +8,25 @@
 
 @if (bankDetails != null && bankDetails.Count > 0)
 {
-    <MudPaper Class="bank-details-container" Elevation="4" Style="padding: 16px;">
-        <MudTable T="KeyValuePair<string, string>" Items="bankDetails" Bordered="true" Dense="true" Hover="true">
-            <HeaderContent>
-                <MudTh >Banking Field</MudTh>
-                <MudTh>Account Details</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd Style="text-transform: capitalize;"DataLabel="Field">@context.Key</MudTd>
-                <MudTd Style="text-transform: capitalize;" DataLabel="Value">@context.Value</MudTd>
-            </RowTemplate>
-        </MudTable>
-    </MudPaper>
+   <MudPaper Class="bank-details-container" Elevation="4" Style="padding: 16px;">
+    <table class="table table-bordered table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Banking Field</th>
+                <th>Account Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in bankDetails)
+            {
+                <tr>
+                    <td style="text-transform: capitalize;">@item.Key</td>
+                    <td style="text-transform: capitalize;">@item.Value</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</MudPaper>
 
     <MudText Typo="Typo.h6" Class="mb-2">Uploaded Documents</MudText>
     <MudGrid Spacing="3">

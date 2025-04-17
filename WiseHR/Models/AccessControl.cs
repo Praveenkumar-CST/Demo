@@ -14,7 +14,12 @@
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*") , // You can match the pattern here
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),  // You can match the pattern here
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
-                    ("HIDE_experienceEditForm", "/experienceEditForm/.*")
+                    ("HIDE_experienceEditForm", "/experienceEditForm/.*"),
+                    ("HIDE_Registration","/registration"),
+                    ("HIDE_confirmationPage","/confirmation"),
+                    ("HIDE_workExperience","/workExperience"),
+                    ("HIDE_employee-form","/employee-form"),
+                    ("HIDE_bankingForm","/bankingForm"),
 
 
                 }
@@ -29,7 +34,12 @@
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"), 
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
-                     ("HIDE_experienceEditForm", "/experienceEditForm/.*")
+                    ("HIDE_experienceEditForm", "/experienceEditForm/.*"),
+                    ("HIDE_Registration","/registration"),
+                    ("HIDE_confirmationPage","/confirmation"),
+                    ("HIDE_workExperience","/workExperience"),
+                    ("HIDE_employee-form","/employee-form"),
+                    ("HIDE_bankingForm","/bankingForm"),
 
 
                 }
@@ -48,7 +58,7 @@
             { "mentor", new List<(string, string)>
                 {
                     ("Dashboard", "/home"),
-                    ("Fortnight Report", "/fortnight-report")
+                    //("Fortnight Report", "/fortnight-report")
                 }
             }
 

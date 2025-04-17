@@ -11,6 +11,7 @@
 @inject ExperienceService ExperienceService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <h3>Confirmation Page</h3>
 
@@ -443,7 +444,7 @@
 
                 <!-- Submit Button -->
                 <div class="text-center mt-3">
-                    <button type="button" class="btn btn-primary" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)">
+                    <button type="button" class="btn btn-reset" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)">
                         Submit
                     </button>
                 </div>
@@ -451,9 +452,10 @@
         </div>
 
         <!-- PDF Preview Modal -->
+        <!-- PDF Preview Modal -->
         @if (!string.IsNullOrEmpty(activePdfUrl))
         {
-            <div class="modal fade show" style="display: block; margin-top:50px" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true">
+            <div @key="renderCounter" class="modal fade show" style="display: block; margin-top:50px" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="@(!ShowModal)">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -461,12 +463,14 @@
                             <button type="button" class="btn-close" @onclick="ClosePreview" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <object data="@activePdfUrl" type="application/pdf" width="100%" height="450px" >
-                                <p>PDF preview not supported. <a href="@activePdfUrl" class="text-primary">Download PDF</a>.</p>
-                            </object>
+                            <div id="pdfViewer" style="height: 450px; overflow-y: scroll;">
+                                <iframe src="@activePdfUrl" width="100%" height="800px" style="border: none;"></iframe>
+                            </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" @onclick="ClosePreview">Close</button>
+                        <div class="modal-footer">                          
+                            <button type="button" class="btn btn-reset" @onclick="ClosePreview" disabled="@(!isEndOfPdfReached)">
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -484,8 +488,7 @@
                             <button type="button" class="btn-close" @onclick="CloseConfirmDialog" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            Are you sure you want to submit the details? Once submitted it need EditRequest to modify.
-                        </div>
+                           Are you sure you want to submit the details? Once submitted, any modifications will require an Edit Request.                        </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" @onclick="CloseConfirmDialog">Cancel</button>
                             <button type="button" class="btn btn-info" @onclick="ConfirmSubmit">Confirm</button>
@@ -497,11 +500,26 @@
         }
 
     </div>
-
-
 </div>
 
+<style>
+    .btn-reset:disabled {
+        background-color: #e9ecef;
+        color: #6c757d;
+        border-color: #ced4da;
+        cursor: not-allowed;
+        opacity: 1;
+    }
+
+    .btn-reset:not([disabled]) {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+        cursor: pointer;
+    }
+</style>
 @code {
+    public bool ShowModal { get; set; } = true;
 
     private BankingInformation bankingInfo = new BankingInformation();
     private Experience experience = new Experience();
@@ -513,26 +531,8 @@
     [Parameter]
     public EventCallback<string> OnSubmit { get; set; }
 
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
-    //     if (!string.IsNullOrEmpty(bankingInfoJson))
-    //     {
-    //         bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
-    //     }
+    public bool isEndOfPdfReached { get; set; } = false;
 
-    //     var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
-    //     if (!string.IsNullOrEmpty(experienceJson))
-    //     {
-    //         experience = JsonSerializer.Deserialize<Experience>(experienceJson);
-    //     }
-
-    //     var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
-    //     if (!string.IsNullOrEmpty(employeeDetailsJson))
-    //     {
-    //         employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
-    //     }
-    // }
     private List<PolicyItem> policyDocuments = new()
         {
         new PolicyItem { Name = "Attendance Policy", Url = "/pdfs/Wise Work Attendance Policy v3.pdf" },
@@ -549,20 +549,106 @@
     private string? activePdfName = null;
 
     private bool CanSubmit =>
-        policyDocuments.All(p => p.HasPreviewed && p.IsChecked);
+      policyDocuments.All(p => p.HasPreviewed && p.IsChecked);
 
-    private void PreviewPolicy(PolicyItem item)
+    private DotNetObjectReference<ConfirmationPage>? dotNetHelperRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetHelperRef = DotNetObjectReference.Create(this);
+
+            if (JSRuntime != null && dotNetHelperRef != null)
+            {
+                await JSRuntime.InvokeVoidAsync("pdfScrollHelper.detectScrollEnd", dotNetHelperRef);
+            }
+        }
+    }
+    // private int renderCounter = 0;
+
+    // [JSInvokable]
+    // public async Task OnPdfScrolledToEnd()
+    // {
+    //     Console.WriteLine("PDF scroll reached the end!");
+    //     isEndOfPdfReached = true;
+    //     renderCounter++;
+    //     Console.WriteLine($"isEndOfPdfReached set to: {isEndOfPdfReached}");
+    //     await InvokeAsync(StateHasChanged);
+    //     StateHasChanged();
+    //     Console.WriteLine("Close button enabled: " + isEndOfPdfReached);
+    // }
+
+
+    public void Dispose()
+    {
+        dotNetHelperRef?.Dispose();
+    }
+    // private async void PreviewPolicy(PolicyItem item)
+    // {
+    //     activePdfUrl = item.Url;
+    //     activePdfName = item.Name;
+    //     item.HasPreviewed = true;
+    //     isEndOfPdfReached = false;
+    //     await InvokeAsync(StateHasChanged);
+    //     Wait for modal to render, then call JS
+    //     await Task.Delay(300); Small delay to allow rendering
+
+    //     if (JSRuntime != null)
+    //     {
+    //         dotNetHelperRef ??= DotNetObjectReference.Create(this);
+    //         await JSRuntime.InvokeVoidAsync("pdfScrollHelper.detectScrollEnd", dotNetHelperRef);
+    //     }
+    // }
+
+    // private async void ClosePreview()
+    // {
+    //     Console.WriteLine($"Close clicked, isEndOfPdfReached before reset: {isEndOfPdfReached}");
+    //     activePdfUrl = null;
+    //     Console.WriteLine("Close clicked: " + isEndOfPdfReached);
+    //     Close the preview when the close button is clicked
+    //     isEndOfPdfReached = false;
+    //     await InvokeAsync(StateHasChanged);
+
+    // }
+
+    private int renderCounter = 0;
+
+    [JSInvokable]
+    public async Task OnPdfScrolledToEnd()
+    {
+        Console.WriteLine("PDF scroll reached the end!");
+        isEndOfPdfReached = true;
+        renderCounter++;
+        Console.WriteLine($"isEndOfPdfReached set to: {isEndOfPdfReached}");
+        await InvokeAsync(StateHasChanged);
+        Console.WriteLine("Close button enabled: " + isEndOfPdfReached);
+    }
+
+    private async Task PreviewPolicy(PolicyItem item)
     {
         activePdfUrl = item.Url;
         activePdfName = item.Name;
         item.HasPreviewed = true;
+        isEndOfPdfReached = false;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(300);
+
+        if (JSRuntime != null)
+        {
+            dotNetHelperRef ??= DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("pdfScrollHelper.detectScrollEnd", dotNetHelperRef);
+        }
     }
 
-    private void ClosePreview()
+    private async Task ClosePreview()
     {
-        activePdfUrl = null; // Close the preview when the close button is clicked
+        Console.WriteLine($"Close clicked, isEndOfPdfReached before reset: {isEndOfPdfReached}");
+        activePdfUrl = null;
+        Console.WriteLine("Close clicked: " + isEndOfPdfReached);
+        isEndOfPdfReached = false;
+        await InvokeAsync(StateHasChanged);
     }
-
     public class PolicyItem
     {
         public string Name { get; set; } = "";
