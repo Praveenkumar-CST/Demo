@@ -6,6 +6,7 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @using System.Text.Json;
+@inject CountryService CountryService
     <MudContainer MaxWidth="MaxWidth.Medium">
         <MudCard Elevation="2" Class="p-3">
              <MudCardHeader>
@@ -110,13 +111,17 @@
                                 <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
                             </MudSelect>
                         </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Nationality" Required="true">
-                                <MudSelectItem Value="@("Indian")">Indian</MudSelectItem>
-                                <MudSelectItem Value="@("American")">American</MudSelectItem>
-                                <MudSelectItem Value="@("Other")">Other</MudSelectItem>
-                            </MudSelect>
-                        </MudItem>
+                    <MudItem xs="12" sm="4" md="3">
+                        <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Nationality" Required="true">
+                            @if (countries != null)
+                            {
+                                @foreach (var country in countries)
+                                {
+                                    <MudSelectItem Value="@country.Name">@country.Name</MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                    </MudItem>
 
                     <MudItem xs="12" sm="6">
                         <MudText Typo="Typo.body1">Upload Image </MudText>
@@ -187,10 +192,19 @@
                             <MudTextField Label="Passport No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportNo" Required="true" />
                             <ValidationMessage For="@(() => employeeDetails.PassportNo)" />
                         </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Passport Nationality" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportNationality" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.PassportNationality)" />
-                        </MudItem>
+<MudItem xs="12" sm="4" md="3">
+    <MudSelect T="string" Label="Passport Nationality" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportNationality" Required="true">
+        @if (countries != null)
+        {
+            @foreach (var country in countries)
+            {
+                <MudSelectItem Value="@country.Name">@country.Name</MudSelectItem>
+            }
+        }
+    </MudSelect>
+    <ValidationMessage For="@(() => employeeDetails.PassportNationality)" />
+</MudItem>
+
                         <MudItem xs="12" sm="4" md="3">
                             <MudDatePicker Label="Date of Issue" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.PassportIssueDate" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.PassportIssueDate)" />
                         </MudItem>
@@ -412,8 +426,6 @@
         </MudCard>
     </MudContainer>
 
-
-
 @code {
     [Parameter]
     public EventCallback<EmployeeDetails> OnSubmit { get; set; }
@@ -421,9 +433,12 @@
     public EmployeeDetails employeeDetails { get; set; } = new EmployeeDetails();
     [Parameter]
     public EmployeeDetails InitialData { get; set; }
+    private List<Country> countries = new();
 
     protected async override void OnInitialized()
     {
+        countries = await CountryService.GetCountriesAsync();
+
         await LoadFromLocalStorage();
         await LoadEmployeeInfo();
         if (InitialData != null)

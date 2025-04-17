@@ -23,7 +23,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<BankingService>();
 builder.Services.AddScoped<ExperienceService>();
-
+builder.Services.AddScoped<CountryService>();
 
 
 builder.Services.AddScoped<IUserService, UserService>();

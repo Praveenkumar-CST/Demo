@@ -1,4 +1,6 @@
-﻿namespace WiseHR.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace WiseHR.Models
 {
     public class ReportModel
     {
@@ -7,11 +9,7 @@
         public string MenteeEmail { get; set; }
 
         public string MentorEmail { get; set; }
-<<<<<<< Updated upstream
         public string ProgressNote { get; set; }
-        public int ProgressPercentage { get; set; }
-        public byte[] UploadedFile { get; set; }
-=======
 
         public string MentorName { get; set; }
         public string MentorDesignation { get; set; }
@@ -46,8 +44,6 @@
 
         // File Upload
         public string UploadedFile { get; set; }
->>>>>>> Stashed changes
-        public string FileName { get; set; }
         public DateTime SubmittedOn { get; set; }
     }
 

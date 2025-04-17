@@ -99,7 +99,28 @@
                 var response = await _httpClient.DeleteAsync($"EmployeeDetails/DeleteEmployeeDetails/{employeeId}");
                 return await response.Content.ReadFromJsonAsync<bool>();
             }
+        // Get Employee Details by Email
+        public async Task<EmployeeDetails> GetEmployeeDetailsByEmail(string email)
+        {
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<EmployeeDetails>($"EmployeeDetails/GetEmployeeDetailsByEmail/{email}");
+
+                if (response == null)
+                {
+                    Console.WriteLine("Employee details not found.");
+                    return null;
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while fetching employee details by email: {ex.Message}");
+                return null;
+            }
         }
+    }
 
     }
 
