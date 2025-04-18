@@ -4,12 +4,14 @@ using WiseHR.Services;
 using WiseHR;
 using MudBlazor.Services;
 using MudBlazor;
+using Blazored.SessionStorage;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Use HTTPS endpoint for the backend
+builder.Services.AddBlazoredSessionStorage();
 
 builder.Services.AddMudServices(config =>
 {

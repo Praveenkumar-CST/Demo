@@ -255,6 +255,10 @@
         try
         {
             var (token, error) = await AuthService.Login(Email, Password);
+            await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
+
+            await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
+            Console.WriteLine($"Email to store: {Email}");
             if (!string.IsNullOrEmpty(token))
             {
                 // Fetch employee details based on email
@@ -266,8 +270,7 @@
                     var (role, verifyError) = await AuthService.VerifyToken();
                     if (!string.IsNullOrEmpty(role))
                     {
-                        // Store Email in localStorage (EmpId should already exist from signup)
-                        await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "email", Email);
+
                         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
 
                         // Navigate based on role
@@ -341,8 +344,8 @@
             if (result == "Signup successful")
             {
                 // Store Email and EmpId in localStorage
-                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "email", SignupEmail);
-                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "empId", empId.ToString());
+                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
+                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "empId", empId.ToString());
 
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", SignupEmail);
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "empId", empId.ToString());

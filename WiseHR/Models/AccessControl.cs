@@ -11,8 +11,8 @@
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Add Employees", "/home/employees"),
-                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*") , // You can match the pattern here
-                    ("HIDE_personalEditForm", "/personalEditForm/.*"),  // You can match the pattern here
+                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*") , 
+                    ("HIDE_personalEditForm", "/personalEditForm/.*"),
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
                     ("HIDE_experienceEditForm", "/experienceEditForm/.*"),
                     ("HIDE_Registration","/registration"),
