@@ -450,7 +450,7 @@
     {
         // Load EmpId and Email from localStorage (set during signup/login)
         var empId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
-        var email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+        var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
 
         if (!string.IsNullOrEmpty(empId))
         {

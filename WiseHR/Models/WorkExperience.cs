@@ -18,19 +18,19 @@ namespace WiseHRServer.Models
     public class Education
     {
 
-        [Required(ErrorMessage = "Qualification is required")]
+        //[Required(ErrorMessage = "Qualification is required")]
         public string Qualification { get; set; }
 
-        [Required(ErrorMessage = "university is required")]
+        //[Required(ErrorMessage = "university is required")]
         public string University { get; set; }
 
-        [Required(ErrorMessage = "year of passing is required")]
+        //[Required(ErrorMessage = "year of passing is required")]
         [Range(1900, 2100, ErrorMessage = "Enter a valid year")]
 
         [Display(Name = "Year of Passing")]
         public int YearOfPassing { get; set; }
 
-        [Required(ErrorMessage = "percentage is required")]
+        //[Required(ErrorMessage = "percentage is required")]
         [Range(0, 100, ErrorMessage = "Percentage must be between 0 and 100")]
 
         public double Percentage { get; set; }
