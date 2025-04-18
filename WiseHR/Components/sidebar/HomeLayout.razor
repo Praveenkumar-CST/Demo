@@ -110,7 +110,7 @@
         {
 
            // var empId = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "empId");
-            var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
+            var email = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "email");
             userProfilePicture = null;
             userName = null;
             userInitials = null;
