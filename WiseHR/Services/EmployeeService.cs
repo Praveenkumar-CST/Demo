@@ -15,7 +15,6 @@
         {
             _httpClient = httpClient;
         }
-
             public async Task<bool> RegisterEmployee(EmployeeDetails employee)
             {
                 // Calling the backend API to register employee details
@@ -51,14 +50,12 @@
                         return null; // Or handle this scenario as needed
                     }
 
-                    // Return the deserialized employee details
                     return response;
                 }
                 catch (Exception ex)
                 {
-                    // Log the error for debugging
                     Console.WriteLine($"An error occurred while fetching employee details: {ex.Message}");
-                    return null; // Handle the error gracefully
+                    return null; 
                 }
             }
 
