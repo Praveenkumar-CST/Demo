@@ -29,5 +29,7 @@ builder.Services.AddScoped<CountryService>();
 
 
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
+//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://172.210.14.62:5000/") });
+
 await builder.Build().RunAsync();
