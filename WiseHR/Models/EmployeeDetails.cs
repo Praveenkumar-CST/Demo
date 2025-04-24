@@ -180,28 +180,21 @@ namespace WiseHR.Models
 
         public string EmergencyContact1Mobile { get; set; }
 
-        // Emergency Contact 2 Fields
-        [Required(ErrorMessage = "Emergency Contact 2 Name is required")]
+
         public string EmergencyContact2Name { get; set; }
 
-        [Required(ErrorMessage = "Relationship with Employee is required")]
+
         public string EmergencyContact2Relationship { get; set; }
 
-        [Required(ErrorMessage = "Emergency Contact 2 Address is required")]
         public string EmergencyContact2Address { get; set; }
 
-        [Required(ErrorMessage = "Emergency Contact 2 City is required")]
+       
         public string EmergencyContact2City { get; set; }
 
-        [Required(ErrorMessage = "Emergency Contact 2 State is required")]
         public string EmergencyContact2State { get; set; }
 
-        [Required(ErrorMessage = "Emergency Contact 2 Zip/Pin Code is required")]
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Zip / Pin Code must be exactly 6 digits")]
+    
         public string EmergencyContact2ZipCode { get; set; }
-
-        [Required(ErrorMessage = "Emergency Contact 2 Mobile No is required")]
-        [RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter a valid 10-digit mobile number starting with 6-9")]
 
         public string EmergencyContact2Mobile { get; set; }
 
