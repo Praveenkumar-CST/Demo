@@ -18,18 +18,32 @@
                 {
                     <MudNavLink Class="mud-nav-link"
                                 Match="NavLinkMatch.All"
+<<<<<<< HEAD
                                 Icon="@(item.Name == "Holiday Calendar" ? Icons.Material.Filled.CalendarToday : Icons.Material.Filled.Dashboard)"
                                 Href="@item.Url"
                                 ActiveClass="mud-nav-link-active"
                                 style="white-space: nowrap;">
+=======
+                                Icon="@Icons.Material.Filled.Dashboard"
+                                Href="@item.Url"
+                                ActiveClass="mud-nav-link-active">
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                         @if (DrawerOpen)
                         {
                             var displayName = item.Name.Replace("HIDE_", "");
                             <span>@displayName</span>
                         }
+<<<<<<< HEAD
                     </MudNavLink>
                 }
             }
+=======
+
+                    </MudNavLink>
+                }
+            }
+
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         }
         else if (!string.IsNullOrEmpty(errorMessage))
         {
@@ -39,9 +53,18 @@
         {
             <p>No menu items available.</p>
         }
+<<<<<<< HEAD
     </MudNavMenu>
 </MudDrawer>
 
+=======
+
+    </MudNavMenu>
+</MudDrawer>
+
+
+
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 @code {
     [Parameter]
     public bool DrawerOpen { get; set; } = true;
@@ -57,6 +80,11 @@
         var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
         Console.WriteLine($"Token from localStorage: {token ?? "null"}");
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         var (role, error) = await AuthService.VerifyToken();
         Console.WriteLine($"Role: {role ?? "null"}, Error: {error ?? "null"}");
 
@@ -66,6 +94,7 @@
             Console.WriteLine($"Role: {role}, Menu Items Count: {accessibleMenuItems?.Count ?? 0}");
             Console.WriteLine($"Accessible URLs: {string.Join(", ", accessibleMenuItems.Select(i => i.Url))}");
 
+<<<<<<< HEAD
             
             if (role =="Employee")
             {
@@ -84,6 +113,17 @@
                     !pagesToExclude.Any(pattern =>
                         Regex.IsMatch(item.Url, $"^{pattern}$", RegexOptions.IgnoreCase)))
                 .ToList();
+=======
+            var pagesToExclude = new List<string>
+                {
+                    "/confirm"
+                };
+                    accessibleMenuItems = accessibleMenuItems
+             .Where(item =>
+                 !pagesToExclude.Any(pattern =>
+                     Regex.IsMatch(item.Url, $"^{pattern}$", RegexOptions.IgnoreCase)))
+             .ToList();
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
             if (accessibleMenuItems == null || accessibleMenuItems.Count == 0)
             {
@@ -92,7 +132,11 @@
             else
             {
                 errorMessage = null;
+<<<<<<< HEAD
                 await RestrictNavigation(); 
+=======
+                await RestrictNavigation(); // Check initial URL
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
             }
         }
         else
@@ -102,7 +146,11 @@
             NavigationManager.NavigateTo("/l"); // Redirect to login if no role
         }
 
+<<<<<<< HEAD
     
+=======
+        // Subscribe to location changes
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         NavigationManager.LocationChanged += HandleLocationChanged;
     }
 
@@ -111,13 +159,26 @@
         var currentUrl = NavigationManager.Uri.Replace(NavigationManager.BaseUri, "/").TrimEnd('/');
         Console.WriteLine($"Current URL: {currentUrl}");
         bool isAllowed = accessibleMenuItems.Any(item =>
+<<<<<<< HEAD
             Regex.IsMatch(currentUrl, item.Url, RegexOptions.IgnoreCase));
+=======
+        Regex.IsMatch(currentUrl, item.Url, RegexOptions.IgnoreCase));
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
         if (!isAllowed && currentUrl != "/")
         {
             Console.WriteLine($"Access denied to {currentUrl}. Redirecting to /home.");
             NavigationManager.NavigateTo("/");
         }
+<<<<<<< HEAD
+=======
+        // var allowedUrls = accessibleMenuItems.Select(i => i.Url.TrimEnd('/')).ToList();
+        // if (!allowedUrls.Contains(currentUrl) && currentUrl != "/") Allow root if needed
+        // {
+        //     Console.WriteLine($"Access denied to {currentUrl}. Redirecting to /home.");
+        //     NavigationManager.NavigateTo("/home"); Redirect to default page
+        // }
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     }
 
     private void HandleLocationChanged(object sender, LocationChangedEventArgs args)

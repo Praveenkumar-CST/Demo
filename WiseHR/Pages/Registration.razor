@@ -3,6 +3,7 @@
 @layout HomeLayout
 @using WiseHR.Pages.Form
 @using WiseHRServer.Models
+<<<<<<< HEAD
 
 <div class="container">
     <h2>Employee Registration</h2>
@@ -34,15 +35,59 @@
         <div class="alert alert-success mt-3">@SuccessMessage</div>
     }
 </div>
+=======
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudCard Elevation="25" Class="p-4">
+        <!-- Header -->
+        <MudCardContent>
+            <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary" Class="mb-4">Employee Registration</MudText>
+            <MudProgressLinear Value="@ProgressPercentage" Color="Color.Primary" Rounded="true" Height="10px" />
+
+            @if (IsLoading)
+            {
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="my-6" />
+            }
+            else
+            {
+                @switch (CurrentStep)
+                {
+                    case 1:
+                        <EmployeeDetailsForm @ref="employeeForm" OnSubmit="HandleEmployeeDetailsSubmit" />
+                        break;
+                    case 2:
+                        <BankingInfoForm @ref="bankingForm" OnSubmit="HandleBankingInfoSubmit" OnBack="HandleBack" />
+                        break;
+                    case 3:
+                        <WorkExperienceForm @ref="workForm" OnSubmit="HandleWorkExperienceSubmit" OnBack="HandleBack" />
+                        break;
+                }
+            }
+
+            <!-- Success Message -->
+            @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+            {
+                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mt-4">@SuccessMessage</MudAlert>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
 @code {
     private int CurrentStep = 1;
     private string SuccessMessage;
+<<<<<<< HEAD
+=======
+    private bool IsLoading = false;
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
     private EmployeeDetailsForm employeeForm;
     private BankingInfoForm bankingForm;
     private WorkExperienceForm workForm;
 
+<<<<<<< HEAD
     private EmployeeDetails employeeDetails = new EmployeeDetails();
     private BankingInformation bankingInfo = new BankingInformation();
     private Experience experience = new Experience();
@@ -70,16 +115,87 @@
         employeeForm?.Reset();
         bankingForm?.Reset();
         StateHasChanged();
+=======
+    private EmployeeDetails employeeDetails = new();
+    private BankingInformation bankingInfo = new();
+    private Experience experience = new();
+
+    private int ProgressPercentage => CurrentStep switch
+    {
+        1 => 33,
+        2 => 66,
+        3 => 100,
+        _ => 0
+    };
+
+    private async Task HandleEmployeeDetailsSubmit(EmployeeDetails details)
+    {
+        employeeDetails = details;
+        await GoToNextStep();
+    }
+
+    private async Task HandleBankingInfoSubmit(BankingInformation info)
+    {
+        bankingInfo = info;
+        await GoToNextStep();
+    }
+
+    private async Task HandleWorkExperienceSubmit(Experience exp)
+    {
+        experience = exp;
+        IsLoading = true;
+        await Task.Delay(500); // Simulate save delay
+        SaveAllData();
+
+        SuccessMessage = "🎉 Registration completed successfully!";
+        await ResetFormFlow();
+        IsLoading = false;
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     }
 
     private void HandleBack()
     {
+<<<<<<< HEAD
         CurrentStep--;
         StateHasChanged();
+=======
+        if (CurrentStep > 1)
+            CurrentStep--;
+    }
+
+    private async Task GoToNextStep()
+    {
+        await Task.Yield();
+        if (CurrentStep < 3)
+            CurrentStep++;
+    }
+
+    private async Task ResetFormFlow()
+    {
+        CurrentStep = 1;
+        employeeForm?.Reset(); // Ensure Reset() is public
+        bankingForm?.Reset();
+        workForm?.Reset();
+
+        employeeDetails = new();
+        bankingInfo = new();
+        experience = new();
+
+        await Task.Yield();
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     }
 
     private void SaveAllData()
     {
+<<<<<<< HEAD
         Console.WriteLine("Saving all data to database...");
+=======
+        Console.WriteLine("Saving employee details:");
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(employeeDetails));
+        Console.WriteLine("Saving banking info:");
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(bankingInfo));
+        Console.WriteLine("Saving experience:");
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(experience));
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     }
 }

@@ -11,10 +11,22 @@
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Add Employees", "/home/employees"),
+<<<<<<< HEAD
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*") , // You can match the pattern here
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),  // You can match the pattern here
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
                     ("HIDE_experienceEditForm", "/experienceEditForm/.*")
+=======
+                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*") , 
+                    ("HIDE_personalEditForm", "/personalEditForm/.*"),
+                    ("HIDE_bankEditForm", "/bankEditForm/.*"),
+                    ("HIDE_experienceEditForm", "/experienceEditForm/.*"),
+                    ("HIDE_Registration","/registration"),
+                    ("HIDE_confirmationPage","/confirmation"),
+                    ("HIDE_workExperience","/workExperience"),
+                    ("HIDE_employee-form","/employee-form"),
+                    ("HIDE_bankingForm","/bankingForm"),
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
 
                 }
@@ -29,7 +41,16 @@
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"), 
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
+<<<<<<< HEAD
                      ("HIDE_experienceEditForm", "/experienceEditForm/.*")
+=======
+                    ("HIDE_experienceEditForm", "/experienceEditForm/.*"),
+                    ("HIDE_Registration","/registration"),
+                    ("HIDE_confirmationPage","/confirmation"),
+                    ("HIDE_workExperience","/workExperience"),
+                    ("HIDE_employee-form","/employee-form"),
+                    ("HIDE_bankingForm","/bankingForm"),
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
 
                 }
@@ -48,7 +69,11 @@
             { "mentor", new List<(string, string)>
                 {
                     ("Dashboard", "/home"),
+<<<<<<< HEAD
                     ("Fortnight Report", "/fortnight-report")
+=======
+                    //("Fortnight Report", "/fortnight-report")
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                 }
             }
 

@@ -15,7 +15,10 @@
         {
             _httpClient = httpClient;
         }
+<<<<<<< HEAD
 
+=======
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
             public async Task<bool> RegisterEmployee(EmployeeDetails employee)
             {
                 // Calling the backend API to register employee details
@@ -51,14 +54,22 @@
                         return null; // Or handle this scenario as needed
                     }
 
+<<<<<<< HEAD
                     // Return the deserialized employee details
+=======
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                     return response;
                 }
                 catch (Exception ex)
                 {
+<<<<<<< HEAD
                     // Log the error for debugging
                     Console.WriteLine($"An error occurred while fetching employee details: {ex.Message}");
                     return null; // Handle the error gracefully
+=======
+                    Console.WriteLine($"An error occurred while fetching employee details: {ex.Message}");
+                    return null; 
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                 }
             }
 
@@ -99,7 +110,35 @@
                 var response = await _httpClient.DeleteAsync($"EmployeeDetails/DeleteEmployeeDetails/{employeeId}");
                 return await response.Content.ReadFromJsonAsync<bool>();
             }
+<<<<<<< HEAD
+=======
+        // Get Employee Details by Email
+        public async Task<EmployeeDetails> GetEmployeeDetailsByEmail(string email)
+        {
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<EmployeeDetails>($"EmployeeDetails/GetEmployeeDetailsByEmail/{email}");
+
+                if (response == null)
+                {
+                    Console.WriteLine("Employee details not found.");
+                    return null;
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while fetching employee details by email: {ex.Message}");
+                return null;
+            }
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         }
 
     }
 
+<<<<<<< HEAD
+=======
+    }
+
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e

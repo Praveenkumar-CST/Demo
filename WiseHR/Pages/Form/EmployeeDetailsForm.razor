@@ -6,6 +6,7 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @using System.Text.Json;
+<<<<<<< HEAD
     <MudContainer MaxWidth="MaxWidth.Medium">
         <MudCard Elevation="2" Class="p-3">
              <MudCardHeader>
@@ -67,10 +68,141 @@
 
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Physically Challenged" Margin="Margin.Dense" Variant="Variant.Outlined" @bind-Value="employeeDetails.PhysicallyChallenged" Required="true">
+=======
+@inject CountryService CountryService
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+    <MudPaper Elevation="10" Class="rounded-lg overflow-hidden">
+        <!-- Header with gradient background -->
+        <MudCardHeader Class="bg-gradient-primary py-6">
+            <MudText Typo="Typo.h4" Color="Color.Inherit" Class="text-white font-weight-bold">
+                <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-2" />
+                EMPLOYEE REGISTRATION FORM
+            </MudText>
+            <MudText Typo="Typo.subtitle1" Color="Color.Inherit" Class="text-white-50">
+                Complete all sections to register new employee
+            </MudText>
+        </MudCardHeader>
+
+        <MudCardContent Class="p-0">
+            <!-- Stepper for form progress -->
+            <MudStepper Linear="true" Class="px-4 pt-4">
+                <MudStep Text="Personal Details" Color="Color.Primary" CompletedIcon="@Icons.Material.Filled.Check" />
+                <MudStep Text="Banking Info" Disabled="true" />
+                <MudStep Text="Documents" Disabled="true" />
+                <MudStep Text="Review" Disabled="true" />
+            </MudStepper>
+
+            <EditForm Model="@employeeDetails" OnValidSubmit="@GoToNextPage" Class="px-4">
+                <DataAnnotationsValidator />
+
+                <!-- Personal Information Section -->
+                <MudExpansionPanel Text="Personal Information" Icon="@Icons.Material.Filled.PersonOutline" Class="mt-4" Expanded="true">
+                    <MudGrid Spacing="2">
+                        <!-- Employee ID -->
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Employee ID" 
+                                         Variant="Variant.Outlined" 
+                                         @bind-Value="employeeDetails.EmployeeID"
+                                         Adornment="Adornment.Start"
+                                         AdornmentIcon="@Icons.Material.Filled.Badge"
+                                         Required="true" 
+                                         Margin="Margin.Dense" 
+                                         Disabled="true" />
+                        </MudItem>
+
+                        <!-- Name Fields -->
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="First Name *" 
+                                         Variant="Variant.Outlined" 
+                                         @bind-Value="employeeDetails.FirstName" 
+                                         Required="true" 
+                                         Margin="Margin.Dense" />
+                            <ValidationMessage For="@(() => employeeDetails.FirstName)" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Middle Name" 
+                                         Variant="Variant.Outlined" 
+                                         @bind-Value="employeeDetails.MiddleName" 
+                                         Margin="Margin.Dense" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Last Name *" 
+                                         Variant="Variant.Outlined" 
+                                         @bind-Value="employeeDetails.LastName" 
+                                         Required="true" 
+                                         Margin="Margin.Dense" />
+                            <ValidationMessage For="@(() => employeeDetails.LastName)" />
+                        </MudItem>
+
+                        <!-- Parents Info -->
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Father's Name *" 
+                                         Variant="Variant.Outlined" 
+                                         @bind-Value="employeeDetails.FatherName" 
+                                         Required="true" 
+                                         Margin="Margin.Dense" />
+                            <ValidationMessage For="@(() => employeeDetails.FatherName)" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Mother's Name *" 
+                                         Variant="Variant.Outlined" 
+                                         @bind-Value="employeeDetails.MotherName" 
+                                         Required="true" 
+                                         Margin="Margin.Dense" />
+                            <ValidationMessage For="@(() => employeeDetails.MotherName)" />
+                        </MudItem>
+
+                        <!-- Date of Birth -->
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudDatePicker Label="Date of Birth *" 
+                                          Variant="Variant.Outlined" 
+                                          Margin="Margin.Dense" 
+                                          @bind-Date="employeeDetails.DateOfBirth" 
+                                          Required="true" 
+                                          MaxDate="DateTime.Now" 
+                                          For="@(() => employeeDetails.DateOfBirth)"
+                                          AdornmentIcon="@Icons.Material.Filled.Cake" />
+                        </MudItem>
+
+                        <!-- Gender -->
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudSelect T="string" 
+                                      Label="Gender *" 
+                                      Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" 
+                                      @bind-Value="employeeDetails.Gender" 
+                                      Required="true"
+                                      AdornmentIcon="@Icons.Material.Filled.Transgender">
+                                <MudSelectItem Value="@("Male")">Male</MudSelectItem>
+                                <MudSelectItem Value="@("Female")">Female</MudSelectItem>
+                                <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                                <MudSelectItem Value="@("Prefer not to mention")">Prefer not to mention</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <!-- Health Information -->
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudSelect T="string" 
+                                      Label="Physically Challenged *" 
+                                      Margin="Margin.Dense" 
+                                      Variant="Variant.Outlined" 
+                                      @bind-Value="employeeDetails.PhysicallyChallenged" 
+                                      Required="true"
+                                      AdornmentIcon="@Icons.Material.Filled.Accessibility">
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                                 <MudSelectItem Value="@("Yes")">Yes</MudSelectItem>
                                 <MudSelectItem Value="@("No")">No</MudSelectItem>
                             </MudSelect>
                         </MudItem>
+<<<<<<< HEAD
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Allergies" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Allergies" />
                             <ValidationMessage For="@(() => employeeDetails.Allergies)" />
@@ -81,12 +213,41 @@
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Marital Status" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.MaritalStatus" Required="true">
+=======
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Allergies" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.Allergies"
+                                         AdornmentIcon="@Icons.Material.Filled.HealthAndSafety" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Medications" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.Medications"
+                                         AdornmentIcon="@Icons.Material.Filled.MedicalServices" />
+                        </MudItem>
+
+                        <!-- Marital Status -->
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudSelect T="string" 
+                                      Label="Marital Status *" 
+                                      Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" 
+                                      @bind-Value="employeeDetails.MaritalStatus" 
+                                      Required="true"
+                                      AdornmentIcon="@Icons.Material.Filled.Favorite">
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                                 <MudSelectItem Value="@("Single")">Single</MudSelectItem>
                                 <MudSelectItem Value="@("Married")">Married</MudSelectItem>
                                 <MudSelectItem Value="@("Divorced")">Divorced</MudSelectItem>
                                 <MudSelectItem Value="@("Widowed")">Widowed</MudSelectItem>
                             </MudSelect>
                         </MudItem>
+<<<<<<< HEAD
                         @if (employeeDetails.MaritalStatus != "Single")
                         {
                             <MudItem xs="12" sm="4" md="3">
@@ -100,6 +261,40 @@
                         }
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.BloodGroup" Required="true">
+=======
+
+                        <!-- Children Info (conditional) -->
+                        @if (employeeDetails.MaritalStatus != "Single")
+                        {
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudNumericField T="string" Label="No of Sons" 
+                                                Variant="Variant.Outlined" 
+                                                Margin="Margin.Dense" 
+                                                @bind-Value="employeeDetails.Sons"
+                                                Min="@("0")"
+                                                AdornmentIcon="@Icons.Material.Filled.Boy" />
+                            </MudItem>
+                            
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudNumericField T="string" Label="No of Daughters" 
+                                                Variant="Variant.Outlined" 
+                                                Margin="Margin.Dense" 
+                                                @bind-Value="employeeDetails.Daughters"
+                                                Min="@("0")"
+                                                AdornmentIcon="@Icons.Material.Filled.Girl" />
+                            </MudItem>
+                        }
+
+                        <!-- Blood Group -->
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudSelect T="string" 
+                                      Label="Blood Group *" 
+                                      Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" 
+                                      @bind-Value="employeeDetails.BloodGroup" 
+                                      Required="true"
+                                      AdornmentIcon="@Icons.Material.Filled.Bloodtype">
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                                 <MudSelectItem Value="@("A+")">A+</MudSelectItem>
                                 <MudSelectItem Value="@("A-")">A-</MudSelectItem>
                                 <MudSelectItem Value="@("B+")">B+</MudSelectItem>
@@ -110,6 +305,7 @@
                                 <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
                             </MudSelect>
                         </MudItem>
+<<<<<<< HEAD
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Nationality" Required="true">
                                 <MudSelectItem Value="@("Indian")">Indian</MudSelectItem>
@@ -147,12 +343,87 @@
                     <MudGrid>
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Type of Employment" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.TypeOfEmployment">
+=======
+
+                        <!-- Nationality -->
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudSelect T="string" 
+                                      Label="Nationality *" 
+                                      Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" 
+                                      @bind-Value="employeeDetails.Nationality" 
+                                      Required="true"
+                                      AdornmentIcon="@Icons.Material.Filled.Public">
+                                @if (countries != null)
+                                {
+                                    @foreach (var country in countries)
+                                    {
+                                        <MudSelectItem Value="@country.Name">@country.Name</MudSelectItem>
+                                    }
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <!-- Photo Upload -->
+                        <MudItem xs="12" sm="12" md="12">
+                            <MudPaper Elevation="1" Class="pa-4 rounded-lg" Style="border: 1px dashed var(--mud-palette-primary);">
+                                <MudText Typo="Typo.subtitle1" Class="mb-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Class="mr-2" />
+                                    Upload Employee Photo
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">
+                                    JPG, PNG or PDF (Max 20MB)
+                                </MudText>
+                                
+                                <MudFileUpload T="IReadOnlyList<IBrowserFile>" 
+                                              FilesChanged="@HandlePhotoFileChange"
+                                              Accept=".jpg,.jpeg,.png,.pdf"
+                                              Multiple="false">
+                                    <Template>
+                                        <MudButton Variant="Variant.Outlined" 
+                                                  Color="Color.Primary" 
+                                                  StartIcon="@Icons.Material.Filled.Upload"
+                                                  Class="ma-2">
+                                            Browse Files
+                                        </MudButton>
+                                    </Template>
+                                </MudFileUpload>
+                                
+                                @if (!string.IsNullOrEmpty(employeeDetails.PhotoFileName))
+                                {
+                                    <MudChip T="string" Class="mt-2" Color="Color.Success" Variant="Variant.Filled" OnClose="() => ClearPhotoUpload()">
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-1" />
+                                        @employeeDetails.PhotoFileName
+                                    </MudChip>
+                                }
+                                
+                                @if (!string.IsNullOrEmpty(PhotoUploadError))
+                                {
+                                    <MudAlert Severity="Severity.Error" Class="mt-2">@PhotoUploadError</MudAlert>
+                                }
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudExpansionPanel>
+
+                <!-- Work Information Section -->
+                <MudExpansionPanel Text="Work Information" Icon="@Icons.Material.Filled.WorkOutline" Class="mt-4">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudSelect T="string" 
+                                      Label="Type of Employment" 
+                                      Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" 
+                                      @bind-Value="employeeDetails.TypeOfEmployment"
+                                      AdornmentIcon="@Icons.Material.Filled.BusinessCenter">
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                                 <MudSelectItem Value="@("Full-Time")">Full-Time</MudSelectItem>
                                 <MudSelectItem Value="@("Part-Time")">Part-Time</MudSelectItem>
                                 <MudSelectItem Value="@("Contract")">Contract</MudSelectItem>
                                 <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
                             </MudSelect>
                         </MudItem>
+<<<<<<< HEAD
                             <MudItem xs="12" sm="4" md="3">
                                 <MudTextField T="string"
                                               Label="Level"
@@ -413,6 +684,482 @@
     </MudContainer>
 
 
+=======
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField T="string"
+                                        Label="Level"
+                                        Variant="Variant.Outlined"
+                                        Margin="Margin.Dense"
+                                        @bind-Value="employeeDetails.Level"
+                                        AdornmentIcon="@Icons.Material.Filled.Leaderboard" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Designation" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.Designation"
+                                         AdornmentIcon="@Icons.Material.Filled.Work" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Joining Location *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.JoiningLocation" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.LocationOn" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudDatePicker Label="Date of Joining *" 
+                                          Variant="Variant.Outlined" 
+                                          Margin="Margin.Dense" 
+                                          @bind-Date="employeeDetails.DateOfJoining" 
+                                          Required="true" 
+                                          MaxDate="DateTime.Now" 
+                                          For="@(() => employeeDetails.DateOfJoining)"
+                                          AdornmentIcon="@Icons.Material.Filled.DateRange" />
+                        </MudItem>
+                    </MudGrid>
+                </MudExpansionPanel>
+
+                <!-- Passport Information Section -->
+                <MudExpansionPanel Text="Passport Information" Icon="@Icons.Material.Filled.PermIdentity" Class="mt-4">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Passport Full Name *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.PassportFullName" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Person" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Passport No *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.PassportNo" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.CreditCard" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudSelect T="string" 
+                                      Label="Passport Nationality *" 
+                                      Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" 
+                                      @bind-Value="employeeDetails.PassportNationality" 
+                                      Required="true"
+                                      AdornmentIcon="@Icons.Material.Filled.Public">
+                                @if (countries != null)
+                                {
+                                    @foreach (var country in countries)
+                                    {
+                                        <MudSelectItem Value="@country.Name">@country.Name</MudSelectItem>
+                                    }
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudDatePicker Label="Date of Issue *" 
+                                          Variant="Variant.Outlined" 
+                                          Margin="Margin.Dense" 
+                                          @bind-Date="employeeDetails.PassportIssueDate" 
+                                          Required="true" 
+                                          MaxDate="DateTime.Now" 
+                                          For="@(() => employeeDetails.PassportIssueDate)"
+                                          AdornmentIcon="@Icons.Material.Filled.CalendarToday" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudDatePicker Label="Date of Expiry *" 
+                                          Variant="Variant.Outlined" 
+                                          Margin="Margin.Dense" 
+                                          @bind-Date="employeeDetails.PassportExpiryDate" 
+                                          Required="true" 
+                                          MinDate="@employeeDetails.PassportIssueDate" 
+                                          For="@(() => employeeDetails.PassportExpiryDate)"
+                                          AdornmentIcon="@Icons.Material.Filled.EventBusy" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Passport Place of Issue *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.PassportPlaceOfIssue" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Place" />
+                        </MudItem>
+                    </MudGrid>
+                </MudExpansionPanel>
+
+                <!-- Current Address Section -->
+                <MudExpansionPanel Text="Current Address" Icon="@Icons.Material.Filled.Home" Class="mt-4">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12">
+                            <MudTextField Label="Address *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.CurrentAddress" 
+                                         Required="true" 
+                                         Lines="3"
+                                         AdornmentIcon="@Icons.Material.Filled.LocationOn" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="City *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.CurrentCity" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.LocationCity" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="State *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.CurrentState" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Map" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Zip/Pin Code *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.CurrentZip" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Pin" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Mobile No *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.CurrentMobile" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Phone" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Email *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense"
+                                         @bind-Value="employeeDetails.CurrentEmail" 
+                                         Required="true" 
+                                         Disabled="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Email" />
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <MudCheckBox T="bool" 
+                                        @bind-Checked="IsSameAsCurrentAddress" 
+                                        Margin="Margin.Dense" 
+                                        Label="Same as Current Address" 
+                                        Color="Color.Primary" 
+                                        ValueChanged="CopyAddress"
+                                        Class="ml-0" />
+                        </MudItem>
+                    </MudGrid>
+                </MudExpansionPanel>
+
+                <!-- Permanent Address Section -->
+                <MudExpansionPanel Text="Permanent Address" Icon="@Icons.Material.Filled.House" Class="mt-4">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12">
+                            <MudTextField Label="Address *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.PermanentAddress" 
+                                         Required="true" 
+                                         Lines="3"
+                                         AdornmentIcon="@Icons.Material.Filled.LocationOn" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="City *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.PermanentCity" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.LocationCity" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="State *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.PermanentState" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Map" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Zip/Pin Code *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.PermanentZip" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Pin" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Mobile No *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.PermanentMobile" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Phone" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Email *" 
+                                         Variant="Variant.Outlined" 
+                                         @bind-Value="employeeDetails.PermanentEmail" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Email" />
+                        </MudItem>
+                    </MudGrid>
+                </MudExpansionPanel>
+
+                <!-- Emergency Contact Section -->
+                <MudExpansionPanel Text="Emergency Contacts" Icon="@Icons.Material.Filled.Emergency" Class="mt-4">
+                    <MudTabs Elevation="0" Color="Color.Primary" Centered="true">
+                        <MudTab Text="Primary Contact">
+                            <MudGrid Spacing="2" Class="pt-4">
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="Contact Name *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact1Name" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.Person" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="Relationship *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact1Relationship" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.People" />
+                                </MudItem>
+                                
+                                <MudItem xs="12">
+                                    <MudTextField Label="Address *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact1Address" 
+                                                 Required="true"
+                                                 Lines="3"
+                                                 AdornmentIcon="@Icons.Material.Filled.Home" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="City *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact1City" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.LocationCity" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="State *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact1State" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.Map" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="Zip/Pin Code *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact1ZipCode" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.Pin" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="Mobile No *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact1Mobile" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.Phone" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudTab>
+                        
+                        <MudTab Text="Secondary Contact">
+                            <MudGrid Spacing="2" Class="pt-4">
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="Contact Name *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact2Name" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.Person" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="Relationship *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact2Relationship" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.People" />
+                                </MudItem>
+                                
+                                <MudItem xs="12">
+                                    <MudTextField Label="Address *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact2Address" 
+                                                 Required="true"
+                                                 Lines="3"
+                                                 AdornmentIcon="@Icons.Material.Filled.Home" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="City *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact2City" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.LocationCity" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="State" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact2State"
+                                                 AdornmentIcon="@Icons.Material.Filled.Map" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="Zip/Pin Code *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact2ZipCode" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.Pin" />
+                                </MudItem>
+                                
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="Mobile No *" 
+                                                 Variant="Variant.Outlined" 
+                                                 Margin="Margin.Dense" 
+                                                 @bind-Value="employeeDetails.EmergencyContact2Mobile" 
+                                                 Required="true"
+                                                 AdornmentIcon="@Icons.Material.Filled.Phone" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudTab>
+                    </MudTabs>
+                </MudExpansionPanel>
+
+                <!-- Nominee Information Section -->
+                <MudExpansionPanel Text="Nominee Information" Icon="@Icons.Material.Filled.AssignmentInd" Class="mt-4">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Nominee Name *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.NomineeName" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Person" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Relationship *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.NomineeRelationship" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.People" />
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <MudTextField Label="Address *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.NomineeAddress" 
+                                         Required="true"
+                                         Lines="3"
+                                         AdornmentIcon="@Icons.Material.Filled.Home" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="City *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.NomineeCity" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.LocationCity" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="State *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.NomineeState" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Map" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Zip/Pin Code *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.NomineeZipCode" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Pin" />
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Label="Mobile No *" 
+                                         Variant="Variant.Outlined" 
+                                         Margin="Margin.Dense" 
+                                         @bind-Value="employeeDetails.NomineeMobile" 
+                                         Required="true"
+                                         AdornmentIcon="@Icons.Material.Filled.Phone" />
+                        </MudItem>
+                    </MudGrid>
+                </MudExpansionPanel>
+
+                <!-- Form Actions -->
+                <MudGrid Class="mt-6 mb-4">
+                    <MudItem xs="12" Class="d-flex justify-space-between">
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Error" 
+                                  OnClick="Reset"
+                                  StartIcon="@Icons.Material.Filled.RestartAlt">
+                            Reset Form
+                        </MudButton>
+                        
+                        <MudButton Variant="Variant.Filled" 
+                                  Color="Color.Primary" 
+                                  ButtonType="ButtonType.Submit"
+                                  EndIcon="@Icons.Material.Filled.ArrowForward"
+                                  Class="px-6">
+                            Continue to Banking Info
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </EditForm>
+        </MudCardContent>
+    </MudPaper>
+</MudContainer>
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
 @code {
     [Parameter]
@@ -421,16 +1168,32 @@
     public EmployeeDetails employeeDetails { get; set; } = new EmployeeDetails();
     [Parameter]
     public EmployeeDetails InitialData { get; set; }
+<<<<<<< HEAD
 
     protected async override void OnInitialized()
     {
         await LoadFromLocalStorage();
         await LoadEmployeeInfo();
+=======
+    private List<Country> countries = new();
+    private bool IsSameAsCurrentAddress { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        countries = await CountryService.GetCountriesAsync();
+        await LoadFromLocalStorage();
+        await LoadEmployeeInfo();
+
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         if (InitialData != null)
         {
             employeeDetails = InitialData;
         }
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     private async Task LoadFromLocalStorage()
     {
         // Load EmpId and Email from localStorage (set during signup/login)
@@ -447,6 +1210,10 @@
         }
         StateHasChanged();
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     private async Task LoadEmployeeInfo()
     {
         // Load existing employee details from sessionStorage, preserving EmpId and Email
@@ -467,9 +1234,12 @@
         }
     }
 
+<<<<<<< HEAD
 
     private bool IsSameAsCurrentAddress { get; set; }
 
+=======
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     private void CopyAddress(bool value)
     {
         IsSameAsCurrentAddress = value;
@@ -483,6 +1253,7 @@
             employeeDetails.PermanentEmail = employeeDetails.CurrentEmail;
         }
     }
+<<<<<<< HEAD
    
 
 
@@ -530,11 +1301,45 @@
 
         var file = e.File;
         if (file == null)
+=======
+
+    private async Task GoToNextPage()
+    {
+        await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
+        await OnSubmit.InvokeAsync(employeeDetails); // Pass data to parent to hold
+        NavigationManager.NavigateTo("/bankingForm");
+    }
+
+    public void Reset()
+    {
+        // Reset the employee details but preserve EmployeeID and CurrentEmail
+        var empId = employeeDetails.EmployeeID;
+        var email = employeeDetails.CurrentEmail;
+
+        employeeDetails = new EmployeeDetails();
+        employeeDetails.EmployeeID = empId;
+        employeeDetails.CurrentEmail = email;
+
+        IsSameAsCurrentAddress = false;
+        StateHasChanged();
+    }
+
+    private async Task HandlePhotoFileChange(IReadOnlyList<IBrowserFile> files)
+    {
+        PhotoUploadError = null;
+
+        if (files == null || files.Count == 0)
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         {
             PhotoUploadError = "No file selected.";
             return;
         }
 
+<<<<<<< HEAD
+=======
+        var file = files.First();
+        
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         // Size check: max 20 MB
         if (file.Size > 20 * 1024 * 1024)
         {
@@ -550,6 +1355,7 @@
             return;
         }
 
+<<<<<<< HEAD
         // Read file content
         var buffer = new byte[file.Size];
         await file.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024).ReadAsync(buffer);
@@ -566,4 +1372,33 @@
                (contentType.StartsWith("image/jpeg") || contentType.StartsWith("image/png"));
     }
 
+=======
+        try
+        {
+            // Read file content
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024).ReadAsync(buffer);
+
+            // Assign to model
+            employeeDetails.PhotoFileName = file.Name;
+            employeeDetails.PhotoContentType = file.ContentType;
+            employeeDetails.PhotoBase64Content = Convert.ToBase64String(buffer);
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            PhotoUploadError = $"Error uploading file: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private void ClearPhotoUpload()
+    {
+        employeeDetails.PhotoFileName = null;
+        employeeDetails.PhotoContentType = null;
+        employeeDetails.PhotoBase64Content = null;
+        StateHasChanged();
+    }
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 }

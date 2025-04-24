@@ -1,5 +1,6 @@
 ﻿@page "/employeeDetails/{EmployeeId}"
 @inject NavigationManager NavigationManager
+<<<<<<< HEAD
 
 @inject EmployeeService EmployeeService
 @if (employee != null)
@@ -159,8 +160,227 @@ else
     }
 
 
+=======
+@inject EmployeeService EmployeeService
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    @if (employee != null)
+    {
+        <MudCard Elevation="25" Class="mb-4">
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12" sm="8">
+                        <MudText Typo="Typo.h5">@($"{employee.FirstName} {employee.LastName}")</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@employee.Designation</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" Class="text-end">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToPersonalEditForm">Edit</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true">
+            <MudTabPanel Text="Personal Information">
+                <MudTable Items="@GetPersonalInfoRows()" Hover="true" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Field</MudTh>
+                        <MudTh>Value</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Key</MudTd>
+                        <MudTd>@context.Value</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Employment Details">
+                <MudTable Items="@GetEmploymentDetailsRows()" Hover="true" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Field</MudTh>
+                        <MudTh>Value</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Key</MudTd>
+                        <MudTd>@context.Value</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Address Details">
+                <MudTable Items="@GetAddressDetailsRows()" Hover="true" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Field</MudTh>
+                        <MudTh>Value</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Key</MudTd>
+                        <MudTd>@context.Value</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Passport Details">
+                <MudTable Items="@GetPassportDetailsRows()" Hover="true" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Field</MudTh>
+                        <MudTh>Value</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Key</MudTd>
+                        <MudTd>@context.Value</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Emergency Contacts">
+                <MudTable Items="@GetEmergencyContactsRows()" Hover="true" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Field</MudTh>
+                        <MudTh>Value</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Key</MudTd>
+                        <MudTd>@context.Value</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Nominee Details">
+                <MudTable Items="@GetNomineeDetailsRows()" Hover="true" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Field</MudTh>
+                        <MudTh>Value</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Key</MudTd>
+                        <MudTd>@context.Value</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+    }
+    else
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudText Align="Align.Center">Loading employee details...</MudText>
+    }
+    </MudContainer>
+
+    @code {
+    [Parameter] public string EmployeeId { get; set; }
+
+    private EmployeeDetails employee;
+
+    private void NavigateToPersonalEditForm()
+    {
+        NavigationManager.NavigateTo($"/personalEditForm/{employee.EmployeeID}");
+    }
+
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     protected override async Task OnInitializedAsync()
     {
         employee = await EmployeeService.GetEmployeeDetails(EmployeeId);
     }
+<<<<<<< HEAD
 }
+=======
+
+    private Dictionary<string, string> GetPersonalInfoRows()
+    {
+        return new Dictionary<string, string>
+        {
+            { "Email", employee.CurrentEmail },
+            { "Gender", employee.Gender },
+            { "Marital Status", employee.MaritalStatus },
+            { "Date of Birth", employee.DateOfBirth?.ToShortDateString() ?? "N/A" },
+            { "Blood Group", employee.BloodGroup },
+            { "Nationality", employee.Nationality },
+            { "Father's Name", employee.FatherName },
+            { "Mother's Name", employee.MotherName },
+            { "Sons", employee.Sons.ToString() },
+            { "Daughters", employee.Daughters.ToString() },
+            { "Allergies", employee.Allergies },
+            { "Medications", employee.Medications },
+            { "Physically Challenged", employee.PhysicallyChallenged }
+        };
+    }
+
+    private Dictionary<string, string> GetEmploymentDetailsRows()
+    {
+        return new Dictionary<string, string>
+        {
+            { "Employee ID", employee.EmployeeID },
+            { "Type of Employment", employee.TypeOfEmployment },
+            { "Level", employee.Level },
+            { "Designation", employee.Designation },
+            { "Joining Location", employee.JoiningLocation },
+            { "Date of Joining", employee.DateOfJoining?.ToShortDateString() ?? "N/A" }
+        };
+    }
+
+    private Dictionary<string, string> GetAddressDetailsRows()
+    {
+        return new Dictionary<string, string>
+        {
+            { "Current Address", employee.CurrentAddress },
+            { "Current City", employee.CurrentCity },
+            { "Current State", employee.CurrentState },
+            { "Current Zip", employee.CurrentZip },
+            { "Permanent Address", employee.PermanentAddress },
+            { "Permanent City", employee.PermanentCity },
+            { "Permanent State", employee.PermanentState },
+            { "Permanent Zip", employee.PermanentZip }
+        };
+    }
+
+    private Dictionary<string, string> GetPassportDetailsRows()
+    {
+        return new Dictionary<string, string>
+        {
+            { "Full Name", employee.PassportFullName },
+            { "Passport No", employee.PassportNo },
+            { "Nationality", employee.PassportNationality },
+            { "Issue Date", employee.PassportIssueDate?.ToShortDateString() ?? "N/A" },
+            { "Expiry Date", employee.PassportExpiryDate?.ToShortDateString() ?? "N/A" },
+            { "Place of Issue", employee.PassportPlaceOfIssue }
+        };
+    }
+
+    private Dictionary<string, string> GetEmergencyContactsRows()
+    {
+        return new Dictionary<string, string>
+        {
+            { "Contact 1 Name", employee.EmergencyContact1Name },
+            { "Relationship", employee.EmergencyContact1Relationship },
+            { "Address", employee.EmergencyContact1Address },
+            { "City", employee.EmergencyContact1City },
+            { "State", employee.EmergencyContact1State },
+            { "Zip", employee.EmergencyContact1ZipCode },
+            { "Mobile", employee.EmergencyContact1Mobile },
+            { "Contact 2 Name", employee.EmergencyContact2Name },
+            { "Relationship", employee.EmergencyContact2Relationship },
+            { "Address", employee.EmergencyContact2Address },
+            { "City", employee.EmergencyContact2City },
+            { "State", employee.EmergencyContact2State },
+            { "Zip", employee.EmergencyContact2ZipCode },
+            { "Mobile", employee.EmergencyContact2Mobile }
+        };
+    }
+
+    private Dictionary<string, string> GetNomineeDetailsRows()
+    {
+        return new Dictionary<string, string>
+        {
+            { "Name", employee.NomineeName },
+            { "Relationship", employee.NomineeRelationship },
+            { "Address", employee.NomineeAddress },
+            { "City", employee.NomineeCity },
+            { "State", employee.NomineeState },
+            { "Zip", employee.NomineeZipCode },
+            { "Mobile", employee.NomineeMobile }
+        };
+    }
+}
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
