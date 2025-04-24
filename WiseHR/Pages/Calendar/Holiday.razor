@@ -5,7 +5,12 @@
 @implements IDisposable
 @layout HomeLayout
 
+
 <h3 class="holiday-title">Holiday List</h3>
+
+<div class="back-button-container">
+    <button class="back-button" @onclick="NavigateToCalendar">Back</button>
+</div>
 
 <div class="holiday-boxes">
     <div class="permanent-holidays">
@@ -75,6 +80,7 @@ else if (_holidays.Length == 0)
     <p>Raw API Response:</p>
     <pre>@_rawResponse</pre>
 }
+
 
 @code {
     private Event[] _holidays = Array.Empty<Event>();
@@ -152,6 +158,11 @@ else if (_holidays.Length == 0)
             return parsedDate.ToString("dddd");
         }
         return "Invalid Date";
+    }
+
+    private void NavigateToCalendar()
+    {
+        Navigation.NavigateTo("/calendar");
     }
 
     public void Dispose()
