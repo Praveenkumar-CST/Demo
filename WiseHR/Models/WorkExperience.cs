@@ -8,7 +8,10 @@ namespace WiseHRServer.Models
 {
     public class WorkExperience
     {
+<<<<<<< HEAD
+=======
 
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         public string Employer { get; set; }
         public string Location { get; set; }
         public DateTime? DateOfJoining { get; set; }
@@ -17,6 +20,11 @@ namespace WiseHRServer.Models
     }
     public class Education
     {
+<<<<<<< HEAD
+        public string Qualification { get; set; }
+        public string University { get; set; }
+        public int YearOfPassing { get; set; }
+=======
 
         [Required(ErrorMessage = "Qualification is required")]
         public string Qualification { get; set; }
@@ -33,6 +41,7 @@ namespace WiseHRServer.Models
         [Required(ErrorMessage = "percentage is required")]
         [Range(0, 100, ErrorMessage = "Percentage must be between 0 and 100")]
 
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         public double Percentage { get; set; }
     }
 

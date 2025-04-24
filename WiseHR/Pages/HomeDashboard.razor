@@ -2,20 +2,38 @@
 @using Components.sidebar
 @layout HomeLayout
 @inject AuthService AuthService
+<<<<<<< HEAD
+=======
 @inject IJSRuntime JSRuntime
 @inject EmployeeService EmployeeService
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
 <MudText Typo="Typo.h4">Dashboard</MudText>
 
 @* Displaying the role-based welcome message *@
+<<<<<<< HEAD
+@if (!string.IsNullOrEmpty(userRole))
+{
+    <MudText>Welcome, @userRole!</MudText>
+=======
 @if (!string.IsNullOrEmpty(userName))
 {
     <MudText>Hello,@userName!</MudText>
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 }
 else
 {
     <MudText>Welcome to the dashboard!</MudText>
 }
+<<<<<<< HEAD
+
+@code {
+    private string userRole;
+
+    protected override async Task OnInitializedAsync()
+    {
+        userRole = await GetUserRoleFromSupabase();
+=======
 @if (!string.IsNullOrEmpty(userRole))
 {
     <MudTex>Role:@userRole</MudTex>
@@ -27,6 +45,7 @@ else
     {
         userRole = await GetUserRoleFromSupabase();
         await LoadUserName();
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     }
 
     private async Task<string> GetUserRoleFromSupabase()
@@ -34,6 +53,8 @@ else
         var (role, error) = await AuthService.VerifyToken();
         return !string.IsNullOrEmpty(role) ? role : "Unknown";
     }
+<<<<<<< HEAD
+=======
     
     private async Task LoadUserName()
     {
@@ -70,4 +91,5 @@ else
     {
         return !string.IsNullOrWhiteSpace(email) ? email.Substring(0, 1).ToUpper() : "G";
     }
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 }

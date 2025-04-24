@@ -1,6 +1,10 @@
+<<<<<<< HEAD
+﻿namespace WiseHR.Models
+=======
 ﻿using System.ComponentModel.DataAnnotations;
 
 namespace WiseHR.Models
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 {
     public class ReportModel
     {
@@ -10,6 +14,11 @@ namespace WiseHR.Models
 
         public string MentorEmail { get; set; }
         public string ProgressNote { get; set; }
+<<<<<<< HEAD
+        public int ProgressPercentage { get; set; }
+        public byte[] UploadedFile { get; set; }
+        public string FileName { get; set; }
+=======
 
         public string MentorName { get; set; }
         public string MentorDesignation { get; set; }
@@ -44,6 +53,7 @@ namespace WiseHR.Models
 
         // File Upload
         public string UploadedFile { get; set; }
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         public DateTime SubmittedOn { get; set; }
     }
 

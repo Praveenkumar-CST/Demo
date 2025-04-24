@@ -20,7 +20,11 @@ namespace WiseHR.Services
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
+<<<<<<< HEAD
+            _baseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5243";
+=======
             _baseUrl = configuration["ApiBaseUrl"] ?? "http://172.210.14.62:5000/";
+>>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
             _supabaseUrl = configuration["Supabase:Url"] ?? _supabaseUrl;
             _supabaseKey = configuration["Supabase:AnonKey"] ?? _supabaseKey;
             _httpClient.BaseAddress = new Uri(_baseUrl);
