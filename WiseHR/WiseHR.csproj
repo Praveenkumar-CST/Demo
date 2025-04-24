@@ -24,7 +24,6 @@
     <PackageReference Include="MongoDB.Driver" Version="3.2.1" />
     <PackageReference Include="MudBlazor" Version="8.4.0" />
     <PackageReference Include="Supabase" Version="1.1.1" />
-
     <PackageReference Include="System.Net.Http.Json" Version="9.0.3" />
   </ItemGroup>
 
