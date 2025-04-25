@@ -6,6 +6,7 @@
 @inject EmployeeService EmployeeService
 @inject NavigationManager NavigationManager
 
+
 <MudThemeProvider />
 <MudLayout>
 
@@ -159,7 +160,7 @@
     private void NavigateToEmployeeProfile(string id)
     {
         _showSearchResults = false;
-        NavigationManager.NavigateTo($"/employee/{id}");
+        NavigationManager.NavigateTo($"/employee//{id}");
     }
 
     private async Task LoadUserDetails()
