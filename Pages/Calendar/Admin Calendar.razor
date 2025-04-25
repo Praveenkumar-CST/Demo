@@ -1,0 +1,464 @@
+﻿@page "/calendar"
+@using System.Text.Json
+@using CalendarApp.Models
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@layout HomeLayout
+
+<div class="page-container">
+    <div class="calendar-container">
+        @if (_isLoading)
+        {
+            <div class="loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
+        }
+        <div class="calendar-header-container">
+            <button class="nav-button" @onclick="NavigateToPreviousMonth">Previous</button>
+            <h3 class="calendar-title">@_currentDate.ToString("MMMM yyyy")</h3>
+            <button class="nav-button" @onclick="NavigateToNextMonth">Next</button>
+        </div>
+        <div class="calendar">
+            <div class="calendar-header">
+                @foreach (var day in _daysOfWeek)
+                {
+                    <div class="day-header">@day</div>
+                }
+            </div>
+            <div class="calendar-body">
+                @foreach (var week in _calendarWeeks)
+                {
+                    <div class="week">
+                        @foreach (var day in week)
+                        {
+                            <div class="day @(day.IsCurrentMonth ? "" : "other-month") @(day.IsToday ? "today" : "") @(HasEvent(day.Date) ? "has-event" : "")"
+                                 @onclick="() => SelectDate(day.Date)">
+                                <div class="day-content">
+                                    <div class="day-number">@day.Date.Day</div>
+                                    @if (HasEvent(day.Date))
+                                    {
+                                        <div class="event-name">
+                                            @(_events[day.Date]?.Description ?? "Unnamed Event")
+                                        </div>
+                                    }
+                                    @if (IsHoliday(day.Date))
+                                    {
+                                        <div class="holiday-indicator @(GetHolidayType(day.Date) == "Permanent" ? "permanent" : "optional")"></div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="holidays-box" @onclick="NavigateToHolidaysPage"><span>Holidays</span></div>
+    </div>
+    <div class="event-and-holidays-container">
+        @if (_isEventInputVisible)
+        {
+            <div class="event-panel">
+                <div class="event-panel-header">
+                    <h4>Events for @_selectedDate.ToString("dd-MM-yyyy")</h4>
+                    <button class="close-button" @onclick="HideEventInput">×</button>
+                </div>
+                <div class="event-panel-content">
+                    @if (_hasExistingEvent)
+                    {
+                        <div class="existing-event">
+                            <strong>Event:</strong> @(_events[_selectedDate]?.Description ?? "No description available")
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(_successMessage))
+                    {
+                        <div class="success-message">@_successMessage</div>
+                    }
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <div class="error-message">@_errorMessage</div>
+                    }
+                    <textarea @bind="_eventDescription" placeholder="Enter new event details..." class="event-textarea"></textarea>
+                    <div class="holiday-type-selection">
+                        <label>Holiday Type (required):</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox"
+                                       @bind="_isPermanentHoliday"
+                                       @onclick="() => SetHolidayType(true)" />
+                                <span>Permanent Holiday</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox"
+                                       @bind="_isOptionalHoliday"
+                                       @onclick="() => SetHolidayType(false)" />
+                                <span>Optional Holiday</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="event-buttons">
+                        @if (_hasExistingEvent)
+                        {
+                            <button class="action-button save" @onclick="UpdateEvent">Update</button>
+                        }
+                        else
+                        {
+                            <button class="action-button save" @onclick="SaveEvent">Save</button>
+                        }
+                        <button class="action-button cancel" @onclick="HideEventInput">Cancel</button>
+                        @if (_hasExistingEvent)
+                        {
+                            <button class="action-button delete" @onclick="DeleteEvent">Delete</button>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="holidays-month-box">
+                <h3>Holidays in @_currentDate.ToString("MMMM yyyy")</h3>
+                <div class="holidays-list-container">
+                    @if (GetHolidaysInMonth().Any())
+                    {
+                        <ul>
+                            @foreach (var holiday in GetHolidaysInMonth())
+                            {
+                                <li class="@(holiday.Value.HolidayType == "Permanent" ? "permanent-holiday" : "optional-holiday")"
+                                    @onclick="() => SelectDate(holiday.Key)">
+                                    <span class="holiday-date">@holiday.Key.ToString("dd-MM-yyyy") (@holiday.Key.ToString("ddd"))</span>
+                                    <span class="holiday-name">- @(holiday.Value.Description ?? "Unnamed Event")</span>
+                                    <span class="holiday-type">- @(holiday.Value.HolidayType ?? "N/A")</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="no-holidays">No holidays this month.</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private static readonly string[] _daysOfWeek = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    private DateTime _currentDate = DateTime.Today;
+    private List<List<CalendarDay>> _calendarWeeks = new();
+    private Dictionary<DateTime, Event> _events = new();
+    private bool _isEventInputVisible;
+    private DateTime _selectedDate;
+    private string _eventDescription = "";
+    private bool _hasExistingEvent;
+    private bool _isPermanentHoliday;
+    private bool _isOptionalHoliday;
+    private string? _successMessage;
+    private string? _errorMessage;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load events and initialize calendar on component startup.
+        await LoadEventsAsync();
+        GenerateCalendar();
+        _isLoading = false;
+    }
+
+    private async Task LoadEventsAsync()
+    {
+        // Fetch events from API and populate events dictionary.
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<Event>>("http://localhost:5243/api/Events");
+            if (response != null)
+            {
+                _events = response
+                    .Where(e => DateTime.TryParse(e.Date, out _))
+                    .ToDictionary(
+                        e => DateTime.Parse(e.Date!),
+                        e => e
+                    );
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Failed to load events: {ex.Message}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
+    private void GenerateCalendar()
+    {
+        // Build a 6-week calendar grid starting from the first Sunday before the month.
+        _calendarWeeks.Clear();
+        var firstOfMonth = new DateTime(_currentDate.Year, _currentDate.Month, 1);
+        var firstDayOfWeek = (int)firstOfMonth.DayOfWeek;
+        var currentDay = firstOfMonth.AddDays(-firstDayOfWeek);
+
+        for (int week = 0; week < 6; week++)
+        {
+            _calendarWeeks.Add(Enumerable.Range(0, 7).Select(d => new CalendarDay
+            {
+                Date = currentDay.AddDays(d),
+                IsCurrentMonth = currentDay.AddDays(d).Month == _currentDate.Month,
+                IsToday = currentDay.AddDays(d).Date == DateTime.Today.Date
+            }).ToList());
+            currentDay = currentDay.AddDays(7);
+        }
+    }
+
+    private void SelectDate(DateTime date)
+    {
+        // Open event input panel for the selected date.
+        _selectedDate = date;
+        _hasExistingEvent = _events.ContainsKey(date);
+
+        if (_hasExistingEvent)
+        {
+            _eventDescription = _events[date]?.Description ?? "";
+            _isPermanentHoliday = _events[date]?.HolidayType == "Permanent";
+            _isOptionalHoliday = _events[date]?.HolidayType == "Optional";
+        }
+        else
+        {
+            _eventDescription = "";
+            _isPermanentHoliday = false;
+            _isOptionalHoliday = false;
+        }
+
+        _isEventInputVisible = true;
+        _successMessage = null;
+        _errorMessage = null;
+        StateHasChanged();
+    }
+
+    private async Task SaveEvent()
+    {
+        // Save a new event to the API after validation.
+        if (string.IsNullOrWhiteSpace(_eventDescription))
+        {
+            _errorMessage = "Please enter event details.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        if (!_isPermanentHoliday && !_isOptionalHoliday)
+        {
+            _errorMessage = "Please select a holiday type (Permanent or Optional).";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        try
+        {
+            var eventToSave = new Event
+            {
+                Date = _selectedDate.ToString("yyyy-MM-dd"),
+                Description = _eventDescription,
+                HolidayType = _isPermanentHoliday ? "Permanent" : "Optional"
+            };
+
+            HttpResponseMessage response = await Http.PostAsJsonAsync(
+                "http://localhost:5243/api/Events",
+                eventToSave);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadEventsAsync();
+                GenerateCalendar();
+                _successMessage = "Event saved successfully.";
+                _hasExistingEvent = true;
+                StateHasChanged();
+
+                await Task.Delay(3000);
+                _successMessage = null;
+            }
+            else
+            {
+                _errorMessage = $"Failed to save event: {await response.Content.ReadAsStringAsync()}.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Error saving event: {ex.Message}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
+    private async Task UpdateEvent()
+    {
+        // Update an existing event via the API after validation.
+        if (string.IsNullOrWhiteSpace(_eventDescription))
+        {
+            _errorMessage = "Please enter event details.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        if (!_isPermanentHoliday && !_isOptionalHoliday)
+        {
+            _errorMessage = "Please select a holiday type (Permanent or Optional).";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        try
+        {
+            var eventToSave = new Event
+            {
+                Date = _selectedDate.ToString("yyyy-MM-dd"),
+                Description = _eventDescription,
+                HolidayType = _isPermanentHoliday ? "Permanent" : "Optional"
+            };
+
+            HttpResponseMessage response = await Http.PutAsJsonAsync(
+                $"http://localhost:/api/Events/{_selectedDate:yyyy-MM-dd}",
+                eventToSave);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadEventsAsync();
+                GenerateCalendar();
+                _successMessage = "Event updated successfully.";
+                StateHasChanged();
+
+                await Task.Delay(3000);
+                _successMessage = null;
+            }
+            else
+            {
+                _errorMessage = $"Failed to update event: {await response.Content.ReadAsStringAsync()}.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Error updating event: {ex.Message}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
+    private void HideEventInput()
+    {
+        _isEventInputVisible = false;
+        _eventDescription = "";
+        _isPermanentHoliday = false;
+        _isOptionalHoliday = false;
+        _successMessage = null;
+        _errorMessage = null;
+        _hasExistingEvent = false;
+        StateHasChanged();
+    }
+
+    private async Task DeleteEvent()
+    {
+        // Delete an event via the API.
+        try
+        {
+            var response = await Http.DeleteAsync(
+                $"http://localhost:5243/api/Events/{_selectedDate:yyyy-MM-dd}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadEventsAsync();
+                GenerateCalendar();
+                _successMessage = "Event deleted successfully.";
+                _hasExistingEvent = false;
+                _eventDescription = "";
+                _isPermanentHoliday = false;
+                _isOptionalHoliday = false;
+                StateHasChanged();
+
+                await Task.Delay(3000);
+                _successMessage = null;
+            }
+            else
+            {
+                _errorMessage = $"Failed to delete event: {await response.Content.ReadAsStringAsync()}.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Error deleting event: {ex.Message}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
+    private void SetHolidayType(bool isPermanent)
+    {
+        if (isPermanent)
+        {
+            _isPermanentHoliday = true;
+            _isOptionalHoliday = false;
+        }
+        else
+        {
+            _isPermanentHoliday = false;
+            _isOptionalHoliday = true;
+        }
+        StateHasChanged();
+    }
+
+    private bool HasEvent(DateTime date)
+    {
+        return _events.ContainsKey(date);
+    }
+
+    private bool IsHoliday(DateTime date)
+    {
+        return _events.ContainsKey(date);
+    }
+
+    private string GetHolidayType(DateTime date)
+    {
+        return _events.TryGetValue(date, out var evt) ? evt.HolidayType ?? "" : "";
+    }
+
+    private IEnumerable<KeyValuePair<DateTime, Event>> GetHolidaysInMonth()
+    {
+        return _events
+            .Where(e => e.Key.Month == _currentDate.Month && e.Key.Year == _currentDate.Year)
+            .OrderBy(e => e.Key);
+    }
+
+    private void NavigateToNextMonth()
+    {
+        _currentDate = _currentDate.AddMonths(1);
+        GenerateCalendar();
+        StateHasChanged();
+    }
+
+    private void NavigateToPreviousMonth()
+    {
+        _currentDate = _currentDate.AddMonths(-1);
+        GenerateCalendar();
+        StateHasChanged();
+    }
+
+    private void NavigateToHolidaysPage()
+    {
+        NavigationManager.NavigateTo("/Calendar/holiday");
+    }
+}

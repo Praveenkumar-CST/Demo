@@ -1,0 +1,85 @@
+﻿@page "/registration"
+@using Components.sidebar
+@layout HomeLayout
+@using WiseHR.Pages.Form
+@using WiseHRServer.Models
+
+<div class="container">
+    <h2>Employee Registration</h2>
+
+    <div class="progress mb-4">
+        <div class="progress-bar" role="progressbar"
+             style="width: @(CurrentStep == 1 ? 33 : CurrentStep == 2 ? 66 : 100)%"
+             aria-valuenow="@(CurrentStep == 1 ? 33 : CurrentStep == 2 ? 66 : 100)"
+             aria-valuemin="0" aria-valuemax="100">
+            Step @CurrentStep of 3
+        </div>
+    </div>
+
+    @if (CurrentStep == 1)
+    {
+        <EmployeeDetailsForm @ref="employeeForm" OnSubmit="HandleEmployeeDetailsSubmit" />
+    }
+    else if (CurrentStep == 2)
+    {
+        <BankingInfoForm @ref="bankingForm" OnSubmit="HandleBankingInfoSubmit" OnBack="HandleBack" />
+    }
+    else if (CurrentStep == 3)
+    {
+        <WorkExperienceForm @ref="workForm" OnSubmit="HandleWorkExperienceSubmit" OnBack="HandleBack" />
+    }
+
+    @if (SuccessMessage != null)
+    {
+        <div class="alert alert-success mt-3">@SuccessMessage</div>
+    }
+</div>
+
+@code {
+    private int CurrentStep = 1;
+    private string SuccessMessage;
+
+    private EmployeeDetailsForm employeeForm;
+    private BankingInfoForm bankingForm;
+    private WorkExperienceForm workForm;
+
+    private EmployeeDetails employeeDetails = new EmployeeDetails();
+    private BankingInformation bankingInfo = new BankingInformation();
+    private Experience experience = new Experience();
+
+    private void HandleEmployeeDetailsSubmit(EmployeeDetails details)
+    {
+        employeeDetails = details;
+        CurrentStep = 2;
+        StateHasChanged();
+    }
+
+    private void HandleBankingInfoSubmit(BankingInformation info)
+    {
+        bankingInfo = info;
+        CurrentStep = 3;
+        StateHasChanged();
+    }
+
+    private void HandleWorkExperienceSubmit(Experience exp)
+    {
+        experience = exp;
+        SaveAllData();
+        SuccessMessage = "Registration completed successfully!";
+        CurrentStep = 1;
+        employeeForm?.Reset();
+        bankingForm?.Reset();
+        StateHasChanged();
+    }
+
+    private void HandleBack()
+    {
+        CurrentStep--;
+        StateHasChanged();
+    }
+
+    private void SaveAllData()
+    {
+        Console.WriteLine("Saving all data to database...");
+    }
+}

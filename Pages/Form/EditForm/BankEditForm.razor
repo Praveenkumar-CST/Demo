@@ -1,0 +1,341 @@
+﻿@page "/bankEditForm/{EmployeeId}"
+<h3>BankEditForm</h3>
+@inject NavigationManager NavigationManager
+@inject BankingService BankingService
+@using Components.sidebar
+@inject IDialogService DialogService
+@layout HomeLayout
+@if (bankingInfo != null)
+{
+<EditForm Model="@bankingInfo" OnValidSubmit="HandleUpdateBank">
+    <DataAnnotationsValidator />
+    @* <ValidationSummary /> *@
+
+    <MudGrid Gutter="3">
+        <!-- Bank Name -->
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="bankingInfo.BankName"
+            Label="Bank Name"
+            Variant="Variant.Outlined"
+            Required="true"
+            Margin="Margin.Dense" />
+
+            <ValidationMessage For="@(() => bankingInfo.BankName)" />
+        </MudItem>
+        <!-- Branch -->
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="bankingInfo.Branch"
+            Label="Branch"
+            Variant="Variant.Outlined"
+            Required="true"
+            style="text-transform:capitalize"
+            Margin="Margin.Dense" />
+            <ValidationMessage For="@(() => bankingInfo.Branch)" />
+        </MudItem>
+
+        <!-- Account Holder Name -->
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="bankingInfo.Name"
+            Label="Account Holder Name"
+            Variant="Variant.Outlined"
+            Required="true"
+            style="text-transform:capitalize"
+            Margin="Margin.Dense" />
+            <ValidationMessage For="@(() => bankingInfo.Name)" />
+        </MudItem>
+
+        <!-- Account Number -->
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="bankingInfo.AccountNumber"
+            Label="Account Number"
+            Variant="Variant.Outlined"
+            Required="true"
+            Margin="Margin.Dense" />
+            <ValidationMessage For="@(() => bankingInfo.AccountNumber)" />
+        </MudItem>
+
+        <!-- IFSC Code -->
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="bankingInfo.IFSCode"
+            Label="IFSCode"
+            Variant="Variant.Outlined"
+            Required="true"
+            Margin="Margin.Dense" />
+            <ValidationMessage For="@(() => bankingInfo.IFSCode)" />
+        </MudItem>
+
+        <!-- Mobile Number -->
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="bankingInfo.Phone"
+            Label="Mobile Number"
+            Variant="Variant.Outlined"
+            Required="true"
+            Margin="Margin.Dense" />
+            <ValidationMessage For="@(() => bankingInfo.Phone)" />
+        </MudItem>
+
+        <!-- PAN Number -->
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="bankingInfo.PANNumber"
+            Label="PAN Number"
+            Variant="Variant.Outlined"
+            Required="true"
+            Margin="Margin.Dense" />
+            <ValidationMessage For="@(() => bankingInfo.PANNumber)" />
+        </MudItem>
+
+        <!-- Aadhaar Number -->
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="bankingInfo.AadhaarNumber"
+            Label="Aadhaar Number"
+            Variant="Variant.Outlined"
+            Required="true"
+            Margin="Margin.Dense" />
+
+            <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
+        </MudItem>
+
+        <!-- Branch State -->
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="bankingInfo.State"
+            Label="Branch State"
+            Variant="Variant.Outlined"
+            style="text-transform:capitalize"
+            Required="true"
+            Margin="Margin.Dense" />
+            <ValidationMessage For="@(() => bankingInfo.State)" />
+        </MudItem>
+
+        <!-- Account Type -->
+        <MudItem xs="12" sm="6">
+            <MudSelect @bind-Value="bankingInfo.AccountType"
+            Label="Account Type"
+            Required="true"
+            Variant="Variant.Outlined"
+            Margin="Margin.Dense">
+                <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
+                <MudSelectItem Value="@("Current")">Current</MudSelectItem>
+            </MudSelect>
+            <ValidationMessage For="@(() => bankingInfo.AccountType)" />
+        </MudItem>
+        <!-- Aadhaar File Upload -->
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.body1">Aadhaar Document</MudText>
+            <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" />
+            <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
+
+            <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : "File selected")</MudText>
+            @if (!string.IsNullOrEmpty(AadhaarUploadError))
+            {
+                <MudText Color="Color.Error">@AadhaarUploadError</MudText>
+            }
+            <ValidationMessage For="@(() => bankingInfo.AadhaarBase64Content)" />
+        </MudItem>
+
+        <!-- PAN File Upload -->
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.body1">PAN Document</MudText>
+            <InputFile OnChange="HandlePanFileChange" accept=".pdf,.jpg,.jpeg,.png" />
+            <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
+
+            <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PanBase64Content) ? "No file selected" : "File selected")</MudText>
+            @if (!string.IsNullOrEmpty(PanUploadError))
+            {
+                <MudText Color="Color.Error">@PanUploadError</MudText>
+            }
+            <ValidationMessage For="@(() => bankingInfo.PanBase64Content)" />
+        </MudItem>
+
+        <!-- Passbook File Upload -->
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.body1">Passbook Document</MudText>
+            <InputFile OnChange="OnPassbookFileChanged" accept=".pdf,.jpg,.jpeg,.png" />
+            <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
+
+            <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) ? "No file selected" : "File selected")</MudText>
+            @if (!string.IsNullOrEmpty(PassbookUploadError))
+            {
+                <MudText Color="Color.Error">@PassbookUploadError</MudText>
+            }
+            <ValidationMessage For="@(() => bankingInfo.PassbookBase64Content)" />
+        </MudItem>
+        @if (!string.IsNullOrEmpty(SuccessMessage))
+        {
+            <MudAlert Severity="Severity.Success">@SuccessMessage</MudAlert>
+        }
+
+        <!-- Action Buttons -->
+            <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
+                    update
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@CloseForm">
+                    Close
+                </MudButton>
+            </MudItem>
+
+
+    </MudGrid>
+</EditForm>
+}
+else
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <p>Loading bank details...</p>
+    }
+
+@code {
+    [Parameter] public string EmployeeId { get; set; }
+    private EditContext editContext;
+    private BankingInformation bankingInfo;
+
+    private string? SuccessMessage;
+    
+
+    [Parameter]
+    public EventCallback<EmployeeDetails> OnSubmit { get; set; }
+
+
+    private async Task OnPassbookFileChanged(InputFileChangeEventArgs e)
+    {
+        await HandleFileSelected(e, "passbook");
+    }
+    private async Task HandlePanFileChange(InputFileChangeEventArgs e)
+    {
+        await HandleFileSelected(e, "pan");
+    }
+
+    private async Task HandleAadharFileChange(InputFileChangeEventArgs e)
+    {
+        await HandleFileSelected(e, "aadhar");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            bankingInfo = await BankingService.GetBankingInfo(EmployeeId);
+        }
+    }
+    private async Task HandleFileSelected(InputFileChangeEventArgs e, string fileType)
+    {
+        var file = e.File;
+        var fileName = file.Name;
+
+        if (file != null)
+        {
+            try
+            {
+                if (file.Size > 20 * 1024 * 1024) // 20 MB
+                {
+                    Console.WriteLine("File is too large! Please upload a file smaller than 20 MB.");
+                    return;
+                }
+
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024).ReadAsync(buffer);
+                var base64String = Convert.ToBase64String(buffer);
+
+                Console.WriteLine($"File uploaded: {file.Name}, Type: {fileType}");
+
+                switch (fileType.ToLower())
+                {
+                    case "aadhar":
+                        bankingInfo.AadhaarBase64Content = base64String;
+                        bankingInfo.AadhaarContentType = file.ContentType;
+                        bankingInfo.AadhaarFileName = fileName;  // Corrected for Aadhaar
+                        break;
+
+                    case "pan":
+                        bankingInfo.PanBase64Content = base64String;
+                        bankingInfo.PanContentType = file.ContentType;
+                        bankingInfo.PanFileName = fileName;  // Corrected for Pan
+                        break;
+
+                    case "passbook":
+                        bankingInfo.PassbookBase64Content = base64String;
+                        bankingInfo.PassbookContentType = file.ContentType;
+                        bankingInfo.PassbookFileName = fileName;  // Corrected for Passbook
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading file: {ex.Message}");
+            }
+        }
+        else
+        {
+            SetUploadError(fileType, "File is required.");
+            return;
+        }
+    }
+        private string AadhaarUploadError;
+        private string PanUploadError;
+        private string PassbookUploadError;
+
+        private void SetUploadError(string fileType, string message)
+        {
+            switch (fileType.ToLower())
+            {
+                case "aadhar":
+                    AadhaarUploadError = message;
+                    break;
+                case "pan":
+                    PanUploadError = message;
+                    break;
+                case "passbook":
+                    PassbookUploadError = message;
+                    break;
+            }
+        }
+ 
+    private void CloseForm()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }
+    }
+
+    private async Task HandleUpdateBank()
+    {
+        bool result = await BankingService.UpdateBankingInfo(bankingInfo);
+        if (result)
+        {
+            SuccessMessage = "Bank details updated successfully!";
+
+            var parameters = new DialogParameters
+        {
+            { "Message", SuccessMessage },
+            { "OnClose", EventCallback.Factory.Create(this, NavigateToList) }
+        };
+
+            DialogService.Show<SubmitSuccessDialog>("Success", parameters);
+            // Navigate or show a success message
+            //NavigationManager.NavigateTo("/home/employeeList");
+        }
+        else
+        {
+            // Show an error message
+            Console.WriteLine("Update failed");
+        }
+    }
+    private void NavigateToList()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }
+    }
+
+
+}
