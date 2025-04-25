@@ -1,8 +1,12 @@
 ﻿@page "/employee/{id}"
 @inject EmployeeService EmployeeService
+@inject ExperienceService ExperienceService
+@inject BankingService BankingService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @using WiseHR.Models
 @using MudBlazor
+@using WiseHRServer.Models
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
     @if (isLoading)
@@ -81,61 +85,52 @@
                             <MudItem xs="12">
                                 <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-4">Personal Details</MudText>
                             </MudItem>
-                            
                             <MudItem xs="12" sm="6" md="4">
                                 <MudPaper Elevation="0" Class="pa-4 rounded-lg background-color-primary-lighten-5">
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">First Name</MudText>
                                     <MudText Typo="Typo.body1">@Employee.FirstName</MudText>
                                 </MudPaper>
                             </MudItem>
-                            
                             <MudItem xs="12" sm="6" md="4">
                                 <MudPaper Elevation="0" Class="pa-4 rounded-lg background-color-primary-lighten-5">
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Middle Name</MudText>
                                     <MudText Typo="Typo.body1">@Employee.MiddleName</MudText>
                                 </MudPaper>
                             </MudItem>
-                            
                             <MudItem xs="12" sm="6" md="4">
                                 <MudPaper Elevation="0" Class="pa-4 rounded-lg background-color-primary-lighten-5">
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Last Name</MudText>
                                     <MudText Typo="Typo.body1">@Employee.LastName</MudText>
                                 </MudPaper>
                             </MudItem>
-                            
                             <MudItem xs="12" sm="6" md="4">
                                 <MudPaper Elevation="0" Class="pa-4 rounded-lg background-color-primary-lighten-5">
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Date of Birth</MudText>
                                     <MudText Typo="Typo.body1">@Employee.DateOfBirth?.ToShortDateString()</MudText>
                                 </MudPaper>
                             </MudItem>
-                            
                             <MudItem xs="12" sm="6" md="4">
                                 <MudPaper Elevation="0" Class="pa-4 rounded-lg background-color-primary-lighten-5">
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Gender</MudText>
                                     <MudText Typo="Typo.body1">@Employee.Gender</MudText>
                                 </MudPaper>
                             </MudItem>
-                            
                             <MudItem xs="12" sm="6" md="4">
                                 <MudPaper Elevation="0" Class="pa-4 rounded-lg background-color-primary-lighten-5">
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Marital Status</MudText>
                                     <MudText Typo="Typo.body1">@Employee.MaritalStatus</MudText>
                                 </MudPaper>
                             </MudItem>
-                            
                             <MudItem xs="12">
                                 <MudDivider Class="my-6" />
                                 <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-4">Family Information</MudText>
                             </MudItem>
-                            
                             <MudItem xs="12" sm="6">
                                 <MudPaper Elevation="0" Class="pa-4 rounded-lg background-color-primary-lighten-5">
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Father's Name</MudText>
                                     <MudText Typo="Typo.body1">@Employee.FatherName</MudText>
                                 </MudPaper>
                             </MudItem>
-                            
                             <MudItem xs="12" sm="6">
                                 <MudPaper Elevation="0" Class="pa-4 rounded-lg background-color-primary-lighten-5">
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Mother's Name</MudText>
@@ -144,77 +139,6 @@
                             </MudItem>
                         </MudGrid>
                     </MudTabPanel>
-                    
-                    <MudTabPanel Text="Address Details" Icon="@Icons.Material.Filled.Home">
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <MudCard Elevation="0" Class="rounded-lg border-2 border-primary-lighten-1">
-                                    <MudCardHeader>
-                                        <CardHeaderContent>
-                                            <MudText Typo="Typo.h6" Color="Color.Primary">Current Address</MudText>
-                                        </CardHeaderContent>
-                                        <CardHeaderActions>
-                                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Secondary" />
-                                        </CardHeaderActions>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <MudGrid>
-                                            <MudItem xs="12">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Address</MudText>
-                                                <MudText Typo="Typo.body1">@Employee.CurrentAddress</MudText>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="4">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">City</MudText>
-                                                <MudText Typo="Typo.body1">@Employee.CurrentCity</MudText>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="4">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">State</MudText>
-                                                <MudText Typo="Typo.body1">@Employee.CurrentState</MudText>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="4">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Zip</MudText>
-                                                <MudText Typo="Typo.body1">@Employee.CurrentZip</MudText>
-                                            </MudItem>
-                                        </MudGrid>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-
-                            <MudItem xs="12" Class="mt-6">
-                                <MudCard Elevation="0" Class="rounded-lg border-2 border-primary-lighten-1">
-                                    <MudCardHeader>
-                                        <CardHeaderContent>
-                                            <MudText Typo="Typo.h6" Color="Color.Primary">Permanent Address</MudText>
-                                        </CardHeaderContent>
-                                        <CardHeaderActions>
-                                            <MudIcon Icon="@Icons.Material.Filled.House" Color="Color.Secondary" />
-                                        </CardHeaderActions>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <MudGrid>
-                                            <MudItem xs="12">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Address</MudText>
-                                                <MudText Typo="Typo.body1">@Employee.PermanentAddress</MudText>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="4">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">City</MudText>
-                                                <MudText Typo="Typo.body1">@Employee.PermanentCity</MudText>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="4">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">State</MudText>
-                                                <MudText Typo="Typo.body1">@Employee.PermanentState</MudText>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="4">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Zip</MudText>
-                                                <MudText Typo="Typo.body1">@Employee.PermanentZip</MudText>
-                                            </MudItem>
-                                        </MudGrid>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
-                    
                     <MudTabPanel Text="Contact Information" Icon="@Icons.Material.Filled.ContactPhone">
                         <MudGrid>
                             <MudItem xs="12" md="6">
@@ -239,7 +163,6 @@
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
-
                             <MudItem xs="12" md="6">
                                 <MudCard Elevation="0" Class="rounded-lg border-2 border-primary-lighten-1 h-100">
                                     <MudCardHeader>
@@ -252,7 +175,7 @@
                                     </MudCardHeader>
                                     <MudCardContent>
                                         <MudList T="string">
-                                            <MudListItem  Icon="@Icons.Material.Filled.Person">
+                                            <MudListItem Icon="@Icons.Material.Filled.Person">
                                                 <MudText Typo="Typo.body1">@Employee.NomineeName</MudText>
                                             </MudListItem>
                                             <MudListItem Icon="@Icons.Material.Filled.Link">
@@ -262,7 +185,6 @@
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
-
                             <MudItem xs="12" Class="mt-6">
                                 <MudExpansionPanels>
                                     <MudExpansionPanel Text="Emergency Contacts" Icon="@Icons.Material.Filled.ContactPhone">
@@ -291,18 +213,172 @@
                             </MudItem>
                         </MudGrid>
                     </MudTabPanel>
+                    @if (UserRole == "Admin")
+                    {
+                        <MudTabPanel Text="Address Details" Icon="@Icons.Material.Filled.Home">
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudCard Elevation="0" Class="rounded-lg border-2 border-primary-lighten-1">
+                                        <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.h6" Color="Color.Primary">Current Address</MudText>
+                                            </CardHeaderContent>
+                                            <CardHeaderActions>
+                                                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Secondary" />
+                                            </CardHeaderActions>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            <MudGrid>
+                                                <MudItem xs="12">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Address</MudText>
+                                                    <MudText Typo="Typo.body1">@Employee.CurrentAddress</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="4">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">City</MudText>
+                                                    <MudText Typo="Typo.body1">@Employee.CurrentCity</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="4">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">State</MudText>
+                                                    <MudText Typo="Typo.body1">@Employee.CurrentState</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="4">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Zip</MudText>
+                                                    <MudText Typo="Typo.body1">@Employee.CurrentZip</MudText>
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                                <MudItem xs="12" Class="mt-6">
+                                    <MudCard Elevation="0" Class="rounded-lg border-2 border-primary-lighten-1">
+                                        <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.h6" Color="Color.Primary">Permanent Address</MudText>
+                                            </CardHeaderContent>
+                                            <CardHeaderActions>
+                                                <MudIcon Icon="@Icons.Material.Filled.House" Color="Color.Secondary" />
+                                            </CardHeaderActions>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            <MudGrid>
+                                                <MudItem xs="12">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Address</MudText>
+                                                    <MudText Typo="Typo.body1">@Employee.PermanentAddress</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="4">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">City</MudText>
+                                                    <MudText Typo="Typo.body1">@Employee.PermanentCity</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="4">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">State</MudText>
+                                                    <MudText Typo="Typo.body1">@Employee.PermanentState</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="4">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Zip</MudText>
+                                                    <MudText Typo="Typo.body1">@Employee.PermanentZip</MudText>
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+                        </MudTabPanel>
+                        <MudTabPanel Text="Experience Details" Icon="@Icons.Material.Filled.School">
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudCard Elevation="0" Class="rounded-lg border-2 border-primary-lighten-1">
+                                        <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.h6" Color="Color.Primary">Experience Details</MudText>
+                                            </CardHeaderContent>
+                                            <CardHeaderActions>
+                                                <MudIcon Icon="@Icons.Material.Filled.School" Color="Color.Secondary" />
+                                            </CardHeaderActions>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            @if (Experiences != null && Experiences.Any())
+                                            {
+                                                <MudList T="string">
+                                                    @foreach (var experience in Experiences)
+                                                    {
+                                                        @if (experience.EducationQualifications != null)
+                                                        {
+                                                            @foreach (var qual in experience.EducationQualifications)
+                                                            {
+                                                                <MudListItem Icon="@Icons.Material.Filled.Book">
+                                                                    <MudText Typo="Typo.body1">
+                                                                        <strong>@qual.Qualification</strong> - @qual.University
+                                                                        (@qual.YearOfPassing, @qual.Percentage%)
+                                                                    </MudText>
+                                                                </MudListItem>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            <MudText Typo="Typo.body1">No qualifications available</MudText>
+                                                        }
+                                                    }
+                                                </MudList>
+                                            }
+                                            else
+                                            {
+                                                <MudText Typo="Typo.body1">No experience details available</MudText>
+                                            }
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+                        </MudTabPanel>
+                        <MudTabPanel Text="Banking Information" Icon="@Icons.Material.Filled.AccountBalance">
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudCard Elevation="0" Class="rounded-lg border-2 border-primary-lighten-1">
+                                        <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.h6" Color="Color.Primary">Banking Information</MudText>
+                                            </CardHeaderContent>
+                                            <CardHeaderActions>
+                                                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Secondary" />
+                                            </CardHeaderActions>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            @if (BankingInfo != null)
+                                            {
+                                                <MudList T="string">
+                                                    <MudListItem Icon="@Icons.Material.Filled.AccountCircle">
+                                                        <MudText Typo="Typo.body1">Account Number: @BankingInfo.AccountNumber</MudText>
+                                                    </MudListItem>
+                                                    <MudListItem Icon="@Icons.Material.Filled.Category">
+                                                        <MudText Typo="Typo.body1">Account Type: @BankingInfo.AccountType</MudText>
+                                                    </MudListItem>
+                                                    <MudListItem Icon="@Icons.Material.Filled.Money">
+                                                        <MudText Typo="Typo.body1">Bank Name: @BankingInfo.BankName</MudText>
+                                                    </MudListItem>
+                                                    <MudListItem Icon="@Icons.Material.Filled.LocationCity">
+                                                        <MudText Typo="Typo.body1">Branch: @BankingInfo.Branch</MudText>
+                                                    </MudListItem>
+                                                    <MudListItem Icon="@Icons.Material.Filled.Code">
+                                                        <MudText Typo="Typo.body1">IFSC Code: @BankingInfo.IFSCode</MudText>
+                                                    </MudListItem>
+                                                </MudList>
+                                            }
+                                            else
+                                            {
+                                                <MudText Typo="Typo.body1">No banking information available</MudText>
+                                            }
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+                        </MudTabPanel>
+                    }
                 </MudTabs>
             </MudItem>
-
             <!-- Action Buttons -->
             <MudItem xs="12" Class="d-flex justify-space-between mt-6">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" 
-                    StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack">
                     Back to Employees
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Secondary" 
-                    StartIcon="@Icons.Material.Filled.Edit" OnClick="EditProfile">
-                    Edit Profile
                 </MudButton>
             </MudItem>
         </MudGrid>
@@ -314,15 +390,29 @@
     public string id { get; set; }
 
     private EmployeeDetails? Employee;
+    private List<Experience>? Experiences;
+    private BankingInformation? BankingInfo;
     private bool isLoading = true;
     private string? errorMessage;
+    private string? UserRole = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
+        UserRole = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "role");
         try
         {
             isLoading = true;
+            // Fetch Employee Details
             Employee = await EmployeeService.GetEmployeeDetails(id);
+            if (Employee == null)
+            {
+                throw new Exception("Employee not found");
+            }
+            // Fetch Experience Details
+            Experiences = await ExperienceService.GetAllExperience();
+            Experiences = Experiences?.Where(e => e.EmployeeID == id).ToList();
+            // Fetch Banking Information
+            BankingInfo = await BankingService.GetBankingInfo(id);
         }
         catch (Exception ex)
         {

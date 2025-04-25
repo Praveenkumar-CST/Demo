@@ -26,6 +26,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         userRole = await GetUserRoleFromSupabase();
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "role", userRole);
         await LoadUserName();
     }
 
@@ -40,6 +41,8 @@ else
         try
         {
             var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
+
+
 
             if (!string.IsNullOrWhiteSpace(email))
             {

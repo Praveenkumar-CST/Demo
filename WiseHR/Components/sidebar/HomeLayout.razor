@@ -1,14 +1,16 @@
 ﻿@inherits LayoutComponentBase
 @using WiseHR.Components.sidebar
+@using WiseHR.Models
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
 @inject EmployeeService EmployeeService
-  
+@inject NavigationManager NavigationManager
+
 <MudThemeProvider />
 <MudLayout>
 
     <!-- Top Navigation Bar -->
-    <MudAppBar Elevation="1" Style="background-color: var(--primary);">
+    <MudAppBar Elevation="1" Style="background-color: var(--primary); position: relative;">
         <MudItem xs="2" Class="d-flex align-center">
             <MudIconButton Icon="@Icons.Material.Filled.Menu"
                            Color="Color.Inherit"
@@ -59,6 +61,43 @@
                 </ChildContent>
             </MudMenu>
         </MudItem>
+
+        <!-- Search Result Dropdown -->
+        @if (_showSearchResults)
+        {
+            <MudPaper Class="mt-2 p-2 mud-elevation-8"
+                      Style="position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 40%; z-index: 10; background-color: white;">
+                @if (_searchResults.Count > 0)
+                {
+                    @foreach (var employee in _searchResults)
+                    {
+                        <MudListItem T="string" Style="cursor: pointer;"
+                                     OnClick="@(() => NavigateToEmployeeProfile(employee.EmployeeID))">
+                            @if (!string.IsNullOrEmpty(employee.PhotoBase64Content) && !string.IsNullOrEmpty(employee.PhotoContentType))
+                            {
+                                <MudAvatar Size="Size.Small"
+                                           Image="@($"data:{employee.PhotoContentType};base64,{employee.PhotoBase64Content}")"
+                                           Style="margin-right: 12px;" />
+                            }
+                            else
+                            {
+                                <MudAvatar Size="Size.Small"
+                                           Color="Color.Primary"
+                                           Style="margin-right: 12px;">
+                                    @employee.FirstName?[0]
+                                </MudAvatar>
+                            }
+
+                            <span>@employee.FirstName @employee.LastName (@employee.CurrentEmail)</span>
+                        </MudListItem>
+                    }
+                }
+                else
+                {
+                    <MudText>No results found.</MudText>
+                }
+            </MudPaper>
+        }
     </MudAppBar>
 
     <!-- Sidebar -->
@@ -84,6 +123,9 @@
     private string? userName;
     private string? userInitials;
 
+    private List<EmployeeDetails> _searchResults = new();
+    private bool _showSearchResults = false;
+
     [Parameter]
     public EventCallback<string> OnSearchQueryChanged { get; set; }
 
@@ -95,8 +137,18 @@
     private async Task SearchEmployees(string query)
     {
         searchQuery = query;
-        await JSRuntime.InvokeVoidAsync("console.log", $"Search: {query}");
         Console.WriteLine($"Searching for: {query}");
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            // _searchResults = await EmployeeService.SearchEmployeesByNameOrEmail(query);
+            _showSearchResults = _searchResults.Any();
+        }
+        else
+        {
+            _searchResults.Clear();
+            _showSearchResults = false;
+        }
 
         if (OnSearchQueryChanged.HasDelegate)
         {
@@ -104,12 +156,16 @@
         }
     }
 
+    private void NavigateToEmployeeProfile(string id)
+    {
+        _showSearchResults = false;
+        NavigationManager.NavigateTo($"/employee/{id}");
+    }
+
     private async Task LoadUserDetails()
     {
         try
         {
-
-           // var empId = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "empId");
             var email = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "email");
             userProfilePicture = null;
             userName = null;
@@ -121,7 +177,6 @@
 
                 if (employee != null)
                 {
-                    // Employee exists
                     if (!string.IsNullOrEmpty(employee.PhotoBase64Content) && !string.IsNullOrEmpty(employee.PhotoContentType))
                     {
                         userProfilePicture = $"data:{employee.PhotoContentType};base64,{employee.PhotoBase64Content}";
@@ -130,22 +185,19 @@
                     {
                         userName = employee.FirstName ?? "User";
                         userInitials = GetInitials(userName);
-                        userProfilePicture = null;
                     }
-                    return; // we’ve found valid data, so exit the method
+                    return;
                 }
             }
 
-            // If empId doesn't exist or employee not found
             if (!string.IsNullOrWhiteSpace(email))
             {
                 userName = "User";
                 userInitials = GetInitialFromEmail(email);
-                userProfilePicture = null;
             }
             else
             {
-                SetDefaultUser(); // fallback to Guest
+                SetDefaultUser();
             }
         }
         catch (Exception ex)
@@ -154,7 +206,6 @@
             SetDefaultUser();
         }
     }
-
 
     private void SetDefaultUser()
     {
@@ -169,31 +220,11 @@
             return "?";
 
         var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 1)
-            return parts[0][0].ToString().ToUpper();
-
-        return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        return parts.Length == 1 ? parts[0][0].ToString().ToUpper() : $"{parts[0][0]}{parts[1][0]}".ToUpper();
     }
 
     private string GetInitialFromEmail(string? email)
     {
-        if (!string.IsNullOrWhiteSpace(email))
-            return char.ToUpper(email[0]).ToString();
-
-        return "?";
-    }
-
-    // Classes (if required for Supabase later)
-    private class UserResponse
-    {
-        public string Id { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public UserMetadata UserMetadata { get; set; } = new();
-    }
-
-    private class UserMetadata
-    {
-        public string ProfilePictureUrl { get; set; } = string.Empty;
+        return !string.IsNullOrWhiteSpace(email) ? char.ToUpper(email[0]).ToString() : "?";
     }
 }
