@@ -25,11 +25,7 @@ namespace WiseHR.Models
         public string AccountNumber { get; set; }
 
         [Required(ErrorMessage = "IFSCode is required")]
-<<<<<<< HEAD
-        [RegularExpression(@"^[A-Z]{4}0[A-Z0-9]{6}$", ErrorMessage = "Enter a valid IFSC code")]
-=======
         [RegularExpression(@"^[A-Z]{4}0[A-Z0-9]{6}$", ErrorMessage = "Enter a valid IFSCode")]
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
         public string IFSCode { get; set; }
 
         [Required(ErrorMessage = "Mobile Number is required")]
