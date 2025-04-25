@@ -1,0 +1,143 @@
+﻿﻿@using System.Text.RegularExpressions
+@using WiseHR.Models
+@inject AuthService AuthService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+<MudDrawer @bind-Open="DrawerOpen"
+           Class="mud-drawer"
+           Width="@(DrawerOpen ? "250px" : "60px")"
+           Elevation="1"
+           Variant="@DrawerVariant.Responsive"
+           ClipMode="DrawerClipMode.Always">
+    <MudNavMenu Class="mud-nav-menu">
+        @if (accessibleMenuItems != null && accessibleMenuItems.Count > 0)
+        {
+            @foreach (var item in accessibleMenuItems)
+            {
+                if (!item.Name.StartsWith("HIDE_"))
+                {
+                    <MudNavLink Class="mud-nav-link"
+                                Match="NavLinkMatch.All"
+                                Icon="@Icons.Material.Filled.Dashboard"
+                                Href="@item.Url"
+                                ActiveClass="mud-nav-link-active">
+                        @if (DrawerOpen)
+                        {
+                            var displayName = item.Name.Replace("HIDE_", "");
+                            <span>@displayName</span>
+                        }
+
+                    </MudNavLink>
+                }
+            }
+
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <p>@errorMessage</p>
+        }
+        else
+        {
+            <p>No menu items available.</p>
+        }
+
+    </MudNavMenu>
+</MudDrawer>
+
+
+
+@code {
+    [Parameter]
+    public bool DrawerOpen { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<bool> DrawerOpenChanged { get; set; }
+
+    private List<(string Name, string Url)> accessibleMenuItems = new List<(string Name, string Url)>();
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+        Console.WriteLine($"Token from localStorage: {token ?? "null"}");
+
+
+
+        var (role, error) = await AuthService.VerifyToken();
+        Console.WriteLine($"Role: {role ?? "null"}, Error: {error ?? "null"}");
+
+        if (!string.IsNullOrEmpty(role))
+        {
+            accessibleMenuItems = AccessControl.GetMenuForRole(role);
+            Console.WriteLine($"Role: {role}, Menu Items Count: {accessibleMenuItems?.Count ?? 0}");
+            Console.WriteLine($"Accessible URLs: {string.Join(", ", accessibleMenuItems.Select(i => i.Url))}");
+
+            var pagesToExclude = new List<string>
+                {
+                    "/confirm"
+                };
+            accessibleMenuItems = accessibleMenuItems
+     .Where(item =>
+         !pagesToExclude.Any(pattern =>
+             Regex.IsMatch(item.Url, $"^{pattern}$", RegexOptions.IgnoreCase)))
+     .ToList();
+
+            if (accessibleMenuItems == null || accessibleMenuItems.Count == 0)
+            {
+                errorMessage = $"No accessible menu items available for role: {role}";
+            }
+            else
+            {
+                errorMessage = null;
+                await RestrictNavigation(); // Check initial URL
+            }
+        }
+        else
+        {
+            accessibleMenuItems = new List<(string Name, string Url)>();
+            errorMessage = $"No role assigned to the user. Error: {error ?? "Unknown"}";
+            NavigationManager.NavigateTo("/l"); // Redirect to login if no role
+        }
+
+        // Subscribe to location changes
+        NavigationManager.LocationChanged += HandleLocationChanged;
+    }
+
+    private async Task RestrictNavigation()
+    {
+        var currentUrl = NavigationManager.Uri.Replace(NavigationManager.BaseUri, "/").TrimEnd('/');
+        Console.WriteLine($"Current URL: {currentUrl}");
+        bool isAllowed = accessibleMenuItems.Any(item =>
+        Regex.IsMatch(currentUrl, item.Url, RegexOptions.IgnoreCase));
+
+        if (!isAllowed && currentUrl != "/")
+        {
+            Console.WriteLine($"Access denied to {currentUrl}. Redirecting to /home.");
+            NavigationManager.NavigateTo("/");
+        }
+        // var allowedUrls = accessibleMenuItems.Select(i => i.Url.TrimEnd('/')).ToList();
+        // if (!allowedUrls.Contains(currentUrl) && currentUrl != "/") Allow root if needed
+        // {
+        //     Console.WriteLine($"Access denied to {currentUrl}. Redirecting to /home.");
+        //     NavigationManager.NavigateTo("/home"); Redirect to default page
+        // }
+    }
+
+    private void HandleLocationChanged(object sender, LocationChangedEventArgs args)
+    {
+        _ = RestrictNavigation(); // Check URL on every navigation
+        StateHasChanged(); // Refresh UI if needed
+    }
+
+    public async Task ToggleDrawer()
+    {
+        DrawerOpen = !DrawerOpen;
+        await DrawerOpenChanged.InvokeAsync(DrawerOpen);
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from event to prevent memory leaks
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+}

@@ -1,0 +1,148 @@
+﻿@page "/home/rolemanagement"
+@using WiseHR.Models
+@using System.Threading.Tasks
+@using Components.sidebar
+@layout HomeLayout
+@inject IUserService UserService
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudGrid Spacing="2" Class="mb-4">
+        <MudItem xs="12" sm="6" md="4">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.PersonAdd"
+                       OnClick='() => NavigationManager.NavigateTo("/home/employees")'
+                       >
+                Add New Employee
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    @if (users == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="d-flex align-center justify-center" />
+    }
+    else
+    {
+        <MudTable Items="@FilteredUsers"
+                  Dense="true"
+                  Hover="true"
+                  Bordered="true"
+                  Striped="true"
+                  Elevation="2"
+                  Class="mud-elevation-1">
+            <HeaderContent>
+                <MudTh>Email</MudTh>
+                <MudTh>Current Role</MudTh>
+                <MudTh>New Role</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Email">@context.Email</MudTd>
+                <MudTd DataLabel="Current Role">@context.Role</MudTd>
+                <MudTd DataLabel="New Role">
+                    <MudSelect T="string"
+                               Value="@context.Role"
+                               ValueChanged="@(newRole => UpdateRole(context, newRole))"
+                               Variant="Variant.Outlined"
+                               Dense="true">
+                        <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
+                        <MudSelectItem Value="@("Manager")">Manager</MudSelectItem>
+                        <MudSelectItem Value="@("Employee")">Employee</MudSelectItem>
+                    </MudSelect>
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Error"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Delete"
+                               OnClick="() => DeleteUser(context.Id)">
+                        Delete
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+
+@code {
+    private List<User>? users;
+    private string searchQuery = "";
+
+    private IEnumerable<User> FilteredUsers => users?
+        .Where(u => string.IsNullOrEmpty(searchQuery) ||
+                    u.Email.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+        .ToList() ?? new List<User>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            users = await UserService.GetUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error loading users: {ex.Message}");
+        }
+    }
+
+    [CascadingParameter]
+    private HomeLayout? Layout { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Layout != null)
+        {
+            Layout.OnSearchQueryChanged = EventCallback.Factory.Create<string>(this, HandleSearchQuery);
+        }
+    }
+
+    private async void HandleSearchQuery(string query)
+    {
+        Console.WriteLine($"Search Query Updated: {query}");
+        await JS.InvokeVoidAsync("console.log", $"Search Query Updated: {query}");
+        searchQuery = query;
+        StateHasChanged();
+    }
+
+    private async Task UpdateRole(User user, string? newRole)
+    {
+        if (user == null || string.IsNullOrEmpty(newRole)) return;
+
+        var oldRole = user.Role;
+        user.Role = newRole;
+        try
+        {
+            await UserService.UpdateUserRoleAsync(user.Id, user.Role);
+            await JS.InvokeVoidAsync("alert", $"Role updated for {user.Email} from {oldRole} to {newRole}");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error updating role: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteUser(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+
+        try
+        {
+            await UserService.DeleteUserAsync(id);
+            if (users != null)
+            {
+                users.RemoveAll(u => u.Id == id);
+                StateHasChanged();
+            }
+            await JS.InvokeVoidAsync("alert", "User deleted");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error deleting user: {ex.Message}");
+        }
+    }
+}
