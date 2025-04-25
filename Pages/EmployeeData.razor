@@ -1,0 +1,266 @@
+﻿@page "/home/employeeData"
+@using Components.sidebar
+@using WiseHRServer.Models
+@layout HomeLayout
+@inject EmployeeService EmployeeService
+@inject BankingService BankingService
+@inject ExperienceService ExperienceService
+
+
+
+<h3>All Employees</h3>
+
+<button class="btn btn-primary mb-3" @onclick="LoadAllEmployees">Load All Employees</button>
+
+@if (isLoading)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else if (hasError)
+{
+    <div class="alert alert-danger">Failed to load employee data.</div>
+}
+else if (employees != null && employees.Count > 0)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Father's Name</th>
+                <th>Mother's Name</th>
+                <th>Gender</th>
+                <th>Marital Status</th>
+                <th>Blood Group</th>
+                <th>Nationality</th>
+                <th>Date of Birth</th>
+                <th>Sons</th>
+                <th>Daughters</th>
+                <th>Type of Employment</th>
+                <th>Level</th>
+                <th>Designation</th>
+                <th>Joining Location</th>
+                <th>Date of Joining</th>
+                <th>Date of Relieving</th>
+                <th>Allergies</th>
+                <th>Medications</th>
+                <th>Physically Challenged</th>
+                <th>Current Address</th>
+                <th>Current City</th>
+                <th>Current State</th>
+                <th>Current Zip</th>
+                <th>Current Mobile</th>
+                <th>Current Email</th>
+                <th>Permanent Address</th>
+                <th>Permanent City</th>
+                <th>Permanent State</th>
+                <th>Permanent Zip</th>
+                <th>Permanent Mobile</th>
+                <th>Permanent Email</th>
+                <th>Passport Full Name</th>
+                <th>Passport No</th>
+                <th>Passport Nationality</th>
+                <th>Passport Issue Date</th>
+                <th>Passport Expiry Date</th>
+                <th>Passport Place of Issue</th>
+                <th>Emergency Contact 1 Name</th>
+                <th>Emergency Contact 1 Relationship</th>
+                <th>Emergency Contact 1 Address</th>
+                <th>Emergency Contact 1 City</th>
+                <th>Emergency Contact 1 State</th>
+                <th>Emergency Contact 1 Zip Code</th>
+                <th>Emergency Contact 1 Mobile</th>
+                <th>Emergency Contact 2 Name</th>
+                <th>Emergency Contact 2 Relationship</th>
+                <th>Emergency Contact 2 Address</th>
+                <th>Emergency Contact 2 City</th>
+                <th>Emergency Contact 2 State</th>
+                <th>Emergency Contact 2 Zip Code</th>
+                <th>Emergency Contact 2 Mobile</th>
+                <th>Nominee Name</th>
+                <th>Nominee Relationship</th>
+                <th>Nominee Address</th>
+                <th>Nominee City</th>
+                <th>Nominee State</th>
+                <th>Nominee Zip Code</th>
+                <th>Nominee Mobile</th>
+                <th>Bank Details</th>
+                <th>Experience</th>
+                <th>Created At</th>
+                <th>Last Modified At</th>
+                <!-- Add more columns as needed -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var emp in employees)
+            {
+                var bankingInfo = bankingInfos.ContainsKey(emp.EmployeeID) ? bankingInfos[emp.EmployeeID] : null;
+
+                <tr>
+                    <td>@emp.EmployeeID</td>
+                    <td>@($"{emp.FirstName} {emp.LastName}")</td>
+                    <td>@emp.CurrentEmail</td>
+                    <td>@emp.Designation</td>
+                    <td>@emp.FatherName</td>
+                    <td>@emp.MotherName</td>
+                    <td>@emp.Gender</td>
+                    <td>@emp.MaritalStatus</td>
+                    <td>@emp.BloodGroup</td>
+                    <td>@emp.Nationality</td>
+                    <td>@emp.DateOfBirth.HasValue ? emp.DateOfBirth.Value.ToString("yyyy-MM-dd")</td>
+                    <td>@emp.Sons</td>
+                    <td>@emp.Daughters</td>
+                    <td>@emp.TypeOfEmployment</td>
+                    <td>@emp.Level</td>
+                    <td>@emp.Designation</td>
+                    <td>@emp.JoiningLocation</td>
+                
+                    <td>@(emp.DateOfJoining.HasValue ? emp.DateOfJoining.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
+                            
+                    <td>@emp.Allergies</td>
+                    <td>@emp.Medications</td>
+                    <td>@emp.PhysicallyChallenged</td>
+                    <td>@emp.CurrentAddress</td>
+                    <td>@emp.CurrentCity</td>
+                    <td>@emp.CurrentState</td>
+                    <td>@emp.CurrentZip</td>
+                    <td>@emp.CurrentMobile</td>
+                    <td>@emp.CurrentEmail</td>
+                    <td>@emp.PermanentAddress</td>
+                    <td>@emp.PermanentCity</td>
+                    <td>@emp.PermanentState</td>
+                    <td>@emp.PermanentZip</td>
+                    <td>@emp.PermanentMobile</td>
+                    <td>@emp.PermanentEmail</td>
+                    <td>@emp.PassportFullName</td>
+                    <td>@emp.PassportNo</td>
+                    <td>@emp.PassportNationality</td>
+                    <td>@(emp.PassportIssueDate.HasValue ? emp.PassportIssueDate.Value.ToShortDateString() : "Not Set")</td>
+               
+                    <td>@(emp.PassportExpiryDate.HasValue ? emp.PassportExpiryDate.Value.ToShortDateString() : "Not Set")</td>
+                    <td>@emp.PassportPlaceOfIssue</td>
+                    <td>@emp.EmergencyContact1Name</td>
+                    <td>@emp.EmergencyContact1Relationship</td>
+                    <td>@emp.EmergencyContact1Address</td>
+                    <td>@emp.EmergencyContact1City</td>
+                    <td>@emp.EmergencyContact1State</td>
+                    <td>@emp.EmergencyContact1ZipCode</td>
+                    <td>@emp.EmergencyContact1Mobile</td>
+                    <td>@emp.EmergencyContact2Name</td>
+                    <td>@emp.EmergencyContact2Relationship</td>
+                    <td>@emp.EmergencyContact2Address</td>
+                    <td>@emp.EmergencyContact2City</td>
+                    <td>@emp.EmergencyContact2State</td>
+                    <td>@emp.EmergencyContact2ZipCode</td>
+                    <td>@emp.EmergencyContact2Mobile</td>
+                    <td>@emp.NomineeName</td>
+                    <td>@emp.NomineeRelationship</td>
+                    <td>@emp.NomineeAddress</td>
+                    <td>@emp.NomineeCity</td>
+                    <td>@emp.NomineeState</td>
+                    <td>@emp.NomineeZipCode</td>
+                    <td>@emp.NomineeMobile</td>
+                    <td>
+                        @if (bankingInfo != null)
+                        {
+                            <div>
+                                <strong>Account Number:</strong> @bankingInfo.AccountNumber
+                                <br />
+                                <strong>Account Type:</strong> @bankingInfo.AccountType
+                                <br />
+                               
+                                <strong>Bank Name:</strong> @bankingInfo.BankName
+                                <strong>Branch:</strong> @bankingInfo.Branch
+                                <br />
+                                <strong>IFSC Code:</strong> @bankingInfo.IFSCode
+                                <br />
+                                <strong>Bank Name:</strong> @bankingInfo.BankName
+                            </div>
+                        }
+                        else
+                        {
+                            <span>No banking information available</span>
+                        }
+                    </td>
+                    <td>
+                        @if (experienceInfos.ContainsKey(emp.EmployeeID) && experienceInfos[emp.EmployeeID].Any())
+                        {
+                            foreach (var experience in experienceInfos[emp.EmployeeID])
+                            {
+                                <div>
+                                    <strong>Qualification:</strong> @experience.EducationQualifications?.FirstOrDefault()?.Qualification
+                                    <br />
+                                    <strong>University:</strong> @experience.EducationQualifications?.FirstOrDefault()?.University
+                                    <br />
+                                    <strong>Year of Passing:</strong> @experience.EducationQualifications?.FirstOrDefault()?.YearOfPassing
+                                    <br />
+                                    <strong>Percentage:</strong> @experience.EducationQualifications?.FirstOrDefault()?.Percentage
+                                    <br /><br />
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <span>No education information available</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (employees != null && employees.Count == 0)
+{
+    <div class="alert alert-info">No employees found.</div>
+}
+
+@code {
+    private List<EmployeeDetails> employees;
+    private Dictionary<string, BankingInformation> bankingInfos = new();
+    private Dictionary<string, List<Experience>> experienceInfos = new();
+
+    private bool isLoading = false;
+    private bool hasError = false;
+
+    private async Task LoadAllEmployees()
+    {
+        isLoading = true;
+        hasError = false;
+        employees = null;
+        bankingInfos.Clear();
+        experienceInfos.Clear();
+
+
+        try
+        {
+            // Call the service method to get all employees
+            employees = await EmployeeService.GetAllEmployees();
+            var allExperiences = await ExperienceService.GetAllExperience();
+            experienceInfos = allExperiences
+              .GroupBy(exp => exp.EmployeeID)
+              .ToDictionary(group => group.Key, group => group.ToList());
+            foreach (var emp in employees)
+            {
+                var bankingInfo = await BankingService.GetBankingInfo(emp.EmployeeID);
+                if (bankingInfo != null)
+                {
+                    bankingInfos[emp.EmployeeID] = bankingInfo;
+                }
+          
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employees: {ex.Message}");
+            // If there's an error fetching the data, set hasError to true
+            hasError = true;
+        }
+
+        // After fetching or error, set isLoading to false
+        isLoading = false;
+    }
+}

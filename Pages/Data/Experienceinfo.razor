@@ -1,0 +1,81 @@
+﻿@page "/experience/{EmployeeId}"
+@using WiseHR.Models
+@inject ExperienceService ExperienceService
+@using MudBlazor
+@inject NavigationManager NavigationManager
+<div class="text-end">
+    <button class="btn btn-primary btn-sm" @onclick="NavigateToExpEditForm">Edit</button>
+</div>
+@if (experience != null)
+{
+    <div>
+        <h4>Education Details</h4>
+        @if (experience.EducationQualifications?.Any() == true)
+        {
+            <MudTable Items="experience.EducationQualifications" Bordered="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Qualification</MudTh>
+                    <MudTh>University</MudTh>
+                    <MudTh>Year of Passing</MudTh>
+                    <MudTh>Percentage</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd Style="text-transform: capitalize;">@context.Qualification</MudTd>
+                    <MudTd Style="text-transform: capitalize;">@context.University</MudTd>
+                    <MudTd Style="text-transform: capitalize;">@context.YearOfPassing</MudTd>
+                    <MudTd Style="text-transform: capitalize;">@context.Percentage</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        else
+        {
+            <MudText>No education details available.</MudText>
+        }
+        <h4>Work Experience Details</h4>
+        @if (experience.WorkExperiences?.Any() == true)
+        {
+            <MudTable Items="experience.WorkExperiences" Bordered="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Employer</MudTh>
+                    <MudTh>Location</MudTh>
+                    <MudTh>Position</MudTh>
+                    <MudTh>Date of Joining</MudTh>
+                    <MudTh>Date of Leaving</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd Style="text-transform: capitalize;">@context.Employer</MudTd>
+                    <MudTd Style="text-transform: capitalize;">@context.Location</MudTd>
+                    <MudTd Style="text-transform: capitalize;">@context.Designation</MudTd>
+                    <MudTd Style="text-transform: capitalize;">@context.DateOfJoining?.ToString("d")</MudTd>
+                    <MudTd Style="text-transform: capitalize;">@(context.DateOfLeaving?.ToString("d") ?? "Present")</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        else
+        {
+            <MudText>No work experience details available.</MudText>
+        }
+    </div>
+}
+else
+{
+    <MudText>No experience information available.</MudText>
+}
+
+@code {
+    [Parameter] public string EmployeeId { get; set; }
+
+    private WiseHRServer.Models.Experience experience;
+
+    private void NavigateToExpEditForm()
+    {
+        // Navigate to edit page, optionally passing the employee ID
+        NavigationManager.NavigateTo($"/experienceEditForm/{experience.EmployeeID}");
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        experience = await ExperienceService.GetExperienceDetails(EmployeeId);
+    }
+}

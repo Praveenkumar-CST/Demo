@@ -1,0 +1,56 @@
+﻿@page "/home/employees"
+@using WiseHR.Models
+@using System.Threading.Tasks
+@using Components.sidebar
+@layout HomeLayout
+@inject IUserService UserService
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+
+<div class="form-container">
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" class="form-control" id="email" @bind="newUserEmail" placeholder="Enter employee's email" />
+    </div>
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" class="form-control" id="password" @bind="newUserPassword" placeholder="Enter password" />
+    </div>
+    <div class="form-actions">
+        <button class="btn btn-success" @onclick="AddUser">Add Employee</button>
+        <button class="btn btn-primary" @onclick="Cancel">Cancel</button>
+    </div>
+</div>
+
+
+@code {
+    private string newUserEmail = "";
+    private string newUserPassword = "";
+
+    private async Task AddUser()
+    {
+        if (string.IsNullOrEmpty(newUserEmail) || string.IsNullOrEmpty(newUserPassword))
+        {
+            await JS.InvokeVoidAsync("alert", "Email and password are required.");
+            return;
+        }
+
+        try
+        {
+            var newUser = await UserService.CreateUserAsync(newUserEmail, newUserPassword);
+            newUserEmail = "";
+            newUserPassword = "";
+            await JS.InvokeVoidAsync("alert", "Employee added successfully with default role 'Employee'.");
+            NavigationManager.NavigateTo("/home/rolemanagement"); // Redirect to RoleManagement page
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error adding employee: {ex.Message}");
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/home/rolemanagement"); // Redirect back without saving
+    }
+}
