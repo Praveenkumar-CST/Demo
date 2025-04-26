@@ -11,6 +11,7 @@
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Add Employees", "/home/employees"),
+                    ("Holiday Calendar", "/calendar"),//calendar
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*") , // You can match the pattern here
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),  // You can match the pattern here
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
@@ -34,6 +35,7 @@
                     ("Employee List", "/home/employeeList"),
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
+                    ("Holiday Calendar", "/calendar"),//calendar
                     ("Add Employees", "/home/employees"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"), 
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -54,6 +56,7 @@
             { "employee", new List<(string, string)>
                 {
                     ("Dashboard", "/home"),
+                    ("Holiday Calendar", "/user"),
                     ("HIDE_Registration","/registration"),
                     ("HIDE_confirmationPage","/confirmation"),
                     ("HIDE_workExperience","/workExperience"),
