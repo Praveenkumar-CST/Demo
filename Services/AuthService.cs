@@ -23,7 +23,7 @@ namespace WiseHR.Services
 
             //_baseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5243";
 
-            _baseUrl = configuration["ApiBaseUrl"] ?? "http://172.210.14.62:5000/";
+            _baseUrl = configuration["ApiBaseUrl"] ?? "http://172.210.14.62:5000";
 
             _supabaseUrl = configuration["Supabase:Url"] ?? _supabaseUrl;
             _supabaseKey = configuration["Supabase:AnonKey"] ?? _supabaseKey;
