@@ -110,7 +110,7 @@
         Console.WriteLine($"Autocomplete SearchFunc triggered with query: '{query}'");
         _searchError = null;
 
-        if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+        if (string.IsNullOrWhiteSpace(query) )
         {
             Console.WriteLine("Query is empty or too short, returning empty results.");
             return Enumerable.Empty<EmployeeSearchResult>();
