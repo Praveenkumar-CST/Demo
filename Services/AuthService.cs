@@ -20,6 +20,7 @@ namespace WiseHR.Services
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
+            //_baseUrl = configuration["ApiBaseUrl"] ?? "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net/";
             _baseUrl = configuration["ApiBaseUrl"] ?? "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net/";
             _supabaseUrl = configuration["Supabase:Url"] ?? _supabaseUrl;
             _supabaseKey = configuration["Supabase:AnonKey"] ?? _supabaseKey;
@@ -56,7 +57,8 @@ namespace WiseHR.Services
                     Console.WriteLine($"Falling back to manual serialization for Signup: {ex.Message}");
                     try
                     {
-                        var json = JsonSerializer.Serialize(request, _jsonOptions);
+                        // AOT-safe JSON construction
+                        var json = $$"""{"email":"{{email}}","password":"{{password}}"}""";
                         Console.WriteLine($"Fallback JSON for Signup: {json}");
                         var content = new StringContent(json, Encoding.UTF8, "application/json");
                         response = await _httpClient.PostAsync("api/auth/signup", content);
@@ -127,7 +129,8 @@ namespace WiseHR.Services
                     Console.WriteLine($"Falling back to manual serialization for Login: {ex.Message}");
                     try
                     {
-                        var json = JsonSerializer.Serialize(request, _jsonOptions);
+                        // AOT-safe JSON construction
+                        var json = $$"""{"email":"{{email}}","password":"{{password}}"}""";
                         Console.WriteLine($"Fallback JSON for Login: {json}");
                         var content = new StringContent(json, Encoding.UTF8, "application/json");
                         response = await _httpClient.PostAsync("api/auth/login", content);
@@ -204,7 +207,8 @@ namespace WiseHR.Services
                     Console.WriteLine($"Falling back to manual serialization for ForgotPassword: {ex.Message}");
                     try
                     {
-                        var json = JsonSerializer.Serialize(request, _jsonOptions);
+                        // AOT-safe JSON construction
+                        var json = $$"""{"email":"{{email}}"}""";
                         Console.WriteLine($"Fallback JSON for ForgotPassword: {json}");
                         var content = new StringContent(json, Encoding.UTF8, "application/json");
                         response = await _httpClient.PostAsync("api/auth/forgot-password", content);
@@ -275,7 +279,8 @@ namespace WiseHR.Services
                     Console.WriteLine($"Falling back to manual serialization for ResetPassword: {ex.Message}");
                     try
                     {
-                        var json = JsonSerializer.Serialize(request, _jsonOptions);
+                        // AOT-safe JSON construction
+                        var json = $$"""{"email":"{{email}}","otp":"{{otp}}","newPassword":"{{newPassword}}"}""";
                         Console.WriteLine($"Fallback JSON for ResetPassword: {json}");
                         var content = new StringContent(json, Encoding.UTF8, "application/json");
                         response = await _httpClient.PostAsync("api/auth/reset-password", content);
