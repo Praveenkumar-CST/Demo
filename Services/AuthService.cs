@@ -24,81 +24,17 @@ namespace WiseHR.Services
             _supabaseUrl = configuration["Supabase:Url"] ?? _supabaseUrl;
             _supabaseKey = configuration["Supabase:AnonKey"] ?? _supabaseKey;
             _httpClient.BaseAddress = new Uri(_baseUrl);
+            _httpClient.Timeout = TimeSpan.FromSeconds(30);
 
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 PropertyNameCaseInsensitive = true,
-                WriteIndented = true
+                WriteIndented = true,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
             };
-        }
 
-        public async Task<(string? Token, string? Error)> Login(string email, string password)
-        {
-            try
-            {
-                var request = new LoginRequest { Email = email, Password = password };
-                Console.WriteLine($"Login attempt for email: {email}");
-                HttpResponseMessage response;
-
-                try
-                {
-                    var primaryJson = JsonSerializer.Serialize(request, _jsonOptions);
-                    Console.WriteLine($"Primary JSON for Login: {primaryJson}");
-                    response = await _httpClient.PostAsJsonAsync("api/auth/login", request, _jsonOptions);
-                }
-                catch (InvalidOperationException ex) when (ex.Message.Contains("NullabilityInfoContext"))
-                {
-                    Console.WriteLine($"Falling back to manual serialization for Login: {ex.Message}");
-                    var json = JsonSerializer.Serialize(request, _jsonOptions);
-                    Console.WriteLine($"Fallback JSON for Login: {json}");
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    response = await _httpClient.PostAsync("api/auth/login", content);
-                }
-
-                Console.WriteLine($"Login response status: {response.StatusCode}");
-                var rawResponse = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Login raw response: {rawResponse}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    try
-                    {
-                    var result = await response.Content.ReadFromJsonAsync<LoginResponse>(_jsonOptions);
-                    if (result?.Token != null)
-                    {
-                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
-                        Console.WriteLine($"Token stored: {result.Token}");
-                        return (result.Token, null);
-                    }
-                    Console.WriteLine("Login failed: No token in response");
-                    return (null, "Login failed: No token received.");
-                }
-                    catch (JsonException ex)
-                    {
-                        Console.WriteLine($"Deserialization error in Login: {ex.Message}");
-                        return (null, $"Failed to deserialize response: {ex.Message}");
-                    }
-                }
-
-                Console.WriteLine($"Login failed with status {response.StatusCode}: {rawResponse}");
-                return (null, rawResponse);
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine($"HTTP error in Login: {ex.Message}");
-                return (null, $"Failed to connect to the server: {ex.Message}");
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"Deserialization error in Login: {ex.Message}");
-                return (null, $"Failed to deserialize response: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Unexpected error in Login: {ex.Message}");
-                return (null, $"Unexpected error: {ex.Message}");
-            }
+            Console.WriteLine($"AuthService initialized with base URL: {_baseUrl}, Supabase URL: {_supabaseUrl}");
         }
 
         public async Task<string> Signup(string email, string password)
@@ -118,10 +54,19 @@ namespace WiseHR.Services
                 catch (InvalidOperationException ex) when (ex.Message.Contains("NullabilityInfoContext"))
                 {
                     Console.WriteLine($"Falling back to manual serialization for Signup: {ex.Message}");
-                    var json = JsonSerializer.Serialize(request, _jsonOptions);
-                    Console.WriteLine($"Fallback JSON for Signup: {json}");
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    response = await _httpClient.PostAsync("api/auth/signup", content);
+                    try
+                    {
+                        var json = JsonSerializer.Serialize(request, _jsonOptions);
+                        Console.WriteLine($"Fallback JSON for Signup: {json}");
+                        var content = new StringContent(json, Encoding.UTF8, "application/json");
+                        response = await _httpClient.PostAsync("api/auth/signup", content);
+                        Console.WriteLine($"Fallback PostAsync for Signup completed");
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        Console.WriteLine($"Fallback serialization failed for Signup: {fallbackEx.GetType().Name}: {fallbackEx.Message}");
+                        return $"Fallback error: {fallbackEx.Message}";
+                    }
                 }
 
                 Console.WriteLine($"Signup response status: {response.StatusCode}");
@@ -130,8 +75,17 @@ namespace WiseHR.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine("Signup successful");
-                    return "Signup successful";
+                    try
+                    {
+                        var result = JsonSerializer.Deserialize<LoginResponse>(rawResponse, _jsonOptions);
+                        Console.WriteLine($"Signup successful, UserId: {result?.UserId}");
+                        return "Signup successful";
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"Deserialization error in Signup response: {ex.Message}");
+                        return $"Failed to deserialize response: {ex.Message}";
+                    }
                 }
 
                 Console.WriteLine($"Signup failed with status {response.StatusCode}: {rawResponse}");
@@ -149,8 +103,85 @@ namespace WiseHR.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unexpected error in Signup: {ex.Message}");
+                Console.WriteLine($"Unexpected error in Signup: {ex.GetType().Name}: {ex.Message}");
                 return $"Unexpected error: {ex.Message}";
+            }
+        }
+
+        public async Task<(string? Token, string? Error)> Login(string email, string password)
+        {
+            try
+            {
+                var request = new LoginRequest { Email = email, Password = password };
+                Console.WriteLine($"Login attempt for email: {email}");
+                HttpResponseMessage response;
+
+                try
+                {
+                    var primaryJson = JsonSerializer.Serialize(request, _jsonOptions);
+                    Console.WriteLine($"Primary JSON for Login: {primaryJson}");
+                    response = await _httpClient.PostAsJsonAsync("api/auth/login", request, _jsonOptions);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("NullabilityInfoContext"))
+                {
+                    Console.WriteLine($"Falling back to manual serialization for Login: {ex.Message}");
+                    try
+                    {
+                        var json = JsonSerializer.Serialize(request, _jsonOptions);
+                        Console.WriteLine($"Fallback JSON for Login: {json}");
+                        var content = new StringContent(json, Encoding.UTF8, "application/json");
+                        response = await _httpClient.PostAsync("api/auth/login", content);
+                        Console.WriteLine($"Fallback PostAsync for Login completed");
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        Console.WriteLine($"Fallback serialization failed for Login: {fallbackEx.GetType().Name}: {fallbackEx.Message}");
+                        return (null, $"Fallback error: {fallbackEx.Message}");
+                    }
+                }
+
+                Console.WriteLine($"Login response status: {response.StatusCode}");
+                var rawResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Login raw response: {rawResponse}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        var result = await response.Content.ReadFromJsonAsync<LoginResponse>(_jsonOptions);
+                        if (result?.Token != null)
+                        {
+                            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
+                            Console.WriteLine($"Token stored: {result.Token}, UserId: {result.UserId}");
+                            return (result.Token, null);
+                        }
+                        Console.WriteLine("Login failed: No token in response");
+                        return (null, "Login failed: No token received.");
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"Deserialization error in Login response: {ex.Message}");
+                        return (null, $"Failed to deserialize response: {ex.Message}");
+                    }
+                }
+
+                Console.WriteLine($"Login failed with status {response.StatusCode}: {rawResponse}");
+                return (null, rawResponse);
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HTTP error in Login: {ex.Message}");
+                return (null, $"Failed to connect to the server: {ex.Message}");
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"Deserialization error in Login: {ex.Message}");
+                return (null, $"Failed to deserialize response: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error in Login: {ex.GetType().Name}: {ex.Message}");
+                return (null, $"Unexpected error: {ex.Message}");
             }
         }
 
@@ -171,10 +202,19 @@ namespace WiseHR.Services
                 catch (InvalidOperationException ex) when (ex.Message.Contains("NullabilityInfoContext"))
                 {
                     Console.WriteLine($"Falling back to manual serialization for ForgotPassword: {ex.Message}");
-                    var json = JsonSerializer.Serialize(request, _jsonOptions);
-                    Console.WriteLine($"Fallback JSON for ForgotPassword: {json}");
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    response = await _httpClient.PostAsync("api/auth/forgot-password", content);
+                    try
+                    {
+                        var json = JsonSerializer.Serialize(request, _jsonOptions);
+                        Console.WriteLine($"Fallback JSON for ForgotPassword: {json}");
+                        var content = new StringContent(json, Encoding.UTF8, "application/json");
+                        response = await _httpClient.PostAsync("api/auth/forgot-password", content);
+                        Console.WriteLine($"Fallback PostAsync for ForgotPassword completed");
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        Console.WriteLine($"Fallback serialization failed for ForgotPassword: {fallbackEx.GetType().Name}: {fallbackEx.Message}");
+                        return (null, null, $"Fallback error: {fallbackEx.Message}");
+                    }
                 }
 
                 Console.WriteLine($"ForgotPassword response status: {response.StatusCode}");
@@ -183,9 +223,17 @@ namespace WiseHR.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<ForgotPasswordResponse>(_jsonOptions);
-                    Console.WriteLine($"ForgotPassword success: Message: {result?.Message}, Email: {result?.Email}");
-                    return (result?.Message, result?.Email, null);
+                    try
+                    {
+                        var result = await response.Content.ReadFromJsonAsync<ForgotPasswordResponse>(_jsonOptions);
+                        Console.WriteLine($"ForgotPassword success: Message: {result?.Message}, Email: {result?.Email}");
+                        return (result?.Message, result?.Email, null);
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"Deserialization error in ForgotPassword response: {ex.Message}");
+                        return (null, null, $"Failed to deserialize response: {ex.Message}");
+                    }
                 }
 
                 Console.WriteLine($"ForgotPassword failed with status {response.StatusCode}: {rawResponse}");
@@ -203,7 +251,7 @@ namespace WiseHR.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unexpected error in ForgotPassword: {ex.Message}");
+                Console.WriteLine($"Unexpected error in ForgotPassword: {ex.GetType().Name}: {ex.Message}");
                 return (null, null, $"Unexpected error: {ex.Message}");
             }
         }
@@ -225,10 +273,19 @@ namespace WiseHR.Services
                 catch (InvalidOperationException ex) when (ex.Message.Contains("NullabilityInfoContext"))
                 {
                     Console.WriteLine($"Falling back to manual serialization for ResetPassword: {ex.Message}");
-                    var json = JsonSerializer.Serialize(request, _jsonOptions);
-                    Console.WriteLine($"Fallback JSON for ResetPassword: {json}");
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    response = await _httpClient.PostAsync("api/auth/reset-password", content);
+                    try
+                    {
+                        var json = JsonSerializer.Serialize(request, _jsonOptions);
+                        Console.WriteLine($"Fallback JSON for ResetPassword: {json}");
+                        var content = new StringContent(json, Encoding.UTF8, "application/json");
+                        response = await _httpClient.PostAsync("api/auth/reset-password", content);
+                        Console.WriteLine($"Fallback PostAsync for ResetPassword completed");
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        Console.WriteLine($"Fallback serialization failed for ResetPassword: {fallbackEx.GetType().Name}: {fallbackEx.Message}");
+                        return (false, $"Fallback error: {fallbackEx.Message}");
+                    }
                 }
 
                 Console.WriteLine($"ResetPassword response status: {response.StatusCode}");
@@ -256,12 +313,11 @@ namespace WiseHR.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unexpected error in ResetPassword: {ex.Message}");
+                Console.WriteLine($"Unexpected error in ResetPassword: {ex.GetType().Name}: {ex.Message}");
                 return (false, $"Unexpected error: {ex.Message}");
             }
         }
 
-        // Other methods (VerifyToken, GetRoleFromSupabase, IsUserAuthorized) remain unchanged
         public async Task<(string? Role, string? Error)> VerifyToken()
         {
             try
@@ -269,39 +325,53 @@ namespace WiseHR.Services
                 var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
                 if (string.IsNullOrEmpty(token))
                 {
+                    Console.WriteLine("VerifyToken: No token found in localStorage");
                     return (null, "No token found.");
                 }
 
                 var (role, error) = await GetRoleFromSupabase(token);
                 if (!string.IsNullOrEmpty(role))
                 {
-                    Console.WriteLine($"Raw role from Supabase: {role}");
+                    Console.WriteLine($"Role from Supabase: {role}");
                     var normalizedRole = char.ToUpper(role[0]) + role.Substring(1).ToLower();
                     return (normalizedRole, null);
                 }
 
+                Console.WriteLine("VerifyToken: Falling back to API verification");
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _httpClient.GetAsync("api/auth/verify");
+                Console.WriteLine($"VerifyToken response status: {response.StatusCode}");
+                var rawResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"VerifyToken raw response: {rawResponse}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<VerifyResponse>(_jsonOptions);
-                    Console.WriteLine($"Raw role from API: {result?.Role}");
-                    var normalizedRole = char.ToUpper(result?.Role[0] ?? ' ') + result?.Role.Substring(1).ToLower();
-                    return (normalizedRole, null);
+                    try
+                    {
+                        var result = await response.Content.ReadFromJsonAsync<VerifyResponse>(_jsonOptions);
+                        Console.WriteLine($"Role from API: {result?.Role}, UserId: {result?.UserId}");
+                        var normalizedRole = char.ToUpper(result?.Role[0] ?? ' ') + result?.Role.Substring(1).ToLower();
+                        return (normalizedRole, null);
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"Deserialization error in VerifyToken: {ex.Message}");
+                        return (null, $"Failed to deserialize response: {ex.Message}");
+                    }
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error Content: {errorContent}");
-                return (null, $"Error from API: {response.StatusCode}. {errorContent}");
+                Console.WriteLine($"VerifyToken failed with status {response.StatusCode}: {rawResponse}");
+                return (null, $"Error from API: {response.StatusCode}. {rawResponse}");
             }
             catch (HttpRequestException ex)
             {
+                Console.WriteLine($"HTTP error in VerifyToken: {ex.Message}");
                 return (null, $"Failed to connect to the server: {ex.Message}");
             }
             catch (Exception ex)
             {
-                return (null, $"An unexpected error occurred: {ex.Message}");
+                Console.WriteLine($"Unexpected error in VerifyToken: {ex.GetType().Name}: {ex.Message}");
+                return (null, $"Unexpected error: {ex.Message}");
             }
         }
 
@@ -309,51 +379,82 @@ namespace WiseHR.Services
         {
             try
             {
+                Console.WriteLine("GetRoleFromSupabase: Starting role fetch");
                 using var supabaseClient = new HttpClient { BaseAddress = new Uri(_supabaseUrl) };
                 supabaseClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 supabaseClient.DefaultRequestHeaders.Add("apikey", _supabaseKey);
+                supabaseClient.Timeout = TimeSpan.FromSeconds(30);
 
+                Console.WriteLine("GetRoleFromSupabase: Fetching user from /auth/v1/user");
                 var userResponse = await supabaseClient.GetAsync("/auth/v1/user");
+                Console.WriteLine($"GetRoleFromSupabase: User response status: {userResponse.StatusCode}");
+                var userRawResponse = await userResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"GetRoleFromSupabase: User raw response: {userRawResponse}");
+
                 if (!userResponse.IsSuccessStatusCode)
                 {
-                    var errorContent = await userResponse.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Error fetching user from Supabase: Status {userResponse.StatusCode}, Content: {errorContent}");
-                    return (null, $"Failed to fetch user: {errorContent}");
+                    Console.WriteLine($"GetRoleFromSupabase: Failed to fetch user, status {userResponse.StatusCode}");
+                    return (null, $"Failed to fetch user: {userRawResponse}");
                 }
 
-                var userData = await userResponse.Content.ReadFromJsonAsync<UserResponse>(_jsonOptions);
-                var userId = userData?.Id;
-
-                if (string.IsNullOrEmpty(userId))
+                try
                 {
-                    Console.WriteLine("Error: User ID is null or empty after fetching user data.");
-                    return (null, "User ID is null or empty.");
-                }
-                Console.WriteLine($"User ID from Supabase: {userId}");
+                    var userData = await userResponse.Content.ReadFromJsonAsync<UserResponse>(_jsonOptions);
+                    var userId = userData?.Id;
+                    Console.WriteLine($"GetRoleFromSupabase: User ID: {userId}");
 
-                var roleUrl = $"/rest/v1/roles?select=role&user_id=eq.{Uri.EscapeDataString(userId)}";
-                var roleResponse = await supabaseClient.GetAsync(roleUrl);
-                if (roleResponse.IsSuccessStatusCode)
-                {
-                    var roles = await roleResponse.Content.ReadFromJsonAsync<List<Role>>(_jsonOptions);
-                    var role = roles?.FirstOrDefault()?.RoleName;
-                    if (string.IsNullOrEmpty(role))
+                    if (string.IsNullOrEmpty(userId))
                     {
-                        Console.WriteLine($"No role found for user ID: {userId}");
-                        return (null, "No role found in roles table.");
+                        Console.WriteLine("GetRoleFromSupabase: User ID is null or empty");
+                        return (null, "User ID is null or empty.");
                     }
-                    Console.WriteLine($"Role fetched successfully for user ID {userId}: {role}");
-                    return (role, null);
-                }
 
-                var roleErrorContent = await roleResponse.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error fetching role from Supabase: Status {roleResponse.StatusCode}, Content: {roleErrorContent}");
-                return (null, $"Failed to fetch role: {roleErrorContent}");
+                    var roleUrl = $"/rest/v1/roles?select=role&user_id=eq.{Uri.EscapeDataString(userId)}";
+                    Console.WriteLine($"GetRoleFromSupabase: Fetching role from {roleUrl}");
+                    var roleResponse = await supabaseClient.GetAsync(roleUrl);
+                    Console.WriteLine($"GetRoleFromSupabase: Role response status: {roleResponse.StatusCode}");
+                    var roleRawResponse = await roleResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"GetRoleFromSupabase: Role raw response: {roleRawResponse}");
+
+                    if (roleResponse.IsSuccessStatusCode)
+                    {
+                        try
+                        {
+                            var roles = await roleResponse.Content.ReadFromJsonAsync<List<Role>>(_jsonOptions);
+                            var role = roles?.FirstOrDefault()?.RoleName;
+                            if (string.IsNullOrEmpty(role))
+                            {
+                                Console.WriteLine($"GetRoleFromSupabase: No role found for user ID: {userId}");
+                                return (null, "No role found in roles table.");
+                            }
+                            Console.WriteLine($"GetRoleFromSupabase: Role fetched: {role}");
+                            return (role, null);
+                        }
+                        catch (JsonException ex)
+                        {
+                            Console.WriteLine($"Deserialization error in GetRoleFromSupabase: {ex.Message}");
+                            return (null, $"Failed to deserialize role response: {ex.Message}");
+                        }
+                    }
+
+                    Console.WriteLine($"GetRoleFromSupabase: Failed to fetch role, status {roleResponse.StatusCode}");
+                    return (null, $"Failed to fetch role: {roleRawResponse}");
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"Deserialization error in GetRoleFromSupabase: {ex.Message}");
+                    return (null, $"Failed to deserialize user response: {ex.Message}");
+                }
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"HTTP request error connecting to Supabase: {ex.Message}");
+                Console.WriteLine($"HTTP error in GetRoleFromSupabase: {ex.Message}");
                 return (null, $"Failed to connect to Supabase: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error in GetRoleFromSupabase: {ex.GetType().Name}: {ex.Message}");
+                return (null, $"Unexpected error: {ex.Message}");
             }
         }
 
@@ -361,23 +462,37 @@ namespace WiseHR.Services
         {
             try
             {
+                Console.WriteLine($"IsUserAuthorized: Checking for role: {requiredRole}");
                 var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                Console.WriteLine($"IsUserAuthorized: Token found: {token != null}");
                 if (string.IsNullOrEmpty(token))
                 {
+                    Console.WriteLine("IsUserAuthorized: No token found");
                     return false;
                 }
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _httpClient.GetAsync("api/auth/verify");
+                Console.WriteLine($"IsUserAuthorized response status: {response.StatusCode}");
+                var rawResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"IsUserAuthorized raw response: {rawResponse}");
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<VerifyResponse>(_jsonOptions);
-                    if (result?.Role == requiredRole)
+                    try
                     {
-                        return true;
+                        var result = await response.Content.ReadFromJsonAsync<VerifyResponse>(_jsonOptions);
+                        Console.WriteLine($"IsUserAuthorized: Role: {result?.Role}, UserId: {result?.UserId}");
+                        return result?.Role.Equals(requiredRole, StringComparison.OrdinalIgnoreCase) ?? false;
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"Deserialization error in IsUserAuthorized: {ex.Message}");
+                        return false;
                     }
                 }
 
+                Console.WriteLine($"IsUserAuthorized failed with status {response.StatusCode}: {rawResponse}");
                 return false;
             }
             catch (HttpRequestException ex)
@@ -387,44 +502,9 @@ namespace WiseHR.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unexpected error in IsUserAuthorized: {ex.Message}");
+                Console.WriteLine($"Unexpected error in IsUserAuthorized: {ex.GetType().Name}: {ex.Message}");
                 return false;
             }
-        }
-
-        private class LoginResponse
-        {
-            public string Token { get; set; } = string.Empty;
-            public string UserId { get; set; } = string.Empty;
-        }
-
-        private class UserResponse
-        {
-            public string? Id { get; set; }
-            public string? Name { get; set; }
-            public string? Email { get; set; }
-        }
-
-        private class ProfileResponse
-        {
-            public string Role { get; set; } = string.Empty;
-        }
-
-        private class VerifyResponse
-        {
-            public string UserId { get; set; } = string.Empty;
-            public string Role { get; set; } = string.Empty;
-        }
-
-        private class ForgotPasswordResponse
-        {
-            public string Message { get; set; } = string.Empty;
-            public string Email { get; set; } = string.Empty;
-        }
-
-        private class Role
-        {
-            public string RoleName { get; set; } = string.Empty;
         }
     }
 }
@@ -454,4 +534,30 @@ namespace WiseHR.Models
         public string Otp { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
     }
+
+    public class LoginResponse
+    {
+        public string Token { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
+    }
+
+    public class ForgotPasswordResponse
+    {
+        public string Message { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class UserResponse
+    {
+        public string? Id { get; set; }
+        public string? Name { get; set; }
+        public string? Email { get; set; }
+    }
+
+    public class VerifyResponse
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+
 }
