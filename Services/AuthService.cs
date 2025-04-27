@@ -1,4 +1,5 @@
 ﻿using Microsoft.JSInterop;
+using MongoDB.Bson;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
@@ -12,7 +13,7 @@ namespace WiseHR.Services
         private readonly HttpClient _httpClient;
         private readonly IJSRuntime _jsRuntime;
         private readonly string _baseUrl;
-
+        private readonly JsonSerializerOptions _jsonOptions;
         private readonly string _supabaseUrl = "https://xnibymvrmxhralsrggau.supabase.co";
         private readonly string _supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhuaWJ5bXZybXhocmFsc3JnZ2F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIzMjIyMDQsImV4cCI6MjA1Nzg5ODIwNH0.DdJTJxUy7FUj0Z4U_JTPqGCg32Sd6mROPhNCCR8x35U";
 
@@ -20,24 +21,43 @@ namespace WiseHR.Services
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
-
-            //_baseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5243";
-
             _baseUrl = configuration["ApiBaseUrl"] ?? "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net/";
-
             _supabaseUrl = configuration["Supabase:Url"] ?? _supabaseUrl;
             _supabaseKey = configuration["Supabase:AnonKey"] ?? _supabaseKey;
             _httpClient.BaseAddress = new Uri(_baseUrl);
+
+            _jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
+            };
         }
 
         public async Task<(string? Token, string? Error)> Login(string email, string password)
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/auth/login", new { email, password });
+                var request = new LoginRequest { Email = email, Password = password };
+                HttpResponseMessage response;
+
+                // Primary approach: Use PostAsJsonAsync
+                try
+                {
+                    response = await _httpClient.PostAsJsonAsync("api/auth/login", request, _jsonOptions);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("NullabilityInfoContext"))
+                {
+                    // Fallback: Manual serialization with StringContent
+                    Console.WriteLine($"Falling back to manual serialization for Login: {ex.Message}");
+                    var json = JsonSerializer.Serialize(request, _jsonOptions);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    response = await _httpClient.PostAsync("api/auth/login", content);
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                    var result = await response.Content.ReadFromJsonAsync<LoginResponse>(_jsonOptions);
                     if (result?.Token != null)
                     {
                         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
@@ -55,7 +75,6 @@ namespace WiseHR.Services
             }
         }
 
-
         public async Task<(string? Role, string? Error)> VerifyToken()
         {
             try
@@ -67,7 +86,7 @@ namespace WiseHR.Services
                 }
 
                 // Try to get role from Supabase first
-                var(role, error) = await GetRoleFromSupabase(token);
+                var (role, error) = await GetRoleFromSupabase(token);
                 if (!string.IsNullOrEmpty(role))
                 {
                     Console.WriteLine($"Raw role from Supabase: {role}");
@@ -76,30 +95,27 @@ namespace WiseHR.Services
                 }
 
                 // Now verify token via the API
-                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _httpClient.GetAsync("api/auth/verify");
 
                 if (response.IsSuccessStatusCode)
                 {
-                var result = await response.Content.ReadFromJsonAsync<VerifyResponse>();
-                Console.WriteLine($"Raw role from API: {result?.Role}");
-                var normalizedRole = char.ToUpper(result?.Role[0] ?? ' ') + result?.Role.Substring(1).ToLower();
-                return (normalizedRole, null);
+                    var result = await response.Content.ReadFromJsonAsync<VerifyResponse>(_jsonOptions);
+                    Console.WriteLine($"Raw role from API: {result?.Role}");
+                    var normalizedRole = char.ToUpper(result?.Role[0] ?? ' ') + result?.Role.Substring(1).ToLower();
+                    return (normalizedRole, null);
                 }
 
-                // Log the response error details if status code isn't 2xx
                 var errorContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Error Content: {errorContent}");
                 return (null, $"Error from API: {response.StatusCode}. {errorContent}");
             }
             catch (HttpRequestException ex)
             {
-                // Handle HTTP request exceptions
                 return (null, $"Failed to connect to the server: {ex.Message}");
             }
             catch (Exception ex)
             {
-                // Catch any other unexpected exceptions
                 return (null, $"An unexpected error occurred: {ex.Message}");
             }
         }
@@ -121,8 +137,8 @@ namespace WiseHR.Services
                     return (null, $"Failed to fetch user: {errorContent}");
                 }
 
-                var userData = await userResponse.Content.ReadFromJsonAsync<UserResponse>();
-                var userId = userData?.Id;  // Get user ID from Supabase Auth
+                var userData = await userResponse.Content.ReadFromJsonAsync<UserResponse>(_jsonOptions);
+                var userId = userData?.Id;
 
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -136,8 +152,8 @@ namespace WiseHR.Services
                 var roleResponse = await supabaseClient.GetAsync(roleUrl);
                 if (roleResponse.IsSuccessStatusCode)
                 {
-                    var roles = await roleResponse.Content.ReadFromJsonAsync<List<Role>>();
-                    var role = roles?.FirstOrDefault()?.RoleName; // No default role
+                    var roles = await roleResponse.Content.ReadFromJsonAsync<List<Role>>(_jsonOptions);
+                    var role = roles?.FirstOrDefault()?.RoleName;
                     if (string.IsNullOrEmpty(role))
                     {
                         Console.WriteLine($"No role found for user ID: {userId}");
@@ -165,34 +181,49 @@ namespace WiseHR.Services
                 var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
                 if (string.IsNullOrEmpty(token))
                 {
-                    return false; // User is not authenticated
+                    return false;
                 }
 
-                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _httpClient.GetAsync("api/auth/verify");
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<VerifyResponse>();
+                    var result = await response.Content.ReadFromJsonAsync<VerifyResponse>(_jsonOptions);
                     if (result?.Role == requiredRole)
                     {
-                        return true; // User has the required role
+                        return true;
                     }
                 }
 
-                return false; // User is either not authorized or does not have the required role
+                return false;
             }
             catch (HttpRequestException ex)
             {
-                return false; // Connection failed, not authorized
+                return false;
             }
         }
-
 
         public async Task<string> Signup(string email, string password)
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/auth/signup", new { email, password });
+                var request = new SignupRequest { Email = email, Password = password };
+                HttpResponseMessage response;
+
+                // Primary approach: Use PostAsJsonAsync
+                try
+                {
+                    response = await _httpClient.PostAsJsonAsync("api/auth/signup", request, _jsonOptions);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("NullabilityInfoContext"))
+                {
+                    // Fallback: Manual serialization with StringContent
+                    Console.WriteLine($"Falling back to manual serialization for Signup: {ex.Message}");
+                    var json = JsonSerializer.Serialize(request, _jsonOptions);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    response = await _httpClient.PostAsync("api/auth/signup", content);
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
                     return "Signup successful";
@@ -209,10 +240,26 @@ namespace WiseHR.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/auth/forgot-password", new { email });
+                var request = new ForgotPasswordRequest { Email = email };
+                HttpResponseMessage response;
+
+                // Primary approach: Use PostAsJsonAsync
+                try
+                {
+                    response = await _httpClient.PostAsJsonAsync("api/auth/forgot-password", request, _jsonOptions);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("NullabilityInfoContext"))
+                {
+                    // Fallback: Manual serialization with StringContent
+                    Console.WriteLine($"Falling back to manual serialization for ForgotPassword: {ex.Message}");
+                    var json = JsonSerializer.Serialize(request, _jsonOptions);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    response = await _httpClient.PostAsync("api/auth/forgot-password", content);
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<ForgotPasswordResponse>();
+                    var result = await response.Content.ReadFromJsonAsync<ForgotPasswordResponse>(_jsonOptions);
                     return (result?.Message, result?.Email, null);
                 }
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -228,10 +275,27 @@ namespace WiseHR.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/auth/reset-password", new { email, otp, newPassword });
+                var request = new ResetPasswordRequest { Email = email, Otp = otp, NewPassword = newPassword };
+                HttpResponseMessage response;
+
+                // Primary approach: Use PostAsJsonAsync
+                try
+                {
+                    response = await _httpClient.PostAsJsonAsync("api/auth/reset-password", request, _jsonOptions);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("NullabilityInfoContext"))
+                {
+                    // Fallback: Manual serialization with StringContent
+                    Console.WriteLine($"Falling back to manual serialization for ResetPassword: {ex.Message}");
+                    var json = JsonSerializer.Serialize(request, _jsonOptions);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    response = await _httpClient.PostAsync("api/auth/reset-password", content);
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
                     return (true, null);
+
                 }
                 var errorContent = await response.Content.ReadAsStringAsync();
                 return (false, errorContent);
@@ -247,16 +311,19 @@ namespace WiseHR.Services
             public string Token { get; set; } = string.Empty;
             public string UserId { get; set; } = string.Empty;
         }
+
         private class UserResponse
         {
-            public string? Id { get; set; }  
+            public string? Id { get; set; }
             public string? Name { get; set; }
             public string? Email { get; set; }
         }
+
         private class ProfileResponse
         {
             public string Role { get; set; } = string.Empty;
         }
+
         private class VerifyResponse
         {
             public string UserId { get; set; } = string.Empty;
@@ -268,5 +335,35 @@ namespace WiseHR.Services
             public string Message { get; set; } = string.Empty;
             public string Email { get; set; } = string.Empty;
         }
+
+        private class Role
+        {
+            public string RoleName { get; set; } = string.Empty;
+        }
+    }
+
+    // DTOs
+    public class LoginRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class SignupRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class ForgotPasswordRequest
+    {
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class ResetPasswordRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Otp { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }
