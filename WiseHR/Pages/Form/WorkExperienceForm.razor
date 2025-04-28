@@ -74,42 +74,39 @@
 
                 <!-- Work Experience Section -->
                 <h4 class="text-secondary mt-1">Work Experience</h4>
-                @if (workList.Any())
+                @foreach (var work in workList)
                 {
-                    @foreach (var work in workList)
-                    {
-                        <div class="border p-2 mb-2 bg-light rounded">
-                            <div class="row g-1">
-                                <div class="col-md-3">
-                                    <label>Employer</label>
-                                    <InputText class="form-control" @bind-Value="work.Employer" />
-                                </div>
-                                <div class="col-md-3">
-                                    <label>Location</label>
-                                    <InputText class="form-control" @bind-Value="work.Location" />
-                                </div>
-                                <div class="col-md-2">
-                                    <label>Join Date</label>
-                                    <InputDate class="form-control" @bind-Value="work.DateOfJoining" />
-                                </div>
-                                <div class="col-md-2">
-                                    <label>Leave Date</label>
-                                    <InputDate class="form-control" @bind-Value="work.DateOfLeaving" />
-                                </div>
-                                <div class="col-md-3">
-                                    <label>Designation</label>
-                                    <InputText class="form-control" @bind-Value="work.Designation" />
-                                </div>
-                                <div class="col-1 d-flex align-items-end">
-                                    <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
-                                        &times;
-                                    </span>
-                                </div>
+                    <div class="border p-2 mb-2 bg-light rounded">
+                        <div class="row g-1">
+                            <div class="col-md-3">
+                                <label>Employer</label>
+                                <InputText class="form-control" @bind-Value="work.Employer" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>Location</label>
+                                <InputText class="form-control" @bind-Value="work.Location" />
+                            </div>
+                            <div class="col-md-2">
+                                <label>Join Date</label>
+                                <InputDate class="form-control" @bind-Value="work.DateOfJoining" />
+                            </div>
+                            <div class="col-md-2">
+                                <label>Leave Date</label>
+                                <InputDate class="form-control" @bind-Value="work.DateOfLeaving" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>Designation</label>
+                                <InputText class="form-control" @bind-Value="work.Designation" />
+                            </div>
+                            <div class="col-1 d-flex align-items-end">
+                                <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
+                                    &times;
+                                </span>
                             </div>
                         </div>
-                    }
-
+                    </div>
                 }
+
                 <button type="button" class="btn btn-outline-primary mb-1 mt-1" @onclick="AddWork">+ Add Work Experience</button>
 
                 <!-- Action Buttons -->
@@ -168,20 +165,9 @@
             await JSRuntime.InvokeVoidAsync("alert", "Please add at least one education qualification before submitting the form.");
             return;
         }
-        var validWorkList = workList
-        .Where(w => !string.IsNullOrWhiteSpace(w.Employer)
-                 || !string.IsNullOrWhiteSpace(w.Designation)
-                 || !string.IsNullOrWhiteSpace(w.Location)
-                 || w.DateOfJoining != null
-                 || w.DateOfLeaving != null)
-        .ToList();
 
         experience.EducationQualifications = educationList;
-        experience.WorkExperiences = validWorkList;
-        if (workList.Count != validWorkList.Count)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", "Some work experience entries were incomplete and have been skipped. Please make sure all fields are filled if you want them to be submitted.");
-        }
+        experience.WorkExperiences = workList;
 
         var json = JsonSerializer.Serialize(experience);
         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "experienceDetails", json);
@@ -222,8 +208,7 @@
         }
 
         if (!educationList.Any()) AddEducation();
-        if (workList == null || workList.Count == 0)
-            workList = new List<WorkExperience>(); // ✅ don't add default row
+        if (!workList.Any()) AddWork();
 
         StateHasChanged();
     }
@@ -244,6 +229,7 @@
         educationList = new List<Education>();
         workList = new List<WorkExperience>();
         AddEducation();
+        AddWork();
     }
 
     private bool IsNextButtonDisabled()
