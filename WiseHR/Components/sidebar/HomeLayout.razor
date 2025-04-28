@@ -90,29 +90,7 @@
 
 </MudLayout>
 
-@* Define the ItemTemplate for Autocomplete results - MOVED TO MAIN @code block below *@
-@*@code {
-    RenderFragment<EmployeeSearchResult> ResultTemplate = (context) => __builder =>
-    {
-        <MudGrid Spacing="2" Justify="Justify.FlexStart" Class="py-2 px-1">
-            <MudItem xs="2" Class="d-flex align-center justify-center">
-                @if (!string.IsNullOrEmpty(context.ProfilePicture))
-                {
-                    <MudAvatar Image=$@"data:image/png;base64,{context.ProfilePicture}" Size="Size.Medium" />
-                }
-                else
-                {
-                    <MudAvatar Color="Color.Primary" Size="Size.Medium">@GetInitials(context.Name)</MudAvatar>
-                }
-            </MudItem>
-            <MudItem xs="10">
-                <MudText Typo="Typo.body1">@((MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery))</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Dark">@((MarkupString)GetHighlightedHtml(context.Designation, _lastSearchQuery))</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Dark">@((MarkupString)GetHighlightedHtml(context.Email, _lastSearchQuery))</MudText>
-            </MudItem>
-        </MudGrid>
-    };
-}*@
+
 
 @code {
     private bool drawerOpen = true;
