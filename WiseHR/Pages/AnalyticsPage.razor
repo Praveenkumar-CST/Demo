@@ -1,20 +1,21 @@
 @page "/analytics"
 @using Microsoft.AspNetCore.Components
-@using WiseHR.Models // Assuming EmployeeDetails might be here, otherwise define below
+@using WiseHR.Models 
 @using System.Net.Http.Json
 @using MudBlazor
 @inject HttpClient Http
+@inject NavigationManager NavigationManager
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
-    <MudText Typo="Typo.h4" GutterBottom="true">Employee Analytics</MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="height: 100vh; display: flex; flex-direction: column;">
+    <MudText Typo="Typo.h5" Class="mb-2">Employee Analytics</MudText>
 
-    <MudGrid Spacing="4">
+    <MudGrid Spacing="2" Style="flex: 1; min-height: 0;">
         @* Filter Section *@
-        <MudItem xs="12" md="3">
-            <MudPaper Class="pa-4" Elevation="1">
-                <MudText Typo="Typo.h6" GutterBottom="true">Filters</MudText>
+        <MudItem xs="12" md="3" Style="display: flex; flex-direction: column;">
+            <MudPaper Class="pa-3" Elevation="1" Style="height: 100%; display: flex; flex-direction: column;">
+                <MudText Typo="Typo.subtitle1" GutterBottom="true">Filters</MudText>
 
-                <div class="mb-3">
+                <div class="mb-2">
                     <MudSelect T="string" @bind-Value="_filterDto.BloodGroup" Label="Blood Group" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
                         @foreach (var group in _bloodGroups)
                         {
@@ -23,37 +24,43 @@
                     </MudSelect>
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-2">
                     <MudTextField @bind-Value="_filterDto.BankName" Label="Bank Name" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" />
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-2">
                     <MudTextField @bind-Value="_filterDto.College" Label="College / University" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" />
                 </div>
 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters" Disabled="_isLoading" FullWidth="true" Class="mt-2">
-                    @if (_isLoading)
-                    {
-                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
-                        <span>Applying...</span>
-                    }
-                    else
-                    {
-                        <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1"/>
-                        <span>Apply Filters</span>
-                    }
-                </MudButton>
+                <div class="mt-auto mb-0 d-flex">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters" Disabled="_isLoading" Class="mr-1" Style="width: 50%;">
+                        @if (_isLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                            <span>Applying...</span>
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1"/>
+                            <span>Apply</span>
+                        }
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="width: 50%;">
+                        <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1"/>
+                        <span>Clear</span>
+                    </MudButton>
+                </div>
             </MudPaper>
         </MudItem>
 
         @* Results Section *@
-        <MudItem xs="12" md="9">
-            <MudPaper Class="pa-4" Elevation="1">
-                <MudText Typo="Typo.h6" GutterBottom="true">Results</MudText>
+        <MudItem xs="12" md="9" Style="display: flex; flex-direction: column; min-height: 0;">
+            <MudPaper Class="pa-3" Elevation="1" Style="height: 100%; display: flex; flex-direction: column;">
+                <MudText Typo="Typo.subtitle1" GutterBottom="true">Results</MudText>
 
                 @if (_isLoading && !_initialLoadComplete)
                 {
-                    <div class="d-flex justify-center align-center pa-4" style="min-height: 400px;">
+                    <div class="d-flex justify-center align-center" style="flex: 1;">
                         <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large"/>
                     </div>
                 }
@@ -61,112 +68,136 @@
                 {
                     @if (!string.IsNullOrEmpty(_errorMessage))
                     {
-                        <MudAlert Severity="Severity.Error" Class="mb-4">@_errorMessage</MudAlert>
+                        <MudAlert Severity="Severity.Error" Class="mb-2">@_errorMessage</MudAlert>
                     }
 
                     @if (!_filteredEmployees.Any() && _initialLoadComplete && string.IsNullOrEmpty(_errorMessage))
                     {
-                        <div class="d-flex justify-center align-center pa-4 mud-text-secondary" style="min-height: 200px;">
+                        <div class="d-flex flex-column justify-center align-center mud-text-secondary" style="flex: 1;">
+                            <MudIcon Icon="@Icons.Material.Outlined.FilterAltOff" Size="Size.Large" Class="mb-2" />
                             <MudText Align="Align.Center">No employees found matching the current filters.</MudText>
-                        </div>
-                    }
-                    else if (!_initialLoadComplete && string.IsNullOrEmpty(_errorMessage))
-                    {
-                        <div class="d-flex justify-center align-center pa-4 mud-text-secondary" style="min-height: 200px;">
-                            <MudText Align="Align.Center">Apply filters using the panel on the left to view analytics results.</MudText>
                         </div>
                     }
 
                     @if (_filteredEmployees.Any() || (_isLoading && _initialLoadComplete))
                     {
-                        <MudGrid Spacing="2" Class="mb-4">
+                        <MudGrid Spacing="2" Class="mb-2">
                             <MudItem xs="12" sm="4">
-                                <MudCard Elevation="2">
-                                    <MudCardHeader><CardHeaderContent><MudText Typo="Typo.subtitle2">Total Employees</MudText></CardHeaderContent></MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center">
-                                        <MudIcon Icon="@Icons.Material.Filled.Groups" Color="Color.Primary" Size="Size.Large" Class="mr-3"/>
-                                        <MudText Typo="Typo.h5">@_totalEmployees</MudText>
+                                <MudCard Elevation="2" Class="hover-lift">
+                                    <MudCardHeader Style="background-color: var(--mud-palette-primary-lighten); padding: 8px 16px;">
+                                        <CardHeaderContent><MudText Typo="Typo.subtitle2">Total Employees</MudText></CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent Class="d-flex align-center pa-2">
+                                        <MudIcon Icon="@Icons.Material.Filled.Groups" Color="Color.Primary" Size="Size.Medium" Class="mr-3"/>
+                                        <MudText Typo="Typo.h6">@_totalEmployees<span class="mud-text-secondary" style="font-size: 0.8em;"> / @_systemTotalEmployees</span></MudText>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
                             <MudItem xs="12" sm="4">
-                                <MudCard Elevation="2">
-                                    <MudCardHeader><CardHeaderContent><MudText Typo="Typo.subtitle2">Unique Designations</MudText></CardHeaderContent></MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center">
-                                        <MudIcon Icon="@Icons.Material.Filled.Work" Color="Color.Secondary" Size="Size.Large" Class="mr-3"/>
-                                        <MudText Typo="Typo.h5">@_uniqueDesignations</MudText>
+                                <MudCard Elevation="2" Class="hover-lift">
+                                    <MudCardHeader Style="background-color: var(--mud-palette-secondary-lighten); padding: 8px 16px;">
+                                        <CardHeaderContent><MudText Typo="Typo.subtitle2">Unique Designations</MudText></CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent Class="d-flex align-center pa-2">
+                                        <MudIcon Icon="@Icons.Material.Filled.Work" Color="Color.Secondary" Size="Size.Medium" Class="mr-3"/>
+                                        <MudText Typo="Typo.h6">@_uniqueDesignations<span class="mud-text-secondary" style="font-size: 0.8em;"> / @_systemTotalDesignations</span></MudText>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
                             <MudItem xs="12" sm="4">
-                                <MudCard Elevation="2">
-                                    <MudCardHeader><CardHeaderContent><MudText Typo="Typo.subtitle2">Unique Blood Groups</MudText></CardHeaderContent></MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center">
-                                        <MudIcon Icon="@Icons.Material.Filled.Bloodtype" Color="Color.Error" Size="Size.Large" Class="mr-3"/>
-                                        <MudText Typo="Typo.h5">@_uniqueBloodGroups</MudText>
+                                <MudCard Elevation="2" Class="hover-lift">
+                                    <MudCardHeader Style="background-color: var(--mud-palette-info-lighten); padding: 8px 16px;">
+                                        <CardHeaderContent><MudText Typo="Typo.subtitle2">Unique Blood Groups</MudText></CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent Class="d-flex align-center pa-2">
+                                        <MudIcon Icon="@Icons.Material.Filled.Bloodtype" Color="Color.Info" Size="Size.Medium" Class="mr-3"/>
+                                        <MudText Typo="Typo.h6">@_uniqueBloodGroups<span class="mud-text-secondary" style="font-size: 0.8em;"> / @_systemTotalBloodGroups</span></MudText>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
                         </MudGrid>
 
-                        <MudTable ServerData="new Func<TableState, Task<TableData<EmployeeDetails>>>(ServerReload)"
-                        @ref="_table"
-                        Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Striped="true" Elevation="0"
-                        Loading="_isLoading" LoadingProgressColor="Color.Primary">
-                            <ToolBarContent>
-                                <MudText Typo="Typo.subtitle1">Filtered Employees</MudText>
-                                <MudSpacer />
-                                <MudTextField @bind-Value="_searchString" Placeholder="Search Table..." Adornment="Adornment.Start" Immediate="false" DebounceInterval="300"
-                                OnDebouncedValueChanged="@((s) => _table?.ReloadServerData())"
-                                AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small" Class="mt-0" Style="width: 250px;" Dense="true"></MudTextField>
-                            </ToolBarContent>
-                            <HeaderContent>
-                                <MudTh Style="width: 60px;"></MudTh>
-                                <MudTh><MudTableSortLabel SortLabel="name_sort" T="EmployeeDetails">Name</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortLabel="designation_sort" T="EmployeeDetails">Designation</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortLabel="id_sort" T="EmployeeDetails">Employee ID</MudTableSortLabel></MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Avatar">
-                                    @if (!string.IsNullOrEmpty(context.ProfilePicture))
-                                    {
-                                        <MudAvatar Image="@GetImageUrl(context.ProfilePictureBytes)" Size="Size.Medium" />
-                                    }
-                                    else
-                                    {
-                                        <MudAvatar Color="Color.Primary" Size="Size.Medium">@GetInitials(context.FirstName + " " + context.LastName)</MudAvatar>
-                                    }
-                                </MudTd>
-                                <MudTd DataLabel="Name">@context.FirstName @context.MiddleName @context.LastName</MudTd>
-                                <MudTd DataLabel="Designation">@context.Designation</MudTd>
-                                <MudTd DataLabel="EmployeeID">@context.EmployeeID</MudTd>
-                            </RowTemplate>
-                            <NoRecordsContent>
-                                <MudText>No matching records found.</MudText>
-                            </NoRecordsContent>
-                            <LoadingContent>
-                                <MudText>Loading...</MudText>
-                            </LoadingContent>
-                            <PagerContent>
-                                <MudTablePager />
-                            </PagerContent>
-                        </MudTable>
+                        <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+                            <MudTable ServerData="ServerReload" @ref="_table"
+                                    Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Striped="true" Elevation="0"
+                                    Loading="_isLoading" LoadingProgressColor="Color.Primary"
+                                    Style="flex: 1; overflow: auto;">
+                                <ToolBarContent>
+                                    <MudText Typo="Typo.subtitle1">Filtered Employees</MudText>
+                                    <MudSpacer />
+                                    <div class="d-flex">
+                                        <MudTextField @bind-Value="SearchString"
+                                                      Placeholder="Search employees..." 
+                                                      Adornment="Adornment.Start"
+                                                      AdornmentIcon="@Icons.Material.Filled.Search" 
+                                                      IconSize="Size.Small"
+                                                      Variant="Variant.Outlined"
+                                                      Dense="true"
+                                                      Immediate="true"
+                                                      OnKeyDown="@HandleKeyDown"
+                                                      Class="mt-0"
+                                                      Style="width: 300px;"></MudTextField>
+                                        @if (!string.IsNullOrWhiteSpace(SearchString))
+                                        {
+                                            <MudIconButton Icon="@Icons.Material.Filled.Clear" 
+                                                          Color="Color.Default" 
+                                                          OnClick="@ClearSearchText" 
+                                                          Size="Size.Small" 
+                                                          Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
+                                        }
+                                    </div>
+                                </ToolBarContent>
+                                <HeaderContent>
+                                    <MudTh Style="width: 60px;"></MudTh>
+                                    <MudTh><MudTableSortLabel SortLabel="name_sort" T="EmployeeDetails">Name</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortLabel="designation_sort" T="EmployeeDetails">Designation</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortLabel="id_sort" T="EmployeeDetails">Employee ID</MudTableSortLabel></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Avatar">
+                                        @if (!string.IsNullOrEmpty(context.ProfilePicture))
+                                        {
+                                            var imageSrc = $"data:image/png;base64,{context.ProfilePicture}";
+                                            <MudAvatar Image="@imageSrc" Size="Size.Small" />
+                                        }
+                                        else
+                                        {
+                                            <MudAvatar Color="Color.Primary" Size="Size.Small">@GetInitials(context.FirstName + " " + context.LastName)</MudAvatar>
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="Name">
+                                        <a href="/employee/@context.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
+                                            @context.FirstName @context.MiddleName @context.LastName
+                                        </a>
+                                    </MudTd>
+                                    <MudTd DataLabel="Designation">
+                                        <a href="/employee/@context.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
+                                            @context.Designation
+                                        </a>
+                                    </MudTd>
+                                    <MudTd DataLabel="EmployeeID">
+                                        <a href="/employee/@context.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
+                                            @context.EmployeeID
+                                        </a>
+                                    </MudTd>
+                                </RowTemplate>
+                                <NoRecordsContent>
+                                    <MudText>No matching records found.</MudText>
+                                </NoRecordsContent>
+                                <LoadingContent>
+                                    <MudText>Loading...</MudText>
+                                </LoadingContent>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                                </PagerContent>
+                            </MudTable>
+                        </div>
                     }
                 }
             </MudPaper>
         </MudItem>
     </MudGrid>
 </MudContainer>
-
-
-@code {
-    private string GetImageUrl(byte[] imageBytes) => 
-        imageBytes != null 
-            ? $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}" 
-            : null;
-}
-
-
 
 @code {
     private MudTable<EmployeeDetails>? _table;
@@ -175,22 +206,73 @@
     private bool _isLoading = false;
     private bool _initialLoadComplete = false;
     private string? _errorMessage;
-    private string _searchString = "";
+    private string _searchStringBackingField = "";
+
+    private string SearchString
+    {
+        get => _searchStringBackingField;
+        set
+        {
+            if (_searchStringBackingField != value)
+            {
+                _searchStringBackingField = value;
+                Console.WriteLine($"SearchString set to: '{value}'");
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Value is empty, trigger table refresh
+                    _ = HandleEmptySearchAsync();
+                }
+                // Note: We don't trigger reload on non-empty changes here,
+                // because the Enter key press handles that.
+            }
+        }
+    }
 
     // Stats
     private int _totalEmployees = 0;
     private int _uniqueDesignations = 0;
     private int _uniqueBloodGroups = 0;
+    
+    // Total metrics (across all employees, regardless of filter)
+    private int _systemTotalEmployees = 0;
+    private int _systemTotalDesignations = 0;
+    private int _systemTotalBloodGroups = 0;
 
     private List<string> _bloodGroups = new List<string> { "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _filterDto = new AnalyticsFilterDto();
+        await ApplyFilters();
+    }
+
+    private async Task FetchSystemTotals()
+    {
+        try
+        {
+            var response = await Http.GetAsync("/api/Analytics/totals");
+            if (response.IsSuccessStatusCode)
+            {
+                var totals = await response.Content.ReadFromJsonAsync<SystemTotals>();
+                if (totals != null)
+                {
+                    _systemTotalEmployees = totals.TotalEmployees;
+                    _systemTotalDesignations = totals.TotalDesignations;
+                    _systemTotalBloodGroups = totals.TotalBloodGroups;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching system totals: {ex.Message}");
+        }
+    }
 
     private async Task ApplyFilters()
     {
         _isLoading = true;
-        _initialLoadComplete = false;
         _errorMessage = null;
         _filteredEmployees.Clear();
-        CalculateStats();
         StateHasChanged();
 
         try
@@ -201,6 +283,26 @@
             {
                 _filteredEmployees = await response.Content.ReadFromJsonAsync<List<EmployeeDetails>>() ?? new List<EmployeeDetails>();
                 Console.WriteLine($"Analytics filter successful: Found {_filteredEmployees.Count} employees.");
+
+                bool isUnfiltered = string.IsNullOrEmpty(_filterDto.BloodGroup) && 
+                                    string.IsNullOrEmpty(_filterDto.BankName) && 
+                                    string.IsNullOrEmpty(_filterDto.College);
+                
+                if (isUnfiltered)
+                {
+                    _systemTotalEmployees = _filteredEmployees.Count;
+                    _systemTotalDesignations = _filteredEmployees
+                        .Select(e => e.Designation)
+                        .Where(d => !string.IsNullOrEmpty(d))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Count();
+                    _systemTotalBloodGroups = _filteredEmployees
+                        .Select(e => e.BloodGroup)
+                        .Where(b => !string.IsNullOrEmpty(b))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Count();
+                }
+                
                 CalculateStats();
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -212,6 +314,7 @@
                     _errorMessage = "No employees found matching the criteria.";
                 }
                 Console.WriteLine($"Analytics filter returned 404: {_errorMessage}");
+                CalculateStats();
             }
             else
             {
@@ -219,6 +322,7 @@
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _errorMessage = $"Error fetching analytics data ({response.StatusCode}): {response.ReasonPhrase}. {errorContent}";
                 Console.WriteLine($"Analytics filter error: {response.StatusCode} - {_errorMessage}");
+                CalculateStats();
             }
         }
         catch (Exception ex)
@@ -226,26 +330,46 @@
             _filteredEmployees.Clear();
             _errorMessage = $"An unexpected error occurred: {ex.Message}";
             Console.WriteLine($"Analytics filter exception: {ex}");
+            CalculateStats();
         }
         finally
         {
             _initialLoadComplete = true;
             _isLoading = false;
             StateHasChanged();
-
             await (_table?.ReloadServerData() ?? Task.CompletedTask);
         }
     }
 
-    private async Task<TableData<EmployeeDetails>> ServerReload(TableState state)
+    private async Task HandleKeyDown(KeyboardEventArgs args)
     {
-        await Task.Delay(50);
+        if (args.Key == "Enter" && _table != null)
+        {
+            Console.WriteLine($"Enter key pressed with search value: '{SearchString}'");
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleEmptySearchAsync()
+    {
+        if (_table != null)
+        {
+            Console.WriteLine("Search string is empty, reloading table.");
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+    }
+
+    private async Task<TableData<EmployeeDetails>> ServerReload(TableState state, CancellationToken token)
+    {
+        await Task.Delay(50, token);
 
         IEnumerable<EmployeeDetails> data = _filteredEmployees;
 
-        if (!string.IsNullOrWhiteSpace(_searchString))
+        if (!string.IsNullOrWhiteSpace(SearchString))
         {
-            string lowerSearch = _searchString.ToLowerInvariant();
+            string lowerSearch = SearchString.ToLowerInvariant();
             data = data.Where(e =>
                 (e.FirstName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
                 (e.LastName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
@@ -261,7 +385,7 @@
                 data = data.OrderByDirection(state.SortDirection, e => $"{e.FirstName} {e.LastName}");
                 break;
             case "designation_sort":
-                data = data.OrderByDirection(state.SortDirection, e => e.Designation);
+                data = data.OrderByDirection(state.SortDirection, e => e.Designation ?? "");
                 break;
             case "id_sort":
                  data = data.OrderByDirection(state.SortDirection, e => e.EmployeeID);
@@ -272,6 +396,22 @@
         var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
 
         return new TableData<EmployeeDetails>() { TotalItems = totalItems, Items = pagedData };
+    }
+
+    private async Task ClearFilters()
+    {
+        _filterDto = new AnalyticsFilterDto();
+        SearchString = string.Empty;
+        await ApplyFilters();
+    }
+
+    private async Task ClearSearchText()
+    {
+        SearchString = string.Empty;
+        if (_table != null)
+        {
+            await _table.ReloadServerData();
+        }
     }
 
     private void CalculateStats()
@@ -285,8 +425,16 @@
         }
 
         _totalEmployees = _filteredEmployees.Count;
-        _uniqueDesignations = _filteredEmployees.Select(e => e.Designation).Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
-        _uniqueBloodGroups = _filteredEmployees.Select(e => e.BloodGroup).Where(b => !string.IsNullOrEmpty(b)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        _uniqueDesignations = _filteredEmployees
+            .Select(e => e.Designation)
+            .Where(d => !string.IsNullOrEmpty(d))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Count();
+        _uniqueBloodGroups = _filteredEmployees
+            .Select(e => e.BloodGroup)
+            .Where(b => !string.IsNullOrEmpty(b))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Count();
     }
 
     private string GetInitials(string? name)
@@ -305,6 +453,13 @@
         public string? BankName { get; set; }
     }
 
+    public class SystemTotals
+    {
+        public int TotalEmployees { get; set; }
+        public int TotalDesignations { get; set; }
+        public int TotalBloodGroups { get; set; }
+    }
+
     public class EmployeeDetails
     {
         public string EmployeeID { get; set; } = string.Empty;
@@ -316,4 +471,3 @@
         public string? BloodGroup { get; set; }
     }
 }
-

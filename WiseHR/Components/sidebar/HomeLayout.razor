@@ -37,44 +37,53 @@
                                  AdornmentIcon="@Icons.Material.Filled.Search"
                                  Style="width: 100%; background-color: var(--secondary); border-radius: var(--border-radius-input); --mud-palette-text-primary: var(--text-primary); --mud-icon-adornment-color: var(--primary);"
                                  DebounceInterval="300"
-                                 ResetValueOnEmptyText="true"
+                                 ResetValueOnEmptyText="false"
                                  ShowProgressIndicator="true"
                                  ValueChanged="OnEmployeeSelected"
+                                 @bind-Text="_searchText"
                                  ItemTemplate="@ResultTemplate" />
 
-                <MudMenu Icon="@Icons.Material.Filled.FilterList" Color="Color.Inherit" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
-                    <MudMenuItem>
-                        <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Value="@selectedGender" ValueChanged="@(value => OnFilterChanged("gender", value))" Dense="true">
-                            <MudSelectItem Value="@("")">None</MudSelectItem>
-                            <MudSelectItem Value="@("Male")">Male</MudSelectItem>
-                            <MudSelectItem Value="@("Female")">Female</MudSelectItem>
-                            <MudSelectItem Value="@("Other")">Other</MudSelectItem>
-                        </MudSelect>
-                    </MudMenuItem>
-                    <MudMenuItem>
-                        <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Value="@selectedBloodGroup" ValueChanged="@(value => OnFilterChanged("bloodGroup", value))" Dense="true">
-                            <MudSelectItem Value="@("")">None</MudSelectItem>
-                            <MudSelectItem Value="@("A+")">A+</MudSelectItem>
-                            <MudSelectItem Value="@("A-")">A-</MudSelectItem>
-                            <MudSelectItem Value="@("B+")">B+</MudSelectItem>
-                            <MudSelectItem Value="@("B-")">B-</MudSelectItem>
-                            <MudSelectItem Value="@("AB+")">AB+</MudSelectItem>
-                            <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
-                            <MudSelectItem Value="@("O+")">O+</MudSelectItem>
-                            <MudSelectItem Value="@("O-")">O-</MudSelectItem>
-                        </MudSelect>
-                    </MudMenuItem>
-                    <MudMenuItem>
-                        <MudSelect T="string" Label="Designation" Variant="Variant.Outlined" Value="@selectedDesignation" ValueChanged="@(value => OnFilterChanged("designation", value))" Dense="true">
-                            <MudSelectItem Value="@("")">None</MudSelectItem>
-                            @foreach (var designation in designations)
-                            {
-                                <MudSelectItem Value="@designation">@designation</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudMenuItem>
-                </MudMenu>
+                <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Inherit" OnClick="ToggleFilters" Class="ml-2"/>
             </div>
+
+            @* Filter Popover - anchored to the filter icon *@
+            <MudPopover Open="@_showFilters" Fixed="true" Class="px-4 pt-4" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                 <MudPaper Elevation="3" Class="pa-4" Style="background-color: var(--secondary); min-width: 400px;">
+                    <MudText Typo="Typo.h6" GutterBottom="true" Style="color: var(--text-primary);">Filter Options</MudText>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12">
+                            <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Value="@selectedGender" ValueChanged="@(value => OnFilterChanged("gender", value))" Dense="true" Margin="Margin.Dense" Style="--mud-palette-text-primary: var(--text-primary);">
+                                <MudSelectItem Value="@("")">Any Gender</MudSelectItem>
+                                <MudSelectItem Value="@("Male")">Male</MudSelectItem>
+                                <MudSelectItem Value="@("Female")">Female</MudSelectItem>
+                                <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Value="@selectedBloodGroup" ValueChanged="@(value => OnFilterChanged("bloodGroup", value))" Dense="true" Margin="Margin.Dense" Style="--mud-palette-text-primary: var(--text-primary);">
+                                <MudSelectItem Value="@("")">Any Blood</MudSelectItem>
+                                <MudSelectItem Value="@("A+")">A+</MudSelectItem>
+                                <MudSelectItem Value="@("A-")">A-</MudSelectItem>
+                                <MudSelectItem Value="@("B+")">B+</MudSelectItem>
+                                <MudSelectItem Value="@("B-")">B-</MudSelectItem>
+                                <MudSelectItem Value="@("AB+")">AB+</MudSelectItem>
+                                <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
+                                <MudSelectItem Value="@("O+")">O+</MudSelectItem>
+                                <MudSelectItem Value="@("O-")">O-</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudSelect T="string" Label="Designation" Variant="Variant.Outlined" Value="@selectedDesignation" ValueChanged="@(value => OnFilterChanged("designation", value))" Dense="true" Margin="Margin.Dense" Style="--mud-palette-text-primary: var(--text-primary);">
+                                <MudSelectItem Value="@("")">Any Designation</MudSelectItem>
+                                @foreach (var designation in designations)
+                                {
+                                    <MudSelectItem Value="@designation">@designation</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+                 </MudPaper>
+            </MudPopover>
 
             @* Display error message if search fails *@
             @if (!string.IsNullOrEmpty(_searchError))
@@ -133,10 +142,12 @@
     private string? userInitials;
     private string? _searchError = null;
     private string _lastSearchQuery = string.Empty;
+    private string? _searchText = null;
     private string? selectedGender = null;
     private string? selectedBloodGroup = null;
     private string? selectedDesignation = null;
     private List<string> designations = new();
+    private bool _showFilters = false; // State for filter panel visibility
 
     private RenderFragment<EmployeeSearchResult> ResultTemplate => (context) => __builder =>
     {
@@ -229,11 +240,12 @@
 
     private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
     {
-        _lastSearchQuery = query;
-        Console.WriteLine($"Autocomplete SearchFunc triggered with query: '{query}'");
+        string currentQuery = _searchText ?? string.Empty;
+        _lastSearchQuery = currentQuery;
+        Console.WriteLine($"Autocomplete SearchFunc triggered. Bound text: '{currentQuery}', Param query: '{query}'");
         _searchError = null;
 
-        if (string.IsNullOrWhiteSpace(query) &&
+        if (string.IsNullOrWhiteSpace(currentQuery) &&
             string.IsNullOrWhiteSpace(selectedGender) &&
             string.IsNullOrWhiteSpace(selectedBloodGroup) &&
             string.IsNullOrWhiteSpace(selectedDesignation))
@@ -242,13 +254,11 @@
             return Enumerable.Empty<EmployeeSearchResult>();
         }
 
-        StateHasChanged();
-
         try
         {
             var queryParams = new List<string>();
-            if (!string.IsNullOrWhiteSpace(query))
-                queryParams.Add($"query={System.Net.WebUtility.UrlEncode(query)}");
+            if (!string.IsNullOrWhiteSpace(currentQuery))
+                queryParams.Add($"query={System.Net.WebUtility.UrlEncode(currentQuery)}");
             if (!string.IsNullOrWhiteSpace(selectedGender))
                 queryParams.Add($"gender={System.Net.WebUtility.UrlEncode(selectedGender)}");
             if (!string.IsNullOrWhiteSpace(selectedBloodGroup))
@@ -277,7 +287,7 @@
                     // Add a special item to link to the analytics page
                     results.Add(new EmployeeSearchResult 
                     {
-                        Name = $"See analytics for '{query}'...", // Use query in the text
+                        Name = $"See analytics for '{currentQuery}'...", // Use currentQuery in the text
                         ProfileUrl = "/analytics", // Special URL to identify this item
                         // Other fields can be null/empty
                     });
@@ -309,7 +319,6 @@
         }
         finally
         {
-            StateHasChanged();
             Console.WriteLine("Autocomplete SearchFunc finished.");
         }
 
@@ -321,7 +330,11 @@
         if (selectedEmployee != null)
         {
             Console.WriteLine($"OnEmployeeSelected triggered for: {selectedEmployee.Name} ({selectedEmployee.ProfileUrl})");
+
             await NavigateToEmployeeInNewTab(selectedEmployee.ProfileUrl);
+
+            _searchText = null;
+            StateHasChanged();
         }
         else
         {
@@ -350,6 +363,9 @@
         {
             Console.WriteLine("NavigateToEmployeeInNewTab called with empty or null URL.");
         }
+
+        await SearchEmployeesAutocomplete(_searchText ?? string.Empty, CancellationToken.None);
+        StateHasChanged();
     }
 
     private async Task OnFilterChanged(string filterType, string value)
@@ -364,8 +380,12 @@
         Console.WriteLine($"Filter changed: {filterType} = {value}");
         StateHasChanged();
 
-        // Trigger search with current query and filters
-        await SearchEmployeesAutocomplete(_lastSearchQuery, CancellationToken.None);
+        await SearchEmployeesAutocomplete(_searchText ?? string.Empty, CancellationToken.None);
+    }
+
+    private void ToggleFilters()
+    {
+        _showFilters = !_showFilters;
     }
 
     private async Task LoadUserDetails()
