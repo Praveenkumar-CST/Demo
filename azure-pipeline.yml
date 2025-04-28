@@ -81,43 +81,42 @@ jobs:
       publishLocation: 'Container'
 
 # Deploy to Blob Storage and Purging the Cache for Azure Front Door
-  - ${{ if eq(variables['Build.SourceBranchName'], 'yaml-sa') }}:
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: "Microsoft Azure Sponsorship(9835c61d-6a4a-454e-8d09-1b383899f7ab)"
-          scriptType: "bash"
-          scriptLocation: "inlineScript"
-          inlineScript: |
-            sourceFilePath="$(Build.ArtifactStagingDirectory)/WiseHR/wwwroot/*"
-            azcopy --version
+ 
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: "Microsoft Azure Sponsorship(9835c61d-6a4a-454e-8d09-1b383899f7ab)"
+      scriptType: "bash"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        sourceFilePath="$(Build.ArtifactStagingDirectory)/WiseHR/wwwroot/*"
+        azcopy --version
 
-            echo "Starting parallel execution with AzCopy for blob storage operations..."
-            echo "Initiating deletion of old blobs from \$web container..."
+        echo "Starting parallel execution with AzCopy for blob storage operations..."
+        echo "Initiating deletion of old blobs from \$web container..."
 
-            # Delete old blobs in parallel
-            azcopy rm "https://wisehrmain.blob.core.windows.net/\$web?$(STORAGE_ACCOUNT_MAIN_SAS)" --recursive=true  
+        # Delete old blobs in parallel
+        azcopy rm "https://wisehrmain.blob.core.windows.net/\$web?$(STORAGE_ACCOUNT_MAIN_SAS)" --recursive=true  
 
-            echo "Starting upload of new blobs from $sourceFilePath..."
+        echo "Starting upload of new blobs from $sourceFilePath..."
 
-            # Upload new blobs in parallel
-            azcopy copy "$sourceFilePath" "https://wisehrmain.blob.core.windows.net/\$web?$(STORAGE_ACCOUNT_MAIN_SAS)" --recursive --overwrite=true
+        # Upload new blobs in parallel
+        azcopy copy "$sourceFilePath" "https://wisehrmain.blob.core.windows.net/\$web?$(STORAGE_ACCOUNT_MAIN_SAS)" --recursive --overwrite=true
 
-            echo "Parallel deletion and upload of blobs is now Done"
+        echo "Parallel deletion and upload of blobs is now Done"
 
-        displayName: "Delete and Upload blobs to Azure Blob storage"
-      
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: "Microsoft Azure Sponsorship(9835c61d-6a4a-454e-8d09-1b383899f7ab)"
-          scriptType: "bash"
-          scriptLocation: "inlineScript"
-          inlineScript: |
-            az afd endpoint purge \
-              --resource-group wise-migrate-rg \
-              --profile-name WiseMigrateFrontdoor \
-              --content-paths '/*' \
-              --endpoint-name wisehrmain \
-              --domains wisehr.wisework.in wisehrmain-h0exgzg0eze9e9bj.z02.azurefd.net
-        displayName: "Azure Front Door Cache invalidation"
+    displayName: "Delete and Upload blobs to Azure Blob storage"
   
-  
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: "Microsoft Azure Sponsorship(9835c61d-6a4a-454e-8d09-1b383899f7ab)"
+      scriptType: "bash"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        az afd endpoint purge \
+          --resource-group wise-migrate-rg \
+          --profile-name WiseMigrateFrontdoor \
+          --content-paths '/*' \
+          --endpoint-name wisehrmain \
+          --domains wisehr.wisework.in wisehrmain-h0exgzg0eze9e9bj.z02.azurefd.net
+    displayName: "Azure Front Door Cache invalidation"
+
