@@ -10,7 +10,7 @@ trigger:
 
 variables:
   buildConfiguration: 'Release'
-  project: 'WiseHR/WiseHR.csproj'
+  project: 'WiseHR.csproj'
   buildPlatform: 'Any CPU'
   vmImage: ubuntu-latest
   
