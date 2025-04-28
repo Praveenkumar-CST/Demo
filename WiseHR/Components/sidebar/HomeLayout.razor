@@ -291,10 +291,12 @@
     private string? userInitials;
     private string? _searchError = null;
     private string _lastSearchQuery = string.Empty;
+    private string? _searchText = null;
     private string? selectedGender = null;
     private string? selectedBloodGroup = null;
     private string? selectedDesignation = null;
     private List<string> designations = new();
+    private bool _showFilters = false; // State for filter panel visibility
 
     private RenderFragment<EmployeeSearchResult> ResultTemplate => (context) => __builder =>
     {
@@ -387,11 +389,12 @@
 
     private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
     {
-        _lastSearchQuery = query;
-        Console.WriteLine($"Autocomplete SearchFunc triggered with query: '{query}'");
+        string currentQuery = _searchText ?? string.Empty;
+        _lastSearchQuery = currentQuery;
+        Console.WriteLine($"Autocomplete SearchFunc triggered. Bound text: '{currentQuery}', Param query: '{query}'");
         _searchError = null;
 
-        if (string.IsNullOrWhiteSpace(query) &&
+        if (string.IsNullOrWhiteSpace(currentQuery) &&
             string.IsNullOrWhiteSpace(selectedGender) &&
             string.IsNullOrWhiteSpace(selectedBloodGroup) &&
             string.IsNullOrWhiteSpace(selectedDesignation))
@@ -400,13 +403,11 @@
             return Enumerable.Empty<EmployeeSearchResult>();
         }
 
-        StateHasChanged();
-
         try
         {
             var queryParams = new List<string>();
-            if (!string.IsNullOrWhiteSpace(query))
-                queryParams.Add($"query={System.Net.WebUtility.UrlEncode(query)}");
+            if (!string.IsNullOrWhiteSpace(currentQuery))
+                queryParams.Add($"query={System.Net.WebUtility.UrlEncode(currentQuery)}");
             if (!string.IsNullOrWhiteSpace(selectedGender))
                 queryParams.Add($"gender={System.Net.WebUtility.UrlEncode(selectedGender)}");
             if (!string.IsNullOrWhiteSpace(selectedBloodGroup))
@@ -489,7 +490,6 @@
         }
         finally
         {
-            StateHasChanged();
             Console.WriteLine("Autocomplete SearchFunc finished.");
         }
 
@@ -501,7 +501,11 @@
         if (selectedEmployee != null)
         {
             Console.WriteLine($"OnEmployeeSelected triggered for: {selectedEmployee.Name} ({selectedEmployee.ProfileUrl})");
+
             await NavigateToEmployeeInNewTab(selectedEmployee.ProfileUrl);
+
+            _searchText = null;
+            StateHasChanged();
         }
         else
         {
