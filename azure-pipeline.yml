@@ -59,15 +59,15 @@ jobs:
     inputs:
       command: 'build'
       arguments: '--configuration $(buildConfiguration)'
-      projects: '$(project)'
+      projects: 'WiseHR.csproj'
     displayName: 'Build WiseMigrateApi'
 
 # Publish WiseHR-Frontend
   - task: DotNetCoreCLI@2
     inputs:
       command: 'publish'
-      publishWebProjects: true
-      projects: 'WiseHR-Frontend/WiseHR.csproj'
+      publishWebProjects: false
+      projects: 'WiseHR.csproj'
       arguments: '--no-restore --configuration Release --output $(Build.ArtifactStagingDirectory)'
       zipAfterPublish: false
     displayName: 'Publish  WiseMigrateBackendApi'
