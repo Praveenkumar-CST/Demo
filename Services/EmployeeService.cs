@@ -11,11 +11,7 @@
     {
         private readonly HttpClient _httpClient;
 
-        public EmployeeService(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
-
+        
             public async Task<bool> RegisterEmployee(EmployeeDetails employee)
             {
                 // Calling the backend API to register employee details
