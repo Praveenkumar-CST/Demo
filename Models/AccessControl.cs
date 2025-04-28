@@ -15,7 +15,7 @@
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*") , // You can match the pattern here
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),  // You can match the pattern here
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
-                   
+                     ("Holiday Calendar", "/calendar"),//calendar
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*") , 
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
@@ -35,7 +35,7 @@
                     ("Employee List", "/home/employeeList"),
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
-                    ("Holiday Calendar", "/calendar"),//calendar
+                     ("Holiday Calendar", "/calendar"),
                     ("Add Employees", "/home/employees"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"), 
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),

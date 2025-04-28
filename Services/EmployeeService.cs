@@ -67,7 +67,7 @@
             {
                 try
                 {
-                    var response = await _httpClient.GetAsync("EmployeeDetails/GetAllEmployees");
+                    var response = await _httpClient.GetAsync($"EmployeeDetails/GetAllEmployees");
                     if (response.IsSuccessStatusCode)
                     {
                         return await response.Content.ReadFromJsonAsync<List<EmployeeDetails>>();
@@ -89,7 +89,7 @@
             // Update Employee Details
             public async Task<bool> UpdateEmployee(EmployeeDetails employee)
             {
-                var response = await _httpClient.PostAsJsonAsync("EmployeeDetails/UpdateEmployeeDetails", employee);
+                var response = await _httpClient.PostAsJsonAsync($"EmployeeDetails/UpdateEmployeeDetails", employee);
                 return await response.Content.ReadFromJsonAsync<bool>();
             }
 
