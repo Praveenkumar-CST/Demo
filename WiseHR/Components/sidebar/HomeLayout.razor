@@ -126,62 +126,101 @@
     // Define the ItemTemplate RenderFragment here inside the main code block
     private RenderFragment<EmployeeSearchResult> ResultTemplate => (context) => __builder =>
     {
-        __builder.OpenComponent<MudGrid>(0);
-        __builder.AddAttribute(1, "Spacing", 2);
-        __builder.AddAttribute(2, "Justify", Justify.FlexStart);
-        __builder.AddAttribute(3, "Class", "py-2 px-1");
-        __builder.AddAttribute(4, "ChildContent", (RenderFragment)((__builder2) => {
-            __builder2.OpenComponent<MudItem>(5);
-            __builder2.AddAttribute(6, "xs", 2);
-            __builder2.AddAttribute(7, "Class", "d-flex align-center justify-center");
-            __builder2.AddAttribute(8, "ChildContent", (RenderFragment)((__builder3) => {
-                if (!string.IsNullOrEmpty(context.ProfilePicture))
-                {
+        // Check if this is the special analytics link
+        if (context.ProfileUrl == "/analytics")
+        {
+            __builder.OpenComponent<MudGrid>(0);
+            __builder.AddAttribute(1, "Spacing", 2);
+            __builder.AddAttribute(2, "Justify", Justify.FlexStart);
+            __builder.AddAttribute(3, "Class", "py-2 px-1");
+            __builder.AddAttribute(4, "ChildContent", (RenderFragment)((__builder2) => {
+                __builder2.OpenComponent<MudItem>(5);
+                __builder2.AddAttribute(6, "xs", 2);
+                __builder2.AddAttribute(7, "Class", "d-flex align-center justify-center");
+                __builder2.AddAttribute(8, "ChildContent", (RenderFragment)((__builder3) => {
                     __builder3.OpenComponent<MudAvatar>(9);
-                    // Use simple string interpolation for the Image attribute
-                    __builder3.AddAttribute(10, "Image", $"data:image/png;base64,{context.ProfilePicture}"); 
-                    __builder3.AddAttribute(11, "Size", Size.Medium);
-                    __builder3.CloseComponent();
-                }
-                else
-                {
-                    __builder3.OpenComponent<MudAvatar>(12);
-                    __builder3.AddAttribute(13, "Color", Color.Primary);
-                    __builder3.AddAttribute(14, "Size", Size.Medium);
-                    __builder3.AddAttribute(15, "ChildContent", (RenderFragment)((__builder4) => {
-                        __builder4.AddContent(16, GetInitials(context.Name));
+                    __builder3.AddAttribute(10, "Color", Color.Primary);
+                    __builder3.AddAttribute(11, "ChildContent", (RenderFragment)((__builder4) => {
+                         __builder4.OpenComponent<MudIcon>(12);
+                         __builder4.AddAttribute(13, "Icon", Icons.Material.Filled.Analytics);
+                         __builder4.CloseComponent(); // MudIcon
                     }));
-                    __builder3.CloseComponent();
-                }
+                    __builder3.CloseComponent(); // MudAvatar
+                 }));
+                __builder2.CloseComponent(); // MudItem xs=2
+                __builder2.OpenComponent<MudItem>(14);
+                __builder2.AddAttribute(15, "xs", 10);
+                 __builder2.AddAttribute(16, "Class", "d-flex align-center"); // Align text vertically
+                __builder2.AddAttribute(17, "ChildContent", (RenderFragment)((__builder3) => {
+                    __builder3.OpenComponent<MudText>(18);
+                    __builder3.AddAttribute(19, "Typo", Typo.body1);
+                    __builder3.AddAttribute(20, "ChildContent", (RenderFragment)((__builder4) => {
+                        __builder4.AddContent(21, (MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery));
+                    }));
+                    __builder3.CloseComponent(); // MudText body1
+                }));
+                __builder2.CloseComponent(); // MudItem xs=10
             }));
-            __builder2.CloseComponent(); // MudItem xs=2
-            __builder2.OpenComponent<MudItem>(17);
-            __builder2.AddAttribute(18, "xs", 10);
-            __builder2.AddAttribute(19, "ChildContent", (RenderFragment)((__builder3) => {
-                __builder3.OpenComponent<MudText>(20);
-                __builder3.AddAttribute(21, "Typo", Typo.body1);
-                __builder3.AddAttribute(22, "ChildContent", (RenderFragment)((__builder4) => {
-                    __builder4.AddContent(23, (MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery));
+            __builder.CloseComponent(); // MudGrid
+        }
+        else // Render normal employee result
+        {
+            __builder.OpenComponent<MudGrid>(22);
+            __builder.AddAttribute(23, "Spacing", 2);
+            __builder.AddAttribute(24, "Justify", Justify.FlexStart);
+            __builder.AddAttribute(25, "Class", "py-2 px-1");
+            __builder.AddAttribute(26, "ChildContent", (RenderFragment)((__builder2) => {
+                __builder2.OpenComponent<MudItem>(27);
+                __builder2.AddAttribute(28, "xs", 2);
+                __builder2.AddAttribute(29, "Class", "d-flex align-center justify-center");
+                __builder2.AddAttribute(30, "ChildContent", (RenderFragment)((__builder3) => {
+                    if (!string.IsNullOrEmpty(context.ProfilePicture))
+                    {
+                        __builder3.OpenComponent<MudAvatar>(31);
+                        __builder3.AddAttribute(32, "Image", $"data:image/png;base64,{context.ProfilePicture}");
+                        __builder3.AddAttribute(33, "Size", Size.Medium);
+                        __builder3.CloseComponent();
+                    }
+                    else
+                    {
+                        __builder3.OpenComponent<MudAvatar>(34);
+                        __builder3.AddAttribute(35, "Color", Color.Primary);
+                        __builder3.AddAttribute(36, "Size", Size.Medium);
+                        __builder3.AddAttribute(37, "ChildContent", (RenderFragment)((__builder4) => {
+                            __builder4.AddContent(38, GetInitials(context.Name));
+                        }));
+                        __builder3.CloseComponent();
+                    }
                 }));
-                __builder3.CloseComponent(); // MudText body1
-                __builder3.OpenComponent<MudText>(24);
-                __builder3.AddAttribute(25, "Typo", Typo.body2);
-                __builder3.AddAttribute(26, "Color", Color.Dark);
-                __builder3.AddAttribute(27, "ChildContent", (RenderFragment)((__builder4) => {
-                    __builder4.AddContent(28, (MarkupString)GetHighlightedHtml(context.Designation, _lastSearchQuery));
+                __builder2.CloseComponent(); // MudItem xs=2
+                __builder2.OpenComponent<MudItem>(39);
+                __builder2.AddAttribute(40, "xs", 10);
+                __builder2.AddAttribute(41, "ChildContent", (RenderFragment)((__builder3) => {
+                    __builder3.OpenComponent<MudText>(42);
+                    __builder3.AddAttribute(43, "Typo", Typo.body1);
+                    __builder3.AddAttribute(44, "ChildContent", (RenderFragment)((__builder4) => {
+                        __builder4.AddContent(45, (MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery));
+                    }));
+                    __builder3.CloseComponent(); // MudText body1
+                    __builder3.OpenComponent<MudText>(46);
+                    __builder3.AddAttribute(47, "Typo", Typo.body2);
+                    __builder3.AddAttribute(48, "Color", Color.Dark);
+                    __builder3.AddAttribute(49, "ChildContent", (RenderFragment)((__builder4) => {
+                        __builder4.AddContent(50, (MarkupString)GetHighlightedHtml(context.Designation, _lastSearchQuery));
+                    }));
+                    __builder3.CloseComponent(); // MudText body2
+                    __builder3.OpenComponent<MudText>(51);
+                    __builder3.AddAttribute(52, "Typo", Typo.caption);
+                    __builder3.AddAttribute(53, "Color", Color.Dark);
+                    __builder3.AddAttribute(54, "ChildContent", (RenderFragment)((__builder4) => {
+                        __builder4.AddContent(55, (MarkupString)GetHighlightedHtml(context.Email, _lastSearchQuery));
+                    }));
+                    __builder3.CloseComponent(); // MudText caption
                 }));
-                __builder3.CloseComponent(); // MudText body2
-                __builder3.OpenComponent<MudText>(29);
-                __builder3.AddAttribute(30, "Typo", Typo.caption);
-                __builder3.AddAttribute(31, "Color", Color.Dark);
-                __builder3.AddAttribute(32, "ChildContent", (RenderFragment)((__builder4) => {
-                    __builder4.AddContent(33, (MarkupString)GetHighlightedHtml(context.Email, _lastSearchQuery));
-                }));
-                __builder3.CloseComponent(); // MudText caption
+                __builder2.CloseComponent(); // MudItem xs=10
             }));
-            __builder2.CloseComponent(); // MudItem xs=10
-        }));
-        __builder.CloseComponent(); // MudGrid
+            __builder.CloseComponent(); // MudGrid
+        }
     };
 
     [Parameter]
@@ -222,6 +261,20 @@
                 if(results.Count > 5) { Console.WriteLine("..."); }
 
                 _searchError = null;
+
+                // Check if exactly 10 results were returned (backend limit)
+                if (results.Count == 10)
+                {
+                    Console.WriteLine("Max results hit. Adding Analytics link.");
+                    // Add a special item to link to the analytics page
+                    results.Add(new EmployeeSearchResult 
+                    {
+                        Name = $"See analytics for '{query}'...", // Use query in the text
+                        ProfileUrl = "/analytics", // Special URL to identify this item
+                        // Other fields can be null/empty
+                    });
+                }
+
                 return results;
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
