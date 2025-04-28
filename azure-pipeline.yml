@@ -67,7 +67,7 @@ jobs:
     inputs:
       command: 'publish'
       publishWebProjects: true
-      projects: '$(project)'
+      projects: 'WiseHR-Frontend/WiseHR.csproj'
       arguments: '--no-restore --configuration Release --output $(Build.ArtifactStagingDirectory)'
       zipAfterPublish: false
     displayName: 'Publish  WiseMigrateBackendApi'
