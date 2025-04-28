@@ -1,12 +1,12 @@
 pr:
   branches:
     include:
-      - yaml-sa
+      - dev-deployment-25/04
 
 trigger:
   branches:
     include:
-      - yaml-sa
+      - dev-deployment-25/04
 
 variables:
   buildConfiguration: 'Release'
