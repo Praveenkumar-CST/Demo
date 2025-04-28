@@ -398,7 +398,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        UserRole = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "role");
+        // UserRole = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "role");
+        UserRole = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "userRole");
         try
         {
             isLoading = true;

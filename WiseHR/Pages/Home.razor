@@ -257,6 +257,7 @@
             var (token, error) = await AuthService.Login(Email, Password);
             await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
 
+
             await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
             Console.WriteLine($"Email to store: {Email}");
             if (!string.IsNullOrEmpty(token))

@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @using WiseHR.Components.sidebar
-@using WiseHR.Models 
+@using WiseHR.Models
 @using System.Net.Http.Json
 @using System.Text.Json
 @using System.Text.RegularExpressions
@@ -8,7 +8,7 @@
 @inject HttpClient Http
 @inject EmployeeService EmployeeService
 @inject NavigationManager NavigationManager
-  
+
 <MudThemeProvider />
 <MudLayout>
 
@@ -27,19 +27,54 @@
                       Style="margin-left: 60px; color:white;" />
         </MudItem>
 
-        <MudItem xs="8" Class="d-flex flex-column justify-center align-center"> 
-            <MudAutocomplete T="EmployeeSearchResult"
-                             SearchFunc="@SearchEmployeesAutocomplete"
-                             Placeholder="Search employees..."
-                             Variant="Variant.Outlined"
-                             Adornment="Adornment.Start"
-                             AdornmentIcon="@Icons.Material.Filled.Search"
-                             Style="width: 50%; background-color: var(--secondary); border-radius: var(--border-radius-input); --mud-palette-text-primary: var(--text-primary); --mud-icon-adornment-color: var(--primary);"
-                             DebounceInterval="300"
-                             ResetValueOnEmptyText="true"
-                             ShowProgressIndicator="true"
-                             ValueChanged="OnEmployeeSelected"
-                             ItemTemplate="@ResultTemplate" />
+        <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
+            <div class="d-flex align-center" style="width: 50%;">
+                <MudAutocomplete T="EmployeeSearchResult"
+                                 SearchFunc="@SearchEmployeesAutocomplete"
+                                 Placeholder="Search employees..."
+                                 Variant="Variant.Outlined"
+                                 Adornment="Adornment.Start"
+                                 AdornmentIcon="@Icons.Material.Filled.Search"
+                                 Style="width: 100%; background-color: var(--secondary); border-radius: var(--border-radius-input); --mud-palette-text-primary: var(--text-primary); --mud-icon-adornment-color: var(--primary);"
+                                 DebounceInterval="300"
+                                 ResetValueOnEmptyText="true"
+                                 ShowProgressIndicator="true"
+                                 ValueChanged="OnEmployeeSelected"
+                                 ItemTemplate="@ResultTemplate" />
+
+                <MudMenu Icon="@Icons.Material.Filled.FilterList" Color="Color.Inherit" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+                    <MudMenuItem>
+                        <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Value="@selectedGender" ValueChanged="@(value => OnFilterChanged("gender", value))" Dense="true">
+                            <MudSelectItem Value="@("")">None</MudSelectItem>
+                            <MudSelectItem Value="@("Male")">Male</MudSelectItem>
+                            <MudSelectItem Value="@("Female")">Female</MudSelectItem>
+                            <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                        </MudSelect>
+                    </MudMenuItem>
+                    <MudMenuItem>
+                        <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Value="@selectedBloodGroup" ValueChanged="@(value => OnFilterChanged("bloodGroup", value))" Dense="true">
+                            <MudSelectItem Value="@("")">None</MudSelectItem>
+                            <MudSelectItem Value="@("A+")">A+</MudSelectItem>
+                            <MudSelectItem Value="@("A-")">A-</MudSelectItem>
+                            <MudSelectItem Value="@("B+")">B+</MudSelectItem>
+                            <MudSelectItem Value="@("B-")">B-</MudSelectItem>
+                            <MudSelectItem Value="@("AB+")">AB+</MudSelectItem>
+                            <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
+                            <MudSelectItem Value="@("O+")">O+</MudSelectItem>
+                            <MudSelectItem Value="@("O-")">O-</MudSelectItem>
+                        </MudSelect>
+                    </MudMenuItem>
+                    <MudMenuItem>
+                        <MudSelect T="string" Label="Designation" Variant="Variant.Outlined" Value="@selectedDesignation" ValueChanged="@(value => OnFilterChanged("designation", value))" Dense="true">
+                            <MudSelectItem Value="@("")">None</MudSelectItem>
+                            @foreach (var designation in designations)
+                            {
+                                <MudSelectItem Value="@designation">@designation</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudMenuItem>
+                </MudMenu>
+            </div>
 
             @* Display error message if search fails *@
             @if (!string.IsNullOrEmpty(_searchError))
@@ -90,30 +125,6 @@
 
 </MudLayout>
 
-@* Define the ItemTemplate for Autocomplete results - MOVED TO MAIN @code block below *@
-@*@code {
-    RenderFragment<EmployeeSearchResult> ResultTemplate = (context) => __builder =>
-    {
-        <MudGrid Spacing="2" Justify="Justify.FlexStart" Class="py-2 px-1">
-            <MudItem xs="2" Class="d-flex align-center justify-center">
-                @if (!string.IsNullOrEmpty(context.ProfilePicture))
-                {
-                    <MudAvatar Image=$@"data:image/png;base64,{context.ProfilePicture}" Size="Size.Medium" />
-                }
-                else
-                {
-                    <MudAvatar Color="Color.Primary" Size="Size.Medium">@GetInitials(context.Name)</MudAvatar>
-                }
-            </MudItem>
-            <MudItem xs="10">
-                <MudText Typo="Typo.body1">@((MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery))</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Dark">@((MarkupString)GetHighlightedHtml(context.Designation, _lastSearchQuery))</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Dark">@((MarkupString)GetHighlightedHtml(context.Email, _lastSearchQuery))</MudText>
-            </MudItem>
-        </MudGrid>
-    };
-}*@
-
 @code {
     private bool drawerOpen = true;
     private HomeSidebar? sidebar;
@@ -121,106 +132,76 @@
     private string? userName;
     private string? userInitials;
     private string? _searchError = null;
-    private string _lastSearchQuery = string.Empty; // Store last query for highlighting
+    private string _lastSearchQuery = string.Empty;
+    private string? selectedGender = null;
+    private string? selectedBloodGroup = null;
+    private string? selectedDesignation = null;
+    private List<string> designations = new();
 
-    // Define the ItemTemplate RenderFragment here inside the main code block
     private RenderFragment<EmployeeSearchResult> ResultTemplate => (context) => __builder =>
     {
-        // Check if this is the special analytics link
-        if (context.ProfileUrl == "/analytics")
+        __builder.OpenComponent<MudGrid>(0);
+        __builder.AddAttribute(1, "Spacing", 2);
+        __builder.AddAttribute(2, "Justify", Justify.FlexStart);
+        __builder.AddAttribute(3, "Class", "py-2 px-1");
+        __builder.AddAttribute(4, "ChildContent", (RenderFragment)((__builder2) =>
         {
-            __builder.OpenComponent<MudGrid>(0);
-            __builder.AddAttribute(1, "Spacing", 2);
-            __builder.AddAttribute(2, "Justify", Justify.FlexStart);
-            __builder.AddAttribute(3, "Class", "py-2 px-1");
-            __builder.AddAttribute(4, "ChildContent", (RenderFragment)((__builder2) => {
-                __builder2.OpenComponent<MudItem>(5);
-                __builder2.AddAttribute(6, "xs", 2);
-                __builder2.AddAttribute(7, "Class", "d-flex align-center justify-center");
-                __builder2.AddAttribute(8, "ChildContent", (RenderFragment)((__builder3) => {
+            __builder2.OpenComponent<MudItem>(5);
+            __builder2.AddAttribute(6, "xs", 2);
+            __builder2.AddAttribute(7, "Class", "d-flex align-center justify-center");
+            __builder2.AddAttribute(8, "ChildContent", (RenderFragment)((__builder3) =>
+            {
+                if (!string.IsNullOrEmpty(context.ProfilePicture))
+                {
                     __builder3.OpenComponent<MudAvatar>(9);
-                    __builder3.AddAttribute(10, "Color", Color.Primary);
-                    __builder3.AddAttribute(11, "ChildContent", (RenderFragment)((__builder4) => {
-                         __builder4.OpenComponent<MudIcon>(12);
-                         __builder4.AddAttribute(13, "Icon", Icons.Material.Filled.Analytics);
-                         __builder4.CloseComponent(); // MudIcon
-                    }));
-                    __builder3.CloseComponent(); // MudAvatar
-                 }));
-                __builder2.CloseComponent(); // MudItem xs=2
-                __builder2.OpenComponent<MudItem>(14);
-                __builder2.AddAttribute(15, "xs", 10);
-                 __builder2.AddAttribute(16, "Class", "d-flex align-center"); // Align text vertically
-                __builder2.AddAttribute(17, "ChildContent", (RenderFragment)((__builder3) => {
-                    __builder3.OpenComponent<MudText>(18);
-                    __builder3.AddAttribute(19, "Typo", Typo.body1);
-                    __builder3.AddAttribute(20, "ChildContent", (RenderFragment)((__builder4) => {
-                        __builder4.AddContent(21, (MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery));
-                    }));
-                    __builder3.CloseComponent(); // MudText body1
-                }));
-                __builder2.CloseComponent(); // MudItem xs=10
-            }));
-            __builder.CloseComponent(); // MudGrid
-        }
-        else // Render normal employee result
-        {
-            __builder.OpenComponent<MudGrid>(22);
-            __builder.AddAttribute(23, "Spacing", 2);
-            __builder.AddAttribute(24, "Justify", Justify.FlexStart);
-            __builder.AddAttribute(25, "Class", "py-2 px-1");
-            __builder.AddAttribute(26, "ChildContent", (RenderFragment)((__builder2) => {
-                __builder2.OpenComponent<MudItem>(27);
-                __builder2.AddAttribute(28, "xs", 2);
-                __builder2.AddAttribute(29, "Class", "d-flex align-center justify-center");
-                __builder2.AddAttribute(30, "ChildContent", (RenderFragment)((__builder3) => {
-                    if (!string.IsNullOrEmpty(context.ProfilePicture))
+                    __builder3.AddAttribute(10, "Image", $"data:image/png;base64,{context.ProfilePicture}");
+                    __builder3.AddAttribute(11, "Size", Size.Medium);
+                    __builder3.CloseComponent();
+                }
+                else
+                {
+                    __builder3.OpenComponent<MudAvatar>(12);
+                    __builder3.AddAttribute(13, "Color", Color.Primary);
+                    __builder3.AddAttribute(14, "Size", Size.Medium);
+                    __builder3.AddAttribute(15, "ChildContent", (RenderFragment)((__builder4) =>
                     {
-                        __builder3.OpenComponent<MudAvatar>(31);
-                        __builder3.AddAttribute(32, "Image", $"data:image/png;base64,{context.ProfilePicture}");
-                        __builder3.AddAttribute(33, "Size", Size.Medium);
-                        __builder3.CloseComponent();
-                    }
-                    else
-                    {
-                        __builder3.OpenComponent<MudAvatar>(34);
-                        __builder3.AddAttribute(35, "Color", Color.Primary);
-                        __builder3.AddAttribute(36, "Size", Size.Medium);
-                        __builder3.AddAttribute(37, "ChildContent", (RenderFragment)((__builder4) => {
-                            __builder4.AddContent(38, GetInitials(context.Name));
-                        }));
-                        __builder3.CloseComponent();
-                    }
-                }));
-                __builder2.CloseComponent(); // MudItem xs=2
-                __builder2.OpenComponent<MudItem>(39);
-                __builder2.AddAttribute(40, "xs", 10);
-                __builder2.AddAttribute(41, "ChildContent", (RenderFragment)((__builder3) => {
-                    __builder3.OpenComponent<MudText>(42);
-                    __builder3.AddAttribute(43, "Typo", Typo.body1);
-                    __builder3.AddAttribute(44, "ChildContent", (RenderFragment)((__builder4) => {
-                        __builder4.AddContent(45, (MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery));
+                        __builder4.AddContent(16, GetInitials(context.Name));
                     }));
-                    __builder3.CloseComponent(); // MudText body1
-                    __builder3.OpenComponent<MudText>(46);
-                    __builder3.AddAttribute(47, "Typo", Typo.body2);
-                    __builder3.AddAttribute(48, "Color", Color.Dark);
-                    __builder3.AddAttribute(49, "ChildContent", (RenderFragment)((__builder4) => {
-                        __builder4.AddContent(50, (MarkupString)GetHighlightedHtml(context.Designation, _lastSearchQuery));
-                    }));
-                    __builder3.CloseComponent(); // MudText body2
-                    __builder3.OpenComponent<MudText>(51);
-                    __builder3.AddAttribute(52, "Typo", Typo.caption);
-                    __builder3.AddAttribute(53, "Color", Color.Dark);
-                    __builder3.AddAttribute(54, "ChildContent", (RenderFragment)((__builder4) => {
-                        __builder4.AddContent(55, (MarkupString)GetHighlightedHtml(context.Email, _lastSearchQuery));
-                    }));
-                    __builder3.CloseComponent(); // MudText caption
-                }));
-                __builder2.CloseComponent(); // MudItem xs=10
+                    __builder3.CloseComponent();
+                }
             }));
-            __builder.CloseComponent(); // MudGrid
-        }
+            __builder2.CloseComponent();
+            __builder2.OpenComponent<MudItem>(17);
+            __builder2.AddAttribute(18, "xs", 10);
+            __builder2.AddAttribute(19, "ChildContent", (RenderFragment)((__builder3) =>
+            {
+                __builder3.OpenComponent<MudText>(20);
+                __builder3.AddAttribute(21, "Typo", Typo.body1);
+                __builder3.AddAttribute(22, "ChildContent", (RenderFragment)((__builder4) =>
+                {
+                    __builder4.AddContent(23, (MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery));
+                }));
+                __builder3.CloseComponent();
+                __builder3.OpenComponent<MudText>(24);
+                __builder3.AddAttribute(25, "Typo", Typo.body2);
+                __builder3.AddAttribute(26, "Color", Color.Dark);
+                __builder3.AddAttribute(27, "ChildContent", (RenderFragment)((__builder4) =>
+                {
+                    __builder4.AddContent(28, (MarkupString)GetHighlightedHtml(context.Designation, _lastSearchQuery));
+                }));
+                __builder3.CloseComponent();
+                __builder3.OpenComponent<MudText>(29);
+                __builder3.AddAttribute(30, "Typo", Typo.caption);
+                __builder3.AddAttribute(31, "Color", Color.Dark);
+                __builder3.AddAttribute(32, "ChildContent", (RenderFragment)((__builder4) =>
+                {
+                    __builder4.AddContent(33, (MarkupString)GetHighlightedHtml(context.Email, _lastSearchQuery));
+                }));
+                __builder3.CloseComponent();
+            }));
+             __builder2.CloseComponent();
+        }));
+        __builder.CloseComponent();
     };
 
     [Parameter]
@@ -229,17 +210,35 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadUserDetails();
+        await LoadDesignations();
+    }
+
+    private async Task LoadDesignations()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<string>>("/api/designations");
+            designations = response ?? new List<string>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading designations: {ex.Message}");
+            designations = new List<string> { "Developer", "Project Manager", "Analyst" }; // Fallback
+        }
     }
 
     private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
     {
-        _lastSearchQuery = query; // Store the query for highlighting
+        _lastSearchQuery = query;
         Console.WriteLine($"Autocomplete SearchFunc triggered with query: '{query}'");
         _searchError = null;
 
-        if (string.IsNullOrWhiteSpace(query) || query.Length < 1) // Allow searching from 1 character
+        if (string.IsNullOrWhiteSpace(query) &&
+            string.IsNullOrWhiteSpace(selectedGender) &&
+            string.IsNullOrWhiteSpace(selectedBloodGroup) &&
+            string.IsNullOrWhiteSpace(selectedDesignation))
         {
-            Console.WriteLine("Query is empty or too short, returning empty results.");
+            Console.WriteLine("No query or filters provided, returning empty results.");
             return Enumerable.Empty<EmployeeSearchResult>();
         }
 
@@ -247,8 +246,17 @@
 
         try
         {
-            var encodedQuery = System.Net.WebUtility.UrlEncode(query);
-            var apiUrl = $"/api/search/spotlight?query={encodedQuery}";
+            var queryParams = new List<string>();
+            if (!string.IsNullOrWhiteSpace(query))
+                queryParams.Add($"query={System.Net.WebUtility.UrlEncode(query)}");
+            if (!string.IsNullOrWhiteSpace(selectedGender))
+                queryParams.Add($"gender={System.Net.WebUtility.UrlEncode(selectedGender)}");
+            if (!string.IsNullOrWhiteSpace(selectedBloodGroup))
+                queryParams.Add($"bloodGroup={System.Net.WebUtility.UrlEncode(selectedBloodGroup)}");
+            if (!string.IsNullOrWhiteSpace(selectedDesignation))
+                queryParams.Add($"designation={System.Net.WebUtility.UrlEncode(selectedDesignation)}");
+
+            var apiUrl = $"/api/search/spotlight?{string.Join("&", queryParams)}";
             Console.WriteLine($"Attempting API call to: {apiUrl}");
             var response = await Http.GetAsync(apiUrl, token);
             Console.WriteLine($"API call completed with status code: {response.StatusCode}");
@@ -256,9 +264,9 @@
             if (response.IsSuccessStatusCode)
             {
                 var results = await response.Content.ReadFromJsonAsync<List<EmployeeSearchResult>>(token) ?? new List<EmployeeSearchResult>();
-                Console.WriteLine($"Search successful: Found {results.Count} results for '{query}'");
-                foreach(var r in results.Take(5)) { Console.WriteLine($" - Result: {r.Name}, Email: {r.Email}"); }
-                if(results.Count > 5) { Console.WriteLine("..."); }
+                Console.WriteLine($"Search successful: Found {results.Count} results");
+                foreach (var r in results.Take(5)) { Console.WriteLine($" - Result: {r.Name}, Email: {r.Email}"); }
+                if (results.Count > 5) { Console.WriteLine("..."); }
 
                 _searchError = null;
 
@@ -280,29 +288,29 @@
             else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
                 _searchError = await response.Content.ReadAsStringAsync(token);
-                Console.WriteLine($"Search BadRequest for '{query}': {_searchError}");
+                Console.WriteLine($"Search BadRequest: {_searchError}");
             }
             else
             {
                 _searchError = $"Error fetching search results: {response.ReasonPhrase} ({(int)response.StatusCode})";
-                Console.WriteLine($"Search HTTP Error for '{query}': {_searchError}");
+                Console.WriteLine($"Search HTTP Error: {_searchError}");
             }
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine($"Search for '{query}' was cancelled.");
+            Console.WriteLine($"Search cancelled.");
             _searchError = null;
             return Enumerable.Empty<EmployeeSearchResult>();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error during search API call for '{query}': {ex.Message}");
+            Console.WriteLine($"Error during search API call: {ex.Message}");
             _searchError = "An error occurred while searching.";
         }
         finally
         {
-             StateHasChanged();
-             Console.WriteLine("Autocomplete SearchFunc finished.");
+            StateHasChanged();
+            Console.WriteLine("Autocomplete SearchFunc finished.");
         }
 
         return Enumerable.Empty<EmployeeSearchResult>();
@@ -317,7 +325,7 @@
         }
         else
         {
-             Console.WriteLine("OnEmployeeSelected triggered with null employee.");
+            Console.WriteLine("OnEmployeeSelected triggered with null employee.");
         }
     }
 
@@ -335,13 +343,29 @@
             {
                 Console.WriteLine($"Error calling JavaScript open: {ex.Message}");
                 _searchError = "Could not open employee profile.";
-                 StateHasChanged();
+                StateHasChanged();
             }
         }
         else
         {
             Console.WriteLine("NavigateToEmployeeInNewTab called with empty or null URL.");
         }
+    }
+
+    private async Task OnFilterChanged(string filterType, string value)
+    {
+        if (filterType == "gender")
+            selectedGender = value;
+        else if (filterType == "bloodGroup")
+            selectedBloodGroup = value;
+        else if (filterType == "designation")
+            selectedDesignation = value;
+
+        Console.WriteLine($"Filter changed: {filterType} = {value}");
+        StateHasChanged();
+
+        // Trigger search with current query and filters
+        await SearchEmployeesAutocomplete(_lastSearchQuery, CancellationToken.None);
     }
 
     private async Task LoadUserDetails()
@@ -409,7 +433,7 @@
         if (parts.Length == 1)
             return parts[0].Length > 0 ? parts[0][0].ToString().ToUpper() : "?";
 
-        return $"{parts[0][0]}{parts.Last()[0]}".ToUpper(); // Use first and last part initials
+        return $"{parts[0][0]}{parts.Last()[0]}".ToUpper();
     }
 
     private string GetInitialFromEmail(string? email)
@@ -444,7 +468,6 @@
         public string? EmployeeID { get; set; }
     }
 
-    // Helper function for text highlighting
     private string GetHighlightedHtml(string? text, string? highlightTerm)
     {
         if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(highlightTerm))
@@ -454,14 +477,13 @@
 
         try
         {
-            // Use Regex for case-insensitive replacement, escaping the highlight term
             var regex = new Regex(Regex.Escape(highlightTerm), RegexOptions.IgnoreCase | RegexOptions.Compiled);
             return regex.Replace(text, match => $"<strong>{match.Value}</strong>");
         }
-        catch (ArgumentException ex) // Catch potential regex errors (e.g., invalid pattern if Escape fails unexpectedly)
+        catch (ArgumentException ex)
         {
             Console.WriteLine($"Regex error during highlighting: {ex.Message}");
-            return text; // Return original text on error
+            return text;
         }
     }
 }
