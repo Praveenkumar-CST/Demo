@@ -16,71 +16,115 @@
     <MudAppBar Elevation="1" Style="background-color: var(--primary);">
         <MudItem xs="2" Class="d-flex align-center">
             <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                           Color="Color.Inherit"
-                           Edge="Edge.Start"
-                           OnClick="@(() => sidebar?.ToggleDrawer())"
-                           Class="mr-2" />
+            Color="Color.Inherit"
+            Edge="Edge.Start"
+            OnClick="@(() => sidebar?.ToggleDrawer())"
+            Class="mr-2" />
 
             <MudImage Src="images/logo1.png"
-                      Alt="Company Logo"
-                      Height="60"
-                      Style="margin-left: 60px; color:white;" />
+            Alt="Company Logo"
+            Height="60"
+            Style="margin-left: 60px; color:white;" />
         </MudItem>
 
         <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
-            <div class="d-flex align-center" style="width: 50%;">
+            <div class="d-flex align-center position-relative" style="width: 60%;">
                 <MudAutocomplete T="EmployeeSearchResult"
-                                 SearchFunc="@SearchEmployeesAutocomplete"
-                                 Placeholder="Search employees..."
-                                 Variant="Variant.Outlined"
-                                 Adornment="Adornment.Start"
-                                 AdornmentIcon="@Icons.Material.Filled.Search"
-                                 Style="width: 100%; background-color: var(--secondary); border-radius: var(--border-radius-input); --mud-palette-text-primary: var(--text-primary); --mud-icon-adornment-color: var(--primary);"
-                                 DebounceInterval="300"
-                                 ResetValueOnEmptyText="true"
-                                 ShowProgressIndicator="true"
-                                 ValueChanged="OnEmployeeSelected"
-                                 ItemTemplate="@ResultTemplate" />
+                SearchFunc="@SearchEmployeesAutocomplete"
+                Placeholder="Search employees..."
+                Variant="Variant.Filled"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search"
+                AdornmentColor="Color.Primary"
+                Class="search-autocomplete"
+                Style="width: 100%; border-radius: 28px; background-color: var(--secondary);"
+                DebounceInterval="300"
+                ResetValueOnEmptyText="true"
+                ShowProgressIndicator="true"
+                ValueChanged="OnEmployeeSelected"
+                ItemTemplate="@ResultTemplate" />
 
-                <MudMenu Icon="@Icons.Material.Filled.FilterList" Color="Color.Inherit" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
-                    <MudMenuItem>
-                        <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Value="@selectedGender" ValueChanged="@(value => OnFilterChanged("gender", value))" Dense="true">
-                            <MudSelectItem Value="@("")">None</MudSelectItem>
-                            <MudSelectItem Value="@("Male")">Male</MudSelectItem>
-                            <MudSelectItem Value="@("Female")">Female</MudSelectItem>
-                            <MudSelectItem Value="@("Other")">Other</MudSelectItem>
-                        </MudSelect>
-                    </MudMenuItem>
-                    <MudMenuItem>
-                        <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Value="@selectedBloodGroup" ValueChanged="@(value => OnFilterChanged("bloodGroup", value))" Dense="true">
-                            <MudSelectItem Value="@("")">None</MudSelectItem>
-                            <MudSelectItem Value="@("A+")">A+</MudSelectItem>
-                            <MudSelectItem Value="@("A-")">A-</MudSelectItem>
-                            <MudSelectItem Value="@("B+")">B+</MudSelectItem>
-                            <MudSelectItem Value="@("B-")">B-</MudSelectItem>
-                            <MudSelectItem Value="@("AB+")">AB+</MudSelectItem>
-                            <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
-                            <MudSelectItem Value="@("O+")">O+</MudSelectItem>
-                            <MudSelectItem Value="@("O-")">O-</MudSelectItem>
-                        </MudSelect>
-                    </MudMenuItem>
-                    <MudMenuItem>
-                        <MudSelect T="string" Label="Designation" Variant="Variant.Outlined" Value="@selectedDesignation" ValueChanged="@(value => OnFilterChanged("designation", value))" Dense="true">
-                            <MudSelectItem Value="@("")">None</MudSelectItem>
-                            @foreach (var designation in designations)
-                            {
-                                <MudSelectItem Value="@designation">@designation</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudMenuItem>
-                </MudMenu>
+                <MudIconButton Icon="@Icons.Material.Filled.FilterList"
+                Color="Color.Primary"
+                Class="ml-2 filter-button"
+                OnClick="@ToggleFilterDrawer"
+                Style="background-color: var(--secondary); border-radius: 50%;" />
             </div>
+
+            <!-- Filter Drawer -->
+            @if (filterDrawerOpen)
+            {
+                <MudPaper Elevation="2"
+                Class="filter-drawer pa-3"
+                Style="width: 360px; max-width: 100%; margin: 0 auto; border-radius: 8px; position: absolute; top: 65px; z-index: 1200;">
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <MudText Typo="Typo.h6">Filter Options</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@CloseFilterDrawer" />
+                    </div>
+                    <MudDivider Class="mb-3" />
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Value="@selectedGender"
+                            ValueChanged="@(value => OnFilterChanged("gender", value))"
+                            FullWidth="true" Margin="Margin.Dense" Class="mb-3"  DisableUnderLine="false">
+                                <MudSelectItem Value="@("All")">All Genders</MudSelectItem>
+                                <MudSelectItem Value="@("Male")">Male</MudSelectItem>
+                                <MudSelectItem Value="@("Female")">Female</MudSelectItem>
+                                <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Value="@selectedBloodGroup"
+                            ValueChanged="@(value => OnFilterChanged("bloodGroup", value))"
+                            FullWidth="true" Margin="Margin.Dense" Class="mb-3">
+                                <MudSelectItem Value="@("All")">All Blood Groups</MudSelectItem>
+                                <MudSelectItem Value="@("A+")">A+</MudSelectItem>
+                                <MudSelectItem Value="@("A-")">A-</MudSelectItem>
+                                <MudSelectItem Value="@("B+")">B+</MudSelectItem>
+                                <MudSelectItem Value="@("B-")">B-</MudSelectItem>
+                                <MudSelectItem Value="@("AB+")">AB+</MudSelectItem>
+                                <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
+                                <MudSelectItem Value="@("O+")">O+</MudSelectItem>
+                                <MudSelectItem Value="@("O-")">O-</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudSelect T="string" Label="Designation" Variant="Variant.Outlined" Value="@selectedDesignation"
+                            ValueChanged="@(value => OnFilterChanged("designation", value))"
+                            FullWidth="true" Margin="Margin.Dense" Class="mb-3">
+                                <MudSelectItem Value="@("All")">All Designations</MudSelectItem>
+                                @foreach (var designation in designations)
+                                {
+                                    <MudSelectItem Value="@designation">@designation</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" Class="d-flex justify-space-between">
+                            <MudButton Variant="Variant.Filled" Color="Color.Error"
+                            OnClick="@ClearFilters"
+                            StartIcon="@Icons.Material.Filled.FilterAltOff">
+                                Clear Filters
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                            OnClick="@ApplyFilters"
+                            StartIcon="@Icons.Material.Filled.Check">
+                                Apply Filters
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            }
 
             @* Display error message if search fails *@
             @if (!string.IsNullOrEmpty(_searchError))
             {
-                <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_searchError</MudText>
+                @* <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_searchError</MudText> *@
             }
+
+            
         </MudItem>
 
         <MudItem xs="2" Style="padding: 8px;">
@@ -89,22 +133,23 @@
                     @if (!string.IsNullOrEmpty(userProfilePicture))
                     {
                         <img src="@userProfilePicture"
-                             class="rounded-circle" alt="Employee Photo"
-                             style="width: 50px; height: 50px; margin-left:180px; object-fit: cover;" />
+                        class="rounded-circle" alt="Employee Photo"
+                        style="width: 50px; height: 50px; margin-left:180px; object-fit: cover; border: 2px solid var(--secondary);" />
                     }
                     else
                     {
                         <MudAvatar Size="Size.Medium"
-                                   Class="cursor-pointer"
-                                   Style="background-color: var(--secondary); color: var(--text-primary); margin-left: 180px;">
+                        Class="cursor-pointer"
+                        Style="background-color: var(--secondary); color: var(--text-primary); margin-left: 180px; border: 2px solid var(--dark);">
                             @userInitials
                         </MudAvatar>
                     }
                 </ActivatorContent>
                 <ChildContent>
-                    <MudMenuItem Style="color: var(--text-primary);">Profile</MudMenuItem>
-                    <MudMenuItem Style="color: var(--text-primary);">Setting</MudMenuItem>
-                    <MudMenuItem Style="color: var(--error);">Logout</MudMenuItem>
+                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person">Profile</MudMenuItem>
+                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Settings">Settings</MudMenuItem>
+                    <MudDivider />
+                    <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
                 </ChildContent>
             </MudMenu>
         </MudItem>
@@ -115,6 +160,36 @@
 
     <!-- Main Content -->
     <MudMainContent Style="flex-grow: 1;">
+        @* Display active filters *@
+        @if (HasActiveFilters())
+        {
+            <div class="d-flex flex-wrap active-filters">
+                @if (!string.IsNullOrEmpty(selectedGender))
+                {
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
+                             OnClose="@(() => RemoveFilter("gender"))"
+                             Class="mr-1 mb-1">
+                        Gender: @selectedGender
+                    </MudChip>
+                }
+                @if (!string.IsNullOrEmpty(selectedBloodGroup))
+                {
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
+                             OnClose="@(() => RemoveFilter("bloodGroup"))"
+                             Class="mr-1 mb-1">
+                        Blood Group: @selectedBloodGroup
+                    </MudChip>
+                }
+                @if (!string.IsNullOrEmpty(selectedDesignation))
+                {
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
+                             OnClose="@(() => RemoveFilter("designation"))"
+                             Class="mr-1 mb-1">
+                        Designation: @selectedDesignation
+                    </MudChip>
+                }
+            </div>
+        }
         <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
             @Body
         </MudContainer>
@@ -123,10 +198,93 @@
     <!-- Popover Support -->
     <MudPopoverProvider />
 
+    @if (filterDrawerOpen)
+    {
+        <div class="filter-backdrop" @onclick="CloseFilterDrawer"></div>
+    }
+
 </MudLayout>
 
+<style>
+    .search-autocomplete ::deep .mud-input {
+    border-radius: 28px;
+    transition: all 0.3s ease;
+    }
+
+    .search-autocomplete ::deep .mud-input:focus-within {
+    box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    .search-autocomplete ::deep .mud-input-adornment {
+    color: var(--primary);
+    }
+
+    .active-filters {
+        position: sticky;
+        top: 64px;
+        left: 0;
+        z-index: 99;
+        background-color: white;
+        padding: 10px 20px;
+        box-shadow: 2px 2px 5px 0px rgba(112, 112,112,0.75);
+    }
+
+    .filter-drawer {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1300;
+    }
+
+    .filter-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.1);
+    z-index: 1100;
+    }
+
+    @@media (max-width: 960px) {
+    .active-filters {
+    max-width: 100%;
+    }
+    }
+</style>
+
 @code {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private bool drawerOpen = true;
+    private bool filterDrawerOpen = false;
     private HomeSidebar? sidebar;
     private string? userProfilePicture;
     private string? userName;
@@ -199,7 +357,7 @@
                 }));
                 __builder3.CloseComponent();
             }));
-             __builder2.CloseComponent();
+            __builder2.CloseComponent();
         }));
         __builder.CloseComponent();
     };
@@ -223,7 +381,7 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading designations: {ex.Message}");
-            designations = new List<string> { "Developer", "Project Manager", "Analyst" }; // Fallback
+            designations = new List<string> {  "Developer", "Project Manager", "Analyst" }; // Fallback
         }
     }
 
@@ -256,30 +414,66 @@
             if (!string.IsNullOrWhiteSpace(selectedDesignation))
                 queryParams.Add($"designation={System.Net.WebUtility.UrlEncode(selectedDesignation)}");
 
-            var apiUrl = $"/api/search/spotlight?{string.Join("&", queryParams)}";
-            Console.WriteLine($"Attempting API call to: {apiUrl}");
-            var response = await Http.GetAsync(apiUrl, token);
-            Console.WriteLine($"API call completed with status code: {response.StatusCode}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var results = await response.Content.ReadFromJsonAsync<List<EmployeeSearchResult>>(token) ?? new List<EmployeeSearchResult>();
-                Console.WriteLine($"Search successful: Found {results.Count} results");
-                foreach (var r in results.Take(5)) { Console.WriteLine($" - Result: {r.Name}, Email: {r.Email}"); }
-                if (results.Count > 5) { Console.WriteLine("..."); }
 
-                _searchError = null;
-                return results;
-            }
-            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            if (!string.IsNullOrWhiteSpace(query))
+
             {
-                _searchError = await response.Content.ReadAsStringAsync(token);
-                Console.WriteLine($"Search BadRequest: {_searchError}");
-            }
-            else
-            {
-                _searchError = $"Error fetching search results: {response.ReasonPhrase} ({(int)response.StatusCode})";
-                Console.WriteLine($"Search HTTP Error: {_searchError}");
+
+
+
+                var apiUrl = $"/api/search/spotlight?{string.Join("&", queryParams)}";
+
+                Console.WriteLine($"Attempting API call to: {apiUrl}");
+
+                var response = await Http.GetAsync(apiUrl, token);
+
+                Console.WriteLine($"API call completed with status code: {response.StatusCode}");
+
+
+
+
+
+                if (response.IsSuccessStatusCode)
+
+                {
+
+                    var results = await response.Content.ReadFromJsonAsync<List<EmployeeSearchResult>>(token) ?? new List<EmployeeSearchResult>();
+
+                    Console.WriteLine($"Search successful: Found {results.Count} results");
+
+                    foreach (var r in results.Take(5)) { Console.WriteLine($" - Result: {r.Name}, Email: {r.Email}"); }
+
+                    if (results.Count > 5) { Console.WriteLine("..."); }
+
+
+
+                    _searchError = null;
+
+                    return results;
+
+                }
+
+                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+
+                {
+
+                    _searchError = await response.Content.ReadAsStringAsync(token);
+
+                    Console.WriteLine($"Search BadRequest: {_searchError}");
+
+                }
+
+                else
+
+                {
+
+                    _searchError = $"Error fetching search results: {response.ReasonPhrase} ({(int)response.StatusCode})";
+
+                    Console.WriteLine($"Search HTTP Error: {_searchError}");
+
+                }
+
             }
         }
         catch (OperationCanceledException)
@@ -338,19 +532,79 @@
         }
     }
 
+    private async void ToggleFilterDrawer()
+    {
+        filterDrawerOpen = !filterDrawerOpen;
+
+        await OnFilterChanged("gender", "All");
+        await OnFilterChanged("bloodGroup","All");
+        await OnFilterChanged("designation","All");
+        StateHasChanged();
+    }
+
+    private void CloseFilterDrawer()
+    {
+        filterDrawerOpen = false;
+        StateHasChanged();
+    }
+
+    private async Task ClearFilters()
+    {
+        selectedGender = "";
+        selectedBloodGroup = "";
+        selectedDesignation = "";
+
+        await SearchEmployeesAutocomplete(_lastSearchQuery, CancellationToken.None);
+        filterDrawerOpen = false;
+        StateHasChanged();
+    }
+
+    private async Task ApplyFilters()
+    {
+        await SearchEmployeesAutocomplete(_lastSearchQuery, CancellationToken.None);
+        filterDrawerOpen = false;
+        StateHasChanged();
+    }
+
+    private bool HasActiveFilters()
+    {
+        return !string.IsNullOrEmpty(selectedGender) ||
+               !string.IsNullOrEmpty(selectedBloodGroup) ||
+               !string.IsNullOrEmpty(selectedDesignation);
+    }
+
     private async Task OnFilterChanged(string filterType, string value)
     {
-        if (filterType == "gender")
+
+        if (filterType == "gender" && value == "All")
+
+            selectedGender = "";
+
+        else if (filterType == "gender" && value != "All")
+
             selectedGender = value;
-        else if (filterType == "bloodGroup")
+
+        else if (filterType == "bloodGroup" && value == "All")
+
+            selectedBloodGroup = "";
+        else if (filterType == "bloodGroup" && value != "All")
+
             selectedBloodGroup = value;
-        else if (filterType == "designation")
+
+        else if (filterType == "designation" && value == "All")
+
+            selectedDesignation = "";
+        else if (filterType == "designation" && value != "All")
+
             selectedDesignation = value;
 
         Console.WriteLine($"Filter changed: {filterType} = {value}");
         StateHasChanged();
+    }
 
-        // Trigger search with current query and filters
+    private async Task RemoveFilter(string filterType)
+    {
+        await OnFilterChanged(filterType, "");
         await SearchEmployeesAutocomplete(_lastSearchQuery, CancellationToken.None);
     }
 
@@ -430,30 +684,6 @@
         return "?";
     }
 
-    private class UserResponse
-    {
-        public string Id { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public UserMetadata UserMetadata { get; set; } = new();
-    }
-
-    private class UserMetadata
-    {
-        public string ProfilePictureUrl { get; set; } = string.Empty;
-    }
-
-    public class EmployeeSearchResult
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Designation { get; set; } = string.Empty;
-        public string ProfileUrl { get; set; } = string.Empty;
-        public string? Email { get; set; }
-        public string? Mobile { get; set; }
-        public string? ProfilePicture { get; set; }
-        public string? EmployeeID { get; set; }
-    }
-
     private string GetHighlightedHtml(string? text, string? highlightTerm)
     {
         if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(highlightTerm))
@@ -471,5 +701,16 @@
             Console.WriteLine($"Regex error during highlighting: {ex.Message}");
             return text;
         }
+    }
+
+    public class EmployeeSearchResult
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty;
+        public string ProfileUrl { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? Mobile { get; set; }
+        public string? ProfilePicture { get; set; }
+        public string? EmployeeID { get; set; }
     }
 }
