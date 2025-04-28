@@ -40,7 +40,7 @@ jobs:
   - task: UseDotNet@2
     inputs:
       packageType: 'sdk'
-      version: '8.x'
+      version: '9.x'
     displayName: 'Install .NET SDK 9.x'
 
   - task: NuGetToolInstaller@1
@@ -48,14 +48,29 @@ jobs:
       versionSpec: '6.x'
     displayName: 'Use NuGet'
 
-# Build and Publish WiseHR-Frontend
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+      projects: '$(project)'
+      arguments: '--verbosity detailed'
+    displayName: 'Restore Packages'
+  
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+      arguments: '--configuration $(buildConfiguration)'
+      projects: '$(project)'
+    displayName: 'Build WiseMigrateApi'
+
+# Publish WiseHR-Frontend
   - task: DotNetCoreCLI@2
     inputs:
       command: 'publish'
+      publishWebProjects: true
       projects: '$(project)'
-      arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+      arguments: '--no-restore --configuration Release --output $(Build.ArtifactStagingDirectory)'
       zipAfterPublish: false
-    displayName: 'Build and Publish WiseHR-Frontend'
+    displayName: 'Publish  WiseMigrateBackendApi'
 
 # Publish Artifacts  
   - task: PublishBuildArtifacts@1
@@ -66,7 +81,7 @@ jobs:
       publishLocation: 'Container'
 
 # Deploy to Blob Storage and Purging the Cache for Azure Front Door
-  - ${{ if eq(variables['Build.SourceBranchName'], 'dev-deployment') }}:
+  - ${{ if eq(variables['Build.SourceBranchName'], 'yaml-sa') }}:
       - task: AzureCLI@2
         inputs:
           azureSubscription: "Microsoft Azure Sponsorship(9835c61d-6a4a-454e-8d09-1b383899f7ab)"
@@ -104,4 +119,5 @@ jobs:
               --endpoint-name wisehrmain \
               --domains wisehr.wisework.in wisehrmain-h0exgzg0eze9e9bj.z02.azurefd.net
         displayName: "Azure Front Door Cache invalidation"
+  
   
