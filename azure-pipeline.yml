@@ -1,0 +1,122 @@
+pr:
+  branches:
+    include:
+      - dev-deployment-25/04
+
+trigger:
+  branches:
+    include:
+      - dev-deployment-25/04
+
+variables:
+  buildConfiguration: 'Release'
+  project: 'WiseHR.csproj'
+  buildPlatform: 'Any CPU'
+  vmImage: ubuntu-latest
+  
+parameters:
+- name: agentSelection
+  displayName: 'Select Agent'
+  type: string
+  default: 'Self Hosted Agent'
+  values:
+  - 'Microsoft Hosted Agent'
+  - 'Self Hosted Agent'
+
+jobs:
+- job: deploy_wisehr_frontend
+  displayName: 'Deploy WiseHR-Frontend'
+  pool:
+    ${{ if eq(parameters.agentSelection, 'Microsoft Hosted Agent') }}:
+      vmImage: ${{ variables.vmImage }}
+    ${{ if eq(parameters.agentSelection, 'Self Hosted Agent') }}:
+      name: 'Pool1-selfhosted-ww'
+
+  steps:
+  - checkout: self
+    persistCredentials: true
+
+# DotNet Install Required Version
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '9.x'
+    displayName: 'Install .NET SDK 9.x'
+
+  - task: NuGetToolInstaller@1
+    inputs:
+      versionSpec: '6.x'
+    displayName: 'Use NuGet'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+      projects: '$(project)'
+      arguments: '--verbosity detailed'
+    displayName: 'Restore Packages'
+  
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+      arguments: '--configuration $(buildConfiguration)'
+      projects: 'WiseHR.csproj'
+    displayName: 'Build WiseMigrateApi'
+
+# Publish WiseHR-Frontend
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      projects: 'WiseHR.csproj'
+      arguments: '--no-restore --configuration Release --output $(Build.ArtifactStagingDirectory)'
+      zipAfterPublish: false
+    displayName: 'Publish  WiseMigrateBackendApi'
+
+# Publish Artifacts  
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
+
+# Deploy to Blob Storage and Purging the Cache for Azure Front Door
+ 
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: "Microsoft Azure Sponsorship(9835c61d-6a4a-454e-8d09-1b383899f7ab)"
+      scriptType: "bash"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        sourceFilePath="$(Build.ArtifactStagingDirectory)/WiseHR/wwwroot/*"
+        azcopy --version
+
+        echo "Starting parallel execution with AzCopy for blob storage operations..."
+        echo "Initiating deletion of old blobs from \$web container..."
+
+        # Delete old blobs in parallel
+        azcopy rm "https://wisehrmain.blob.core.windows.net/\$web?$(STORAGE_ACCOUNT_MAIN_SAS)" --recursive=true  
+
+        echo "Starting upload of new blobs from $sourceFilePath..."
+
+        # Upload new blobs in parallel
+        azcopy copy "$sourceFilePath" "https://wisehrmain.blob.core.windows.net/\$web?$(STORAGE_ACCOUNT_MAIN_SAS)" --recursive --overwrite=true
+
+        echo "Parallel deletion and upload of blobs is now Done"
+
+    displayName: "Delete and Upload blobs to Azure Blob storage"
+  
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: "Microsoft Azure Sponsorship(9835c61d-6a4a-454e-8d09-1b383899f7ab)"
+      scriptType: "bash"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        az afd endpoint purge \
+          --resource-group wise-migrate-rg \
+          --profile-name WiseMigrateFrontdoor \
+          --content-paths '/*' \
+          --endpoint-name wisehrmain \
+          --domains wisehr.wisework.in wisehrmain-h0exgzg0eze9e9bj.z02.azurefd.net
+    displayName: "Azure Front Door Cache invalidation"
+

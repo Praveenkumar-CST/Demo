@@ -1,0 +1,199 @@
+﻿@inherits LayoutComponentBase
+@using WiseHR.Components.sidebar
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@inject EmployeeService EmployeeService
+  
+<MudThemeProvider />
+<MudLayout>
+
+    <!-- Top Navigation Bar -->
+    <MudAppBar Elevation="1" Style="background-color: var(--primary);">
+        <MudItem xs="2" Class="d-flex align-center">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           Edge="Edge.Start"
+                           OnClick="@(() => sidebar?.ToggleDrawer())"
+                           Class="mr-2" />
+
+            <MudImage Src="images/logo1.png"
+                      Alt="Company Logo"
+                      Height="60"
+                      Style="margin-left: 60px; color:white;" />
+        </MudItem>
+
+        <MudItem xs="8" Class="d-flex justify-center align-center">
+            <MudTextField @bind-Value="searchQuery"
+                          Placeholder="Search employees..."
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Style="width: 50%; margin-left: 260px; background-color: var(--secondary); border-radius: var(--border-radius-input); --mud-palette-text-primary: var(--text-primary); --mud-icon-adornment-color: var(--primary);"
+                          Immediate="true"
+                          DebounceInterval="100"
+                          OnValueChanged="SearchEmployees" />
+        </MudItem>
+
+        <MudItem xs="2" Style="padding: 8px;">
+            <MudMenu>
+                <ActivatorContent>
+                    @if (!string.IsNullOrEmpty(userProfilePicture))
+                    {
+                        <img src="@userProfilePicture"
+                             class="rounded-circle" alt="Employee Photo"
+                             style="width: 50px; height: 50px; margin-left:180px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <MudAvatar Size="Size.Medium"
+                                   Class="cursor-pointer"
+                                   Style="background-color: var(--secondary); color: var(--text-primary); margin-left: 180px;">
+                            @userInitials
+                        </MudAvatar>
+                    }
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Style="color: var(--text-primary);">Profile</MudMenuItem>
+                    <MudMenuItem Style="color: var(--text-primary);">Setting</MudMenuItem>
+                    <MudMenuItem Style="color: var(--error);">Logout</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </MudItem>
+    </MudAppBar>
+
+    <!-- Sidebar -->
+    <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+
+    <!-- Main Content -->
+    <MudMainContent Style="flex-grow: 1;">
+        <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+
+    <!-- Popover Support -->
+    <MudPopoverProvider />
+
+</MudLayout>
+
+@code {
+    private bool drawerOpen = true;
+    private HomeSidebar? sidebar;
+    private string? searchQuery;
+    private string? userProfilePicture;
+    private string? userName;
+    private string? userInitials;
+
+    [Parameter]
+    public EventCallback<string> OnSearchQueryChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserDetails();
+    }
+
+    private async Task SearchEmployees(string query)
+    {
+        searchQuery = query;
+        await JSRuntime.InvokeVoidAsync("console.log", $"Search: {query}");
+        Console.WriteLine($"Searching for: {query}");
+
+        if (OnSearchQueryChanged.HasDelegate)
+        {
+            await OnSearchQueryChanged.InvokeAsync(query);
+        }
+    }
+
+    private async Task LoadUserDetails()
+    {
+        try
+        {
+
+           // var empId = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "empId");
+            var email = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "email");
+            userProfilePicture = null;
+            userName = null;
+            userInitials = null;
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var employee = await EmployeeService.GetEmployeeDetailsByEmail(email);
+
+                if (employee != null)
+                {
+                    // Employee exists
+                    if (!string.IsNullOrEmpty(employee.PhotoBase64Content) && !string.IsNullOrEmpty(employee.PhotoContentType))
+                    {
+                        userProfilePicture = $"data:{employee.PhotoContentType};base64,{employee.PhotoBase64Content}";
+                    }
+                    else
+                    {
+                        userName = employee.FirstName ?? "User";
+                        userInitials = GetInitials(userName);
+                        userProfilePicture = null;
+                    }
+                    return; // we’ve found valid data, so exit the method
+                }
+            }
+
+            // If empId doesn't exist or employee not found
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                userName = "User";
+                userInitials = GetInitialFromEmail(email);
+                userProfilePicture = null;
+            }
+            else
+            {
+                SetDefaultUser(); // fallback to Guest
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user details: {ex.Message}");
+            SetDefaultUser();
+        }
+    }
+
+
+    private void SetDefaultUser()
+    {
+        userName = "Guest";
+        userInitials = "?";
+        userProfilePicture = null;
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "?";
+
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+            return parts[0][0].ToString().ToUpper();
+
+        return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+    }
+
+    private string GetInitialFromEmail(string? email)
+    {
+        if (!string.IsNullOrWhiteSpace(email))
+            return char.ToUpper(email[0]).ToString();
+
+        return "?";
+    }
+
+    // Classes (if required for Supabase later)
+    private class UserResponse
+    {
+        public string Id { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public UserMetadata UserMetadata { get; set; } = new();
+    }
+
+    private class UserMetadata
+    {
+        public string ProfilePictureUrl { get; set; } = string.Empty;
+    }
+}

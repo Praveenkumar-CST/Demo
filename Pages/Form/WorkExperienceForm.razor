@@ -1,0 +1,253 @@
+﻿@page "/workExperience"
+@using WiseHRServer.Models
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Text.Json;
+@using Components.sidebar
+@layout HomeLayout
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudCard Elevation="2" Class="p-2">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                EXPERIENCE DETAILS
+            </MudText>
+        </MudCardHeader>
+
+        <MudCardContent Margin="Margin.Dense" Dense="true">
+            <EditForm Model="@experience" OnValidSubmit="@SubmitForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <!-- Education Qualifications Section -->
+                <h4 class="text-secondary mt-2">
+                    Education Qualifications <span class="text-danger">*</span>
+                </h4>
+
+                <small class="text-danger mb-2 d-block">At least one education qualification is mandatory.</small>
+
+                @foreach (var edu in educationList)
+                {
+                    var isFirst = (edu == educationList.First());
+
+                    <div class="border p-2 mb-1 bg-light rounded">
+                        <div class="row g-1">
+                            <div class="col-md-3">
+                                <label>Qualification</label>
+                                <InputText class="form-control" @bind-Value="edu.Qualification" />
+                                <ValidationMessage For="@(() => edu.Qualification)" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>University</label>
+                                <InputText class="form-control" @bind-Value="edu.University" />
+                                <ValidationMessage For="@(() => edu.University)" />
+                            </div>
+                            <div class="col-md-2">
+                                <label>Year</label>
+                                <InputSelect class="form-control" @bind-Value="edu.YearOfPassing">
+                                    <ValidationMessage For="@(() => edu.YearOfPassing)" />
+                                    <option value="">Select Year</option>
+                                    @foreach (var year in YearList)
+                                    {
+                                        <option value="@year">@year</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-2">
+                                <label>Percentage</label>
+                                <InputNumber class="form-control" @bind-Value="edu.Percentage" />
+                                <ValidationMessage For="@(() => edu.Percentage)" />
+                            </div>
+                            @if (!isFirst)
+                            {
+                                <div class="col-1 d-flex align-items-end">
+                                    <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveEducation(edu)">
+                                        &times;
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <button type="button" class="btn btn-outline-primary mb-4 mt-1" @onclick="AddEducation">+ Add Education</button>
+
+                <!-- Work Experience Section -->
+                <h4 class="text-secondary mt-1">Work Experience</h4>
+                @if (workList.Any())
+                {
+                    @foreach (var work in workList)
+                    {
+                        <div class="border p-2 mb-2 bg-light rounded">
+                            <div class="row g-1">
+                                <div class="col-md-3">
+                                    <label>Employer</label>
+                                    <InputText class="form-control" @bind-Value="work.Employer" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Location</label>
+                                    <InputText class="form-control" @bind-Value="work.Location" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Join Date</label>
+                                    <InputDate class="form-control" @bind-Value="work.DateOfJoining" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Leave Date</label>
+                                    <InputDate class="form-control" @bind-Value="work.DateOfLeaving" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Designation</label>
+                                    <InputText class="form-control" @bind-Value="work.Designation" />
+                                </div>
+                                <div class="col-1 d-flex align-items-end">
+                                    <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
+                                        &times;
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                }
+                <button type="button" class="btn btn-outline-primary mb-1 mt-1" @onclick="AddWork">+ Add Work Experience</button>
+
+                <!-- Action Buttons -->
+                <MudItem xs="12" Class="d-flex justify-end mt-1 gap-3">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GoBack">Back</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@IsNextButtonDisabled()">Next</MudButton>
+                </MudItem>
+            </EditForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private Experience experience = new Experience();
+    private List<Education> educationList = new();
+    private List<WorkExperience> workList = new();
+    private EditContext editContext;
+    private List<int> YearList = new();
+
+    [Inject] private ExperienceService ExperienceService { get; set; }
+    [Parameter] public EventCallback<Experience> OnSubmit { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Parameter] public Experience InitialData { get; set; }
+
+    protected override void OnInitialized()
+    {
+        int currentYear = DateTime.Now.Year;
+        for (int year = currentYear; year >= 1980; year--)
+        {
+            YearList.Add(year);
+        }
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
+
+        if (!string.IsNullOrEmpty(employeeDetailsJson))
+        {
+            var employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
+            if (employeeDetails != null)
+                experience.EmployeeID = employeeDetails.EmployeeID;
+        }
+
+        await LoadExperienceInfo();
+
+        if (InitialData != null)
+            experience = InitialData;
+        editContext = new EditContext(experience);
+    }
+
+    private async Task SubmitForm()
+    {
+        if (educationList == null || !educationList.Any())
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Please add at least one education qualification before submitting the form.");
+            return;
+        }
+        var validWorkList = workList
+        .Where(w => !string.IsNullOrWhiteSpace(w.Employer)
+                 || !string.IsNullOrWhiteSpace(w.Designation)
+                 || !string.IsNullOrWhiteSpace(w.Location)
+                 || w.DateOfJoining != null
+                 || w.DateOfLeaving != null)
+        .ToList();
+
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = validWorkList;
+        if (workList.Count != validWorkList.Count)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Some work experience entries were incomplete and have been skipped. Please make sure all fields are filled if you want them to be submitted.");
+        }
+
+        var json = JsonSerializer.Serialize(experience);
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "experienceDetails", json);
+
+        NavigationManager.NavigateTo("/confirmation");
+    }
+
+    private void AddEducation()
+    {
+        educationList.Add(new Education());
+    }
+
+    private void RemoveEducation(Education education)
+    {
+        if (educationList.Count > 1)
+            educationList.Remove(education);
+    }
+
+    private void AddWork()
+    {
+        workList.Add(new WorkExperience());
+    }
+
+    private void RemoveWork(WorkExperience work)
+    {
+        workList.Remove(work);
+    }
+
+    private async Task LoadExperienceInfo()
+    {
+        var experienceJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "experienceDetails");
+
+        if (!string.IsNullOrEmpty(experienceJson))
+        {
+            experience = JsonSerializer.Deserialize<Experience>(experienceJson);
+            educationList = experience.EducationQualifications ?? new List<Education>();
+            workList = experience.WorkExperiences ?? new List<WorkExperience>();
+        }
+
+        if (!educationList.Any()) AddEducation();
+        if (workList == null || workList.Count == 0)
+            workList = new List<WorkExperience>(); // ✅ don't add default row
+
+        StateHasChanged();
+    }
+
+    private async Task GoBack()
+    {
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = workList;
+
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "experienceDetails", JsonSerializer.Serialize(experience));
+        await OnBack.InvokeAsync();
+        NavigationManager.NavigateTo("/bankingForm");
+    }
+
+    public void Reset()
+    {
+        experience = new Experience();
+        educationList = new List<Education>();
+        workList = new List<WorkExperience>();
+        AddEducation();
+    }
+
+    private bool IsNextButtonDisabled()
+    {
+        return !educationList.Any(edu => !string.IsNullOrEmpty(edu.Qualification) && !string.IsNullOrEmpty(edu.University) && edu.YearOfPassing != null && edu.Percentage != null);
+    }
+}

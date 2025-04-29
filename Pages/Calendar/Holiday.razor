@@ -1,0 +1,176 @@
+@page "/Calendar/holiday"
+@using list.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@implements IDisposable
+@layout HomeLayout
+
+
+<h3 class="holiday-title">Holiday List</h3>
+
+<div class="back-button-container">
+    <button class="back-button" @onclick="NavigateToCalendar">Back</button>
+</div>
+
+<div class="holiday-boxes">
+    <div class="permanent-holidays">
+        <h4>Permanent Holidays</h4>
+        <table class="holiday-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Event</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var holiday in _permanentHolidays.OrderByDescending(h => DateTime.Parse(h.Date)))
+                {
+                    <tr>
+                        <td>@FormatDateString(holiday.Date)</td>
+                        <td>@GetDayOfWeek(holiday.Date)</td>
+                        <td class="event-description">
+                            <div class="event-content">@holiday.Description</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="optional-holidays">
+        <h4>Optional Holidays</h4>
+        <table class="holiday-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Event</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var holiday in _optionalHolidays.OrderByDescending(h => DateTime.Parse(h.Date)))
+                {
+                    <tr>
+                        <td>@FormatDateString(holiday.Date)</td>
+                        <td>@GetDayOfWeek(holiday.Date)</td>
+                        <td class="event-description">
+                            <div class="event-content">@holiday.Description</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (_isLoading)
+{
+    <p>Loading holidays...</p>
+}
+else if (_errorMessage != null)
+{
+    <p class="error-message">@_errorMessage</p>
+    <p>Raw API Response:</p>
+    <pre>@_rawResponse</pre>
+}
+else if (_holidays.Length == 0)
+{
+    <p>No holidays found for 2025.</p>
+    <p>Raw API Response:</p>
+    <pre>@_rawResponse</pre>
+}
+
+
+@code {
+    private Event[] _holidays = Array.Empty<Event>();
+    private Event[] _permanentHolidays = Array.Empty<Event>();
+    private Event[] _optionalHolidays = Array.Empty<Event>();
+    private string? _errorMessage;
+    private bool _isLoading = true;
+    private string _rawResponse = "No response yet.";
+    private System.Timers.Timer? _refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch holidays and start periodic refresh on component startup.
+        await FetchHolidaysAsync();
+        using var timer = new System.Timers.Timer(5000);
+        _refreshTimer = timer;
+        _refreshTimer.Elapsed += async (sender, e) => await RefreshHolidaysAsync();
+        _refreshTimer.AutoReset = true;
+        _refreshTimer.Start();
+    }
+
+    private async Task FetchHolidaysAsync()
+    {
+        // Retrieve holiday data from the API and categorize by type.
+        try
+        {
+            _isLoading = true;
+            const string apiUrl = "http://localhost:5243/api/Events";
+
+            var httpResponse = await Http.GetAsync(apiUrl);
+            _rawResponse = await httpResponse.Content.ReadAsStringAsync();
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                _holidays = await httpResponse.Content.ReadFromJsonAsync<Event[]>() ?? Array.Empty<Event>();
+                _permanentHolidays = _holidays.Where(h => h.HolidayType == "Permanent").ToArray();
+                _optionalHolidays = _holidays.Where(h => h.HolidayType == "Optional").ToArray();
+            }
+            else
+            {
+                _errorMessage = $"API request failed with status: {httpResponse.StatusCode}.";
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Error fetching holidays: {ex.Message}.";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshHolidaysAsync()
+    {
+        // Periodically refresh holiday data to keep the list updated.
+        await FetchHolidaysAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string FormatDateString(string date)
+    {
+        if (DateTime.TryParse(date, out var parsedDate))
+        {
+            return $"{parsedDate.Day:D2}/{parsedDate.Month:D2}/{parsedDate.Year}";
+        }
+        return date;
+    }
+
+    private string GetDayOfWeek(string date)
+    {
+        if (DateTime.TryParse(date, out var parsedDate))
+        {
+            return parsedDate.ToString("dddd");
+        }
+        return "Invalid Date";
+    }
+
+    private void NavigateToCalendar()
+    {
+        Navigation.NavigateTo("/calendar");
+    }
+
+    public void Dispose()
+    {
+        if (_refreshTimer != null)
+        {
+            _refreshTimer.Stop();
+            _refreshTimer.Dispose();
+        }
+    }
+}
