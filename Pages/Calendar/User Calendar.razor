@@ -189,7 +189,7 @@ else if (AllHolidays.Length == 0)
             // Fetch saved holidays if UserEmail is provided
             if (!string.IsNullOrEmpty(UserEmail))
             {
-                var savedHolidaysUrl = $"http://localhost:5243/api/SavedHolidays/{Uri.EscapeDataString(UserEmail)}";
+                var savedHolidaysUrl = $"/api/SavedHolidays/{Uri.EscapeDataString(UserEmail)}";
                 var savedResponse = await HttpClient.GetAsync(savedHolidaysUrl);
                 SavedHolidays = await savedResponse.Content.ReadFromJsonAsync<Event[]>() ?? Array.Empty<Event>();
                 // Filter out invalid saved holidays
@@ -200,7 +200,7 @@ else if (AllHolidays.Length == 0)
                 SavedHolidays = Array.Empty<Event>();
             }
 
-            const string eventsUrl = "http://localhost:5243/api/Events";
+            const string eventsUrl = "/api/Events";
             var httpResponse = await HttpClient.GetAsync(eventsUrl);
 
             if (httpResponse.IsSuccessStatusCode)
@@ -300,7 +300,7 @@ else if (AllHolidays.Length == 0)
                     if (savedHoliday != null)
                     {
                         var response = await HttpClient.DeleteAsync(
-                            $"http://localhost:5243/api/SavedHolidays/{Uri.EscapeDataString(UserEmail)}/{Uri.EscapeDataString(holiday.Date)}");
+                            $"/api/SavedHolidays/{Uri.EscapeDataString(UserEmail)}/{Uri.EscapeDataString(holiday.Date)}");
                         if (!response.IsSuccessStatusCode)
                         {
                             ErrorMessage = $"Failed to delete holiday for {holiday.Date}. Status: {response.StatusCode}";
@@ -313,7 +313,7 @@ else if (AllHolidays.Length == 0)
             if (selectedHolidays.Any())
             {
                 var postResponse = await HttpClient.PostAsJsonAsync(
-                    "http://localhost:5243/api/SavedHolidays", selectedHolidays);
+                    "/api/SavedHolidays", selectedHolidays);
                 if (!postResponse.IsSuccessStatusCode)
                 {
                     ErrorMessage = $"Failed to save holidays. Status: {postResponse.StatusCode}";
