@@ -119,11 +119,11 @@ else if (AllHolidays.Length == 0)
         try
         {
             IsLoading = true;
-            const string savedHolidaysUrl = "http://localhost:5243/api/SavedHolidays";
+            const string savedHolidaysUrl = "/api/SavedHolidays";
             var savedResponse = await HttpClient.GetAsync(savedHolidaysUrl);
             SavedHolidays = await savedResponse.Content.ReadFromJsonAsync<Event[]>() ?? Array.Empty<Event>();
 
-            const string eventsUrl = "http://localhost:5243/api/Events";
+            const string eventsUrl = "/api/Events";
             var httpResponse = await HttpClient.GetAsync(eventsUrl);
 
             if (httpResponse.IsSuccessStatusCode)
@@ -215,7 +215,7 @@ else if (AllHolidays.Length == 0)
                     if (savedHoliday != null)
                     {
                         var response = await HttpClient.DeleteAsync(
-                            $"http://localhost:5243/api/SavedHolidays/{savedHoliday.Id}");
+                            $"/api/SavedHolidays/{savedHoliday.Id}");
                         if (!response.IsSuccessStatusCode)
                         {
                             ErrorMessage = $"Failed to delete holiday with ID {savedHoliday.Id}. " +
@@ -227,7 +227,7 @@ else if (AllHolidays.Length == 0)
             }
 
             var postResponse = await HttpClient.PostAsJsonAsync(
-                "http://localhost:5243/api/SavedHolidays", selectedHolidays);
+                "/api/SavedHolidays", selectedHolidays);
             if (!postResponse.IsSuccessStatusCode)
             {
                 ErrorMessage = $"Failed to save holidays. Status: {postResponse.StatusCode}";

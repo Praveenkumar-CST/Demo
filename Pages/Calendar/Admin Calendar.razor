@@ -167,7 +167,7 @@
         // Fetch events from API and populate events dictionary.
         try
         {
-            var response = await Http.GetFromJsonAsync<List<Event>>("http://localhost:5243/api/Events");
+            var response = await Http.GetFromJsonAsync<List<Event>>("/api/Events");
             if (response != null)
             {
                 _events = response
@@ -263,7 +263,7 @@
             };
 
             HttpResponseMessage response = await Http.PostAsJsonAsync(
-                "http://localhost:5243/api/Events",
+                "/api/Events",
                 eventToSave);
 
             if (response.IsSuccessStatusCode)
@@ -325,7 +325,7 @@
             };
 
             HttpResponseMessage response = await Http.PutAsJsonAsync(
-                $"http://localhost:/api/Events/{_selectedDate:yyyy-MM-dd}",
+                $"/api/Events/{_selectedDate:yyyy-MM-dd}",
                 eventToSave);
 
             if (response.IsSuccessStatusCode)
@@ -373,7 +373,7 @@
         try
         {
             var response = await Http.DeleteAsync(
-                $"http://localhost:5243/api/Events/{_selectedDate:yyyy-MM-dd}");
+                $"/api/Events/{_selectedDate:yyyy-MM-dd}");
 
             if (response.IsSuccessStatusCode)
             {
