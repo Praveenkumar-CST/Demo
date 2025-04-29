@@ -108,7 +108,7 @@ else if (_holidays.Length == 0)
         try
         {
             _isLoading = true;
-            const string apiUrl = "http://localhost:5243/api/Events";
+            const string apiUrl = "/api/Events";
 
             var httpResponse = await Http.GetAsync(apiUrl);
             _rawResponse = await httpResponse.Content.ReadAsStringAsync();
