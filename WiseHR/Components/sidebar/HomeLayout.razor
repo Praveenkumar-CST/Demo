@@ -8,6 +8,7 @@
 @inject HttpClient Http
 @inject EmployeeService EmployeeService
 @inject NavigationManager NavigationManager
+@using WiseHR.Components.sidebar
 
 <MudThemeProvider />
 <MudLayout>
@@ -124,7 +125,7 @@
                 @* <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_searchError</MudText> *@
             }
 
-            
+
         </MudItem>
 
         <MudItem xs="2" Style="padding: 8px;">
@@ -146,7 +147,7 @@
                     }
                 </ActivatorContent>
                 <ChildContent>
-                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person">Profile</MudMenuItem>
+                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person" OnClick="NavigateToProfile">Profile</MudMenuItem>
                     <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Settings">Settings</MudMenuItem>
                     <MudDivider />
                     <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
@@ -156,7 +157,7 @@
     </MudAppBar>
 
     <!-- Sidebar -->
-    <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+    @* <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />   *@
 
     <!-- Main Content -->
     <MudMainContent Style="flex-grow: 1;">
@@ -167,24 +168,24 @@
                 @if (!string.IsNullOrEmpty(selectedGender))
                 {
                     <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
-                             OnClose="@(() => RemoveFilter("gender"))"
-                             Class="mr-1 mb-1">
+                    OnClose="@(() => RemoveFilter("gender"))"
+                    Class="mr-1 mb-1">
                         Gender: @selectedGender
                     </MudChip>
                 }
                 @if (!string.IsNullOrEmpty(selectedBloodGroup))
                 {
                     <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
-                             OnClose="@(() => RemoveFilter("bloodGroup"))"
-                             Class="mr-1 mb-1">
+                    OnClose="@(() => RemoveFilter("bloodGroup"))"
+                    Class="mr-1 mb-1">
                         Blood Group: @selectedBloodGroup
                     </MudChip>
                 }
                 @if (!string.IsNullOrEmpty(selectedDesignation))
                 {
                     <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
-                             OnClose="@(() => RemoveFilter("designation"))"
-                             Class="mr-1 mb-1">
+                    OnClose="@(() => RemoveFilter("designation"))"
+                    Class="mr-1 mb-1">
                         Designation: @selectedDesignation
                     </MudChip>
                 }
@@ -220,13 +221,13 @@
     }
 
     .active-filters {
-        position: sticky;
-        top: 64px;
-        left: 0;
-        z-index: 99;
-        background-color: white;
-        padding: 10px 20px;
-        box-shadow: 2px 2px 5px 0px rgba(112, 112,112,0.75);
+    position: sticky;
+    top: 64px;
+    left: 0;
+    z-index: 99;
+    background-color: white;
+    padding: 10px 20px;
+    box-shadow: 2px 2px 5px 0px rgba(112, 112,112,0.75);
     }
 
     .filter-drawer {
@@ -252,6 +253,27 @@
 </style>
 
 @code {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     private bool drawerOpen = true;
@@ -579,6 +601,26 @@
         await SearchEmployeesAutocomplete(_lastSearchQuery, CancellationToken.None);
     }
 
+
+    private string CurrentUserEmail()
+    {
+        return JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "email").Result;
+    }
+
+
+
+    private string? employeeId;
+    private void NavigateToProfile()
+    {
+
+        Console.WriteLine("employee id "+ employeeId);
+        Console.WriteLine("Navigate to current user profile");
+        if (!string.IsNullOrEmpty(employeeId))
+        {
+            NavigationManager.NavigateTo($"/employee/{employeeId}");
+        }
+    }
+
     private async Task LoadUserDetails()
     {
         try
@@ -597,9 +639,13 @@
                     if (!string.IsNullOrEmpty(employee.PhotoBase64Content) && !string.IsNullOrEmpty(employee.PhotoContentType))
                     {
                         userProfilePicture = $"data:{employee.PhotoContentType};base64,{employee.PhotoBase64Content}";
+                        employeeId = employee.EmployeeID;
                     }
                     else
                     {
+                       
+
+                        Console.WriteLine("Employee ID " + employeeId);
                         userName = employee.FirstName ?? "User";
                         userInitials = GetInitials(userName);
                         userProfilePicture = null;

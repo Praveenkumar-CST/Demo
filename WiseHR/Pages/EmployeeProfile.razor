@@ -219,7 +219,7 @@
                             </MudItem>
                         </MudGrid>
                     </MudTabPanel>
-                    @if (UserRole == "Admin")
+                    @if (UserRole == "Admin" || CurrentEmail==Employee_Email )
                     {
                         <MudTabPanel Text="Address Details" Icon="@Icons.Material.Filled.Home">
                             <MudGrid>
@@ -438,7 +438,7 @@
             <!-- Action Buttons -->
             <MudItem xs="12" Class="d-flex justify-space-between mt-6">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack">
+                StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack">
                     Back to Employees
                 </MudButton>
             </MudItem>
@@ -456,10 +456,14 @@
     private bool isLoading = true;
     private string? errorMessage;
     private string? UserRole = string.Empty;
-
+    private string? Employee_Email = string.Empty;
+    private string? CurrentEmail = string.Empty;
     protected override async Task OnInitializedAsync()
     {
         UserRole = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "userRole");
+        CurrentEmail = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+
+        Console.WriteLine("Current_Email "+ CurrentEmail);
         try
         {
             isLoading = true;
@@ -471,6 +475,9 @@
             }
             // Fetch and assign Experience Details
             Experience = await ExperienceService.GetExperienceDetails(id);
+
+			Employee_Email = Employee.CurrentEmail;
+			Console.WriteLine($"Employee Email: {Employee_Email}");
             // Log Experience data for debugging
             if (Experience != null)
             {
