@@ -268,14 +268,6 @@
 
 
 
-
-
-
-
-
-
-
-
     private bool drawerOpen = true;
     private bool filterDrawerOpen = false;
     private HomeSidebar? sidebar;
@@ -439,8 +431,6 @@
 
                     if (results.Count > 5) { Console.WriteLine("..."); }
 
-
-
                     _searchError = null;
 
                     return results;
@@ -494,7 +484,10 @@
         if (selectedEmployee != null)
         {
             Console.WriteLine($"OnEmployeeSelected triggered for: {selectedEmployee.Name} ({selectedEmployee.ProfileUrl})");
+
+            SearchEmployeesAutocomplete("" , CancellationToken.None );
             await NavigateToEmployeeInNewTab(selectedEmployee.ProfileUrl);
+
         }
         else
         {
@@ -509,7 +502,10 @@
             Console.WriteLine($"Attempting to navigate to {profileUrl} in new tab.");
             try
             {
+
                 await JSRuntime.InvokeVoidAsync("open", profileUrl, "_blank");
+
+                // NavigationManager.NavigateTo(profileUrl);
                 Console.WriteLine("JavaScript window.open called successfully.");
             }
             catch (Exception ex)
@@ -723,7 +719,7 @@
     public class EmployeeSearchResult
     {
         public string Name { get; set; } = string.Empty;
-        public string Designation { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty; 
         public string ProfileUrl { get; set; } = string.Empty;
         public string? Email { get; set; }
         public string? Mobile { get; set; }
