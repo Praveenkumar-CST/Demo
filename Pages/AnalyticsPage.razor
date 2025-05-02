@@ -6,34 +6,92 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="height: 100vh; display: flex; flex-direction: column;">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="height: calc(100vh - 64px); display: flex; flex-direction: column;">
     <MudText Typo="Typo.h5" Class="mb-2">Employee Analytics</MudText>
 
     <MudGrid Spacing="2" Style="flex: 1; min-height: 0;">
         @* Filter Section *@
         <MudItem xs="12" md="3" Style="display: flex; flex-direction: column;">
-            <MudPaper Class="pa-3" Elevation="1" Style="height: 100%; display: flex; flex-direction: column;">
+            <MudPaper Class="pa-3" Elevation="1" Style="height: 100%; display: flex; flex-direction: column; overflow-y: auto;">
                 <MudText Typo="Typo.subtitle1" GutterBottom="true">Filters</MudText>
 
-                <div class="mb-2">
-                    <MudSelect T="string" @bind-Value="_filterDto.BloodGroup" Label="Blood Group" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                        @foreach (var group in _bloodGroups)
-                        {
-                            <MudSelectItem Value="@group">@group</MudSelectItem>
-                        }
-                    </MudSelect>
-                </div>
+                <MudExpansionPanels MultiExpansion="true">
+                    <MudExpansionPanel Text="Personal" IsInitiallyExpanded="true">
+                        <MudSelect T="string" @bind-Value="_filterDto.BloodGroup" Label="Blood Group" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                            @foreach (var group in _bloodGroups)
+                            {
+                                <MudSelectItem Value="@group">@group</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect T="string" @bind-Value="_filterDto.Gender" Label="Gender" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                            @foreach (var gender in _genders)
+                            {
+                                <MudSelectItem Value="@gender">@gender</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect T="string" @bind-Value="_filterDto.MaritalStatus" Label="Marital Status" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                             @foreach (var status in _maritalStatuses)
+                            {
+                                <MudSelectItem Value="@status">@status</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudTextField @bind-Value="_filterDto.Nationality" Label="Nationality" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudSelect T="string" @bind-Value="_filterDto.PhysicallyChallenged" Label="Physically Challenged" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                            @foreach (var option in _physicallyChallengedOptions)
+                            {
+                                <MudSelectItem Value="@option">@option</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudDatePicker @bind-Date="_filterDto.DateOfBirthStart" Label="DOB From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudDatePicker @bind-Date="_filterDto.DateOfBirthEnd" Label="DOB To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfBirthStart" />
+                    </MudExpansionPanel>
 
-                <div class="mb-2">
-                    <MudTextField @bind-Value="_filterDto.BankName" Label="Bank Name" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" />
-                </div>
+                    <MudExpansionPanel Text="Employment">
+                         <MudTextField @bind-Value="_filterDto.Designation" Label="Designation" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                         <MudTextField @bind-Value="_filterDto.JoiningLocation" Label="Joining Location" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                         <MudSelect T="string" @bind-Value="_filterDto.TypeOfEmployment" Label="Type of Employment" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                            @foreach (var type in _employmentTypes)
+                            {
+                                <MudSelectItem Value="@type">@type</MudSelectItem>
+                            }
+                         </MudSelect>
+                         <MudTextField @bind-Value="_filterDto.Level" Label="Level" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                         <MudDatePicker @bind-Date="_filterDto.DateOfJoiningStart" Label="Joined From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                         <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
+                    </MudExpansionPanel>
 
-                <div class="mb-2">
-                    <MudTextField @bind-Value="_filterDto.College" Label="College / University" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" />
-                </div>
+                     <MudExpansionPanel Text="Address">
+                        <MudTextField @bind-Value="_filterDto.CurrentCity" Label="Current City" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.CurrentState" Label="Current State" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.PermanentCity" Label="Permanent City" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.PermanentState" Label="Permanent State" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                     </MudExpansionPanel>
 
-                <div class="mt-auto mb-0 d-flex">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters" Disabled="_isLoading" Class="mr-1" Style="width: 50%;">
+                    <MudExpansionPanel Text="Banking">
+                        <MudTextField @bind-Value="_filterDto.BankName" Label="Bank Name" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.BankBranch" Label="Bank Branch" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.BankState" Label="Bank State" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                             @foreach (var type in _accountTypes)
+                            {
+                                <MudSelectItem Value="@type">@type</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudExpansionPanel>
+
+                    <MudExpansionPanel Text="Experience">
+                        <MudTextField @bind-Value="_filterDto.College" Label="College / University" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.Qualification" Label="Qualification" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudNumericField @bind-Value="_filterDto.YearOfPassingStart" Label="Passed From Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="1900" Max="DateTime.Now.Year" Class="mb-2" />
+                        <MudNumericField @bind-Value="_filterDto.YearOfPassingEnd" Label="Passed To Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.YearOfPassingStart ?? 1900" Max="DateTime.Now.Year" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.PreviousDesignation" Label="Previous Designation" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.PreviousLocation" Label="Previous Location" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+
+                <div class="mt-auto pt-3 d-flex">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters" Disabled="_isLoading" Class="mr-1" Style="flex: 1;">
                         @if (_isLoading)
                         {
                             <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
@@ -45,7 +103,7 @@
                             <span>Apply</span>
                         }
                     </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="width: 50%;">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="flex: 1;">
                         <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1"/>
                         <span>Clear</span>
                     </MudButton>
@@ -127,9 +185,9 @@
                                     <MudSpacer />
                                     <div class="d-flex">
                                         <MudTextField @bind-Value="SearchString"
-                                                      Placeholder="Search employees..." 
+                                                      Placeholder="Search employees..."
                                                       Adornment="Adornment.Start"
-                                                      AdornmentIcon="@Icons.Material.Filled.Search" 
+                                                      AdornmentIcon="@Icons.Material.Filled.Search"
                                                       IconSize="Size.Small"
                                                       Variant="Variant.Outlined"
                                                       Dense="true"
@@ -139,10 +197,10 @@
                                                       Style="width: 300px;"></MudTextField>
                                         @if (!string.IsNullOrWhiteSpace(SearchString))
                                         {
-                                            <MudIconButton Icon="@Icons.Material.Filled.Clear" 
-                                                          Color="Color.Default" 
-                                                          OnClick="@ClearSearchText" 
-                                                          Size="Size.Small" 
+                                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                                          Color="Color.Default"
+                                                          OnClick="@ClearSearchText"
+                                                          Size="Size.Small"
                                                           Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
                                         }
                                     </div>
@@ -219,11 +277,8 @@
                 Console.WriteLine($"SearchString set to: '{value}'");
                 if (string.IsNullOrEmpty(value))
                 {
-                    // Value is empty, trigger table refresh
                     _ = HandleEmptySearchAsync();
                 }
-                // Note: We don't trigger reload on non-empty changes here,
-                // because the Enter key press handles that.
             }
         }
     }
@@ -239,6 +294,11 @@
     private int _systemTotalBloodGroups = 0;
 
     private List<string> _bloodGroups = new List<string> { "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-" };
+    private List<string> _genders = new List<string> { "Male", "Female", "Other" };
+    private List<string> _maritalStatuses = new List<string> { "Single", "Married", "Divorced", "Widowed" };
+    private List<string> _physicallyChallengedOptions = new List<string> { "Yes", "No" };
+    private List<string> _employmentTypes = new List<string> { "Permanent", "Contract", "Intern" };
+    private List<string> _accountTypes = new List<string> { "Savings", "Current" };
 
     protected override async Task OnInitializedAsync()
     {
@@ -246,26 +306,60 @@
         await ApplyFilters();
     }
 
-    private async Task FetchSystemTotals()
+    // Helper function to build the query string
+    private string BuildFilterQueryString(AnalyticsFilterDto dto)
     {
-        try
+        var parameters = new Dictionary<string, string>();
+
+        void AddIfNotNullOrEmpty(string key, string? value)
         {
-            var response = await Http.GetAsync("/api/Analytics/totals");
-            if (response.IsSuccessStatusCode)
-            {
-                var totals = await response.Content.ReadFromJsonAsync<SystemTotals>();
-                if (totals != null)
-                {
-                    _systemTotalEmployees = totals.TotalEmployees;
-                    _systemTotalDesignations = totals.TotalDesignations;
-                    _systemTotalBloodGroups = totals.TotalBloodGroups;
-                }
-            }
+            if (!string.IsNullOrEmpty(value))
+                parameters.Add(key, System.Net.WebUtility.UrlEncode(value));
         }
-        catch (Exception ex)
+
+        void AddIfNotNull<T>(string key, T? value) where T : struct
         {
-            Console.WriteLine($"Error fetching system totals: {ex.Message}");
+            if (value.HasValue)
+                 parameters.Add(key, System.Net.WebUtility.UrlEncode(value.Value.ToString()));
         }
+         void AddIfDateNotNull(string key, DateTime? value)
+        {
+            if (value.HasValue)
+                 // Use a consistent, URL-friendly format (ISO 8601 is good)
+                 parameters.Add(key, System.Net.WebUtility.UrlEncode(value.Value.ToString("yyyy-MM-dd"))); 
+        }
+
+        // Add all filter properties
+        AddIfNotNullOrEmpty(nameof(dto.College), dto.College);
+        AddIfNotNullOrEmpty(nameof(dto.BloodGroup), dto.BloodGroup);
+        AddIfNotNullOrEmpty(nameof(dto.BankName), dto.BankName);
+        AddIfNotNullOrEmpty(nameof(dto.Designation), dto.Designation);
+        AddIfNotNullOrEmpty(nameof(dto.JoiningLocation), dto.JoiningLocation);
+        AddIfNotNullOrEmpty(nameof(dto.Gender), dto.Gender);
+        AddIfNotNullOrEmpty(nameof(dto.MaritalStatus), dto.MaritalStatus);
+        AddIfNotNullOrEmpty(nameof(dto.Nationality), dto.Nationality);
+        AddIfNotNullOrEmpty(nameof(dto.TypeOfEmployment), dto.TypeOfEmployment);
+        AddIfNotNullOrEmpty(nameof(dto.Level), dto.Level);
+        AddIfNotNullOrEmpty(nameof(dto.CurrentCity), dto.CurrentCity);
+        AddIfNotNullOrEmpty(nameof(dto.CurrentState), dto.CurrentState);
+        AddIfNotNullOrEmpty(nameof(dto.PermanentCity), dto.PermanentCity);
+        AddIfNotNullOrEmpty(nameof(dto.PermanentState), dto.PermanentState);
+        AddIfDateNotNull(nameof(dto.DateOfJoiningStart), dto.DateOfJoiningStart);
+        AddIfDateNotNull(nameof(dto.DateOfJoiningEnd), dto.DateOfJoiningEnd);
+        AddIfDateNotNull(nameof(dto.DateOfBirthStart), dto.DateOfBirthStart);
+        AddIfDateNotNull(nameof(dto.DateOfBirthEnd), dto.DateOfBirthEnd);
+        AddIfNotNullOrEmpty(nameof(dto.PhysicallyChallenged), dto.PhysicallyChallenged);
+        AddIfNotNullOrEmpty(nameof(dto.BankBranch), dto.BankBranch);
+        AddIfNotNullOrEmpty(nameof(dto.BankState), dto.BankState);
+        AddIfNotNullOrEmpty(nameof(dto.AccountType), dto.AccountType);
+        AddIfNotNullOrEmpty(nameof(dto.Qualification), dto.Qualification);
+        AddIfNotNull(nameof(dto.YearOfPassingStart), dto.YearOfPassingStart);
+        AddIfNotNull(nameof(dto.YearOfPassingEnd), dto.YearOfPassingEnd);
+        AddIfNotNullOrEmpty(nameof(dto.PreviousEmployer), dto.PreviousEmployer);
+        AddIfNotNullOrEmpty(nameof(dto.PreviousDesignation), dto.PreviousDesignation);
+        AddIfNotNullOrEmpty(nameof(dto.PreviousLocation), dto.PreviousLocation);
+
+        return parameters.Any() ? "?" + string.Join("&", parameters.Select(p => $"{p.Key}={p.Value}")) : string.Empty;
     }
 
     private async Task ApplyFilters()
@@ -277,18 +371,22 @@
 
         try
         {
-            var response = await Http.PostAsJsonAsync("/api/Analytics/filter", _filterDto);
+            string queryString = BuildFilterQueryString(_filterDto);
+            string apiUrl = $"/api/Analytics/filter{queryString}";
+            Console.WriteLine($"Applying filters with GET request to: {apiUrl}");
+
+            // Change from PostAsJsonAsync to GetAsync
+            var response = await Http.GetAsync(apiUrl);
 
             if (response.IsSuccessStatusCode)
             {
+                // Read content using ReadFromJsonAsync
                 _filteredEmployees = await response.Content.ReadFromJsonAsync<List<EmployeeDetails>>() ?? new List<EmployeeDetails>();
                 Console.WriteLine($"Analytics filter successful: Found {_filteredEmployees.Count} employees.");
 
-                bool isUnfiltered = string.IsNullOrEmpty(_filterDto.BloodGroup) && 
-                                    string.IsNullOrEmpty(_filterDto.BankName) && 
-                                    string.IsNullOrEmpty(_filterDto.College);
-                
-                if (isUnfiltered)
+                bool isUnfiltered = string.IsNullOrEmpty(queryString); // Check if query string is empty
+
+                if (isUnfiltered && !_initialLoadComplete) 
                 {
                     _systemTotalEmployees = _filteredEmployees.Count;
                     _systemTotalDesignations = _filteredEmployees
@@ -334,7 +432,7 @@
         }
         finally
         {
-            _initialLoadComplete = true;
+            if (!_initialLoadComplete) _initialLoadComplete = true;
             _isLoading = false;
             StateHasChanged();
             await (_table?.ReloadServerData() ?? Task.CompletedTask);
@@ -363,7 +461,7 @@
 
     private async Task<TableData<EmployeeDetails>> ServerReload(TableState state, CancellationToken token)
     {
-        await Task.Delay(50, token);
+        await Task.Delay(1, token);
 
         IEnumerable<EmployeeDetails> data = _filteredEmployees;
 
@@ -451,13 +549,31 @@
         public string? College { get; set; }
         public string? BloodGroup { get; set; }
         public string? BankName { get; set; }
-    }
-
-    public class SystemTotals
-    {
-        public int TotalEmployees { get; set; }
-        public int TotalDesignations { get; set; }
-        public int TotalBloodGroups { get; set; }
+        public string? Designation { get; set; }
+        public string? JoiningLocation { get; set; }
+        public string? Gender { get; set; }
+        public string? MaritalStatus { get; set; }
+        public string? Nationality { get; set; }
+        public string? TypeOfEmployment { get; set; }
+        public string? Level { get; set; }
+        public string? CurrentCity { get; set; }
+        public string? CurrentState { get; set; }
+        public string? PermanentCity { get; set; }
+        public string? PermanentState { get; set; }
+        public DateTime? DateOfJoiningStart { get; set; }
+        public DateTime? DateOfJoiningEnd { get; set; }
+        public DateTime? DateOfBirthStart { get; set; }
+        public DateTime? DateOfBirthEnd { get; set; }
+        public string? PhysicallyChallenged { get; set; }
+        public string? BankBranch { get; set; }
+        public string? BankState { get; set; }
+        public string? AccountType { get; set; }
+        public string? Qualification { get; set; }
+        public int? YearOfPassingStart { get; set; }
+        public int? YearOfPassingEnd { get; set; }
+        public string? PreviousEmployer { get; set; }
+        public string? PreviousDesignation { get; set; }
+        public string? PreviousLocation { get; set; }
     }
 
     public class EmployeeDetails

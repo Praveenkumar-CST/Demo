@@ -550,6 +550,23 @@
     private async Task RefreshMainEmployeeListAsync()
     {
         Console.WriteLine($"Refreshing main content with Query: '{activeSearchQuery}', Gender: '{activeGenderFilter ?? "N/A"}', Blood: '{activeBloodGroupFilter ?? "N/A"}', Designation: '{activeDesignationFilter ?? "N/A"}'");
+
+        // TODO: Implement the actual logic to update the component in @Body.
+        // This typically involves:
+        // 1. Having a reference to the child component OR
+        // 2. Passing the active* variables as parameters to the child component.
+        //    When these parameters change, the child component should detect the change
+        //    (e.g., in OnParametersSetAsync) and re-fetch its data using these criteria.
+
+        // Example (if child component parameters are bound):
+        // StateHasChanged(); // This might be enough if parameters trigger child refresh
+
+        // Example (if child component has a public refresh method):
+        // if (employeeListComponentRef != null)
+        // {
+        //     await employeeListComponentRef.LoadEmployees(activeSearchQuery, activeGenderFilter, activeBloodGroupFilter, activeDesignationFilter);
+        // }
+
         await Task.CompletedTask; // Placeholder
         StateHasChanged(); // Ensure UI reflects changes (like active filter chips)
     }
