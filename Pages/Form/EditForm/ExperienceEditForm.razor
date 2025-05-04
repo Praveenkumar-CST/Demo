@@ -1,0 +1,214 @@
+﻿@page "/experienceEditForm/{EmployeeId}"
+@using WiseHRServer.Models
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Text.Json
+@using Components.sidebar
+@inject ExperienceService ExperienceService
+@layout HomeLayout
+@inject NavigationManager NavigationManager
+
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudCard Elevation="2" Class="p-2">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                EXPERIENCE DETAILS
+            </MudText>
+        </MudCardHeader>
+
+        <MudCardContent Margin="Margin.Dense" Dense="true">
+            <EditForm Model="@experience" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+
+                <!-- Education Section -->
+                <h4 class="text-secondary mt-2">Education Qualifications</h4>
+                @foreach (var edu in educationList)
+                {
+                    <div class="border p-2 mb-1 bg-light rounded">
+                        <div class="row g-1">
+                            <div class="col-md-3">
+                                <label>Qualification</label>
+                                <InputText class="form-control" @bind-Value="edu.Qualification" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>University</label>
+                                <InputText class="form-control" @bind-Value="edu.University" />
+                            </div>
+                            <div class="col-md-2">
+                                <label>Year</label>
+                                <InputSelect class="form-control" @bind-Value="edu.YearOfPassing">
+                                    <option value="">Select Year</option>
+                                    @foreach (var year in YearList)
+                                    {
+                                        <option value="@year">@year</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-2">
+                                <label>Percentage</label>
+                                <InputNumber class="form-control" @bind-Value="edu.Percentage" />
+                            </div>
+                            <div class="col-1 d-flex align-items-end">
+                                <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveEducation(edu)">
+                                    &times;
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+                <button type="button" class="btn btn-outline-primary mb-4 mt-1" @onclick="AddEducation">+ Add Education</button>
+
+                <!-- Work Experience Section -->
+                <h4 class="text-secondary mt-1">Work Experience</h4>
+                @foreach (var work in workList)
+                {
+                    <div class="border p-2 mb-2 bg-light rounded">
+                        <div class="row g-1">
+                            <div class="col-md-3">
+                                <label>Employer</label>
+                                <InputText class="form-control" @bind-Value="work.Employer" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>Location</label>
+                                <InputText class="form-control" @bind-Value="work.Location" />
+                            </div>
+                            <div class="col-md-2">
+                                <label>Join Date</label>
+                                <InputDate class="form-control" @bind-Value="work.DateOfJoining" />
+                            </div>
+                            <div class="col-md-2">
+                                <label>Leave Date</label>
+                                <InputDate class="form-control" @bind-Value="work.DateOfLeaving" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>Designation</label>
+                                <InputText class="form-control" @bind-Value="work.Designation" />
+                            </div>
+                            <div class="col-1 d-flex align-items-end">
+                                <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
+                                    &times;
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+                <button type="button" class="btn btn-outline-primary mb-1 mt-1" @onclick="AddWork">+ Add Work Experience</button>
+
+                <!-- Only Back Button -->
+                <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
+            Update
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@CloseForm">
+            Close
+        </MudButton>
+
+
+    </MudItem>
+            </EditForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string EmployeeId { get; set; }
+
+    private Experience experience = new Experience();
+    private List<Education> educationList = new();
+    private List<WorkExperience> workList = new();
+    private List<int> YearList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        int currentYear = DateTime.Now.Year;
+        for (int year = currentYear; year >= 1980; year--)
+        {
+            YearList.Add(year);
+        }
+
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            var allExperiences = await ExperienceService.GetAllExperience();
+            var empExperience = allExperiences.FirstOrDefault(e => e.EmployeeID == EmployeeId);
+
+            if (empExperience != null)
+            {
+                experience = empExperience;
+                educationList = experience.EducationQualifications ?? new List<Education>();
+                workList = experience.WorkExperiences ?? new List<WorkExperience>();
+            }
+            else
+            {
+                AddEducation();
+                AddWork();
+            }
+        }
+    }
+    private string? SuccessMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = workList;
+
+        Console.WriteLine("Updated experience data: " + JsonSerializer.Serialize(experience));
+
+        bool result = await ExperienceService.UpdateExperienceAsync(experience);
+
+        if (result)
+        {
+            SuccessMessage = "Experience details updated successfully!";
+
+            var parameters = new DialogParameters
+        {
+            { "Message", SuccessMessage },
+            { "OnClose", EventCallback.Factory.Create(this, NavigateToList) }
+        };
+
+            DialogService.Show<SubmitSuccessDialog>("Success", parameters);
+        
+
+            Snackbar.Add("Updated successfully!", Severity.Success); // ✅ Success message
+        }
+        else
+        {
+            Snackbar.Add("Update failed. Please try again.", Severity.Error); // ❌ Failure message
+            Console.WriteLine("Update failed!");
+        }
+    }
+    private void NavigateToList()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }
+    }
+    private void CloseForm()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }
+    }
+
+    private void AddEducation() => educationList.Add(new Education());
+    private void RemoveEducation(Education edu) => educationList.Remove(edu);
+
+    private void AddWork() => workList.Add(new WorkExperience());
+    private void RemoveWork(WorkExperience work) => workList.Remove(work);
+
+    private void GoBack() => NavigationManager.NavigateTo("/previousPage"); // 🔁 Replace with actual back route
+
+}
