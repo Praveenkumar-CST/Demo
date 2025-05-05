@@ -12,9 +12,8 @@
 
 <MudThemeProvider />
 <MudLayout>
-
     <!-- Top Navigation Bar -->
-    <MudAppBar Elevation="1" Style="background-color: var(--primary);">
+    <MudAppBar Elevation="3" Style="background-color: var(--primary); height: 72px;">
         <MudItem xs="2" Class="d-flex align-center">
             <MudIconButton Icon="@Icons.Material.Filled.Menu"
                            Color="Color.Inherit"
@@ -24,12 +23,12 @@
 
             <MudImage Src="images/logo1.png"
                       Alt="Company Logo"
-                      Height="60"
-                      Style="margin-left: 60px; color:white;" />
+                      Height="48"
+                      Style="margin-left: 16px; color:white;" />
         </MudItem>
 
         <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
-            <div class="d-flex align-center position-relative" style="width: 60%;">
+            <div class="d-flex align-center position-relative" style="width: 70%; max-width: 800px;">
                 <MudAutocomplete T="EmployeeSearchResult"
                                  SearchFunc="@SearchEmployeesAutocomplete"
                                  Placeholder="Search employees..."
@@ -48,29 +47,32 @@
                                  ItemTemplate="@ResultTemplate"
                                  ToStringFunc="@(e => null)" />
 
-                <MudIconButton Icon="@Icons.Material.Filled.FilterList"
-                               Color="Color.Primary"
-                               Class="ml-2 filter-button"
-                               OnClick="@ToggleFilterDrawer"
-                               Style="background-color: var(--secondary); border-radius: 50%;" />
+                <MudTooltip Text="Filter Options">
+                    <MudIconButton Icon="@Icons.Material.Filled.FilterList"
+                                   Color="Color.Primary"
+                                   Class="ml-2 filter-button"
+                                   OnClick="@ToggleFilterDrawer"
+                                   Style="background-color: var(--secondary); border-radius: 50%;" />
+                </MudTooltip>
             </div>
 
             <!-- Filter Drawer -->
             @if (filterDrawerOpen)
             {
-                <MudPaper Elevation="2"
-                          Class="filter-drawer pa-3"
-                          Style="width: 360px; max-width: 100%; margin: 0 auto; border-radius: 8px; position: absolute; top: 65px; z-index: 1200;">
-                    <div class="d-flex justify-space-between align-center mb-2">
-                        <MudText Typo="Typo.h6">Filter Options</MudText>
+                <MudPaper Elevation="4"
+                          Class="filter-drawer pa-4"
+                          Style="width: 360px; max-width: 100%; margin: 0 auto; border-radius: 12px; position: absolute; top: 65px; z-index: 1200;">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <MudText Typo="Typo.h6" Style="font-weight: 500;">Filter Options</MudText>
                         <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@CloseFilterDrawer" />
                     </div>
-                    <MudDivider Class="mb-3" />
+                    <MudDivider Class="mb-4" />
                     <MudGrid>
                         <MudItem xs="12">
                             <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Value="@selectedGender"
                                        ValueChanged="@(value => OnFilterChanged("gender", value))"
-                                       FullWidth="true" Margin="Margin.Dense" Class="mb-3" DisableUnderLine="false">
+                                       FullWidth="true" Margin="Margin.Dense" Class="mb-4" DisableUnderLine="false"
+                                       Style="border-radius: 8px;">
                                 <MudSelectItem Value="@("All")">All Genders</MudSelectItem>
                                 <MudSelectItem Value="@("Male")">Male</MudSelectItem>
                                 <MudSelectItem Value="@("Female")">Female</MudSelectItem>
@@ -81,7 +83,8 @@
                         <MudItem xs="12">
                             <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Value="@selectedBloodGroup"
                                        ValueChanged="@(value => OnFilterChanged("bloodGroup", value))"
-                                       FullWidth="true" Margin="Margin.Dense" Class="mb-3">
+                                       FullWidth="true" Margin="Margin.Dense" Class="mb-4"
+                                       Style="border-radius: 8px;">
                                 <MudSelectItem Value="@("All")">All Blood Groups</MudSelectItem>
                                 <MudSelectItem Value="@("A+")">A+</MudSelectItem>
                                 <MudSelectItem Value="@("A-")">A-</MudSelectItem>
@@ -97,7 +100,8 @@
                         <MudItem xs="12">
                             <MudSelect T="string" Label="Designation" Variant="Variant.Outlined" Value="@selectedDesignation"
                                        ValueChanged="@(value => OnFilterChanged("designation", value))"
-                                       FullWidth="true" Margin="Margin.Dense" Class="mb-3">
+                                       FullWidth="true" Margin="Margin.Dense" Class="mb-4"
+                                       Style="border-radius: 8px;">
                                 <MudSelectItem Value="@("All")">All Designations</MudSelectItem>
                                 @foreach (var designation in designations)
                                 {
@@ -107,10 +111,20 @@
                         </MudItem>
 
                         <MudItem xs="12" Class="d-flex justify-space-between">
-                            <MudButton Variant="Variant.Filled" Color="Color.Error"
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Error"
                                        OnClick="@ClearFilters"
-                                       StartIcon="@Icons.Material.Filled.FilterAltOff">
+                                       StartIcon="@Icons.Material.Filled.FilterAltOff"
+                                       Class="px-4">
                                 Clear Filters
+                            </MudButton>
+
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       OnClick="@CloseFilterDrawer"
+                                       StartIcon="@Icons.Material.Filled.Check"
+                                       Class="px-4">
+                                Apply
                             </MudButton>
                         </MudItem>
                     </MudGrid>
@@ -120,35 +134,39 @@
             @* Display error message if search fails *@
             @if (!string.IsNullOrEmpty(_searchError))
             {
-                @* <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_searchError</MudText> *@
+                <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_searchError</MudText>
             }
-
-
         </MudItem>
 
         <MudItem xs="2" Style="padding: 8px;">
-            <MudMenu>
+            <MudMenu AnchorOrigin="Origin.BottomRight">
                 <ActivatorContent>
-                    @if (!string.IsNullOrEmpty(userProfilePicture))
-                    {
-                        <img src="@userProfilePicture"
-                             class="rounded-circle" alt="Employee Photo"
-                             style="width: 50px; height: 50px; margin-left:180px; object-fit: cover; border: 2px solid var(--secondary);" />
-                    }
-                    else
-                    {
-                        <MudAvatar Size="Size.Medium"
-                                   Class="cursor-pointer"
-                                   Style="background-color: var(--secondary); color: var(--text-primary); margin-left: 180px; border: 2px solid var(--dark);">
-                            @userInitials
-                        </MudAvatar>
-                    }
+                    <div class="d-flex align-center justify-end pr-4">
+                        @if (!string.IsNullOrEmpty(userProfilePicture))
+                        {
+                            <img src="@userProfilePicture"
+                                 class="rounded-circle" alt="Employee Photo"
+                                 style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--secondary);" />
+                        }
+                        else
+                        {
+                            <MudAvatar Size="Size.Medium"
+                                       Class="cursor-pointer"
+                                       Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--dark);">
+                                @userInitials
+                            </MudAvatar>
+                        }
+                    </div>
                 </ActivatorContent>
                 <ChildContent>
-                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person" OnClick="NavigateToProfile">Profile</MudMenuItem>
-                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Settings">Settings</MudMenuItem>
-                    <MudDivider />
-                    <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
+                    <div class="px-2 py-3">
+                        <MudText Typo="Typo.subtitle1" Class="px-4 mb-2">@(userName ?? "Guest")</MudText>
+                        <MudDivider Class="mb-2" />
+                        <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person" IconColor="Color.Primary" OnClick="NavigateToProfile">My Profile</MudMenuItem>
+                        <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary">Settings</MudMenuItem>
+                        <MudDivider Class="my-2" />
+                        <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error">Logout</MudMenuItem>
+                    </div>
                 </ChildContent>
             </MudMenu>
         </MudItem>
@@ -162,33 +180,68 @@
         @* Display active filters *@
         @if (HasActiveFilters())
         {
-            <div class="d-flex flex-wrap active-filters">
-                @if (!string.IsNullOrEmpty(selectedGender))
+            <div class="d-flex flex-wrap active-filters pa-3">
+                <MudText Typo="Typo.body2" Class="mr-3 d-flex align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" Class="mr-1" />
+                    Active Filters:
+                </MudText>
+
+                @if (!string.IsNullOrEmpty(activeGenderFilter))
                 {
-                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
+                    <MudChip T="string"
+                             Color="Color.Primary"
+                             Size="Size.Small"
+                             Variant="Variant.Outlined"
                              OnClose="@(() => RemoveFilter("gender"))"
-                             Class="mr-1 mb-1">
-                        Gender: @selectedGender
+                             Class="mr-2 mb-1">
+                        Gender: @activeGenderFilter
                     </MudChip>
                 }
-                @if (!string.IsNullOrEmpty(selectedBloodGroup))
+                @if (!string.IsNullOrEmpty(activeBloodGroupFilter))
                 {
-                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
+                    <MudChip T="string"
+                             Color="Color.Primary"
+                             Size="Size.Small"
+                             Variant="Variant.Outlined"
                              OnClose="@(() => RemoveFilter("bloodGroup"))"
-                             Class="mr-1 mb-1">
-                        Blood Group: @selectedBloodGroup
+                             Class="mr-2 mb-1">
+                        Blood Group: @activeBloodGroupFilter
                     </MudChip>
                 }
-                @if (!string.IsNullOrEmpty(selectedDesignation))
+                @if (!string.IsNullOrEmpty(activeDesignationFilter))
                 {
-                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
+                    <MudChip T="string"
+                             Color="Color.Primary"
+                             Size="Size.Small"
+                             Variant="Variant.Outlined"
                              OnClose="@(() => RemoveFilter("designation"))"
-                             Class="mr-1 mb-1">
-                        Designation: @selectedDesignation
+                             Class="mr-2 mb-1">
+                        Designation: @activeDesignationFilter
                     </MudChip>
                 }
+
+                @if (!string.IsNullOrEmpty(activeSearchQuery))
+                {
+                    <MudChip T="string"
+                             Color="Color.Info"
+                             Size="Size.Small"
+                             Variant="Variant.Outlined"
+                             OnClose="@(() => ClearSearchQuery())"
+                             Class="mr-2 mb-1">
+                        Search: @activeSearchQuery
+                    </MudChip>
+                }
+
+                <MudTooltip Text="Clear All Filters">
+                    <MudIconButton Size="Size.Small"
+                                   OnClick="ClearFilters"
+                                   Icon="@Icons.Material.Filled.ClearAll"
+                                   Color="Color.Error"
+                                   Class="ml-auto" />
+                </MudTooltip>
             </div>
         }
+
         <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
             @Body
         </MudContainer>
@@ -203,6 +256,85 @@
     }
 
 </MudLayout>
+
+<style>
+    .search-autocomplete ::deep .mud-input {
+        border-radius: 28px;
+        transition: all 0.3s ease;
+    }
+
+        .search-autocomplete ::deep .mud-input:focus-within {
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+    .search-autocomplete ::deep .mud-input-adornment {
+        color: var(--primary);
+    }
+
+    .active-filters {
+        position: sticky;
+        top: 72px;
+        left: 0;
+        z-index: 99;
+        background-color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-drawer {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        z-index: 1300;
+    }
+
+    .filter-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0,0,0,0.2);
+        z-index: 1100;
+        animation: fadeIn 0.2s ease;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* Improved select styles */
+    ::deep .mud-select {
+        transition: all 0.2s ease;
+    }
+
+        ::deep .mud-select:focus-within {
+            border-color: var(--primary);
+        }
+
+    /* Improved user menu styling */
+    ::deep .mud-menu-list {
+        border-radius: 12px;
+        overflow: hidden;
+        min-width: 200px;
+    }
+
+    ::deep .mud-list-item-icon {
+        min-width: 40px;
+    }
+
+    @@media (max-width: 960px) {
+        .active-filters {
+            padding: 8px 12px;
+        }
+    }
+</style>
 
 @code {
     private bool drawerOpen = true;
@@ -219,14 +351,22 @@
     private string? selectedDesignation = null;
     private List<string> designations = new();
 
-    // ---> New Active State Variables <---
+    // Active State Variables
     private string activeSearchQuery = "";
     private string? activeGenderFilter = null;
     private string? activeBloodGroupFilter = null;
     private string? activeDesignationFilter = null;
-    // <---------------------------------->
+    private string? employeeId; // Moved to field for accessibility
 
-    // ---> Add Keyboard Event Handler <---
+    // Clear search query method
+    private async Task ClearSearchQuery()
+    {
+        activeSearchQuery = "";
+        _searchText = "";
+        await RefreshMainEmployeeListAsync();
+        StateHasChanged();
+    }
+
     private async Task HandleSearchInputKeyUp(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
@@ -236,7 +376,6 @@
             await RefreshMainEmployeeListAsync();    // Trigger main list refresh
         }
     }
-    // <---------------------------------->
 
     private RenderFragment<EmployeeSearchResult> ResultTemplate => (context) => __builder =>
     {
@@ -329,13 +468,12 @@
 
     private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
     {
-        // This function uses 'selected*' filters for live suggestions
         _lastSearchQuery = query;
         Console.WriteLine($"Autocomplete SearchFunc triggered with query: '{query}'");
         _searchError = null;
 
         if (string.IsNullOrWhiteSpace(query) &&
-            string.IsNullOrWhiteSpace(selectedGender) && // Use selected* for suggestions
+            string.IsNullOrWhiteSpace(selectedGender) &&
             string.IsNullOrWhiteSpace(selectedBloodGroup) &&
             string.IsNullOrWhiteSpace(selectedDesignation))
         {
@@ -348,11 +486,11 @@
             var queryParams = new List<string>();
             if (!string.IsNullOrWhiteSpace(query))
                 queryParams.Add($"query={System.Net.WebUtility.UrlEncode(query)}");
-            if (!string.IsNullOrWhiteSpace(selectedGender)) // Use selected* for suggestions
+            if (!string.IsNullOrWhiteSpace(selectedGender))
                 queryParams.Add($"gender={System.Net.WebUtility.UrlEncode(selectedGender)}");
-            if (!string.IsNullOrWhiteSpace(selectedBloodGroup)) // Use selected* for suggestions
+            if (!string.IsNullOrWhiteSpace(selectedBloodGroup))
                 queryParams.Add($"bloodGroup={System.Net.WebUtility.UrlEncode(selectedBloodGroup)}");
-            if (!string.IsNullOrWhiteSpace(selectedDesignation)) // Use selected* for suggestions
+            if (!string.IsNullOrWhiteSpace(selectedDesignation))
                 queryParams.Add($"designation={System.Net.WebUtility.UrlEncode(selectedDesignation)}");
 
             var apiUrl = $"/api/search/spotlight?{string.Join("&", queryParams)}";
@@ -363,27 +501,14 @@
             if (response.IsSuccessStatusCode)
             {
                 var results = await response.Content.ReadFromJsonAsync<List<EmployeeSearchResult>>(token) ?? new List<EmployeeSearchResult>();
-                Console.WriteLine($"Autocomplete Search successful: Found {results.Count} actual employee results");
+                Console.WriteLine($"Autocomplete Search successful: Found {results.Count} results");
                 _searchError = null;
-
-                // Always add the special "See for more details..." item at the end
-                Console.WriteLine("Adding 'See more' link to suggestions.");
-                results.Add(new EmployeeSearchResult
-                    {
-                        EmployeeID = "ANALYTICS_LINK", // Special identifier
-                        Name = "See for more details...",
-                        Designation = "Click to view full analytics", // Informative subtitle
-                        ProfileUrl = "/analytics" // Target URL
-                    // ProfilePicture can remain null
-                    });
-
                 return results;
             }
             else
             {
                 _searchError = $"Error fetching autocomplete results: {response.ReasonPhrase}";
                 Console.WriteLine($"Autocomplete Search HTTP Error: {_searchError}");
-                // Consider showing _searchError in the UI near the autocomplete
             }
         }
         catch (OperationCanceledException)
@@ -395,11 +520,9 @@
         {
             Console.WriteLine($"Error during autocomplete search API call: {ex.Message}");
             _searchError = "An error occurred during autocomplete.";
-            // Consider showing _searchError in the UI near the autocomplete
         }
         finally
         {
-            // No StateHasChanged needed here unless updating an error display specific to autocomplete
             Console.WriteLine("Autocomplete SearchFunc finished.");
         }
 
@@ -410,18 +533,8 @@
     {
         if (selectedEmployee != null)
         {
-            // Check if the selected item is the special analytics link
-            if (selectedEmployee.EmployeeID == "ANALYTICS_LINK")
-            {
-                Console.WriteLine($"Analytics link selected. Navigating to: {selectedEmployee.ProfileUrl} in new tab.");
-                await NavigateToEmployeeInNewTab(selectedEmployee.ProfileUrl);
-            }
-            // Otherwise, handle as a regular employee selection
-            else
-            {
-                Console.WriteLine($"OnEmployeeSelected triggered for: {selectedEmployee.Name} ({selectedEmployee.ProfileUrl})");
-                await NavigateToEmployeeInNewTab(selectedEmployee.ProfileUrl);
-            }
+            Console.WriteLine($"OnEmployeeSelected triggered for: {selectedEmployee.Name} ({selectedEmployee.ProfileUrl})");
+            await NavigateToEmployeeInNewTab(selectedEmployee.ProfileUrl);
         }
         else
         {
@@ -481,19 +594,20 @@
         activeGenderFilter = null;
         activeBloodGroupFilter = null;
         activeDesignationFilter = null;
+        activeSearchQuery = "";
+        _searchText = "";
 
         await RefreshMainEmployeeListAsync(); // Trigger main list update
-
         filterDrawerOpen = false; // Close drawer
         StateHasChanged(); // Update UI (chips, drawer controls)
     }
 
     private bool HasActiveFilters()
     {
-        // Base chip display on active filters
         return !string.IsNullOrEmpty(activeGenderFilter) ||
                !string.IsNullOrEmpty(activeBloodGroupFilter) ||
-               !string.IsNullOrEmpty(activeDesignationFilter);
+               !string.IsNullOrEmpty(activeDesignationFilter) ||
+               !string.IsNullOrEmpty(activeSearchQuery);
     }
 
     private async Task OnFilterChanged(string filterType, string value)
@@ -508,7 +622,7 @@
         else if (filterType == "designation")
             selectedDesignation = processedValue;
 
-        // --- Immediately update the ACTIVE filter state ---
+        // Update the ACTIVE filter state
         if (filterType == "gender")
             activeGenderFilter = processedValue;
         else if (filterType == "bloodGroup")
@@ -517,9 +631,7 @@
             activeDesignationFilter = processedValue;
 
         Console.WriteLine($"Filter changed & applied: {filterType} = {processedValue ?? "null"}");
-
         await RefreshMainEmployeeListAsync(); // Trigger main list update immediately
-
         StateHasChanged(); // Update filter drawer controls UI
     }
 
@@ -546,49 +658,38 @@
         StateHasChanged(); // Update UI (chips)
     }
 
-    // ---> New Refresh Method <---
     private async Task RefreshMainEmployeeListAsync()
     {
         Console.WriteLine($"Refreshing main content with Query: '{activeSearchQuery}', Gender: '{activeGenderFilter ?? "N/A"}', Blood: '{activeBloodGroupFilter ?? "N/A"}', Designation: '{activeDesignationFilter ?? "N/A"}'");
-
-        // TODO: Implement the actual logic to update the component in @Body.
-        // This typically involves:
-        // 1. Having a reference to the child component OR
-        // 2. Passing the active* variables as parameters to the child component.
-        //    When these parameters change, the child component should detect the change
-        //    (e.g., in OnParametersSetAsync) and re-fetch its data using these criteria.
-
-        // Example (if child component parameters are bound):
-        // StateHasChanged(); // This might be enough if parameters trigger child refresh
-
-        // Example (if child component has a public refresh method):
-        // if (employeeListComponentRef != null)
-        // {
-        //     await employeeListComponentRef.LoadEmployees(activeSearchQuery, activeGenderFilter, activeBloodGroupFilter, activeDesignationFilter);
-        // }
-
         await Task.CompletedTask; // Placeholder
         StateHasChanged(); // Ensure UI reflects changes (like active filter chips)
     }
-    // <-------------------------->
 
-
-    private string CurrentUserEmail()
+    private async Task<string?> CurrentUserEmail()
     {
-        return JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "email").Result;
+        try
+        {
+            return await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error retrieving email from localStorage: {ex.Message}");
+            return null;
+        }
     }
 
-
-
-    private string? employeeId;
-    private void NavigateToProfile()
+    private async Task NavigateToProfile()
     {
-
-        Console.WriteLine("employee id " + employeeId);
-        Console.WriteLine("Navigate to current user profile");
+        Console.WriteLine($"Navigate to current user profile, employeeId: {employeeId}");
         if (!string.IsNullOrEmpty(employeeId))
         {
             NavigationManager.NavigateTo($"/employee/{employeeId}");
+        }
+        else
+        {
+            Console.WriteLine("Cannot navigate to profile: employeeId is null or empty.");
+            _searchError = "Unable to load profile. Please try logging in again.";
+            StateHasChanged();
         }
     }
 
@@ -596,35 +697,47 @@
     {
         try
         {
-            var email = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "email");
+            // Retrieve email from localStorage
+            var email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+            Console.WriteLine($"Retrieved email from localStorage: {email}");
+
+            // Initialize defaults
             userProfilePicture = null;
             userName = null;
             userInitials = null;
+            employeeId = null;
+
+            // Try to retrieve employeeId from localStorage
+            employeeId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
+            Console.WriteLine($"Retrieved employeeId from localStorage: {employeeId}");
 
             if (!string.IsNullOrWhiteSpace(email))
             {
                 var employee = await EmployeeService.GetEmployeeDetailsByEmail(email);
-
                 if (employee != null)
                 {
+                    // Set employeeId from API if not already set from localStorage
+                    employeeId ??= employee.EmployeeID;
+                    Console.WriteLine($"EmployeeID from API: {employee.EmployeeID}");
+
+                    // Set profile picture if available
                     if (!string.IsNullOrEmpty(employee.PhotoBase64Content) && !string.IsNullOrEmpty(employee.PhotoContentType))
                     {
                         userProfilePicture = $"data:{employee.PhotoContentType};base64,{employee.PhotoBase64Content}";
-                        employeeId = employee.EmployeeID;
                     }
                     else
                     {
-
-
-                        Console.WriteLine("Employee ID " + employeeId);
-                        userName = employee.FirstName ?? "User";
-                        userInitials = GetInitials(userName);
                         userProfilePicture = null;
                     }
+
+                    // Set user name and initials
+                    userName = employee.FirstName ?? "User";
+                    userInitials = GetInitials(userName);
                     return;
                 }
             }
 
+            // Fallback if employee not found but email exists
             if (!string.IsNullOrWhiteSpace(email))
             {
                 userName = "User";
@@ -648,6 +761,7 @@
         userName = "Guest";
         userInitials = "?";
         userProfilePicture = null;
+        employeeId = null;
     }
 
     private string GetInitials(string? name)

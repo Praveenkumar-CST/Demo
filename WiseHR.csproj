@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+
+		  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	
+
   </PropertyGroup>
 
   <ItemGroup>
