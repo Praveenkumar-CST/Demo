@@ -719,8 +719,9 @@
                     // Set employeeId from API if not already set from localStorage
                     employeeId ??= employee.EmployeeID;
                     Console.WriteLine($"EmployeeID from API: {employee.EmployeeID}");
+					Console.WriteLine($"Employee ID {employeeId}");
 
-                    // Set profile picture if available
+					// Set profile picture if available
                     if (!string.IsNullOrEmpty(employee.PhotoBase64Content) && !string.IsNullOrEmpty(employee.PhotoContentType))
                     {
                         userProfilePicture = $"data:{employee.PhotoContentType};base64,{employee.PhotoBase64Content}";

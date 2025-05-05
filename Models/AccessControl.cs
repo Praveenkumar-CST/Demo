@@ -25,6 +25,7 @@
                     ("HIDE_workExperience","/workExperience"),
                     ("HIDE_employee-form","/employee-form"),
                     ("HIDE_bankingForm","/bankingForm"),
+                    ("HIDE_EmployeeProfile", "/employee/.*")
 
 
                 }
@@ -48,6 +49,7 @@
                     ("HIDE_workExperience","/workExperience"),
                     ("HIDE_employee-form","/employee-form"),
                     ("HIDE_bankingForm","/bankingForm"),
+                    ("HIDE_EmployeeProfile", "/employee/.*")
 
 
 
@@ -62,6 +64,7 @@
                     ("HIDE_workExperience","/workExperience"),
                     ("HIDE_employee-form","/employee-form"),
                     ("HIDE_bankingForm","/bankingForm"),
+                    ("HIDE_EmployeeProfile", "/employee/.*")
 
                 }
             },
