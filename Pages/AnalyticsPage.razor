@@ -60,6 +60,16 @@
                          <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
                     </MudExpansionPanel>
 
+                    <MudExpansionPanel Text="Experience">
+                        <MudTextField @bind-Value="_filterDto.College" Label="College / University" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.Qualification" Label="Qualification" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudNumericField @bind-Value="_filterDto.YearOfPassingStart" Label="Passed From Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="1900" Max="DateTime.Now.Year" Class="mb-2" />
+                        <MudNumericField @bind-Value="_filterDto.YearOfPassingEnd" Label="Passed To Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.YearOfPassingStart ?? 1900" Max="DateTime.Now.Year" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.PreviousDesignation" Label="Previous Designation" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.PreviousLocation" Label="Previous Location" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                    </MudExpansionPanel>
+
                      <MudExpansionPanel Text="Address">
                         <MudTextField @bind-Value="_filterDto.CurrentCity" Label="Current City" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudTextField @bind-Value="_filterDto.CurrentState" Label="Current State" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
@@ -79,15 +89,7 @@
                         </MudSelect>
                     </MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Experience">
-                        <MudTextField @bind-Value="_filterDto.College" Label="College / University" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.Qualification" Label="Qualification" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudNumericField @bind-Value="_filterDto.YearOfPassingStart" Label="Passed From Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="1900" Max="DateTime.Now.Year" Class="mb-2" />
-                        <MudNumericField @bind-Value="_filterDto.YearOfPassingEnd" Label="Passed To Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.YearOfPassingStart ?? 1900" Max="DateTime.Now.Year" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PreviousDesignation" Label="Previous Designation" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PreviousLocation" Label="Previous Location" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                    </MudExpansionPanel>
+                    
                 </MudExpansionPanels>
 
                 <div class="mt-auto pt-3 d-flex">
