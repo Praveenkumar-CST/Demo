@@ -324,6 +324,19 @@
                             __builder5.AddContent(50, (MarkupString)GetHighlightedHtml(context.Email, _lastSearchQuery));
                         }));
                         __builder4.CloseComponent();
+
+                        // Display Matched Fields if any
+                        if (context.MatchedFields.Any())
+                        {
+                            __builder4.OpenComponent<MudText>(51);
+                            __builder4.AddAttribute(52, "Typo", Typo.caption);
+                            __builder4.AddAttribute(53, "Color", Color.Info); // Use Info color for distinction
+                            __builder4.AddAttribute(54, "Style", "line-height: 1.2; font-style: italic; margin-top: 2px;");
+                            __builder4.AddAttribute(55, "ChildContent", (RenderFragment)((__builder5) => {
+                                __builder5.AddContent(56, $" Matches: {string.Join(", ", context.MatchedFields)}");
+                            }));
+                            __builder4.CloseComponent();
+                        }
                     })); // End MudPaper ChildContent
                     __builder3.CloseComponent(); // End MudPaper
                 })); // End MudItem (Details) ChildContent
@@ -729,5 +742,8 @@
         public string? Mobile { get; set; }
         public string? ProfilePicture { get; set; }
         public string? EmployeeID { get; set; }
+
+        // Add MatchedFields to the frontend model
+        public List<string> MatchedFields { get; set; } = new List<string>();
     }
 }

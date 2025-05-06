@@ -1,6 +1,7 @@
 @page "/analytics"
 @using Microsoft.AspNetCore.Components
-@using WiseHR.Models 
+@using WiseHR.Models
+@using WiseHR.Dtos
 @using System.Net.Http.Json
 @using MudBlazor
 @inject HttpClient Http
@@ -35,7 +36,10 @@
                                 <MudSelectItem Value="@status">@status</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudTextField @bind-Value="_filterDto.Nationality" Label="Nationality" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.Nationality" Label="Nationality"
+                                         SearchFunc="SearchNationalities"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudSelect T="string" @bind-Value="_filterDto.PhysicallyChallenged" Label="Physically Challenged" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var option in _physicallyChallengedOptions)
                             {
@@ -47,49 +51,127 @@
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Employment">
-                         <MudTextField @bind-Value="_filterDto.Designation" Label="Designation" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                         <MudTextField @bind-Value="_filterDto.JoiningLocation" Label="Joining Location" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                         <MudAutocomplete T="string" @bind-Value="_filterDto.Designation" Label="Designation"
+                                          SearchFunc="SearchDesignations"
+                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                         <MudAutocomplete T="string" @bind-Value="_filterDto.JoiningLocation" Label="Joining Location"
+                                          SearchFunc="SearchJoiningLocations"
+                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                          <MudSelect T="string" @bind-Value="_filterDto.TypeOfEmployment" Label="Type of Employment" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var type in _employmentTypes)
                             {
                                 <MudSelectItem Value="@type">@type</MudSelectItem>
                             }
                          </MudSelect>
-                         <MudTextField @bind-Value="_filterDto.Level" Label="Level" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                         <MudAutocomplete T="string" @bind-Value="_filterDto.Level" Label="Level"
+                                          SearchFunc="SearchLevels"
+                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                          <MudDatePicker @bind-Date="_filterDto.DateOfJoiningStart" Label="Joined From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                          <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Experience">
-                        <MudTextField @bind-Value="_filterDto.College" Label="College / University" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.Qualification" Label="Qualification" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.College" Label="College / University"
+                                         SearchFunc="SearchEducationUniversities"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.Qualification" Label="Qualification"
+                                         SearchFunc="SearchQualifications"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudNumericField @bind-Value="_filterDto.YearOfPassingStart" Label="Passed From Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="1900" Max="DateTime.Now.Year" Class="mb-2" />
                         <MudNumericField @bind-Value="_filterDto.YearOfPassingEnd" Label="Passed To Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.YearOfPassingStart ?? 1900" Max="DateTime.Now.Year" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PreviousDesignation" Label="Previous Designation" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PreviousLocation" Label="Previous Location" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer"
+                                         SearchFunc="SearchWorkEmployers"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousDesignation" Label="Previous Designation"
+                                         SearchFunc="SearchWorkDesignations"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousLocation" Label="Previous Location"
+                                         SearchFunc="SearchWorkLocations"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMin" Label="Min Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
+                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMax" Label="Max Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.EducationPercentageMin ?? 0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
+                        <MudDatePicker @bind-Date="_filterDto.PreviousJobStartDateStart" Label="Prev. Job Start From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudDatePicker @bind-Date="_filterDto.PreviousJobStartDateEnd" Label="Prev. Job Start To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PreviousJobStartDateStart" />
+                        <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateStart" Label="Prev. Job End From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateEnd" Label="Prev. Job End To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PreviousJobEndDateStart" />
                     </MudExpansionPanel>
 
                      <MudExpansionPanel Text="Address">
-                        <MudTextField @bind-Value="_filterDto.CurrentCity" Label="Current City" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.CurrentState" Label="Current State" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PermanentCity" Label="Permanent City" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PermanentState" Label="Permanent State" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentCity" Label="Current City"
+                                         SearchFunc="SearchCurrentCities"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentState" Label="Current State"
+                                         SearchFunc="SearchCurrentStates"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentCity" Label="Permanent City"
+                                         SearchFunc="SearchPermanentCities"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentState" Label="Permanent State"
+                                         SearchFunc="SearchPermanentStates"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudTextField @bind-Value="_filterDto.CurrentZip" Label="Current Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.PermanentZip" Label="Permanent Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                      </MudExpansionPanel>
 
+                    <MudExpansionPanel Text="Passport">
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PassportNationality" Label="Passport Nationality"
+                                         SearchFunc="SearchPassportNationalities"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudDatePicker @bind-Date="_filterDto.PassportIssueDateStart" Label="Passport Issued From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudDatePicker @bind-Date="_filterDto.PassportIssueDateEnd" Label="Passport Issued To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PassportIssueDateStart" />
+                        <MudDatePicker @bind-Date="_filterDto.PassportExpiryDateStart" Label="Passport Expires From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudDatePicker @bind-Date="_filterDto.PassportExpiryDateEnd" Label="Passport Expires To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PassportExpiryDateStart" />
+                    </MudExpansionPanel>
+
                     <MudExpansionPanel Text="Banking">
-                        <MudTextField @bind-Value="_filterDto.BankName" Label="Bank Name" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.BankBranch" Label="Bank Branch" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.BankState" Label="Bank State" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankName" Label="Bank Name"
+                                         SearchFunc="SearchBankNames"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankBranch" Label="Bank Branch"
+                                         SearchFunc="SearchBankBranches"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankState" Label="Bank State"
+                                         SearchFunc="SearchBankStates"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                              @foreach (var type in _accountTypes)
                             {
                                 <MudSelectItem Value="@type">@type</MudSelectItem>
                             }
                         </MudSelect>
+                        <MudTextField @bind-Value="_filterDto.PANNumber" Label="PAN Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.AadhaarNumber" Label="Aadhaar Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                     </MudExpansionPanel>
 
-                    
+                    <MudExpansionPanel Text="Misc">
+                        <MudSelect T="bool?" @bind-Value="_filterDto.HasAllergies" Label="Has Allergies?" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                            <MudSelectItem Value="@( (bool?)null )">Any</MudSelectItem>
+                            <MudSelectItem Value="@( (bool?)true )">Yes</MudSelectItem>
+                            <MudSelectItem Value="@( (bool?)false )">No</MudSelectItem>
+                        </MudSelect>
+                        <MudSelect T="bool?" @bind-Value="_filterDto.HasMedications" Label="Has Medications?" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                            <MudSelectItem Value="@( (bool?)null )">Any</MudSelectItem>
+                            <MudSelectItem Value="@( (bool?)true )">Yes</MudSelectItem>
+                            <MudSelectItem Value="@( (bool?)false )">No</MudSelectItem>
+                        </MudSelect>
+                    </MudExpansionPanel>
+
                 </MudExpansionPanels>
 
                 <div class="mt-auto pt-3 d-flex">
@@ -179,6 +261,7 @@
 
                         <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
                             <MudTable ServerData="ServerReload" @ref="_table"
+                                    T="AnalyticsResultDto"
                                     Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Striped="true" Elevation="0"
                                     Loading="_isLoading" LoadingProgressColor="Color.Primary"
                                     Style="flex: 1; overflow: auto;">
@@ -194,14 +277,14 @@
                                                       Variant="Variant.Outlined"
                                                       Dense="true"
                                                       Immediate="true"
-                                                      OnKeyDown="@HandleKeyDown"
+                                                      OnKeyDown="HandleKeyDown"
                                                       Class="mt-0"
                                                       Style="width: 300px;"></MudTextField>
                                         @if (!string.IsNullOrWhiteSpace(SearchString))
                                         {
                                             <MudIconButton Icon="@Icons.Material.Filled.Clear"
                                                           Color="Color.Default"
-                                                          OnClick="@ClearSearchText"
+                                                          OnClick="ClearSearchText"
                                                           Size="Size.Small"
                                                           Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
                                         }
@@ -209,35 +292,35 @@
                                 </ToolBarContent>
                                 <HeaderContent>
                                     <MudTh Style="width: 60px;"></MudTh>
-                                    <MudTh><MudTableSortLabel SortLabel="name_sort" T="EmployeeDetails">Name</MudTableSortLabel></MudTh>
-                                    <MudTh><MudTableSortLabel SortLabel="designation_sort" T="EmployeeDetails">Designation</MudTableSortLabel></MudTh>
-                                    <MudTh><MudTableSortLabel SortLabel="id_sort" T="EmployeeDetails">Employee ID</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortLabel="name_sort" T="AnalyticsResultDto">Name</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortLabel="designation_sort" T="AnalyticsResultDto">Designation</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortLabel="id_sort" T="AnalyticsResultDto">Employee ID</MudTableSortLabel></MudTh>
                                 </HeaderContent>
-                                <RowTemplate>
+                                <RowTemplate Context="employeeContext">
                                     <MudTd DataLabel="Avatar">
-                                        @if (!string.IsNullOrEmpty(context.ProfilePicture))
+                                        @if (!string.IsNullOrEmpty(employeeContext.ProfilePicture))
                                         {
-                                            var imageSrc = $"data:image/png;base64,{context.ProfilePicture}";
+                                            var imageSrc = $"data:image/png;base64,{employeeContext.ProfilePicture}";
                                             <MudAvatar Image="@imageSrc" Size="Size.Small" />
                                         }
                                         else
                                         {
-                                            <MudAvatar Color="Color.Primary" Size="Size.Small">@GetInitials(context.FirstName + " " + context.LastName)</MudAvatar>
+                                            <MudAvatar Color="Color.Primary" Size="Size.Small">@GetInitials(employeeContext.FirstName + " " + employeeContext.LastName)</MudAvatar>
                                         }
                                     </MudTd>
                                     <MudTd DataLabel="Name">
-                                        <a href="/employee/@context.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
-                                            @context.FirstName @context.MiddleName @context.LastName
+                                        <a href="/employee/@employeeContext.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
+                                            @employeeContext.FirstName @employeeContext.MiddleName @employeeContext.LastName
                                         </a>
                                     </MudTd>
                                     <MudTd DataLabel="Designation">
-                                        <a href="/employee/@context.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
-                                            @context.Designation
+                                        <a href="/employee/@employeeContext.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
+                                            @employeeContext.Designation
                                         </a>
                                     </MudTd>
                                     <MudTd DataLabel="EmployeeID">
-                                        <a href="/employee/@context.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
-                                            @context.EmployeeID
+                                        <a href="/employee/@employeeContext.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
+                                            @employeeContext.EmployeeID
                                         </a>
                                     </MudTd>
                                 </RowTemplate>
@@ -260,9 +343,9 @@
 </MudContainer>
 
 @code {
-    private MudTable<EmployeeDetails>? _table;
+    private MudTable<AnalyticsResultDto>? _table;
     private AnalyticsFilterDto _filterDto = new();
-    private List<EmployeeDetails> _filteredEmployees = new();
+    private List<AnalyticsResultDto> _filteredEmployees = new();
     private bool _isLoading = false;
     private bool _initialLoadComplete = false;
     private string? _errorMessage;
@@ -295,6 +378,7 @@
     private int _systemTotalDesignations = 0;
     private int _systemTotalBloodGroups = 0;
 
+    // --- Predefined lists for some MudSelect components ---
     private List<string> _bloodGroups = new List<string> { "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-" };
     private List<string> _genders = new List<string> { "Male", "Female", "Other" };
     private List<string> _maritalStatuses = new List<string> { "Single", "Married", "Divorced", "Widowed" };
@@ -302,37 +386,55 @@
     private List<string> _employmentTypes = new List<string> { "Permanent", "Contract", "Intern" };
     private List<string> _accountTypes = new List<string> { "Savings", "Current" };
 
+    // --- Suggestion Lists and Loaded Flags for Autocomplete ---
+    private List<string> _nationalitySuggestions = new();
+    private bool _nationalityLoaded = false;
+    private List<string> _designationSuggestions = new();
+    private bool _designationLoaded = false;
+    private List<string> _joiningLocationSuggestions = new();
+    private bool _joiningLocationLoaded = false;
+    private List<string> _levelSuggestions = new();
+    private bool _levelLoaded = false;
+    private List<string> _educationUniversitySuggestions = new();
+    private bool _educationUniversityLoaded = false;
+    private List<string> _qualificationSuggestions = new();
+    private bool _qualificationLoaded = false;
+    private List<string> _workEmployerSuggestions = new();
+    private bool _workEmployerLoaded = false;
+    private List<string> _workDesignationSuggestions = new();
+    private bool _workDesignationLoaded = false;
+    private List<string> _workLocationSuggestions = new();
+    private bool _workLocationLoaded = false;
+    private List<string> _currentCitySuggestions = new();
+    private bool _currentCityLoaded = false;
+    private List<string> _currentStateSuggestions = new();
+    private bool _currentStateLoaded = false;
+    private List<string> _permanentCitySuggestions = new();
+    private bool _permanentCityLoaded = false;
+    private List<string> _permanentStateSuggestions = new();
+    private bool _permanentStateLoaded = false;
+    private List<string> _passportNationalitySuggestions = new();
+    private bool _passportNationalityLoaded = false;
+    private List<string> _bankNameSuggestions = new();
+    private bool _bankNameLoaded = false;
+    private List<string> _bankBranchSuggestions = new();
+    private bool _bankBranchLoaded = false;
+    private List<string> _bankStateSuggestions = new();
+    private bool _bankStateLoaded = false;
+
     protected override async Task OnInitializedAsync()
     {
         _filterDto = new AnalyticsFilterDto();
         await ApplyFilters();
     }
 
-    // Helper function to build the query string
     private string BuildFilterQueryString(AnalyticsFilterDto dto)
     {
         var parameters = new Dictionary<string, string>();
+        void AddIfNotNullOrEmpty(string key, string? value) { if (!string.IsNullOrEmpty(value)) parameters.Add(key, System.Net.WebUtility.UrlEncode(value)); }
+        void AddIfNotNull<T>(string key, T? value) where T : struct { if (value.HasValue) parameters.Add(key, System.Net.WebUtility.UrlEncode(value.Value.ToString())); }
+        void AddIfDateNotNull(string key, DateTime? value) { if (value.HasValue) parameters.Add(key, System.Net.WebUtility.UrlEncode(value.Value.ToString("yyyy-MM-dd"))); }
 
-        void AddIfNotNullOrEmpty(string key, string? value)
-        {
-            if (!string.IsNullOrEmpty(value))
-                parameters.Add(key, System.Net.WebUtility.UrlEncode(value));
-        }
-
-        void AddIfNotNull<T>(string key, T? value) where T : struct
-        {
-            if (value.HasValue)
-                 parameters.Add(key, System.Net.WebUtility.UrlEncode(value.Value.ToString()));
-        }
-         void AddIfDateNotNull(string key, DateTime? value)
-        {
-            if (value.HasValue)
-                 // Use a consistent, URL-friendly format (ISO 8601 is good)
-                 parameters.Add(key, System.Net.WebUtility.UrlEncode(value.Value.ToString("yyyy-MM-dd"))); 
-        }
-
-        // Add all filter properties
-        AddIfNotNullOrEmpty(nameof(dto.College), dto.College);
         AddIfNotNullOrEmpty(nameof(dto.BloodGroup), dto.BloodGroup);
         AddIfNotNullOrEmpty(nameof(dto.BankName), dto.BankName);
         AddIfNotNullOrEmpty(nameof(dto.Designation), dto.Designation);
@@ -354,13 +456,30 @@
         AddIfNotNullOrEmpty(nameof(dto.BankBranch), dto.BankBranch);
         AddIfNotNullOrEmpty(nameof(dto.BankState), dto.BankState);
         AddIfNotNullOrEmpty(nameof(dto.AccountType), dto.AccountType);
+        AddIfNotNullOrEmpty(nameof(dto.PANNumber), dto.PANNumber);
+        AddIfNotNullOrEmpty(nameof(dto.AadhaarNumber), dto.AadhaarNumber);
+        AddIfNotNullOrEmpty("EducationUniversity", dto.College);
         AddIfNotNullOrEmpty(nameof(dto.Qualification), dto.Qualification);
         AddIfNotNull(nameof(dto.YearOfPassingStart), dto.YearOfPassingStart);
         AddIfNotNull(nameof(dto.YearOfPassingEnd), dto.YearOfPassingEnd);
-        AddIfNotNullOrEmpty(nameof(dto.PreviousEmployer), dto.PreviousEmployer);
-        AddIfNotNullOrEmpty(nameof(dto.PreviousDesignation), dto.PreviousDesignation);
-        AddIfNotNullOrEmpty(nameof(dto.PreviousLocation), dto.PreviousLocation);
-
+        AddIfNotNull(nameof(dto.EducationPercentageMin), dto.EducationPercentageMin);
+        AddIfNotNull(nameof(dto.EducationPercentageMax), dto.EducationPercentageMax);
+        AddIfNotNullOrEmpty("WorkEmployer", dto.PreviousEmployer);
+        AddIfNotNullOrEmpty("WorkDesignation", dto.PreviousDesignation);
+        AddIfNotNullOrEmpty("WorkLocation", dto.PreviousLocation);
+        AddIfDateNotNull("WorkDateOfJoiningStart", dto.PreviousJobStartDateStart);
+        AddIfDateNotNull("WorkDateOfJoiningEnd", dto.PreviousJobStartDateEnd);
+        AddIfDateNotNull("WorkDateOfLeavingStart", dto.PreviousJobEndDateStart);
+        AddIfDateNotNull("WorkDateOfLeavingEnd", dto.PreviousJobEndDateEnd);
+        AddIfNotNullOrEmpty(nameof(dto.PassportNationality), dto.PassportNationality);
+        AddIfDateNotNull(nameof(dto.PassportIssueDateStart), dto.PassportIssueDateStart);
+        AddIfDateNotNull(nameof(dto.PassportIssueDateEnd), dto.PassportIssueDateEnd);
+        AddIfDateNotNull(nameof(dto.PassportExpiryDateStart), dto.PassportExpiryDateStart);
+        AddIfDateNotNull(nameof(dto.PassportExpiryDateEnd), dto.PassportExpiryDateEnd);
+        AddIfNotNullOrEmpty(nameof(dto.CurrentZip), dto.CurrentZip);
+        AddIfNotNullOrEmpty(nameof(dto.PermanentZip), dto.PermanentZip);
+        AddIfNotNull(nameof(dto.HasAllergies), dto.HasAllergies);
+        AddIfNotNull(nameof(dto.HasMedications), dto.HasMedications);
         return parameters.Any() ? "?" + string.Join("&", parameters.Select(p => $"{p.Key}={p.Value}")) : string.Empty;
     }
 
@@ -370,49 +489,30 @@
         _errorMessage = null;
         _filteredEmployees.Clear();
         StateHasChanged();
-
         try
         {
             string queryString = BuildFilterQueryString(_filterDto);
             string apiUrl = $"/api/Analytics/filter{queryString}";
             Console.WriteLine($"Applying filters with GET request to: {apiUrl}");
-
-            // Change from PostAsJsonAsync to GetAsync
             var response = await Http.GetAsync(apiUrl);
-
             if (response.IsSuccessStatusCode)
             {
-                // Read content using ReadFromJsonAsync
-                _filteredEmployees = await response.Content.ReadFromJsonAsync<List<EmployeeDetails>>() ?? new List<EmployeeDetails>();
+                _filteredEmployees = await response.Content.ReadFromJsonAsync<List<AnalyticsResultDto>>() ?? new List<AnalyticsResultDto>();
                 Console.WriteLine($"Analytics filter successful: Found {_filteredEmployees.Count} employees.");
-
-                bool isUnfiltered = string.IsNullOrEmpty(queryString); // Check if query string is empty
-
-                if (isUnfiltered && !_initialLoadComplete) 
+                bool isUnfiltered = string.IsNullOrEmpty(queryString);
+                if (isUnfiltered && !_initialLoadComplete)
                 {
                     _systemTotalEmployees = _filteredEmployees.Count;
-                    _systemTotalDesignations = _filteredEmployees
-                        .Select(e => e.Designation)
-                        .Where(d => !string.IsNullOrEmpty(d))
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .Count();
-                    _systemTotalBloodGroups = _filteredEmployees
-                        .Select(e => e.BloodGroup)
-                        .Where(b => !string.IsNullOrEmpty(b))
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .Count();
+                    _systemTotalDesignations = _filteredEmployees.Select(e => e.Designation).Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                    _systemTotalBloodGroups = _filteredEmployees.Select(e => e.BloodGroup).Where(b => !string.IsNullOrEmpty(b)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
                 }
-                
                 CalculateStats();
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 _filteredEmployees.Clear();
                 _errorMessage = await response.Content.ReadAsStringAsync();
-                if (string.IsNullOrWhiteSpace(_errorMessage))
-                {
-                    _errorMessage = "No employees found matching the criteria.";
-                }
+                if (string.IsNullOrWhiteSpace(_errorMessage)) { _errorMessage = "No employees found matching the criteria."; }
                 Console.WriteLine($"Analytics filter returned 404: {_errorMessage}");
                 CalculateStats();
             }
@@ -461,12 +561,10 @@
         }
     }
 
-    private async Task<TableData<EmployeeDetails>> ServerReload(TableState state, CancellationToken token)
+    private async Task<TableData<AnalyticsResultDto>> ServerReload(TableState state, CancellationToken token)
     {
         await Task.Delay(1, token);
-
-        IEnumerable<EmployeeDetails> data = _filteredEmployees;
-
+        IEnumerable<AnalyticsResultDto> data = _filteredEmployees;
         if (!string.IsNullOrWhiteSpace(SearchString))
         {
             string lowerSearch = SearchString.ToLowerInvariant();
@@ -478,24 +576,15 @@
                 (e.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false)
             );
         }
-
         switch (state.SortLabel)
         {
-            case "name_sort":
-                data = data.OrderByDirection(state.SortDirection, e => $"{e.FirstName} {e.LastName}");
-                break;
-            case "designation_sort":
-                data = data.OrderByDirection(state.SortDirection, e => e.Designation ?? "");
-                break;
-            case "id_sort":
-                 data = data.OrderByDirection(state.SortDirection, e => e.EmployeeID);
-                 break;
+            case "name_sort": data = data.OrderByDirection(state.SortDirection, e => $"{e.FirstName} {e.LastName}"); break;
+            case "designation_sort": data = data.OrderByDirection(state.SortDirection, e => e.Designation ?? ""); break;
+            case "id_sort": data = data.OrderByDirection(state.SortDirection, e => e.EmployeeID); break;
         }
-
         var totalItems = data.Count();
         var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
-
-        return new TableData<EmployeeDetails>() { TotalItems = totalItems, Items = pagedData };
+        return new TableData<AnalyticsResultDto>() { TotalItems = totalItems, Items = pagedData };
     }
 
     private async Task ClearFilters()
@@ -508,10 +597,7 @@
     private async Task ClearSearchText()
     {
         SearchString = string.Empty;
-        if (_table != null)
-        {
-            await _table.ReloadServerData();
-        }
+        if (_table != null) { await _table.ReloadServerData(); }
     }
 
     private void CalculateStats()
@@ -523,18 +609,9 @@
             _uniqueBloodGroups = 0;
             return;
         }
-
         _totalEmployees = _filteredEmployees.Count;
-        _uniqueDesignations = _filteredEmployees
-            .Select(e => e.Designation)
-            .Where(d => !string.IsNullOrEmpty(d))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Count();
-        _uniqueBloodGroups = _filteredEmployees
-            .Select(e => e.BloodGroup)
-            .Where(b => !string.IsNullOrEmpty(b))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Count();
+        _uniqueDesignations = _filteredEmployees.Select(e => e.Designation).Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        _uniqueBloodGroups = _filteredEmployees.Select(e => e.BloodGroup).Where(b => !string.IsNullOrEmpty(b)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
     }
 
     private string GetInitials(string? name)
@@ -546,46 +623,21 @@
         return $"{parts[0][0]}{parts.Last()[0]}".ToUpper();
     }
 
-    public class AnalyticsFilterDto
-    {
-        public string? College { get; set; }
-        public string? BloodGroup { get; set; }
-        public string? BankName { get; set; }
-        public string? Designation { get; set; }
-        public string? JoiningLocation { get; set; }
-        public string? Gender { get; set; }
-        public string? MaritalStatus { get; set; }
-        public string? Nationality { get; set; }
-        public string? TypeOfEmployment { get; set; }
-        public string? Level { get; set; }
-        public string? CurrentCity { get; set; }
-        public string? CurrentState { get; set; }
-        public string? PermanentCity { get; set; }
-        public string? PermanentState { get; set; }
-        public DateTime? DateOfJoiningStart { get; set; }
-        public DateTime? DateOfJoiningEnd { get; set; }
-        public DateTime? DateOfBirthStart { get; set; }
-        public DateTime? DateOfBirthEnd { get; set; }
-        public string? PhysicallyChallenged { get; set; }
-        public string? BankBranch { get; set; }
-        public string? BankState { get; set; }
-        public string? AccountType { get; set; }
-        public string? Qualification { get; set; }
-        public int? YearOfPassingStart { get; set; }
-        public int? YearOfPassingEnd { get; set; }
-        public string? PreviousEmployer { get; set; }
-        public string? PreviousDesignation { get; set; }
-        public string? PreviousLocation { get; set; }
-    }
-
-    public class EmployeeDetails
-    {
-        public string EmployeeID { get; set; } = string.Empty;
-        public string FirstName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string LastName { get; set; } = string.Empty;
-        public string? Designation { get; set; }
-        public string? ProfilePicture { get; set; }
-        public string? BloodGroup { get; set; }
-    }
+    private async Task<IEnumerable<string>> SearchNationalities(string value, CancellationToken token) { if (!_nationalityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/nationalities", token); if (r != null) _nationalitySuggestions = r.OrderBy(s => s).ToList(); _nationalityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading nationalities: {ex.Message}"); _nationalitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _nationalitySuggestions.Take(10); return _nationalitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchDesignations(string value, CancellationToken token) { if (!_designationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/designations", token); if (r != null) _designationSuggestions = r.OrderBy(s => s).ToList(); _designationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading designations: {ex.Message}"); _designationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _designationSuggestions.Take(10); return _designationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchJoiningLocations(string value, CancellationToken token) { if (!_joiningLocationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/joiningLocations", token); if (r != null) _joiningLocationSuggestions = r.OrderBy(s => s).ToList(); _joiningLocationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading joining locations: {ex.Message}"); _joiningLocationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _joiningLocationSuggestions.Take(10); return _joiningLocationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchLevels(string value, CancellationToken token) { if (!_levelLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/levels", token); if (r != null) _levelSuggestions = r.OrderBy(s => s).ToList(); _levelLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading levels: {ex.Message}"); _levelSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _levelSuggestions.Take(10); return _levelSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchEducationUniversities(string value, CancellationToken token) { if (!_educationUniversityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/educationUniversities", token); if (r != null) _educationUniversitySuggestions = r.OrderBy(s => s).ToList(); _educationUniversityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading education universities: {ex.Message}"); _educationUniversitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _educationUniversitySuggestions.Take(10); return _educationUniversitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchQualifications(string value, CancellationToken token) { if (!_qualificationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/qualifications", token); if (r != null) _qualificationSuggestions = r.OrderBy(s => s).ToList(); _qualificationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading qualifications: {ex.Message}"); _qualificationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _qualificationSuggestions.Take(10); return _qualificationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchWorkEmployers(string value, CancellationToken token) { if (!_workEmployerLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workEmployers", token); if (r != null) _workEmployerSuggestions = r.OrderBy(s => s).ToList(); _workEmployerLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading work employers: {ex.Message}"); _workEmployerSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _workEmployerSuggestions.Take(10); return _workEmployerSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchWorkDesignations(string value, CancellationToken token) { if (!_workDesignationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workDesignations", token); if (r != null) _workDesignationSuggestions = r.OrderBy(s => s).ToList(); _workDesignationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading work designations: {ex.Message}"); _workDesignationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _workDesignationSuggestions.Take(10); return _workDesignationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchWorkLocations(string value, CancellationToken token) { if (!_workLocationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workLocations", token); if (r != null) _workLocationSuggestions = r.OrderBy(s => s).ToList(); _workLocationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading work locations: {ex.Message}"); _workLocationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _workLocationSuggestions.Take(10); return _workLocationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchCurrentCities(string value, CancellationToken token) { if (!_currentCityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/currentCities", token); if (r != null) _currentCitySuggestions = r.OrderBy(s => s).ToList(); _currentCityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading current cities: {ex.Message}"); _currentCitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _currentCitySuggestions.Take(10); return _currentCitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchCurrentStates(string value, CancellationToken token) { if (!_currentStateLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/currentStates", token); if (r != null) _currentStateSuggestions = r.OrderBy(s => s).ToList(); _currentStateLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading current states: {ex.Message}"); _currentStateSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _currentStateSuggestions.Take(10); return _currentStateSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchPermanentCities(string value, CancellationToken token) { if (!_permanentCityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/permanentCities", token); if (r != null) _permanentCitySuggestions = r.OrderBy(s => s).ToList(); _permanentCityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading permanent cities: {ex.Message}"); _permanentCitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _permanentCitySuggestions.Take(10); return _permanentCitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchPermanentStates(string value, CancellationToken token) { if (!_permanentStateLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/permanentStates", token); if (r != null) _permanentStateSuggestions = r.OrderBy(s => s).ToList(); _permanentStateLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading permanent states: {ex.Message}"); _permanentStateSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _permanentStateSuggestions.Take(10); return _permanentStateSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchPassportNationalities(string value, CancellationToken token) { if (!_passportNationalityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/passportNationalities", token); if (r != null) _passportNationalitySuggestions = r.OrderBy(s => s).ToList(); _passportNationalityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading passport nationalities: {ex.Message}"); _passportNationalitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _passportNationalitySuggestions.Take(10); return _passportNationalitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchBankNames(string value, CancellationToken token) { if (!_bankNameLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankNames", token); if (r != null) _bankNameSuggestions = r.OrderBy(s => s).ToList(); _bankNameLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading bank names: {ex.Message}"); _bankNameSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _bankNameSuggestions.Take(10); return _bankNameSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchBankBranches(string value, CancellationToken token) { if (!_bankBranchLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankBranches", token); if (r != null) _bankBranchSuggestions = r.OrderBy(s => s).ToList(); _bankBranchLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading bank branches: {ex.Message}"); _bankBranchSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _bankBranchSuggestions.Take(10); return _bankBranchSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchBankStates(string value, CancellationToken token) { if (!_bankStateLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankStates", token); if (r != null) _bankStateSuggestions = r.OrderBy(s => s).ToList(); _bankStateLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading bank states: {ex.Message}"); _bankStateSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _bankStateSuggestions.Take(10); return _bankStateSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
 }
