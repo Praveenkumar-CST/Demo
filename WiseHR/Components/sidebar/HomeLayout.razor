@@ -1,14 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿﻿@inherits LayoutComponentBase
 @using WiseHR.Components.sidebar
-<<<<<<< HEAD
-@using MudBlazor
-@inject IJSRuntime JSRuntime
-@inject HttpClient Http
-
-<MudThemeProvider />
-<MudLayout>
-
-=======
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
 @inject EmployeeService EmployeeService
@@ -17,7 +8,6 @@
 <MudLayout>
 
     <!-- Top Navigation Bar -->
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     <MudAppBar Elevation="1" Style="background-color: var(--primary);">
         <MudItem xs="2" Class="d-flex align-center">
             <MudIconButton Icon="@Icons.Material.Filled.Menu"
@@ -25,17 +15,10 @@
                            Edge="Edge.Start"
                            OnClick="@(() => sidebar?.ToggleDrawer())"
                            Class="mr-2" />
-<<<<<<< HEAD
-            <MudImage Src="images/logo1.png"
-                      Alt="Company Logo"
-                      Height="60"
-                       
-=======
 
             <MudImage Src="images/logo1.png"
                       Alt="Company Logo"
                       Height="60"
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                       Style="margin-left: 60px; color:white;" />
         </MudItem>
 
@@ -45,14 +28,7 @@
                           Variant="Variant.Outlined"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Search"
-<<<<<<< HEAD
-                          Style="width: 50%;  margin-left: 260px; background-color: var(--secondary);
-                             border-radius: var(--border-radius-input);
-                             --mud-palette-text-primary: var(--text-primary);
-                             --mud-icon-adornment-color: var(--primary);"
-=======
                           Style="width: 50%; margin-left: 260px; background-color: var(--secondary); border-radius: var(--border-radius-input); --mud-palette-text-primary: var(--text-primary); --mud-icon-adornment-color: var(--primary);"
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                           Immediate="true"
                           DebounceInterval="100"
                           OnValueChanged="SearchEmployees" />
@@ -61,20 +37,6 @@
         <MudItem xs="2" Style="padding: 8px;">
             <MudMenu>
                 <ActivatorContent>
-<<<<<<< HEAD
-                    <MudAvatar Color="Color.Dark"
-                               Class="cursor-pointer user-avatar"
-                               Size="Size.Medium"
-                               BorderColor="Color.Secondary"
-                               BorderWidth="2px"
-                               Style="background-color: var(--secondary); color: var(--text-primary); margin-left: 180px; ">
-                        @userInitials
-                    </MudAvatar>
-                </ActivatorContent>
-                <ChildContent>
-                    <MudMenuItem Style="color: var(--text-primary);">Profile</MudMenuItem>
-                    <MudMenuItem Style="color: var(--text-primary);">Settings</MudMenuItem>
-=======
                     @if (!string.IsNullOrEmpty(userProfilePicture))
                     {
                         <img src="@userProfilePicture"
@@ -93,36 +55,23 @@
                 <ChildContent>
                     <MudMenuItem Style="color: var(--text-primary);">Profile</MudMenuItem>
                     <MudMenuItem Style="color: var(--text-primary);">Setting</MudMenuItem>
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                     <MudMenuItem Style="color: var(--error);">Logout</MudMenuItem>
                 </ChildContent>
             </MudMenu>
         </MudItem>
     </MudAppBar>
 
-<<<<<<< HEAD
-
-    <!-- Sidebar -->
-    <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
-    
-    <!-- Content -->
-=======
     <!-- Sidebar -->
     <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
 
     <!-- Main Content -->
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     <MudMainContent Style="flex-grow: 1;">
         <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
             @Body
         </MudContainer>
     </MudMainContent>
 
-<<<<<<< HEAD
-    <!-- MudPopoverProvider (Must be inside MudLayout) -->
-=======
     <!-- Popover Support -->
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     <MudPopoverProvider />
 
 </MudLayout>
@@ -131,69 +80,18 @@
     private bool drawerOpen = true;
     private HomeSidebar? sidebar;
     private string? searchQuery;
-<<<<<<< HEAD
-=======
     private string? userProfilePicture;
     private string? userName;
     private string? userInitials;
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
     [Parameter]
     public EventCallback<string> OnSearchQueryChanged { get; set; }
 
-<<<<<<< HEAD
-    private async Task SearchEmployees(string query)
-    {
-        searchQuery = query;
-        await JSRuntime.InvokeVoidAsync("console.log", $"Search: {query}");
-        Console.WriteLine($"Searching for: {query}");
-        if (OnSearchQueryChanged.HasDelegate)
-        {
-            await OnSearchQueryChanged.InvokeAsync(query);
-        }
-    }
-
-    private string? userName;
-    private string? userInitials;
-
-=======
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     protected override async Task OnInitializedAsync()
     {
         await LoadUserDetails();
     }
 
-<<<<<<< HEAD
-    private async Task LoadUserDetails()
-    {
-        // Get token from localStorage
-        var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
-        if (string.IsNullOrEmpty(token))
-        {
-            Console.WriteLine("No token found in localStorage.");
-            userName = "Guest"; // Default user
-            userInitials = "?";
-            return;
-        }
-
-        try
-        {
-            // Fetch user details from Supabase Auth
-            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            var response = await Http.GetAsync("https://xnibymvrmxhralsrggau.supabase.co/auth/v1/user");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var userData = await response.Content.ReadFromJsonAsync<UserResponse>();
-                userName = userData?.FullName ?? "Unknown User";  // Set username
-                userInitials = GetInitials(userName);             // Generate initials
-            }
-            else
-            {
-                Console.WriteLine($"Error fetching user details: {response.StatusCode}");
-                userName = "Unknown";
-                userInitials = "?";
-=======
     private async Task SearchEmployees(string query)
     {
         searchQuery = query;
@@ -248,20 +146,10 @@
             else
             {
                 SetDefaultUser(); // fallback to Guest
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
             }
         }
         catch (Exception ex)
         {
-<<<<<<< HEAD
-            Console.WriteLine($"Exception occurred: {ex.Message}");
-            userName = "Unknown";
-            userInitials = "?";
-        }
-    }
-
-    private string GetInitials(string? name)
-=======
             Console.WriteLine($"Error loading user details: {ex.Message}");
             SetDefaultUser();
         }
@@ -276,7 +164,6 @@
     }
 
     private string GetInitials(string name)
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     {
         if (string.IsNullOrWhiteSpace(name))
             return "?";
@@ -285,18 +172,6 @@
         if (parts.Length == 1)
             return parts[0][0].ToString().ToUpper();
 
-<<<<<<< HEAD
-        return (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper();
-    }
-
-    private class UserResponse
-    {
-        public string Id { get; set; }
-        public string FullName { get; set; }
-        public string Email { get; set; }
-    }
-}
-=======
         return $"{parts[0][0]}{parts[1][0]}".ToUpper();
     }
 
@@ -322,4 +197,3 @@
         public string ProfilePictureUrl { get; set; } = string.Empty;
     }
 }
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e

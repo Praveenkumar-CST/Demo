@@ -11,10 +11,7 @@
 @inject ExperienceService ExperienceService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
-<<<<<<< HEAD
-=======
 @implements IDisposable
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
 <h3>Confirmation Page</h3>
 
@@ -447,11 +444,7 @@
 
                 <!-- Submit Button -->
                 <div class="text-center mt-3">
-<<<<<<< HEAD
-                    <button type="button" class="btn btn-primary" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)">
-=======
                     <button type="button" class="btn btn-reset" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)">
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                         Submit
                     </button>
                 </div>
@@ -459,16 +452,10 @@
         </div>
 
         <!-- PDF Preview Modal -->
-<<<<<<< HEAD
-        @if (!string.IsNullOrEmpty(activePdfUrl))
-        {
-            <div class="modal fade show" style="display: block; margin-top:50px" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true">
-=======
         <!-- PDF Preview Modal -->
         @if (!string.IsNullOrEmpty(activePdfUrl))
         {
             <div @key="renderCounter" class="modal fade show" style="display: block; margin-top:50px" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="@(!ShowModal)">
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -476,14 +463,6 @@
                             <button type="button" class="btn-close" @onclick="ClosePreview" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-<<<<<<< HEAD
-                            <object data="@activePdfUrl" type="application/pdf" width="100%" height="450px" >
-                                <p>PDF preview not supported. <a href="@activePdfUrl" class="text-primary">Download PDF</a>.</p>
-                            </object>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" @onclick="ClosePreview">Close</button>
-=======
                             <div id="pdfViewer" style="height: 450px; overflow-y: scroll;">
                                 <iframe src="@activePdfUrl" width="100%" height="800px" style="border: none;"></iframe>
                             </div>
@@ -492,7 +471,6 @@
                             <button type="button" class="btn btn-reset" @onclick="ClosePreview" disabled="@(!isEndOfPdfReached)">
                                 Close
                             </button>
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                         </div>
                     </div>
                 </div>
@@ -510,12 +488,7 @@
                             <button type="button" class="btn-close" @onclick="CloseConfirmDialog" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-<<<<<<< HEAD
-                            Are you sure you want to submit the details? Once submitted it need EditRequest to modify.
-                        </div>
-=======
                            Are you sure you want to submit the details? Once submitted, any modifications will require an Edit Request.                        </div>
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" @onclick="CloseConfirmDialog">Cancel</button>
                             <button type="button" class="btn btn-info" @onclick="ConfirmSubmit">Confirm</button>
@@ -527,13 +500,6 @@
         }
 
     </div>
-<<<<<<< HEAD
-
-
-</div>
-
-@code {
-=======
 </div>
 
 <style>
@@ -554,7 +520,6 @@
 </style>
 @code {
     public bool ShowModal { get; set; } = true;
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
 
     private BankingInformation bankingInfo = new BankingInformation();
     private Experience experience = new Experience();
@@ -566,31 +531,8 @@
     [Parameter]
     public EventCallback<string> OnSubmit { get; set; }
 
-<<<<<<< HEAD
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     var bankingInfoJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "bankingInfo");
-    //     if (!string.IsNullOrEmpty(bankingInfoJson))
-    //     {
-    //         bankingInfo = JsonSerializer.Deserialize<BankingInformation>(bankingInfoJson);
-    //     }
-
-    //     var experienceJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "experienceDetails");
-    //     if (!string.IsNullOrEmpty(experienceJson))
-    //     {
-    //         experience = JsonSerializer.Deserialize<Experience>(experienceJson);
-    //     }
-
-    //     var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
-    //     if (!string.IsNullOrEmpty(employeeDetailsJson))
-    //     {
-    //         employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeDetailsJson);
-    //     }
-    // }
-=======
     public bool isEndOfPdfReached { get; set; } = false;
 
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     private List<PolicyItem> policyDocuments = new()
         {
         new PolicyItem { Name = "Attendance Policy", Url = "/pdfs/Wise Work Attendance Policy v3.pdf" },
@@ -607,11 +549,6 @@
     private string? activePdfName = null;
 
     private bool CanSubmit =>
-<<<<<<< HEAD
-        policyDocuments.All(p => p.HasPreviewed && p.IsChecked);
-
-    private void PreviewPolicy(PolicyItem item)
-=======
       policyDocuments.All(p => p.HasPreviewed && p.IsChecked);
 
     private DotNetObjectReference<ConfirmationPage>? dotNetHelperRef;
@@ -689,20 +626,10 @@
     }
 
     private async Task PreviewPolicy(PolicyItem item)
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     {
         activePdfUrl = item.Url;
         activePdfName = item.Name;
         item.HasPreviewed = true;
-<<<<<<< HEAD
-    }
-
-    private void ClosePreview()
-    {
-        activePdfUrl = null; // Close the preview when the close button is clicked
-    }
-
-=======
         isEndOfPdfReached = false;
         await InvokeAsync(StateHasChanged);
         await Task.Delay(300);
@@ -722,7 +649,6 @@
         isEndOfPdfReached = false;
         await InvokeAsync(StateHasChanged);
     }
->>>>>>> d8524e0ce06483b23a43a0effce5d37f9631f59e
     public class PolicyItem
     {
         public string Name { get; set; } = "";
