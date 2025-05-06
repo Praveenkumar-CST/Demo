@@ -518,7 +518,22 @@
             employeeDetails = InitialData;
         }
     }
+    // private async Task LoadFromLocalStorage()
+    // {
+    //     // Load EmpId and Email from localStorage (set during signup/login)
+    //     var empId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
+    //     var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
 
+    //     if (!string.IsNullOrEmpty(empId))
+    //     {
+    //         employeeDetails.EmployeeID = empId;
+    //     }
+    //     if (!string.IsNullOrEmpty(email))
+    //     {
+    //         employeeDetails.CurrentEmail = email;
+    //     }
+    //     StateHasChanged();
+    // }
     private async Task LoadFromLocalStorage()
     {
         var empId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
@@ -527,10 +542,12 @@
         if (!string.IsNullOrEmpty(empId))
         {
             employeeDetails.EmployeeID = empId;
+            Console.WriteLine($"Loaded EmployeeID from localStorage: {empId}");
         }
         if (!string.IsNullOrEmpty(email))
         {
             employeeDetails.CurrentEmail = email;
+            Console.WriteLine($"Loaded Email from sessionStorage: {email}");
         }
         StateHasChanged();
     }

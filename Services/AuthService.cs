@@ -22,8 +22,9 @@ namespace WiseHR.Services
             _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
 
             //_baseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5243";
-
+            //_baseUrl = configuration["ApiBaseUrl"] ?? "http://172.210.14.62:5000/";
             _baseUrl = configuration["ApiBaseUrl"] ?? "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net/";
+
 
             _supabaseUrl = configuration["Supabase:Url"] ?? _supabaseUrl;
             _supabaseKey = configuration["Supabase:AnonKey"] ?? _supabaseKey;
@@ -34,26 +35,102 @@ namespace WiseHR.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/auth/login", new { email, password });
+                var requestBody = new { email, password };
+                var serializedBody = JsonSerializer.Serialize(requestBody);
+                Console.WriteLine($"Login request JSON: {serializedBody}");
+
+                var content = new StringContent(serializedBody, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("api/auth/login", content);
+
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-                    if (result?.Token != null)
+                    if (result == null)
+                    {
+                        Console.WriteLine("Failed to deserialize LoginResponse.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Token: {result.Token}");
+                    }
+                    //if (result?.Token != null)
+                    //{
+                    //    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
+                    //    Console.WriteLine($"Token stored: {result.Token}");
+                    //    return (result.Token, null);
+                    //}
+                    if (!string.IsNullOrEmpty(result?.Token))
                     {
                         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
                         Console.WriteLine($"Token stored: {result.Token}");
                         return (result.Token, null);
                     }
+                    else
+                    {
+                        Console.WriteLine("Failed to store token: Token is null or empty.");
+                    }
+
                     return (null, "Login failed: No token received.");
                 }
                 var errorContent = await response.Content.ReadAsStringAsync();
                 return (null, errorContent);
             }
+
             catch (HttpRequestException ex)
             {
                 return (null, $"Failed to connect to the server: {ex.Message}");
             }
+
         }
+
+        public async Task<string> Signup(string email, string password)
+        {
+            try
+            {
+                var requestBody = new { email, password };
+                var serializedBody = JsonSerializer.Serialize(requestBody);
+                Console.WriteLine($"Signup request JSON: {serializedBody}");
+
+                var content = new StringContent(serializedBody, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("api/auth/signup", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return "Signup successful";
+                }
+                return await response.Content.ReadAsStringAsync();
+            }
+            catch (HttpRequestException ex)
+            {
+                return $"Failed to connect to the server: {ex.Message}";
+            }
+        }
+
+        public async Task<(string? Message, string? Email, string? Error)> ForgotPassword(string email)
+        {
+            try
+            {
+                var requestBody = new { email };
+                var serializedBody = JsonSerializer.Serialize(requestBody);
+                Console.WriteLine($"ForgotPassword request JSON: {serializedBody}");
+
+                var content = new StringContent(serializedBody, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("api/auth/forgot-password", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<ForgotPasswordResponse>();
+                    return (result?.Message, result?.Email, null);
+                }
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return (null, null, errorContent);
+            }
+            catch (HttpRequestException ex)
+            {
+                return (null, null, $"Failed to connect to the server: {ex.Message}");
+            }
+        }
+
 
 
         public async Task<(string? Role, string? Error)> VerifyToken()
@@ -67,7 +144,7 @@ namespace WiseHR.Services
                 }
 
                 // Try to get role from Supabase first
-                var(role, error) = await GetRoleFromSupabase(token);
+                var (role, error) = await GetRoleFromSupabase(token);
                 if (!string.IsNullOrEmpty(role))
                 {
                     Console.WriteLine($"Raw role from Supabase: {role}");
@@ -81,10 +158,10 @@ namespace WiseHR.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                var result = await response.Content.ReadFromJsonAsync<VerifyResponse>();
-                Console.WriteLine($"Raw role from API: {result?.Role}");
-                var normalizedRole = char.ToUpper(result?.Role[0] ?? ' ') + result?.Role.Substring(1).ToLower();
-                return (normalizedRole, null);
+                    var result = await response.Content.ReadFromJsonAsync<VerifyResponse>();
+                    Console.WriteLine($"Raw role from API: {result?.Role}");
+                    var normalizedRole = char.ToUpper(result?.Role[0] ?? ' ') + result?.Role.Substring(1).ToLower();
+                    return (normalizedRole, null);
                 }
 
                 // Log the response error details if status code isn't 2xx
@@ -186,44 +263,6 @@ namespace WiseHR.Services
                 return false; // Connection failed, not authorized
             }
         }
-
-
-        public async Task<string> Signup(string email, string password)
-        {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync("api/auth/signup", new { email, password });
-                if (response.IsSuccessStatusCode)
-                {
-                    return "Signup successful";
-                }
-                return await response.Content.ReadAsStringAsync();
-            }
-            catch (HttpRequestException ex)
-            {
-                return $"Failed to connect to the server: {ex.Message}";
-            }
-        }
-
-        public async Task<(string? Message, string? Email, string? Error)> ForgotPassword(string email)
-        {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync("api/auth/forgot-password", new { email });
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<ForgotPasswordResponse>();
-                    return (result?.Message, result?.Email, null);
-                }
-                var errorContent = await response.Content.ReadAsStringAsync();
-                return (null, null, errorContent);
-            }
-            catch (HttpRequestException ex)
-            {
-                return (null, null, $"Failed to connect to the server: {ex.Message}");
-            }
-        }
-
         public async Task<(bool Success, string? Error)> ResetPassword(string email, string otp, string newPassword)
         {
             try
@@ -244,12 +283,12 @@ namespace WiseHR.Services
 
         private class LoginResponse
         {
-            public string Token { get; set; } = string.Empty;
-            public string UserId { get; set; } = string.Empty;
+            public string? Token { get; set; }
+            public string? UserId { get; set; }
         }
         private class UserResponse
         {
-            public string? Id { get; set; }  
+            public string? Id { get; set; }
             public string? Name { get; set; }
             public string? Email { get; set; }
         }

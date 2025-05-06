@@ -3,9 +3,10 @@
 @inject AuthService AuthService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
-@using System.Text.Json
 @inject EmployeeService EmployeeService
+@inject HttpClient HttpClient
 @using MudBlazor
+@using System.Text.Json
 
 <MudContainer MaxWidth="MaxWidth.False" Style="min-height: 100vh; width: 100vw; padding: 0; margin: 0;" Class="d-flex justify-center align-center">
     <MudPaper Width="400px" Elevation="25" Class="pa-8 transition-transform" Style="border-radius: 16px; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15); transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;"
@@ -364,18 +365,22 @@
         }
         try
         {
-            // Generate EmpId locally
-            var empId = await GenerateEmpId();
             var result = await AuthService.Signup(SignupEmail, SignupPassword);
             if (result == "Signup successful")
             {
+                // Generate EmpId only after successful signup
+                var empId = await GenerateEmpId();
+
                 // Store Email and EmpId in localStorage
                 await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
                 await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "empId", empId.ToString());
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", SignupEmail);
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "empId", empId.ToString());
+
                 SignupMessage = "Signup successful! Please login.";
                 SignupErrorMessage = "";
+
+                // Wait briefly and show login form
                 await Task.Delay(2000);
                 ShowForm(FormState.Login);
             }
@@ -395,14 +400,33 @@
 
     private async Task<int> GenerateEmpId()
     {
-        // Load existing signup count from localStorage
-        var signupCountJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "signupCount");
-        int signupCount = string.IsNullOrEmpty(signupCountJson) ? 0 : int.Parse(signupCountJson);
-        // Increment and generate EmpId
-        int empId = signupCount + 1;
-        // Update signup count in localStorage
-        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "signupCount", empId.ToString());
-        return empId;
+        try
+        {
+            // Fetch the total count of employees from MongoDB via API, passing SignupEmail
+            var response = await HttpClient.GetAsync($"EmployeeDetails/count?email={Uri.EscapeDataString(SignupEmail)}");
+            if (response.IsSuccessStatusCode)
+            {
+                var totalCount = await response.Content.ReadFromJsonAsync<int>();
+                var newEmpId = totalCount + 1;
+
+                // Log the total available number and new EmployeeID
+                Console.WriteLine($"Total available employees in MongoDB: {totalCount}");
+                Console.WriteLine($"New EmployeeID assigned: {newEmpId}");
+
+                return newEmpId;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Failed to fetch employee count: {errorContent}");
+                return 1000; // Fallback if API call fails
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error generating EmpId: {ex.Message}");
+            return 1000; // Fallback if an error occurs
+        }
     }
 
     private async Task HandleForgotPassword()
