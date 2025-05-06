@@ -270,6 +270,7 @@
                     var (role, verifyError) = await AuthService.VerifyToken();
                     if (!string.IsNullOrEmpty(role))
                     {
+                        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
 
                         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
 
