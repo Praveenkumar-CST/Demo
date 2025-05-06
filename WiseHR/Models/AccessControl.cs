@@ -23,7 +23,10 @@
                     ("HIDE_confirmationPage","/confirmation"),
                     ("HIDE_workExperience","/workExperience"),
                     ("HIDE_employee-form","/employee-form"),
-                    ("HIDE_bankingForm","/bankingForm"),
+                    ("HIDE_bankingForm","/bankingForm"), 
+                    ("HIDE_Fortnight Report", "/fortnight-report"),
+                    ("ReportList", "/reports")
+
 
 
                 }
@@ -43,7 +46,10 @@
                     ("HIDE_confirmationPage","/confirmation"),
                     ("HIDE_workExperience","/workExperience"),
                     ("HIDE_employee-form","/employee-form"),
-                    ("HIDE_bankingForm","/bankingForm"),
+                    ("HIDE_bankingForm","/bankingForm"),  
+                ("HIDE_Fortnight Report", "/fortnight-report"),
+                    ("ReportList", "/reports")
+
 
 
                 }
@@ -55,7 +61,10 @@
                     ("HIDE_confirmationPage","/confirmation"),
                     ("HIDE_workExperience","/workExperience"),
                     ("HIDE_employee-form","/employee-form"),
-                    ("HIDE_bankingForm","/bankingForm"),
+                    ("HIDE_bankingForm","/bankingForm"),            
+                    ("ReportList", "/reports")
+
+
 
                 }
             },
