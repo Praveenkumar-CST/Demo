@@ -623,21 +623,445 @@
         return $"{parts[0][0]}{parts.Last()[0]}".ToUpper();
     }
 
-    private async Task<IEnumerable<string>> SearchNationalities(string value, CancellationToken token) { if (!_nationalityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/nationalities", token); if (r != null) _nationalitySuggestions = r.OrderBy(s => s).ToList(); _nationalityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading nationalities: {ex.Message}"); _nationalitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _nationalitySuggestions.Take(10); return _nationalitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchDesignations(string value, CancellationToken token) { if (!_designationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/designations", token); if (r != null) _designationSuggestions = r.OrderBy(s => s).ToList(); _designationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading designations: {ex.Message}"); _designationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _designationSuggestions.Take(10); return _designationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchJoiningLocations(string value, CancellationToken token) { if (!_joiningLocationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/joiningLocations", token); if (r != null) _joiningLocationSuggestions = r.OrderBy(s => s).ToList(); _joiningLocationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading joining locations: {ex.Message}"); _joiningLocationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _joiningLocationSuggestions.Take(10); return _joiningLocationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchLevels(string value, CancellationToken token) { if (!_levelLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/levels", token); if (r != null) _levelSuggestions = r.OrderBy(s => s).ToList(); _levelLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading levels: {ex.Message}"); _levelSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _levelSuggestions.Take(10); return _levelSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchEducationUniversities(string value, CancellationToken token) { if (!_educationUniversityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/educationUniversities", token); if (r != null) _educationUniversitySuggestions = r.OrderBy(s => s).ToList(); _educationUniversityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading education universities: {ex.Message}"); _educationUniversitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _educationUniversitySuggestions.Take(10); return _educationUniversitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchQualifications(string value, CancellationToken token) { if (!_qualificationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/qualifications", token); if (r != null) _qualificationSuggestions = r.OrderBy(s => s).ToList(); _qualificationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading qualifications: {ex.Message}"); _qualificationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _qualificationSuggestions.Take(10); return _qualificationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchWorkEmployers(string value, CancellationToken token) { if (!_workEmployerLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workEmployers", token); if (r != null) _workEmployerSuggestions = r.OrderBy(s => s).ToList(); _workEmployerLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading work employers: {ex.Message}"); _workEmployerSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _workEmployerSuggestions.Take(10); return _workEmployerSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchWorkDesignations(string value, CancellationToken token) { if (!_workDesignationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workDesignations", token); if (r != null) _workDesignationSuggestions = r.OrderBy(s => s).ToList(); _workDesignationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading work designations: {ex.Message}"); _workDesignationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _workDesignationSuggestions.Take(10); return _workDesignationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchWorkLocations(string value, CancellationToken token) { if (!_workLocationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workLocations", token); if (r != null) _workLocationSuggestions = r.OrderBy(s => s).ToList(); _workLocationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading work locations: {ex.Message}"); _workLocationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _workLocationSuggestions.Take(10); return _workLocationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchCurrentCities(string value, CancellationToken token) { if (!_currentCityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/currentCities", token); if (r != null) _currentCitySuggestions = r.OrderBy(s => s).ToList(); _currentCityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading current cities: {ex.Message}"); _currentCitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _currentCitySuggestions.Take(10); return _currentCitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchCurrentStates(string value, CancellationToken token) { if (!_currentStateLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/currentStates", token); if (r != null) _currentStateSuggestions = r.OrderBy(s => s).ToList(); _currentStateLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading current states: {ex.Message}"); _currentStateSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _currentStateSuggestions.Take(10); return _currentStateSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchPermanentCities(string value, CancellationToken token) { if (!_permanentCityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/permanentCities", token); if (r != null) _permanentCitySuggestions = r.OrderBy(s => s).ToList(); _permanentCityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading permanent cities: {ex.Message}"); _permanentCitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _permanentCitySuggestions.Take(10); return _permanentCitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchPermanentStates(string value, CancellationToken token) { if (!_permanentStateLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/permanentStates", token); if (r != null) _permanentStateSuggestions = r.OrderBy(s => s).ToList(); _permanentStateLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading permanent states: {ex.Message}"); _permanentStateSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _permanentStateSuggestions.Take(10); return _permanentStateSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchPassportNationalities(string value, CancellationToken token) { if (!_passportNationalityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/passportNationalities", token); if (r != null) _passportNationalitySuggestions = r.OrderBy(s => s).ToList(); _passportNationalityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading passport nationalities: {ex.Message}"); _passportNationalitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _passportNationalitySuggestions.Take(10); return _passportNationalitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchBankNames(string value, CancellationToken token) { if (!_bankNameLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankNames", token); if (r != null) _bankNameSuggestions = r.OrderBy(s => s).ToList(); _bankNameLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading bank names: {ex.Message}"); _bankNameSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _bankNameSuggestions.Take(10); return _bankNameSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchBankBranches(string value, CancellationToken token) { if (!_bankBranchLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankBranches", token); if (r != null) _bankBranchSuggestions = r.OrderBy(s => s).ToList(); _bankBranchLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading bank branches: {ex.Message}"); _bankBranchSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _bankBranchSuggestions.Take(10); return _bankBranchSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchBankStates(string value, CancellationToken token) { if (!_bankStateLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankStates", token); if (r != null) _bankStateSuggestions = r.OrderBy(s => s).ToList(); _bankStateLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading bank states: {ex.Message}"); _bankStateSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _bankStateSuggestions.Take(10); return _bankStateSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchNationalities(string value, CancellationToken token)
+    {
+        if (!_nationalityLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/nationalities", token);
+                if (r != null)
+                    _nationalitySuggestions = r.OrderBy(s => s).ToList();
+                _nationalityLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading nationalities: {ex.Message}");
+                _nationalitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _nationalitySuggestions.Take(10);
+
+        return _nationalitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchDesignations(string value, CancellationToken token)
+    {
+        if (!_designationLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/designations", token);
+                if (r != null)
+                    _designationSuggestions = r.OrderBy(s => s).ToList();
+                _designationLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading designations: {ex.Message}");
+                _designationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _designationSuggestions.Take(10);
+
+        return _designationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchJoiningLocations(string value, CancellationToken token)
+    {
+        if (!_joiningLocationLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/joiningLocations", token);
+                if (r != null)
+                    _joiningLocationSuggestions = r.OrderBy(s => s).ToList();
+                _joiningLocationLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading joining locations: {ex.Message}");
+                _joiningLocationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _joiningLocationSuggestions.Take(10);
+
+        return _joiningLocationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchLevels(string value, CancellationToken token)
+    {
+        if (!_levelLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/levels", token);
+                if (r != null)
+                    _levelSuggestions = r.OrderBy(s => s).ToList();
+                _levelLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading levels: {ex.Message}");
+                _levelSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _levelSuggestions.Take(10);
+
+        return _levelSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchEducationUniversities(string value, CancellationToken token)
+    {
+        if (!_educationUniversityLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/educationUniversities", token);
+                if (r != null)
+                    _educationUniversitySuggestions = r.OrderBy(s => s).ToList();
+                _educationUniversityLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading education universities: {ex.Message}");
+                _educationUniversitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _educationUniversitySuggestions.Take(10);
+
+        return _educationUniversitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchQualifications(string value, CancellationToken token)
+    {
+        if (!_qualificationLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/qualifications", token);
+                if (r != null)
+                    _qualificationSuggestions = r.OrderBy(s => s).ToList();
+                _qualificationLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading qualifications: {ex.Message}");
+                _qualificationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _qualificationSuggestions.Take(10);
+
+        return _qualificationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchWorkEmployers(string value, CancellationToken token)
+    {
+        if (!_workEmployerLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workEmployers", token);
+                if (r != null)
+                    _workEmployerSuggestions = r.OrderBy(s => s).ToList();
+                _workEmployerLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading work employers: {ex.Message}");
+                _workEmployerSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _workEmployerSuggestions.Take(10);
+
+        return _workEmployerSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchWorkDesignations(string value, CancellationToken token)
+    {
+        if (!_workDesignationLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workDesignations", token);
+                if (r != null)
+                    _workDesignationSuggestions = r.OrderBy(s => s).ToList();
+                _workDesignationLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading work designations: {ex.Message}");
+                _workDesignationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _workDesignationSuggestions.Take(10);
+
+        return _workDesignationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchWorkLocations(string value, CancellationToken token)
+    {
+        if (!_workLocationLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workLocations", token);
+                if (r != null)
+                    _workLocationSuggestions = r.OrderBy(s => s).ToList();
+                _workLocationLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading work locations: {ex.Message}");
+                _workLocationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _workLocationSuggestions.Take(10);
+
+        return _workLocationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchCurrentCities(string value, CancellationToken token)
+    {
+        if (!_currentCityLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/currentCities", token);
+                if (r != null)
+                    _currentCitySuggestions = r.OrderBy(s => s).ToList();
+                _currentCityLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading current cities: {ex.Message}");
+                _currentCitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _currentCitySuggestions.Take(10);
+
+        return _currentCitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchCurrentStates(string value, CancellationToken token)
+    {
+        if (!_currentStateLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/currentStates", token);
+                if (r != null)
+                    _currentStateSuggestions = r.OrderBy(s => s).ToList();
+                _currentStateLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading current states: {ex.Message}");
+                _currentStateSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _currentStateSuggestions.Take(10);
+
+        return _currentStateSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchPermanentCities(string value, CancellationToken token)
+    {
+        if (!_permanentCityLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/permanentCities", token);
+                if (r != null)
+                    _permanentCitySuggestions = r.OrderBy(s => s).ToList();
+                _permanentCityLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading permanent cities: {ex.Message}");
+                _permanentCitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _permanentCitySuggestions.Take(10);
+
+        return _permanentCitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchPermanentStates(string value, CancellationToken token)
+    {
+        if (!_permanentStateLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/permanentStates", token);
+                if (r != null)
+                    _permanentStateSuggestions = r.OrderBy(s => s).ToList();
+                _permanentStateLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading permanent states: {ex.Message}");
+                _permanentStateSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _permanentStateSuggestions.Take(10);
+
+        return _permanentStateSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchPassportNationalities(string value, CancellationToken token)
+    {
+        if (!_passportNationalityLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/passportNationalities", token);
+                if (r != null)
+                    _passportNationalitySuggestions = r.OrderBy(s => s).ToList();
+                _passportNationalityLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading passport nationalities: {ex.Message}");
+                _passportNationalitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _passportNationalitySuggestions.Take(10);
+
+        return _passportNationalitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchBankNames(string value, CancellationToken token)
+    {
+        if (!_bankNameLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankNames", token);
+                if (r != null)
+                    _bankNameSuggestions = r.OrderBy(s => s).ToList();
+                _bankNameLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading bank names: {ex.Message}");
+                _bankNameSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _bankNameSuggestions.Take(10);
+
+        return _bankNameSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchBankBranches(string value, CancellationToken token)
+    {
+        if (!_bankBranchLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankBranches", token);
+                if (r != null)
+                    _bankBranchSuggestions = r.OrderBy(s => s).ToList();
+                _bankBranchLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading bank branches: {ex.Message}");
+                _bankBranchSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _bankBranchSuggestions.Take(10);
+
+        return _bankBranchSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchBankStates(string value, CancellationToken token)
+    {
+        if (!_bankStateLoaded)
+        {
+            try
+            {
+                var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankStates", token);
+                if (r != null)
+                    _bankStateSuggestions = r.OrderBy(s => s).ToList();
+                _bankStateLoaded = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading bank states: {ex.Message}");
+                _bankStateSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _bankStateSuggestions.Take(10);
+
+        return _bankStateSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
 }
