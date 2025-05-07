@@ -13,8 +13,8 @@ namespace WiseHR.Services
         private readonly IJSRuntime _jsRuntime;
         private readonly string _baseUrl;
 
-        private readonly string _supabaseUrl = "https://xnibymvrmxhralsrggau.supabase.co";
-        private readonly string _supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhuaWJ5bXZybXhocmFsc3JnZ2F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIzMjIyMDQsImV4cCI6MjA1Nzg5ODIwNH0.DdJTJxUy7FUj0Z4U_JTPqGCg32Sd6mROPhNCCR8x35U";
+        private readonly string _supabaseUrl = "https://fhhnmffpdcyktnjahnwq.supabase.co";
+        private readonly string _supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoaG5tZmZwZGN5a3RuamFobndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzczNzA4MDAsImV4cCI6MjA1Mjk0NjgwMH0.1b7s7qJ-yyZXo9wgzq5ZlOnaSxsKRcHDZyYb9J7LU60";
 
         public AuthService(HttpClient httpClient, IConfiguration configuration, IJSRuntime jsRuntime)
         {
@@ -84,27 +84,42 @@ namespace WiseHR.Services
 
         }
 
-        public async Task<string> Signup(string email, string password)
+        public async Task<(string message, string error)> Signup(string email, string password)
         {
             try
             {
-                var requestBody = new { email, password };
-                var serializedBody = JsonSerializer.Serialize(requestBody);
-                Console.WriteLine($"Signup request JSON: {serializedBody}");
+                // Save to MongoDB
+                var mongoResponse = await _httpClient.PostAsJsonAsync("api/auth/signup", new { email, password });
 
-                var content = new StringContent(serializedBody, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync("api/auth/signup", content);
-
-                if (response.IsSuccessStatusCode)
+                if (mongoResponse.IsSuccessStatusCode)
                 {
-                    return "Signup successful";
+                    return ("Signup successful", null);
                 }
-                return await response.Content.ReadAsStringAsync();
+
+                var mongoError = await mongoResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"MongoDB error: {mongoError}");
+
+                return ("MongoDB insert failed", mongoError);
             }
             catch (HttpRequestException ex)
             {
-                return $"Failed to connect to the server: {ex.Message}";
+                Console.WriteLine($"Connection error: {ex.Message}");
+                return ("Connection error", ex.Message);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                return ("Unexpected error", ex.Message);
+            }
+        }
+
+
+
+        // Add this class to handle the signup response
+        private class SignupResponse
+        {
+            public UserResponse? User { get; set; }
+            public string? AccessToken { get; set; }
         }
 
         public async Task<(string? Message, string? Email, string? Error)> ForgotPassword(string email)
@@ -150,25 +165,28 @@ namespace WiseHR.Services
                 {
                     Console.WriteLine($"Raw role from Supabase: {role}");
                     var normalizedRole = char.ToUpper(role[0]) + role.Substring(1).ToLower();
+                    await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "userRole", normalizedRole);
+
                     return (normalizedRole, null);
                 }
+                return (null, $"Failed to fetch role from Supabase. Error: {error ?? "Unknown error"}");
 
                 // Now verify token via the API
-                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.GetAsync("api/auth/verify");
+                //_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                //var response = await _httpClient.GetAsync("api/auth/verify");
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<VerifyResponse>();
-                    Console.WriteLine($"Raw role from API: {result?.Role}");
-                    var normalizedRole = char.ToUpper(result?.Role[0] ?? ' ') + result?.Role.Substring(1).ToLower();
-                    return (normalizedRole, null);
-                }
+                //if (response.IsSuccessStatusCode)
+                //{
+                //    var result = await response.Content.ReadFromJsonAsync<VerifyResponse>();
+                //    Console.WriteLine($"Raw role from API: {result?.Role}");
+                //    var normalizedRole = char.ToUpper(result?.Role[0] ?? ' ') + result?.Role.Substring(1).ToLower();
+                //    return (normalizedRole, null);
+                //}
 
-                // Log the response error details if status code isn't 2xx
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error Content: {errorContent}");
-                return (null, $"Error from API: {response.StatusCode}. {errorContent}");
+                //// Log the response error details if status code isn't 2xx
+                //var errorContent = await response.Content.ReadAsStringAsync();
+                //Console.WriteLine($"Error Content: {errorContent}");
+                //return (null, $"Error from API: {response.StatusCode}. {errorContent}");
             }
             catch (HttpRequestException ex)
             {
@@ -181,7 +199,6 @@ namespace WiseHR.Services
                 return (null, $"An unexpected error occurred: {ex.Message}");
             }
         }
-
         private async Task<(string? Role, string? Error)> GetRoleFromSupabase(string token)
         {
             try

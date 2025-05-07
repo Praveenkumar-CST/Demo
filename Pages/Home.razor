@@ -270,7 +270,7 @@
                     var (role, verifyError) = await AuthService.VerifyToken();
                     if (!string.IsNullOrEmpty(role))
                     {
-                        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
+                        //await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
 
                         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
 
@@ -338,36 +338,34 @@
 
         try
         {
-            // Generate EmpId locally
-           
-
-            var result = await AuthService.Signup(SignupEmail, SignupPassword);
-            if (result == "Signup successful")
+            // Call the updated Signup method
+            var (message, error) = await AuthService.Signup(SignupEmail, SignupPassword);
+            if (message == "Signup successful")
             {
-                // Store Email and EmpId in localStorage
-                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
-                
-
+                // Store SignupEmail (not Email) in storage
+                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", SignupEmail);
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", SignupEmail);
-                
 
-                SignupMessage = "Signup successful! Please login.";
+                // Generate and store empId
                 var empId = await GenerateEmpId();
                 await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "empId", empId.ToString());
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "empId", empId.ToString());
+
+                SignupMessage = "Signup successful! Please login.";
                 SignupErrorMessage = "";
                 await Task.Delay(2000);
                 ShowForm(FormState.Login);
             }
             else
             {
-                SignupErrorMessage = result ?? "Signup failed.";
+                SignupErrorMessage = error ?? "Signup failed.";
                 SignupMessage = "";
             }
         }
         catch (Exception ex)
         {
             SignupErrorMessage = $"Signup error: {ex.Message}";
+            SignupMessage = "";
         }
 
         IsLoading = false;
