@@ -22,27 +22,6 @@
         </MudTable>
     </MudPaper>
 
-   <MudPaper Class="bank-details-container" Elevation="4" Style="padding: 16px;">
-    <table class="table table-bordered table-striped table-hover">
-        <thead>
-            <tr>
-                <th>Banking Field</th>
-                <th>Account Details</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in bankDetails)
-            {
-                <tr>
-                    <td style="text-transform: capitalize;">@item.Key</td>
-                    <td style="text-transform: capitalize;">@item.Value</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</MudPaper>
-
-
     <MudText Typo="Typo.h6" Class="mb-2">Uploaded Documents</MudText>
     <MudGrid Spacing="3">
         <!-- Aadhaar Document -->
