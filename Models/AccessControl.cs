@@ -15,26 +15,16 @@
                     ("Holiday Calendar", "/calendar"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
-                    ("HIDE_bankEditForm", "/bankEditForm/.*"),
-                    ("HIDE_experienceEditForm", "/experienceEditForm/.*"),
-<<<<<<< HEAD
-                    ("HIDE_Registration","/registration"),
-                    ("HIDE_confirmationPage","/confirmation"),
-                    ("HIDE_workExperience","/workExperience"),
-                    ("HIDE_employee-form","/employee-form"),
-                    ("HIDE_bankingForm","/bankingForm"),
-                    ("HIDE_EmployeeProfile", "/employee/.*")
 
-
-=======
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports")
->>>>>>> 2336a7881d8675e0f5cef80c8bea954dadf056f6
+                    ("ReportList", "/reports"),
+                      ("HIDE_EmployeeProfile", "/employee/.*")
+
                 }
             },
             {
@@ -50,25 +40,16 @@
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
                     ("HIDE_experienceEditForm", "/experienceEditForm/.*"),
-<<<<<<< HEAD
-                    ("HIDE_Registration","/registration"),
-                    ("HIDE_confirmationPage","/confirmation"),
-                    ("HIDE_workExperience","/workExperience"),
-                    ("HIDE_employee-form","/employee-form"),
-                    ("HIDE_bankingForm","/bankingForm"),
-                    ("HIDE_EmployeeProfile", "/employee/.*")
 
-
-
-=======
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports")
->>>>>>> 2336a7881d8675e0f5cef80c8bea954dadf056f6
+                    ("ReportList", "/reports"),
+                    ("HIDE_EmployeeProfile", "/employee/.*")
+
                 }
             },
             {
@@ -76,22 +57,14 @@
                 {
                     ("Dashboard", "/home"),
                     ("Holiday Calendar", "/user"),
-<<<<<<< HEAD
-                    ("HIDE_Registration","/registration"),
-                    ("HIDE_confirmationPage","/confirmation"),
-                    ("HIDE_workExperience","/workExperience"),
-                    ("HIDE_employee-form","/employee-form"),
-                    ("HIDE_bankingForm","/bankingForm"),
-                    ("HIDE_EmployeeProfile", "/employee/.*")
-
-=======
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
-                    ("ReportList", "/reports")
->>>>>>> 2336a7881d8675e0f5cef80c8bea954dadf056f6
+                    ("ReportList", "/reports"),
+                      ("HIDE_EmployeeProfile", "/employee/.*")
+
                 }
             },
             {
