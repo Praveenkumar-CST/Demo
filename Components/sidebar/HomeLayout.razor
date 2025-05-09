@@ -543,8 +543,20 @@
             if (response.IsSuccessStatusCode)
             {
                 var results = await response.Content.ReadFromJsonAsync<List<EmployeeSearchResult>>(token) ?? new List<EmployeeSearchResult>();
-                Console.WriteLine($"Autocomplete Search successful: Found {results.Count} results");
+                Console.WriteLine($"Autocomplete Search successful: Found {results.Count} actual employee results");
                 _searchError = null;
+
+                // Always add the special "See for more details..." item at the end
+                Console.WriteLine("Adding 'See more' link to suggestions.");
+                results.Add(new EmployeeSearchResult
+                    {
+                        EmployeeID = "ANALYTICS_LINK", // Special identifier
+                        Name = "See for more details...",
+                        Designation = "Click to view full analytics", // Informative subtitle
+                        ProfileUrl = "/analytics" // Target URL
+                                                  // ProfilePicture can remain null
+                    });
+
                 return results;
             }
             else
