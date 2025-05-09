@@ -23,7 +23,9 @@
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
                     ("ReportList", "/reports"),
-                      ("HIDE_EmployeeProfile", "/employee/.*")
+                      ("HIDE_EmployeeProfile", "/employee/.*"),
+                      ("HIDE_Analytics", "/analytics"),
+
 
                 }
             },
@@ -48,7 +50,8 @@
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
                     ("ReportList", "/reports"),
-                    ("HIDE_EmployeeProfile", "/employee/.*")
+                    ("HIDE_EmployeeProfile", "/employee/.*"),
+                     ("HIDE_Analytics", "/analytics"),
 
                 }
             },
@@ -63,7 +66,8 @@
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("ReportList", "/reports"),
-                      ("HIDE_EmployeeProfile", "/employee/.*")
+                      ("HIDE_EmployeeProfile", "/employee/.*"),
+                       ("HIDE_Analytics", "/analytics"),
 
                 }
             },
@@ -71,7 +75,8 @@
                 "mentor", new List<(string, string)>
                 {
                     ("Dashboard", "/home"),
-                    ("Fortnight Report", "/fortnight-report")
+                    ("Fortnight Report", "/fortnight-report"),
+                     ("HIDE_Analytics", "/analytics"),
                 }
             }
         };
