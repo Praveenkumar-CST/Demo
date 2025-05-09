@@ -81,8 +81,15 @@
                     <tr><td>Full Name</td><td>@employee.PassportFullName</td></tr>
                     <tr><td>Passport No</td><td>@employee.PassportNo</td></tr>
                     <tr><td>Nationality</td><td>@employee.PassportNationality</td></tr>
-                    <tr><td>Issue Date</td><td>@employee.PassportIssueDate.Value.ToShortDateString()</td></tr>
-                    <tr><td>Expiry Date</td><td>@employee.PassportExpiryDate.Value.ToShortDateString()</td></tr>
+                    <tr>
+                        <td>Issue Date</td>
+                        <td>@(employee.PassportIssueDate?.ToShortDateString() ?? "N/A")</td>
+                    </tr>
+                    <tr>
+                        <td>Expiry Date</td>
+                        <td>@(employee.PassportExpiryDate?.ToShortDateString() ?? "N/A")</td>
+                    </tr>
+
                     <tr><td>Place of Issue</td><td>@employee.PassportPlaceOfIssue</td></tr>
                     <tr><td colspan="2" style="height: 20px;"></td></tr>
 
@@ -113,22 +120,22 @@
 
                 </tbody>
 
-                <thead class="table-light">
-                    <tr>
-                        <th colspan="2">Nominee Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>Name</td><td>@employee.NomineeName</td></tr>
-                    <tr><td>Relationship</td><td>@employee.NomineeRelationship</td></tr>
-                    <tr><td>Address</td><td>@employee.NomineeAddress</td></tr>
-                    <tr><td>City</td><td>@employee.NomineeCity</td></tr>
-                    <tr><td>State</td><td>@employee.NomineeState</td></tr>
-                    <tr><td>Zip</td><td>@employee.NomineeZipCode</td></tr>
-                    <tr><td>Mobile</td><td>@employee.NomineeMobile</td></tr>
-                    <tr><td colspan="2" style="height: 20px;"></td></tr>
+                @* <thead class="table-light"> *@
+                @*     <tr> *@
+                @*         <th colspan="2">Nominee Details</th> *@
+                @*     </tr> *@
+                @* </thead> *@
+                @* <tbody> *@
+                @*     <tr><td>Name</td><td>@employee.NomineeName</td></tr> *@
+                @*     <tr><td>Relationship</td><td>@employee.NomineeRelationship</td></tr> *@
+                @*     <tr><td>Address</td><td>@employee.NomineeAddress</td></tr> *@
+                @*     <tr><td>City</td><td>@employee.NomineeCity</td></tr> *@
+                @*     <tr><td>State</td><td>@employee.NomineeState</td></tr> *@
+                @*     <tr><td>Zip</td><td>@employee.NomineeZipCode</td></tr> *@
+                @*     <tr><td>Mobile</td><td>@employee.NomineeMobile</td></tr> *@
+                @*     <tr><td colspan="2" style="height: 20px;"></td></tr> *@
 
-                </tbody>
+                @* </tbody> *@
 
                 @* <thead class="table-light"> *@
                 @*     <tr> *@

@@ -6,13 +6,12 @@ html {
     width: 100%;
     overflow-x: hidden;
 }
-body{
+body {
     background-color: #ffffff;
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
-    overflow-x: hidden;
 }
 
 .page-container {

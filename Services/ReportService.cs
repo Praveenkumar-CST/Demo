@@ -73,8 +73,6 @@ public class ReportService
             return false;
         }
     }
-
-
     // Update report
     public async Task<bool> UpdateReportAsync(int id, ReportModel report)
     {

@@ -65,7 +65,7 @@
     <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
 
     <!-- Main Content -->
-    <MudMainContent Style="flex-grow: 1;">
+    <MudMainContent Style="overflow-y: scroll; scrollbar-width: none; -ms-overflow-style: none;">
         <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
             @Body
         </MudContainer>

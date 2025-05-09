@@ -43,7 +43,7 @@
 /* Container styles */
 .mud-container {
     padding: var(--container-padding);
-    margin-top: 24px;
+    margin-top: 14px;
 }
 
 /* Page heading */
@@ -170,7 +170,7 @@
 /* Responsiveness */
 @media (max-width: 600px) {
     .mud-table-cell {
-        padding: 8px 12px;
+        padding: 4px 6px;
     }
 
     .mud-button {
