@@ -8,15 +8,15 @@ namespace WiseHR.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Employee ID is required")]
-        public string EmployeeID { get; set; }
+        public string EmployeeID { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "First Name is required")]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
-        public string MiddleName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
 
         [Required(ErrorMessage = "Last Name is required")]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Father's Name is required")]
         public string FatherName { get; set; }
@@ -34,7 +34,7 @@ namespace WiseHR.Models
 
         public string Level { get; set; } = string.Empty;
 
-        public string Designation { get; set; } = string.Empty;
+        public string? Designation { get; set; }
 
         [Required(ErrorMessage = "Joining Location is required")]
         public string JoiningLocation { get; set; }
@@ -46,7 +46,7 @@ namespace WiseHR.Models
         public string MaritalStatus { get; set; }
 
         [Required(ErrorMessage = "Blood Group is required")]
-        public string BloodGroup { get; set; }
+        public string? BloodGroup { get; set; }
 
         [Required(ErrorMessage = "Nationality is required")]
         public string Nationality { get; set; }
@@ -238,6 +238,8 @@ namespace WiseHR.Models
 
         public string? PhotoContentType { get; set; }
 
+        [Required(ErrorMessage = "Profile Picture is required")]
+        public string? ProfilePicture { get; set; }
 
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
