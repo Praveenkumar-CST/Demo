@@ -176,10 +176,7 @@
     <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
 
     <!-- Main Content -->
-<<<<<<< HEAD
     <MudMainContent Style="overflow-y: scroll; scrollbar-width: none; -ms-overflow-style: none;">
-=======
-    <MudMainContent Style="flex-grow: 1;">
         @* Display active filters *@
         @if (HasActiveFilters())
         {
@@ -245,7 +242,6 @@
             </div>
         }
 
->>>>>>> 9a0aac0013c0ebf97de78c4ad7db15d94b9750d6
         <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
             @Body
         </MudContainer>
