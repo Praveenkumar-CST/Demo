@@ -192,31 +192,30 @@ namespace WiseHR.Models
 
         public string EmergencyContact2Mobile { get; set; }
 
-        // Nominee Details
-        //[Required(ErrorMessage = "Nominee Name is required")]
-        //public string NomineeName { get; set; }
+        [Required(ErrorMessage = "Nominee Name is required")]
+        public string NomineeName { get; set; }
 
-        //[Required(ErrorMessage = "Nominee Relationship with Employee is required")]
-        //public string NomineeRelationship { get; set; }
+        [Required(ErrorMessage = "Nominee Relationship with Employee is required")]
+        public string NomineeRelationship { get; set; }
 
-        //[Required(ErrorMessage = "Nominee Address is required")]
-        //public string NomineeAddress { get; set; }
+        [Required(ErrorMessage = "Nominee Address is required")]
+        public string NomineeAddress { get; set; }
 
-        //[Required(ErrorMessage = "Nominee City is required")]
-        //public string NomineeCity { get; set; }
+        [Required(ErrorMessage = "Nominee City is required")]
+        public string NomineeCity { get; set; }
 
-        //[Required(ErrorMessage = "Nominee State is required")]
-        //public string NomineeState { get; set; }
+        [Required(ErrorMessage = "Nominee State is required")]
+        public string NomineeState { get; set; }
 
-        //[Required(ErrorMessage = "Nominee Zip/Pin Code is required")]
-        //[RegularExpression(@"^\d{6}$", ErrorMessage = "Zip / Pin Code must be exactly 6 digits")]
+        [Required(ErrorMessage = "Nominee Zip/Pin Code is required")]
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "Zip / Pin Code must be exactly 6 digits")]
 
-        //public string NomineeZipCode { get; set; }
+        public string NomineeZipCode { get; set; }
 
-        //[Required(ErrorMessage = "Nominee Mobile No is required")]
-        //[RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter a valid 10-digit mobile number starting with 6-9")]
+        [Required(ErrorMessage = "Nominee Mobile No is required")]
+        [RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter a valid 10-digit mobile number starting with 6-9")]
 
-        //public string NomineeMobile { get; set; }
+        public string NomineeMobile { get; set; }
 
         public string PhotoFileName { get; set; }
 
