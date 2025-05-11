@@ -5,11 +5,11 @@
 @inject EmployeeService EmployeeService
 @inject ReportService ReportService
 @layout HomeLayout
-
-<MudPaper Class="p-4 mx-auto mt-6" MaxWidth="800px">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+<MudPaper Class="p-4 mx-auto mt-1" >
     @if (isLoading)
     {
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudProgressCircular Align="Align.Center" Indeterminate="true" Color="Color.Primary" />
     }
     else if (hasError)
     {
@@ -17,7 +17,7 @@
     }
     else
     {
-        <EditForm Model="@report" OnValidSubmit="HandleValidSubmit">
+            <EditForm Model="@report" OnValidSubmit="HandleValidSubmit" Class="p-1">
             <DataAnnotationsValidator />
             <MudTextField @bind-Value="report.MentorName" Label="Mentor Name" Disabled="true" />
             <MudTextField @bind-Value="report.MentorEmail" Label="Mentor Email" Disabled="true" />
@@ -46,38 +46,38 @@
                 <MudSelectItem Value=@("Completed")>Completed</MudSelectItem>
             </MudSelect>
 
-            <MudText Typo="Typo.subtitle2">Progress % — <span class="text-primary">@report.ProgressPercentage%</span></MudText>
+            <MudText Typo="Typo.subtitle1">Progress % — <span class="text-primary">@report.ProgressPercentage%</span></MudText>
             <MudSlider @bind-Value="report.ProgressPercentage" For="@(() => report.ProgressPercentage)" Min="0" Max="100" Step="1" />
 
             <MudTextField @bind-Value="report.FortnightRemarks1" For="@(() => report.FortnightRemarks1)" Label="Fortnight Remarks 1" Lines="3" Required="true" />
             <MudTextField @bind-Value="report.FortnightRemarks2" For="@(() => report.FortnightRemarks2)" Label="Fortnight Remarks 2" Lines="3" Required="true" />
 
-            <MudText Typo="Typo.subtitle2">Upload Supporting File</MudText>
+            <MudText Typo="Typo.subtitle1">Upload Supporting File</MudText>
             <InputFile OnChange="HandleFileChange" accept=".pdf,.docx,.xlsx,.jpg" />
             @if (!string.IsNullOrEmpty(report.FileName))
             {
                 <MudText Typo="Typo.body2" Class="mt-2">Current File: @report.FileName</MudText>
             }
 
-            <MudText Typo="Typo.subtitle1" Color="Color.Info">Debug Info:</MudText>
-            <MudPaper Class="p-2 mb-2" Style="background-color: #f5f5f5;">
-                <MudText Typo="Typo.body2">Mentor: @report.MentorName (Email: @report.MentorEmail, Designation: @report.MentorDesignation, id:@report.MentorId)</MudText>
-                <MudText Typo="Typo.body2">Mentee: @report.MenteeName (Email: @report.MenteeEmail, id:@report.MenteeId)</MudText>
-                <MudText Typo="Typo.body2">Projects Worked On: @report.ProjectsWorkedOn</MudText>
-                <MudText Typo="Typo.body2">Progress Stage: @report.ProgressStage</MudText>
-                <MudText Typo="Typo.body2">Progress %: @report.ProgressPercentage%</MudText>
-                <MudText Typo="Typo.body2">Remarks 1: @report.FortnightRemarks1</MudText>
-                <MudText Typo="Typo.body2">Remarks 2: @report.FortnightRemarks2</MudText>
-                <MudText Typo="Typo.body2">File: @report.FileName</MudText>
-            </MudPaper>
-
+            @* <MudText Typo="Typo.subtitle1" Color="Color.Info">Debug Info:</MudText> *@
+            @* <MudPaper Class="p-2 mb-2" Style="background-color: #f5f5f5;"> *@
+            @*     <MudText Typo="Typo.body2">Mentor: @report.MentorName (Email: @report.MentorEmail, Designation: @report.MentorDesignation, id:@report.MentorId)</MudText> *@
+            @*     <MudText Typo="Typo.body2">Mentee: @report.MenteeName (Email: @report.MenteeEmail, id:@report.MenteeId)</MudText> *@
+            @*     <MudText Typo="Typo.body2">Projects Worked On: @report.ProjectsWorkedOn</MudText> *@
+            @*     <MudText Typo="Typo.body2">Progress Stage: @report.ProgressStage</MudText> *@
+            @*     <MudText Typo="Typo.body2">Progress %: @report.ProgressPercentage%</MudText> *@
+            @*     <MudText Typo="Typo.body2">Remarks 1: @report.FortnightRemarks1</MudText> *@
+            @*     <MudText Typo="Typo.body2">Remarks 2: @report.FortnightRemarks2</MudText> *@
+            @*     <MudText Typo="Typo.body2">File: @report.FileName</MudText> *@
+            @* </MudPaper> *@
+            <br />
             <button type="submit" class="mud-button mud-button-filled mud-button-filled-primary mt-4">
                 @(isEditMode ? "Update Report" : "Submit Report")
             </button>
         </EditForm>
     }
 </MudPaper>
-
+</MudContainer>
 @code {
     [Parameter] public ReportModel Report { get; set; } // Accept report for editing
     private ReportModel report = new();
