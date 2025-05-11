@@ -10,7 +10,6 @@
 @inject NavigationManager NavigationManager
 @using WiseHR.Components.sidebar
 
-
 <MudThemeProvider />
 <MudLayout>
     <!-- Top Navigation Bar -->
@@ -91,7 +90,7 @@
                         <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person" IconColor="Color.Primary" OnClick="NavigateToProfile">My Profile</MudMenuItem>
                         <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary">Settings</MudMenuItem>
                         <MudDivider Class="my-2" />
-                        <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error">Logout</MudMenuItem>
+                        <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="Logout">Logout</MudMenuItem>
                     </div>
                 </ChildContent>
             </MudMenu>
@@ -189,6 +188,27 @@
         }
     }
 
+    private async Task Logout()
+    {
+        try
+        {
+            // Clear localStorage
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "accessToken");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "email");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "empId");
+            Console.WriteLine("Logged out successfully. LocalStorage cleared.");
+
+            // Navigate to login page
+            NavigationManager.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during logout: {ex.Message}");
+            _searchError = "Error logging out. Please try again.";
+            StateHasChanged();
+        }
+    }
+
     private RenderFragment<EmployeeSearchResult> ResultTemplate => (context) => __builder =>
     {
         if (context.EmployeeID == "ANALYTICS_LINK")
@@ -216,14 +236,7 @@
                 __builder2.AddAttribute(17, "Class", "d-flex align-center justify-center");
                 __builder2.AddAttribute(18, "ChildContent", (RenderFragment)((__builder3) =>
                 {
-                    if (!string.IsNullOrEmpty(context.ProfilePicture))
-                    {
-                        __builder3.OpenComponent<MudAvatar>(19);
-                        __builder3.AddAttribute(20, "Image", $"data:image/png;base64,{context.ProfilePicture}");
-                        __builder3.AddAttribute(21, "Size", Size.Large);
-                        __builder3.CloseComponent();
-                    }
-                    else
+                    if (!string.IsNullOrEmpty(context.Name))
                     {
                         __builder3.OpenComponent<MudAvatar>(22);
                         __builder3.AddAttribute(23, "Color", Color.Primary);
@@ -233,6 +246,10 @@
                             __builder4.AddContent(26, GetInitials(context.Name));
                         }));
                         __builder3.CloseComponent();
+                    }
+                    else
+                    {
+
                     }
                 }));
                 __builder2.CloseComponent();
@@ -302,23 +319,30 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadUserDetails();
-        await LoadDesignations();
+     
     }
 
-    private async Task LoadDesignations()
+    private async Task<string?> GetAccessToken()
     {
         try
         {
-            var response = await Http.GetFromJsonAsync<List<string>>("/api/designations");
-            designations = response ?? new List<string>();
+            var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Console.WriteLine("Access token not found in localStorage.");
+                return null;
+            }
+            Console.WriteLine("Access token retrieved from localStorage.");
+            return token;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading designations: {ex.Message}");
-            designations = new List<string> { "Developer", "Project Manager", "Analyst" };
+            Console.WriteLine($"Error retrieving access token from localStorage: {ex.Message}");
+            return null;
         }
     }
 
+  
     private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
     {
         _lastSearchQuery = query;
@@ -333,9 +357,15 @@
 
         try
         {
+            var accessToken = await GetAccessToken();
+          
             var apiUrl = $"/api/search/spotlight?query={System.Net.WebUtility.UrlEncode(query)}";
             Console.WriteLine($"Attempting Autocomplete API call to: {apiUrl}");
-            var response = await Http.GetAsync(apiUrl, token);
+
+            var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await Http.SendAsync(request, token);
             Console.WriteLine($"Autocomplete API call completed with status code: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
@@ -347,12 +377,18 @@
                 results.Add(new EmployeeSearchResult
                     {
                         EmployeeID = "ANALYTICS_LINK",
-                        Name = "Click for Adavanced Search...",
+                        Name = "Click for Advanced Search...",
                         Designation = "Click to view full analytics",
                         ProfileUrl = "/analytics"
                     });
 
                 return results;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                _searchError = "Session expired. Please log in again.";
+                NavigationManager.NavigateTo("/login");
+                Console.WriteLine("Unauthorized: Redirecting to login.");
             }
             else
             {
