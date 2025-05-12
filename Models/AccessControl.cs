@@ -15,7 +15,8 @@
                     ("Holiday Calendar", "/calendar"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
-
+                     ("HIDE_experienceEditForm","/experienceEditForm/.*"),
+                      ("HIDE_bankEditForm","/bankEditForm/.*"),
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
@@ -23,8 +24,8 @@
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
                     ("ReportList", "/reports"),
-                      ("HIDE_EmployeeProfile", "/employee/.*"),
-                      ("HIDE_Analytics", "/analytics"),
+                     ("HIDE_EmployeeProfile", "/employee/.*"),
+                     ("HIDE_Analytics", "/analytics"),
 
 
                 }
@@ -42,7 +43,6 @@
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
                     ("HIDE_bankEditForm", "/bankEditForm/.*"),
                     ("HIDE_experienceEditForm", "/experienceEditForm/.*"),
-
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),

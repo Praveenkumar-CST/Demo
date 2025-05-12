@@ -73,7 +73,6 @@ else
         NavigationManager.NavigateTo($"/experienceEditForm/{experience.EmployeeID}");
     }
 
-
     protected override async Task OnInitializedAsync()
     {
         experience = await ExperienceService.GetExperienceDetails(EmployeeId);
