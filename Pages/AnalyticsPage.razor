@@ -206,7 +206,7 @@
                         <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large"/>
                     </div>
                 }
-                else
+                else    
                 {
                     @if (!string.IsNullOrEmpty(_errorMessage))
                     {
@@ -226,7 +226,7 @@
                         <MudGrid Spacing="2" Class="mb-2">
                             <MudItem xs="12" sm="4">
                                 <MudCard Elevation="2" Class="hover-lift">
-                                    <MudCardHeader Style="background-color: var(--mud-palette-primary-lighten); padding: 8px 16px;">
+                                    <MudCardHeader Style="background-color: rgb(100 203 146); padding: 8px 16px;">
                                         <CardHeaderContent><MudText Typo="Typo.subtitle2">Total Employees</MudText></CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent Class="d-flex align-center pa-2">
@@ -237,7 +237,7 @@
                             </MudItem>
                             <MudItem xs="12" sm="4">
                                 <MudCard Elevation="2" Class="hover-lift">
-                                    <MudCardHeader Style="background-color: var(--mud-palette-secondary-lighten); padding: 8px 16px;">
+                                    <MudCardHeader Style="background-color: rgb(243 149 237); padding: 8px 16px;">
                                         <CardHeaderContent><MudText Typo="Typo.subtitle2">Unique Designations</MudText></CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent Class="d-flex align-center pa-2">
@@ -248,7 +248,7 @@
                             </MudItem>
                             <MudItem xs="12" sm="4">
                                 <MudCard Elevation="2" Class="hover-lift">
-                                    <MudCardHeader Style="background-color: var(--mud-palette-info-lighten); padding: 8px 16px;">
+                                    <MudCardHeader Style="background-color:rgb(93 188 245);; padding: 8px 16px;">
                                         <CardHeaderContent><MudText Typo="Typo.subtitle2">Unique Blood Groups</MudText></CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent Class="d-flex align-center pa-2">
@@ -305,7 +305,7 @@
                                         }
                                         else
                                         {
-                                            <MudAvatar Color="Color.Primary" Size="Size.Small">@GetInitials(employeeContext.FirstName + " " + employeeContext.LastName)</MudAvatar>
+                                            <MudAvatar Color="Color.Primary" Size="Size.Small">@GetInitials(employeeContext.FirstName )</MudAvatar>
                                         }
                                     </MudTd>
                                     <MudTd DataLabel="Name">

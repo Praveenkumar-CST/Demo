@@ -18,7 +18,7 @@
             <MudIconButton Icon="@Icons.Material.Filled.Menu"
                            Color="Color.Primary"
                            Edge="Edge.Start"
-                           OnClick="@(() => sidebar?.ToggleDrawer())"
+                           OnClick="@(() => ToggleSidebar())"
                            Size="Size.Large"
                            Class="mr-2" />
 
@@ -102,7 +102,7 @@
     </MudAppBar>
 
     <!-- Sidebar -->
-     <div class="sidebar-container">
+     <div class="sidebar-container" @onmouseleave="HandleMouseLeave">
         <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
     </div>
     <!-- Main Content -->
@@ -178,11 +178,8 @@
         transition: all 0.3s ease;
     }
 
-    /* Sidebar hover styles */
-    .sidebar-container:hover ::deep .mud-drawer {
-        width: 250px !important;
-    }
-
+    /* Removed hover styles to prevent automatic opening on hover */
+    
     ::deep .mud-drawer {
         transition: width 0.3s ease;
         width: 60px; /* Default collapsed width */
@@ -221,17 +218,7 @@
     private string? employeeId;
     private bool IsAdmin = false;
 
-    private async Task OpenSidebar()
-    {
-        drawerOpen = true;
-        if (sidebar != null)
-        {
-            await sidebar.ToggleDrawer(); // Sync with sidebar component
-        }
-        StateHasChanged();
-    }
-
-    private async Task CloseSidebar()
+    private async Task ToggleSidebar()
     {
         drawerOpen = !drawerOpen;
         if (sidebar != null)
@@ -239,6 +226,20 @@
             await sidebar.ToggleDrawer(); // Sync with sidebar component
         }
         StateHasChanged();
+    }
+    
+    // Close sidebar when mouse leaves
+    private async Task HandleMouseLeave()
+    {
+        if (drawerOpen)
+        {
+            drawerOpen = false;
+            if (sidebar != null)
+            {
+                await sidebar.ToggleDrawer();
+            }
+            StateHasChanged();
+        }
     }
 
     private async Task ClearSearchQuery()

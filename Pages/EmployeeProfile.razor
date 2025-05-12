@@ -92,10 +92,10 @@
                         <MudPaper Elevation="3" Class="pa-4 rounded-lg profile-header">
                             <MudGrid AlignItems="AlignItems.Center">
                                 <MudItem xs="12" sm="3" Class="d-flex justify-center">
-                                    @if (!string.IsNullOrEmpty(Employee.PhotoBase64Content))
+                                    @if (!string.IsNullOrEmpty(Employee.PhotoBase64Content) && !string.IsNullOrEmpty(Employee.PhotoContentType))
                                     {
                                         <MudAvatar Style="height: 120px; width: 120px;" Class="mud-elevation-2 profile-avatar">
-                                            <MudImage Src="@Employee.PhotoBase64Content" Alt="@Employee.FirstName" ObjectFit="ObjectFit.Cover" />
+                                            <MudImage Src="@($"data:{Employee.PhotoContentType};base64,{Employee.PhotoBase64Content}")" Alt="@Employee.FirstName" ObjectFit="ObjectFit.Cover" />
                                         </MudAvatar>
                                     }
                                     else
