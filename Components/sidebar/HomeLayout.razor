@@ -16,44 +16,50 @@
     <MudAppBar Elevation="3" Style="background-color: var(--primary); height: 72px;">
         <MudItem xs="2" Class="d-flex align-center">
             <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                           Color="Color.Inherit"
-                           Edge="Edge.Start"
-                           OnClick="@(() => sidebar?.ToggleDrawer())"
-                           Class="mr-2" />
+            Color="Color.Inherit"
+            Edge="Edge.Start"
+            OnClick="@(() => sidebar?.ToggleDrawer())"
+            Class="mr-2" />
 
             <MudImage Src="images/logo1.png"
-                      Alt="Company Logo"
-                      Height="48"
-                      Style="margin-left: 16px; color:white;" />
+            Alt="Company Logo"
+            Height="48"
+            Style="margin-left: 16px; color:white;" />
         </MudItem>
 
         <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
             <div class="d-flex align-center position-relative" style="width: 70%; max-width: 800px;">
                 <MudAutocomplete T="EmployeeSearchResult"
-                                 SearchFunc="@SearchEmployeesAutocomplete"
-                                 Placeholder="Search employees..."
-                                 Variant="Variant.Outlined"
-                                 Adornment="Adornment.Start"
-                                 AdornmentIcon="@Icons.Material.Filled.Search"
-                                 AdornmentColor="Color.Primary"
-                                 Class="search-autocomplete"
-                                 Style="width: 100%; border-radius: 28px; background-color: var(--secondary);"
-                                 DebounceInterval="300"
-                                 ResetValueOnEmptyText="true"
-                                 ShowProgressIndicator="true"
-                                 ValueChanged="OnEmployeeSelected"
-                                 @bind-Text="_searchText"
-                                 @onkeyup="HandleSearchInputKeyUp"
-                                 ItemTemplate="@ResultTemplate"
-                                 ToStringFunc="@(e => null)" />
+                SearchFunc="@SearchEmployeesAutocomplete"
+                Placeholder="Search employees..."
+                Variant="Variant.Outlined"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search"
+                AdornmentColor="Color.Primary"
+                Class="search-autocomplete"
+                Style="width: 100%; border-radius: 28px; background-color: var(--secondary);"
+                DebounceInterval="300"
+                ResetValueOnEmptyText="true"
+                ShowProgressIndicator="true"
+                ValueChanged="OnEmployeeSelected"
+                @bind-Text="_searchText"
+                @onkeyup="HandleSearchInputKeyUp"
+                ItemTemplate="@ResultTemplate"
+                ToStringFunc="@(e => null)" />
+                @if (IsAdmin)
+                {
 
-                <MudTooltip Text="Go to Advanced Search">
-                    <MudIconButton Icon="@Icons.Material.Filled.FilterList"
-                                   Color="Color.Primary"
-                                   Class="ml-2 filter-button"
-                                   OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
-                                   Style="background-color: var(--secondary); border-radius: 50%;" />
-                </MudTooltip>
+                    <MudTooltip Text="Go to Advanced Search">
+                        <MudIconButton Icon="@Icons.Material.Filled.FilterList"
+                        Color="Color.Primary"
+                        Class="ml-2 filter-button"
+                        OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
+                        Style="background-color: var(--secondary); border-radius: 50%;" />
+                    </MudTooltip>
+
+
+
+                }
             </div>
 
             @* Display error message if search fails *@
@@ -70,14 +76,14 @@
                         @if (!string.IsNullOrEmpty(userProfilePicture))
                         {
                             <img src="@userProfilePicture"
-                                 class="rounded-circle" alt="Employee Photo"
-                                 style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--secondary);" />
+                            class="rounded-circle" alt="Employee Photo"
+                            style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--secondary);" />
                         }
                         else
                         {
                             <MudAvatar Size="Size.Medium"
-                                       Class="cursor-pointer"
-                                       Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--dark);">
+                            Class="cursor-pointer"
+                            Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--dark);">
                                 @userInitials
                             </MudAvatar>
                         }
@@ -114,49 +120,52 @@
 
 <style>
     .search-autocomplete ::deep .mud-input {
-        border-radius: 28px;
-        transition: all 0.3s ease;
+    border-radius: 28px;
+    transition: all 0.3s ease;
     }
 
-        .search-autocomplete ::deep .mud-input:focus-within {
-            box-shadow: 0 0 0 2px var(--primary-light);
-        }
+    .search-autocomplete ::deep .mud-input:focus-within {
+    box-shadow: 0 0 0 2px var(--primary-light);
+    }
 
     .search-autocomplete ::deep .mud-input-adornment {
-        color: var(--primary);
+    color: var(--primary);
     }
 
     .active-filters {
-        position: sticky;
-        top: 72px;
-        left: 0;
-        z-index: 99;
-        background-color: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
+    position: sticky;
+    top: 72px;
+    left: 0;
+    z-index: 99;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     }
 
     /* Improved user menu styling */
     ::deep .mud-menu-list {
-        border-radius: 12px;
-        overflow: hidden;
-        min-width: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    min-width: 200px;
     }
 
     ::deep .mud-list-item-icon {
-        min-width: 40px;
+    min-width: 40px;
     }
 
     @@media (max-width: 960px) {
-        .active-filters {
-            padding: 8px 12px;
-        }
+    .active-filters {
+    padding: 8px 12px;
+    }
     }
 </style>
 
 @code {
+
+
+
     private bool drawerOpen = true;
     private HomeSidebar? sidebar;
     private string? userProfilePicture;
@@ -169,6 +178,7 @@
     private string? activeSearchQuery = "";
     private string? employeeId;
 
+    private bool IsAdmin = false; 
     // Clear search query method
     private async Task ClearSearchQuery()
     {
@@ -319,7 +329,8 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadUserDetails();
-     
+
+
     }
 
     private async Task<string?> GetAccessToken()
@@ -342,7 +353,7 @@
         }
     }
 
-  
+
     private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
     {
         _lastSearchQuery = query;
@@ -358,7 +369,7 @@
         try
         {
             var accessToken = await GetAccessToken();
-          
+
             var apiUrl = $"/api/search/spotlight?query={System.Net.WebUtility.UrlEncode(query)}";
             Console.WriteLine($"Attempting Autocomplete API call to: {apiUrl}");
 
@@ -490,6 +501,10 @@
         try
         {
             var email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+            var value = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem","userRole");
+
+
+            IsAdmin = value == "Admin";
             Console.WriteLine($"Retrieved email from localStorage: {email}");
 
             userProfilePicture = null;
