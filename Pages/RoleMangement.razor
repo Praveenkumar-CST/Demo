@@ -1,4 +1,4 @@
-﻿@page "/home/rolemanagement"
+﻿ @page "/home/rolemanagement"
 @using WiseHR.Models
 @using System.Threading.Tasks
 @using Components.sidebar
@@ -9,15 +9,15 @@
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudGrid Spacing="2" Class="mb-4">
-        <MudItem xs="12" sm="6" md="4">
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.PersonAdd"
-                       OnClick='() => NavigationManager.NavigateTo("/home/employees")'
-                       >
-                Add New Employee
-            </MudButton>
-        </MudItem>
+        @* <MudItem xs="12" sm="6" md="4"> *@
+        @*     <MudButton Variant="Variant.Filled" *@
+        @*                Color="Color.Primary" *@
+        @*                StartIcon="@Icons.Material.Filled.PersonAdd" *@
+        @*                OnClick='() => NavigationManager.NavigateTo("/home/employees")' *@
+        @*                > *@
+        @*         Add New Employee *@
+        @*     </MudButton> *@
+        @* </MudItem> *@
     </MudGrid>
 
     @if (users == null)
