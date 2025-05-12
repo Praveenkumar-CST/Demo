@@ -13,6 +13,61 @@
 
 <MudThemeProvider />
 
+<style>
+    .profile-header {
+        background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%);
+        box-shadow: 0 8px 20px rgba(71, 118, 230, 0.2);
+        transition: all 0.3s ease;
+        color: white;
+    }
+
+    .profile-header:hover {
+        box-shadow: 0 12px 25px rgba(71, 118, 230, 0.3);
+        transform: translateY(-3px);
+    }
+
+    .profile-avatar {
+        border: 4px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Custom gradient styles for tabs */
+    .gradient-tabs ::deep .mud-tabs-toolbar {
+        background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%);
+    }
+    
+    .gradient-tabs ::deep .mud-tab {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .gradient-tabs ::deep .mud-tab.mud-tab-active {
+        color: white;
+        font-weight: 500;
+    }
+    
+    .gradient-tabs ::deep .mud-tabs-toolbar-content .mud-tab:hover {
+        color: white;
+    }
+    
+    .gradient-tabs ::deep .mud-tabs-indicator {
+        background: white;
+        height: 3px;
+    }
+    .mud-tabs-tabbar{
+            background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%);
+    color: white;
+    }
+    .mud-tab.mud-tab-active{
+        color: white;
+    }
+    .mud-tab-slider.mud-tab-slider-horizontal {
+        height: 5px;
+    }
+    .mud-tab-slider {
+        background: #fff;
+    }
+</style>
+
     <MudMainContent Style="flex-grow: 1;">
         <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
             @if (isLoading)
@@ -34,36 +89,36 @@
                 <MudGrid>
                     <!-- Employee Profile Header -->
                     <MudItem xs="12">
-                        <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                        <MudPaper Elevation="3" Class="pa-4 rounded-lg profile-header">
                             <MudGrid AlignItems="AlignItems.Center">
                                 <MudItem xs="12" sm="3" Class="d-flex justify-center">
                                     @if (!string.IsNullOrEmpty(Employee.PhotoBase64Content))
                                     {
-                                        <MudAvatar Style="height: 120px; width: 120px;" Class="mud-elevation-2">
+                                        <MudAvatar Style="height: 120px; width: 120px;" Class="mud-elevation-2 profile-avatar">
                                             <MudImage Src="@Employee.PhotoBase64Content" Alt="@Employee.FirstName" ObjectFit="ObjectFit.Cover" />
                                         </MudAvatar>
                                     }
                                     else
                                     {
-                                        <MudAvatar Color="Color.Primary" Style="height: 120px; width: 120px; font-size: 2.5rem;" Class="mud-elevation-2">
+                                        <MudAvatar Style="height: 120px; width: 120px; font-size: 2.5rem;" Class="mud-elevation-2 profile-avatar">
                                             @(Employee.FirstName?.Length > 0 ? Employee.FirstName[0].ToString().ToUpper() : "?")
                                         </MudAvatar>
                                     }
                                 </MudItem>
                                 <MudItem xs="12" sm="9" Class="pl-sm-4">
-                                    <MudText Typo="Typo.h4" Color="Color.Primary" GutterBottom="true">@Employee.FirstName @Employee.MiddleName @Employee.LastName</MudText>
-                                    <MudText Typo="Typo.h6" GutterBottom="true">@Employee.Designation</MudText>
-                                    <MudDivider Class="my-2" />
+                                    <MudText Typo="Typo.h4" GutterBottom="true" Style="color: white; font-weight: 500;">@Employee.FirstName @Employee.MiddleName @Employee.LastName</MudText>
+                                    <MudText Typo="Typo.h6" GutterBottom="true" Style="color: rgba(255, 255, 255, 0.9);">@Employee.Designation</MudText>
+                                    <MudDivider Class="my-2" Style="background-color: rgba(255, 255, 255, 0.2);" />
                                     <MudGrid Spacing="2">
                                         <MudItem xs="12" md="6">
-                                            <MudText Typo="Typo.body1" Class="d-flex align-center">
-                                                <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Class="mr-2" Color="Color.Secondary" />
+                                            <MudText Typo="Typo.body1" Class="d-flex align-center" Style="color: white;">
+                                                <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Class="mr-2" Style="color: rgba(255, 255, 255, 0.8);" />
                                                 @Employee.CurrentEmail
                                             </MudText>
                                         </MudItem>
                                         <MudItem xs="12" md="6">
-                                            <MudText Typo="Typo.body1" Class="d-flex align-center">
-                                                <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Class="mr-2" Color="Color.Secondary" />
+                                            <MudText Typo="Typo.body1" Class="d-flex align-center" Style="color: white;">
+                                                <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Class="mr-2" Style="color: rgba(255, 255, 255, 0.8);" />
                                                 @Employee.CurrentMobile
                                             </MudText>
                                         </MudItem>
@@ -75,7 +130,7 @@
 
                     <!-- Employee Tabs -->
                     <MudItem xs="12" Class="mt-4">
-                        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4" Color="Color.Primary">
+                        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4" Class="gradient-tabs">
 
                             @* --- Personal Information Tab --- *@
                             <MudTabPanel Text="Personal" Icon="@Icons.Material.Filled.Person">
