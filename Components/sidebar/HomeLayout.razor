@@ -500,12 +500,12 @@
     {
         try
         {
-            var email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+            var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
             var value = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem","userRole");
 
 
             IsAdmin = value == "Admin";
-            Console.WriteLine($"Retrieved email from localStorage: {email}");
+            Console.WriteLine($"Retrieved email from sessionStorage: {email}");
 
             userProfilePicture = null;
             userName = null;
