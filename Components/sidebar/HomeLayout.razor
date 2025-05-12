@@ -13,22 +13,23 @@
 <MudThemeProvider />
 
     <!-- Top Navigation Bar -->
-    <MudAppBar Elevation="3" Style="background-color: var(--primary); height: 72px;">
+    <MudAppBar Elevation="3" Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 78px; color: var(--primary); padding-top:5px">
         <MudItem xs="2" Class="d-flex align-center">
             <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                           Color="Color.Inherit"
+                           Color="Color.Primary"
                            Edge="Edge.Start"
                            OnClick="@(() => sidebar?.ToggleDrawer())"
+                           Size="Size.Large"
                            Class="mr-2" />
 
             <MudImage Src="images/logo1.png"
                       Alt="Company Logo"
-                      Height="48"
-                      Style="margin-left: 16px; color:white;" />
+                      Height="64"
+                      Style="margin-left: 16px;" />
         </MudItem>
 
         <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
-            <div class="d-flex align-center position-relative" style="width: 70%; max-width: 800px;">
+            <div class="d-flex align-center position-relative" style="width: 75%; max-width: 850px;">
                 <MudAutocomplete T="EmployeeSearchResult"
                                  SearchFunc="@SearchEmployeesAutocomplete"
                                  Placeholder="Search employees..."
@@ -37,7 +38,7 @@
                                  AdornmentIcon="@Icons.Material.Filled.Search"
                                  AdornmentColor="Color.Primary"
                                  Class="search-autocomplete"
-                                 Style="width: 100%; border-radius: 28px; background-color: var(--secondary);"
+                                 Style="width: 100%; border-radius: 28px; font-size: 1.1rem;"
                                  DebounceInterval="300"
                                  ResetValueOnEmptyText="true"
                                  ShowProgressIndicator="true"
@@ -51,9 +52,10 @@
                     <MudTooltip Text="Go to Advanced Search">
                         <MudIconButton Icon="@Icons.Material.Filled.FilterList"
                                        Color="Color.Primary"
+                                       Size="Size.Large"
                                        Class="ml-2 filter-button"
                                        OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
-                                       Style="background-color: var(--secondary); border-radius: 50%;" />
+                                       Style="border-radius: 50%;" />
                     </MudTooltip>
                 }
             </div>
@@ -73,13 +75,13 @@
                         {
                             <img src="@userProfilePicture"
                                  class="rounded-circle" alt="Employee Photo"
-                                 style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--secondary);" />
+                                 style="width: 56px; height: 56px; object-fit: cover; border: 2px solid var(--primary);" />
                         }
                         else
                         {
-                            <MudAvatar Size="Size.Medium"
+                            <MudAvatar Size="Size.Large"
                                        Class="cursor-pointer"
-                                       Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--dark);">
+                                       Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--primary);">
                                 @userInitials
                             </MudAvatar>
                         }
@@ -100,12 +102,12 @@
     </MudAppBar>
 
     <!-- Sidebar -->
-     <div  @onmouseleave="CloseSidebar" class="sidebar-container">
+     <div class="sidebar-container">
         <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
     </div>
     <!-- Main Content -->
   
-    <MudMainContent Style="flex-grow: 1;">
+    <MudMainContent Style="@($"flex-grow: 1; margin-left: {(drawerOpen ? "260px" : "70px")}; transition: margin 0.3s ease;")">
         <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge"> 
             @Body
         </MudContainer>
@@ -159,19 +161,20 @@
         }
     }
 
-    /* Sidebar hover styles */
+    /* Sidebar container styles */
     .sidebar-container {
         position: fixed;
-        top: 72px; /* Below app bar */
+        top: 78px; /* Match the AppBar height */
         left: 0;
-        height: calc(100vh - 72px);
+        height: calc(100vh - 78px);
         z-index: 1000;
-        transition: width 0.3s ease;
+        transition: all 0.3s ease;
     }
 
-        .sidebar-container:hover ::deep .mud-drawer {
-            width: 250px !important;
-        }
+    /* Sidebar hover styles */
+    .sidebar-container:hover ::deep .mud-drawer {
+        width: 250px !important;
+    }
 
     ::deep .mud-drawer {
         transition: width 0.3s ease;
