@@ -12,86 +12,99 @@
 @inject IJSRuntime JS
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-1">
-    <!-- Button to open dialog -->
-    @if (Role?.ToLower() != "employee")
+    @if (isLoading)
     {
-        <!-- Add Report Button -->
-        <div class="d-flex  mb-3">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary"  OnClick="OpenReportDialog">
-                Add Report
-            </MudButton>
+        <MudProgressCircular Color="Color.Primary" Align="Align.Center" Indeterminate="true" />
+        <MudText Align="Align.Center">Loading...</MudText>
+    }
+    else
+    {
+        <!-- Button to open dialog -->
+        @if (Role?.ToLower() != "employee")
+        {
+            <!-- Add Report Button -->
+            <div class="d-flex  mb-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"  OnClick="OpenReportDialog">
+                    Add Report
+                </MudButton>
+            </div>
+        }
+        <div style=" max-width: 100%;">
+
+            <MudTable Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="width:fit-content;">
+                <HeaderContent>
+                    @* <MudTh>Mentor ID</MudTh> *@
+                    @*  <MudTh>Mentee ID</MudTh> *@
+                    <MudTh>S.NO</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Email</MudTh>
+                    <MudTh>Phone</MudTh>
+                    <MudTh>Institution</MudTh>
+                    <MudTh>Mentor</MudTh>
+                    <MudTh>Projects</MudTh>
+                    <MudTh>Pro-Stage</MudTh>
+                    <MudTh>Progress%</MudTh>
+                    <MudTh>Remark1</MudTh>
+                    <MudTh>Remark2</MudTh>       
+                    <MudTh>File</MudTh>
+                    @if (Role?.ToLower() != "employee")
+                    {
+                        <MudTh>Actions</MudTh>
+                    }       
+                </HeaderContent>
+                <RowTemplate Context="report" >
+                    @* <MudTd DataLabel="Mentor Id">@report.MentorId</MudTd> *@
+                    @* <MudTd DataLabel="Mentee Id">@report.MenteeId</MudTd> *@
+                    <MudTd DataLabel="S.NO">@((reports.IndexOf(report) + 1).ToString())</MudTd>
+
+                    <MudTd DataLabel="Mentee Name">@report.MenteeName</MudTd>
+                    <MudTd DataLabel="Mentee Email">@report.MenteeEmail</MudTd>
+                    <MudTd DataLabel="Phone">
+                        @(menteeMobiles.TryGetValue(report.MenteeId, out var phone) ? phone : "N/A")
+                    </MudTd>
+
+                    <MudTd DataLabel="Institution">
+                        @(menteeInstitutions.TryGetValue(report.MenteeId, out var institution) ? institution : "N/A")
+                    </MudTd>           
+                    <MudTd DataLabel="MentorName">@report.MentorName</MudTd> 
+
+                    @* <MudTd DataLabel="Mentor Designation">@report.MentorDesignation</MudTd> *@
+                    <MudTd DataLabel="Project">@report.ProjectsWorkedOn</MudTd>
+                    <MudTd DataLabel="Pro-Stage">@report.ProgressStage</MudTd>
+                    <MudTd DataLabel="Progress%">@report.ProgressPercentage %</MudTd>
+                    <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
+                    <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
+
+                    <MudTd>
+                        @if (!string.IsNullOrEmpty(report.FileName))
+                        {
+                            <MudButton Color="Color.Primary" OnClick="() => DownloadFile(report)">
+                                ⬇️
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <span>No File</span>
+                        }
+                    </MudTd>
+                    @if (Role?.ToLower() != "employee")
+                    {
+                        <MudTd>
+                            <div style="display: flex; gap:2px;">
+
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                Color="Color.Primary"
+                                OnClick="() => OpenEditReportDialog(report)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                Color="Color.Error"
+                                OnClick="() => DeleteReport(report.Id)" />
+                            </div>
+                        </MudTd>
+                    }
+                </RowTemplate>
+            </MudTable>
         </div>
     }
-
-    <MudTable Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="min-width: 1400px;">
-        <HeaderContent>
-            @* <MudTh>Mentor ID</MudTh> *@
-            @*  <MudTh>Mentee ID</MudTh> *@
-            <MudTh>S.NO</MudTh>
-            <MudTh>Name</MudTh>
-            <MudTh>Email</MudTh>
-            <MudTh>Phone</MudTh>
-            <MudTh>Institution</MudTh>
-            <MudTh>Mentor</MudTh>
-            <MudTh>Projects</MudTh>
-            <MudTh>Pro-Stage</MudTh>
-            <MudTh>Progress%</MudTh>
-            <MudTh>Remark1</MudTh>
-            <MudTh>Remark2</MudTh>       
-            <MudTh>File</MudTh>
-            @if (Role?.ToLower() != "employee")
-            {
-                <MudTh>Actions</MudTh>
-            }       
-        </HeaderContent>
-        <RowTemplate Context="report" >
-            @* <MudTd DataLabel="Mentor Id">@report.MentorId</MudTd> *@
-            @* <MudTd DataLabel="Mentee Id">@report.MenteeId</MudTd> *@
-            <MudTd DataLabel="S.NO">@((reports.IndexOf(report) + 1).ToString())</MudTd>
-
-            <MudTd DataLabel="Mentee Name">@report.MenteeName</MudTd>
-            <MudTd DataLabel="Mentee Email">@report.MenteeEmail</MudTd>
-            <MudTd DataLabel="Phone">
-                @(menteeMobiles.TryGetValue(report.MenteeId, out var phone) ? phone : "N/A")
-            </MudTd>
-
-            <MudTd DataLabel="Institution">
-                @(menteeInstitutions.TryGetValue(report.MenteeId, out var institution) ? institution : "N/A")
-            </MudTd>           
-            <MudTd DataLabel="MentorName">@report.MentorName</MudTd> 
-
-            @* <MudTd DataLabel="Mentor Designation">@report.MentorDesignation</MudTd> *@
-            <MudTd DataLabel="Project">@report.ProjectsWorkedOn</MudTd>
-            <MudTd DataLabel="Pro-Stage">@report.ProgressStage</MudTd>
-            <MudTd DataLabel="Progress%">@report.ProgressPercentage %</MudTd>
-            <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
-            <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
-
-            <MudTd>
-                @if (!string.IsNullOrEmpty(report.FileName))
-                {
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => DownloadFile(report)">
-                        ⬇️
-                    </MudButton>
-                }
-                else
-                {
-                    <span>No File</span>
-                }
-            </MudTd>
-            @if (Role?.ToLower() != "employee")
-            {
-                <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                    Color="Color.Primary"
-                    OnClick="() => OpenEditReportDialog(report)" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                    Color="Color.Error"
-                    OnClick="() => DeleteReport(report.Id)" />
-                </MudTd>
-            }
-        </RowTemplate>
-    </MudTable>
 </MudContainer>
 
 @code {
@@ -100,15 +113,26 @@
     private string Email { get; set; }
     private Dictionary<string, string> menteeMobiles = new();
     private Dictionary<string, string> menteeInstitutions = new(); // New dictionary for institutions                                                            // }
+    private bool isLoading = true;
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;
         //role to userRole
-        Role = await JS.InvokeAsync<string>("sessionStorage.getItem", "userRole");
-        Email = await JS.InvokeAsync<string>("sessionStorage.getItem", "email");
-        Console.WriteLine($"role: {Role}");
-        Console.WriteLine($"email: {Email}");
-        await LoadReportsBasedOnRole();
+        try
+        {
 
+
+            Role = await JS.InvokeAsync<string>("sessionStorage.getItem", "userRole");
+            Email = await JS.InvokeAsync<string>("sessionStorage.getItem", "email");
+            Console.WriteLine($"role: {Role}");
+            Console.WriteLine($"email: {Email}");
+            await LoadReportsBasedOnRole();
+        }
+        finally
+        {
+            isLoading = false; // Set loading to false when done
+            StateHasChanged(); // Ensure UI updates
+        }
     }
     private async Task LoadReportsBasedOnRole()
     {
@@ -189,7 +213,7 @@
                             var latestEducation = experience.EducationQualifications
                                 .OrderByDescending(e => e.YearOfPassing)
                                 .First();
-                            institution = latestEducation.Qualification; // Or use University if preferred
+                            institution = latestEducation.University; // Or use University if preferred
                             Console.WriteLine($"Added institution (education) for Mentee ID {menteeId}: {institution}");
                         }
                         menteeInstitutions[menteeId] = institution;
