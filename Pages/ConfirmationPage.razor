@@ -248,34 +248,34 @@
                 <td>@employeeDetails.EmergencyContact2Mobile</td>
             </tr>
             <!-- Nominee Details -->
-            <tr>
-                <td>Nominee Name</td>
-                <td>@employeeDetails.NomineeName</td>
-            </tr>
-            <tr>
-                <td>Nominee Relationship</td>
-                <td>@employeeDetails.NomineeRelationship</td>
-            </tr>
-            <tr>
-                <td>Nominee Address</td>
-                <td>@employeeDetails.NomineeAddress</td>
-            </tr>
-            <tr>
-                <td>Nominee City</td>
-                <td>@employeeDetails.NomineeCity</td>
-            </tr>
-            <tr>
-                <td>Nominee State</td>
-                <td>@employeeDetails.NomineeState</td>
-            </tr>
-            <tr>
-                <td>Nominee Zip Code</td>
-                <td>@employeeDetails.NomineeZipCode</td>
-            </tr>
-            <tr>
-                <td>Nominee Mobile</td>
-                <td>@employeeDetails.NomineeMobile</td>
-            </tr>
+            @* <tr> *@
+            @*     <td>Nominee Name</td> *@
+            @*     <td>@employeeDetails.NomineeName</td> *@
+            @* </tr> *@
+            @* <tr> *@
+            @*     <td>Nominee Relationship</td> *@
+            @*     <td>@employeeDetails.NomineeRelationship</td> *@
+            @* </tr> *@
+            @* <tr> *@
+            @*     <td>Nominee Address</td> *@
+            @*     <td>@employeeDetails.NomineeAddress</td> *@
+            @* </tr> *@
+            @* <tr> *@
+            @*     <td>Nominee City</td> *@
+            @*     <td>@employeeDetails.NomineeCity</td> *@
+            @* </tr> *@
+            @* <tr> *@
+            @*     <td>Nominee State</td> *@
+            @*     <td>@employeeDetails.NomineeState</td> *@
+            @* </tr> *@
+            @* <tr> *@
+            @*     <td>Nominee Zip Code</td> *@
+            @*     <td>@employeeDetails.NomineeZipCode</td> *@
+            @* </tr> *@
+            @* <tr> *@
+            @*     <td>Nominee Mobile</td> *@
+            @*     <td>@employeeDetails.NomineeMobile</td> *@
+            @* </tr> *@
             <tr>
                 <td>Photo File</td>
                 <td>@employeeDetails.PhotoFileName</td>
@@ -441,13 +441,23 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 }
-
+                @if (isSubmitting)
+                {
+                    <div class="loading-container" >
+                        <div class="spinner-border text-primary" role="status" >
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p><b>Submitting your details. Please wait...</b></p>
+                    </div>
+                }
                 <!-- Submit Button -->
                 <div class="text-center mt-3">
                     <button type="button" class="btn btn-reset" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)">
                         Submit
                     </button>
                 </div>
+              
+
             </div>
         </div>
 
@@ -518,15 +528,17 @@
         cursor: pointer;
     }
 </style>
+
 @code {
     public bool ShowModal { get; set; } = true;
 
     private BankingInformation bankingInfo = new BankingInformation();
     private Experience experience = new Experience();
-    private EmployeeDetails employeeDetails = new EmployeeDetails(); // Add EmployeeDetails model
+    private EmployeeDetails employeeDetails = new EmployeeDetails(); 
     private List<Education> educationList = new();
     private List<WorkExperience> workList = new();
     private List<EmployeeDetails> allEmployees = new();
+    private bool isSubmitting = false;
 
     [Parameter]
     public EventCallback<string> OnSubmit { get; set; }
@@ -543,7 +555,7 @@
         new PolicyItem { Name = "MongoDB Coding Guidelines", Url = "/pdfs/MongoDB Coding Guidelines.pdf" },
         new PolicyItem { Name = "Python Coding Guidelines", Url = "/pdfs/Python Coding Guidelines.pdf" }
 
-    };//E:\Pugazh\new\InF\InF\WiseHR\wwwroot\pdfs\Python Coding Guidelines.pdf
+    };
 
     private string? activePdfUrl = null;
     private string? activePdfName = null;
@@ -565,52 +577,14 @@
             }
         }
     }
-    // private int renderCounter = 0;
-
-    // [JSInvokable]
-    // public async Task OnPdfScrolledToEnd()
-    // {
-    //     Console.WriteLine("PDF scroll reached the end!");
-    //     isEndOfPdfReached = true;
-    //     renderCounter++;
-    //     Console.WriteLine($"isEndOfPdfReached set to: {isEndOfPdfReached}");
-    //     await InvokeAsync(StateHasChanged);
-    //     StateHasChanged();
-    //     Console.WriteLine("Close button enabled: " + isEndOfPdfReached);
-    // }
+  
 
 
     public void Dispose()
     {
         dotNetHelperRef?.Dispose();
     }
-    // private async void PreviewPolicy(PolicyItem item)
-    // {
-    //     activePdfUrl = item.Url;
-    //     activePdfName = item.Name;
-    //     item.HasPreviewed = true;
-    //     isEndOfPdfReached = false;
-    //     await InvokeAsync(StateHasChanged);
-    //     Wait for modal to render, then call JS
-    //     await Task.Delay(300); Small delay to allow rendering
-
-    //     if (JSRuntime != null)
-    //     {
-    //         dotNetHelperRef ??= DotNetObjectReference.Create(this);
-    //         await JSRuntime.InvokeVoidAsync("pdfScrollHelper.detectScrollEnd", dotNetHelperRef);
-    //     }
-    // }
-
-    // private async void ClosePreview()
-    // {
-    //     Console.WriteLine($"Close clicked, isEndOfPdfReached before reset: {isEndOfPdfReached}");
-    //     activePdfUrl = null;
-    //     Console.WriteLine("Close clicked: " + isEndOfPdfReached);
-    //     Close the preview when the close button is clicked
-    //     isEndOfPdfReached = false;
-    //     await InvokeAsync(StateHasChanged);
-
-    // }
+  
 
     private int renderCounter = 0;
 
@@ -692,7 +666,9 @@
     private async Task ConfirmSubmit()
     {
         showConfirmDialog = false;
+        isSubmitting = true;
         await SubmitForm();
+        isSubmitting = false;
     }
     private string? SuccessMessage;
 
