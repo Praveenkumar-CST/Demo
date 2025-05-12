@@ -8,6 +8,7 @@
            Width="@(DrawerOpen ? "250px" : "60px")"
            Elevation="1"
            Variant="@DrawerVariant.Responsive"
+           OpenMiniOnHover ="true"
            ClipMode="DrawerClipMode.Always">
     <MudNavMenu Class="mud-nav-menu">
         @if (accessibleMenuItems != null && accessibleMenuItems.Count > 0)
@@ -48,7 +49,7 @@
 
 @code {
     [Parameter]
-    public bool DrawerOpen { get; set; } = true;
+    public bool DrawerOpen { get; set; } = false;
 
     [Parameter]
     public EventCallback<bool> DrawerOpenChanged { get; set; }
