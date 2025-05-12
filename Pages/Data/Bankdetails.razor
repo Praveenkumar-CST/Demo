@@ -129,6 +129,7 @@ else
         if (bankingInfo != null && !string.IsNullOrEmpty(bankingInfo.EmployeeID))
         {
             // Navigate to edit page, passing the employee ID
+
             NavigationManager.NavigateTo($"/bankEditForm/{bankingInfo.EmployeeID}");
         }
         else
