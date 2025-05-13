@@ -126,7 +126,7 @@
 
     private List<(string Name, string Url)> accessibleMenuItems = new List<(string Name, string Url)>();
     private string errorMessage;
-
+   
     protected override async Task OnInitializedAsync()
     {
         var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");

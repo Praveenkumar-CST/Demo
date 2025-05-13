@@ -101,7 +101,6 @@ namespace WiseHR.Models
         public string CurrentMobile { get; set; }
 
         [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Enter a valid email address")]
         public string CurrentEmail { get; set; }
 
         // Permanent Address Fields
@@ -124,8 +123,7 @@ namespace WiseHR.Models
 
         public string PermanentMobile { get; set; }
 
-        [EmailAddress(ErrorMessage = "Enter a valid email address")]
-        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@gmail\.com$", ErrorMessage = "Email must be a valid Gmail address")]
+
         public string PermanentEmail { get; set; }
 
         public string? PassportFullName { get; set; } = string.Empty;

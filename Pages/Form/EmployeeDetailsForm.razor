@@ -4,6 +4,8 @@
 @using Components.sidebar
 @layout HomeLayout
 @inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+
 @inject NavigationManager NavigationManager
 @using System.Text.Json;
 @inject CountryService CountryService
@@ -21,8 +23,13 @@
                     @* <ValidationSummary /> *@
 
                     <!-- Personal Information -->
-                    <MudText Typo="Typo.h6" Class="mb-4">Personal Information</MudText>
-                    <MudGrid Margin="Margin.Dense">
+                <MudExpansionPanel Typo="Typo.h5" Text="Personal Information"
+                                   Icon="@Icons.Material.Filled.Person"
+                                   Class="section-tab"
+                                   Style="margin-top: 16px;">
+                    <ChildContent>
+                        <div class="section-content">         
+                            <MudGrid Margin="Margin.Dense">
                     <MudItem xs="12" sm="4" md="3">
                         <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID"
                                       Required="true" Margin="Margin.Dense" Disabled="true" />
@@ -146,9 +153,16 @@
                         <ValidationMessage For="@(() => employeeDetails.PhotoBase64Content)" />
                     </MudItem>
                     </MudGrid>
-
+                        </div>
+                    </ChildContent>
+                </MudExpansionPanel>
+                  <MudExpansionPanel Typo="Typo.h5" Text="Work Information"
+                                   Icon="@Icons.Material.Filled.Work"
+                                   Class="section-tab">
+                    <ChildContent>
+                        <div class="section-content">
                     <!-- Work Information -->
-                    <MudText Typo="Typo.h6" Class="mb-4 mt-6">Work Information</MudText>
+                    @* <MudText Typo="Typo.h6" Class="mb-4 mt-6">Work Information</MudText> *@
                     <MudGrid>
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Type of Employment" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.TypeOfEmployment">
@@ -179,9 +193,18 @@
                         </MudItem>
 
                     </MudGrid>
+                        </div>
+                    </ChildContent>
+                </MudExpansionPanel>
                     @* break *@
+
                     <!-- passport Information -->
-                    <MudText Typo="Typo.h6" Class="mb-4 mt-6">Passport  Information</MudText>
+                           <MudExpansionPanel Typo="Typo.h5" Text="Passport Information"
+                                   Icon="@Icons.Material.Filled.PersonOutline"
+                                   Class="section-tab">
+                    <ChildContent>
+                        <div class="section-content">
+                    @* <MudText Typo="Typo.h6" Class="mb-4 mt-6">Passport  Information</MudText> *@
 
                     <MudGrid>
                         <MudItem xs="12" sm="4" md="3">
@@ -221,8 +244,15 @@
                             <ValidationMessage For="@(() => employeeDetails.PassportPlaceOfIssue)" />
                         </MudItem>
                     </MudGrid>
+                               </div>
+       </ChildContent>
+   </MudExpansionPanel>
                     @* break *@
-
+                      <MudExpansionPanel Typo="Typo.h5" Text="Address"
+                                   Icon="@Icons.Material.Filled.LocationOn"
+                                   Class="section-tab">
+                    <ChildContent>
+                        <div class="section-content">
                     <!-- Current Address -->
                     <MudText Typo="Typo.h6" Class="mb-4 mt-6">Current Address</MudText>
                     <MudGrid>
@@ -261,7 +291,7 @@
                             <MudCheckBox T="bool" @bind-Checked="IsSameAsCurrentAddress" Margin="Margin.Dense" Label="Same as Current Address" Color="Color.Primary" ValueChanged="CopyAddress" />
                         </MudItem>
                     </MudGrid>
-
+                     
                     <!-- Permanent Address -->
                     <MudText Typo="Typo.h6" Class="mb-4 mt-6">Permanent Address</MudText>
                     <MudGrid>
@@ -296,9 +326,16 @@
 
                         </MudItem>
                     </MudGrid>
-
+                        </div>
+                    </ChildContent>
+                </MudExpansionPanel>
                     <!-- Emergency Contact Information -->
-                    <MudText Typo="Typo.h6" Class="mb-4 mt-6">Emergency Contact Information</MudText>
+                      <MudExpansionPanel Typo="Typo.h5" Text="Emergency Contact Information"
+                                   Icon="@Icons.Material.Filled.ContactPhone"
+                                   Class="section-tab">
+                    <ChildContent>
+                        <div class="section-content">
+                    @* <MudText Typo="Typo.h6" Class="mb-4 mt-6">Emergency Contact Information</MudText> *@
                     <MudGrid>
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Contact 1 Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Name" Required="true" />
@@ -336,6 +373,7 @@
 
                         </MudItem>
                     </MudGrid>
+                       
                     @* break *@
                     <strong> <b><hr style="color:black" ; /></b></strong>
                     <MudGrid>
@@ -375,7 +413,9 @@
 
                         </MudItem>
                     </MudGrid>
-
+                        </div>
+                    </ChildContent>
+                </MudExpansionPanel>
                     @* <!-- Nominee Information --> *@
                     @* <MudText Typo="Typo.h6" Class="mb-4 mt-6">Nominee Information</MudText> *@
                     @* <MudGrid> *@
@@ -427,7 +467,46 @@
             </MudCardContent>
         </MudCard>
     </MudContainer>
+<style>
+    .section-tab {
+        transition: all 0.2s ease;
+        border-radius: 8px 8px 0 0;
+        margin: 0 4px;
+        padding: 8px 16px;
+        background-color: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-bottom: none;
+    }
 
+        /* Subtle hover effect - border highlight only */
+        .section-tab:hover:not(.mud-expanded) {
+            border-color: var(--mud-palette-primary);
+            cursor: pointer;
+        }
+
+        /* Active state during click */
+        .section-tab:active:not(.mud-expanded) {
+            transform: translateY(1px);
+        }
+
+        /* Expanded state - clean look */
+        .section-tab.mud-expanded {
+            border-color: var(--mud-palette-lines-default);
+        }
+
+    .section-content {
+        border: 1px solid var(--mud-palette-lines-default);
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        background-color: var(--mud-palette-surface);
+    }
+
+    .section-tab .mud-expand-panel-header {
+        padding: 0;
+    }
+</style>
 @code {
     [Parameter]
     public EventCallback<EmployeeDetails> OnSubmit { get; set; }
@@ -567,6 +646,8 @@
         if (file == null)
         {
             PhotoUploadError = "No file selected.";
+            Snackbar.Add(PhotoUploadError, Severity.Error);
+
             return;
         }
 
@@ -574,6 +655,8 @@
         if (file.Size > 20 * 1024 * 1024)
         {
             PhotoUploadError = "File size exceeds 20MB limit.";
+            Snackbar.Add(PhotoUploadError, Severity.Error);
+
             return;
         }
 
@@ -584,7 +667,8 @@
             PhotoUploadError = "Invalid file format. Please upload JPG, PNG, or PDF.";
             return;
         }
-
+        try
+        {
         // Read file content
         var buffer = new byte[file.Size];
         await file.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024).ReadAsync(buffer);
@@ -593,7 +677,14 @@
         employeeDetails.PhotoFileName = file.Name;
         employeeDetails.PhotoContentType = file.ContentType;
         employeeDetails.PhotoBase64Content = Convert.ToBase64String(buffer);
+        Snackbar.Add("Photo file uploaded successfully!", Severity.Success);
     }
+    catch (Exception ex)
+    {
+    PhotoUploadError = $"Error reading file: {ex.Message}";
+    Snackbar.Add(PhotoUploadError, Severity.Error);
+    }
+}
 
     private bool IsImageFile(string? contentType)
     {

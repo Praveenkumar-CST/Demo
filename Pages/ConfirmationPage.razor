@@ -360,7 +360,7 @@
     <!-- Education Qualifications Table -->
     <h4 class="d-flex justify-content-between align-items-center">
         <MudText Typo="Typo.h6">Education Qualification</MudText>
-        <MudButton Variant="Variant.Outlined" Color="Color.Secondary"  @onclick="NavigateToExperiencepage">Edit Work Experience</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" @onclick="NavigateToExperiencepage">Edit Education Qualification</MudButton>
     </h4>
 
     <table class="table table-bordered">
@@ -385,8 +385,11 @@
         </tbody>
     </table>
 
-    <h4>Work Experiences</h4>
 
+    <h4 class="d-flex justify-content-between align-items-center">
+        <h4>Work Experiences</h4>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" @onclick="NavigateToExperiencepage">Edit Work Experience</MudButton>
+    </h4>
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -443,13 +446,14 @@
                 }
                 @if (isSubmitting)
                 {
-                    <div class="loading-container" >
-                        <div class="spinner-border text-primary" role="status" >
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p><b>Submitting your details. Please wait...</b></p>
+                    <div class="d-flex flex-column align-items-center mt-4">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                        <MudText Class="mt-2" Typo="Typo.subtitle1">
+                            <b>Submitting your details. Please wait...</b>
+                        </MudText>
                     </div>
                 }
+
                 <!-- Submit Button -->
                 <div class="text-center mt-3">
                     <button type="button" class="btn btn-reset" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)">
@@ -743,9 +747,10 @@
         };
 
         DialogService.Show<SubmitSuccessDialog>("Success", parameters);
+        Snackbar.Add("Submitted successfully!", Severity.Success); // ✅ Success message
 
         isSubmitted = true;
-
+        
     }
     private void NavigateToHome()
     {

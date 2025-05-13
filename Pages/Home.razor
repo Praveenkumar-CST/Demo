@@ -217,8 +217,8 @@
     {
         if (string.IsNullOrWhiteSpace(email))
             return "Email is required";
-        if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
-            return "Invalid email address";
+        // if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+        //     return "Invalid email address";
         return null;
     };
 
