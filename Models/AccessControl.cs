@@ -53,7 +53,7 @@ namespace WiseHR.Models
                     ("HIDE_Fortnight Report", "/fortnight-report"),
                     ("ReportList", "/reports"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
-                    ("HIDE_Analytics", "/analytics"),
+                  
 
                 }
             },
@@ -68,8 +68,8 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("ReportList", "/reports"),
-                    ("HIDE_EmployeeProfile", "/employee/.*"),
-                    ("HIDE_Analytics", "/analytics"),
+                      ("HIDE_EmployeeProfile", "/employee/.*"),
+                      
 
                 }
             },
@@ -78,7 +78,7 @@ namespace WiseHR.Models
                 {
                     ("Dashboard", "/home"),
                     ("Fortnight Report", "/fortnight-report"),
-                     ("HIDE_Analytics", "/analytics"),
+                 
                 }
             }
         };
