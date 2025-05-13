@@ -6,13 +6,13 @@
 
 <div class="sidebar-wrapper">
     <MudDrawer @bind-Open="DrawerOpen"
-               Class="@(DrawerOpen ? "mud-drawer open" : "mud-drawer")"
-               Width="@(DrawerOpen ? "260px" : "70px")"
-               Elevation="2"
-               Variant="@DrawerVariant.Responsive"
-               OpenMiniOnHover="true"
-               ClipMode="DrawerClipMode.Always">
-     
+    Class="@(DrawerOpen ? "mud-drawer open" : "mud-drawer")"
+    Width="@(DrawerOpen ? "260px" : "70px")"
+    Elevation="2"
+    Variant="@DrawerVariant.Responsive"
+    OpenMiniOnHover="true"
+    ClipMode="DrawerClipMode.Always">
+
         <MudNavMenu Class="mud-nav-menu pa-2">
             @if (accessibleMenuItems != null && accessibleMenuItems.Count > 0)
             {
@@ -20,12 +20,14 @@
                 {
                     if (!item.Name.StartsWith("HIDE_"))
                     {
+						Console.WriteLine($"Menu Item: {item.Name}, URL: {item.Url}");
+					
                         <MudNavLink Class="sidebar-navlink mb-2 rounded-lg"
-                                    Match="NavLinkMatch.All"
-                                    Icon="@GetIconForMenuItem(item.Name)"
-                                    IconColor="Color.Primary"
-                                    Href="@item.Url"
-                                    ActiveClass="sidebar-navlink-active">
+                        Match="NavLinkMatch.All"
+                        Icon="@GetIconForMenuItem(item.Name)"
+                        IconColor="Color.Primary"
+                        Href="@item.Url"
+                        ActiveClass="sidebar-navlink-active">
                             @if (DrawerOpen)
                             {
                                 var displayName = item.Name.Replace("HIDE_", "");
@@ -44,77 +46,78 @@
                 <MudAlert Severity="Severity.Info" Class="mt-2">No menu items available.</MudAlert>
             }
         </MudNavMenu>
-        
-     
+
+
     </MudDrawer>
 </div>
 
 <style>
     .sidebar-wrapper {
-        height: 100%;
+    height: 100%;
     }
 
     .mud-drawer {
-        background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
-        border-right: 1px solid #e0e6ff;
-        transition: all 0.3s ease;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
+    border-right: 1px solid #e0e6ff;
+    transition: all 0.3s ease;
     }
 
     .mud-primary-text {
-        color: rgb(19 19 20) !important;
-        --mud-ripple-color: var(--mud-palette-primary) !important;
+    color: rgb(19 19 20) !important;
+    --mud-ripple-color: var(--mud-palette-primary) !important;
     }
     .sidebar-header {
-        padding-top: 8px;
-        margin-bottom: 8px;
-        color: var(--primary);
+    padding-top: 8px;
+    margin-bottom: 8px;
+    color: var(--primary);
     }
 
     .sidebar-navlink {
-        transition: all 0.3s ease;
-        margin: 4px 0;
-        padding: 10px 16px;
-        border-radius: 8px;
-        color: var(--text-primary) !important;
+    transition: all 0.3s ease;
+    margin: 4px 0;
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: var(--text-primary) !important;
     }
 
     .sidebar-navlink:hover {
-        background-color: rgba(25, 118, 210, 0.08);
-        transform: translateX(4px);
+    background-color: rgba(25, 118, 210, 0.08);
+    transform: translateX(4px);
     }
 
     .sidebar-navlink-active {
-        background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%) !important;
-        color: white !important;
-        font-weight: 500;
-        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+    background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%) !important;
+    color: white !important;
+    font-weight: 500;
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
     }
 
     .sidebar-navlink-active:hover {
-        transform: translateX(4px);
-        box-shadow: 0 6px 12px rgba(25, 118, 210, 0.3);
+    transform: translateX(4px);
+    box-shadow: 0 6px 12px rgba(25, 118, 210, 0.3);
     }
 
     /* Make sure icons match text color in active state */
     .sidebar-navlink-active ::deep .mud-nav-link-icon {
-        color: white !important;
+    color: white !important;
     }
 
     /* Style for inactive nav link text */
     .sidebar-navlink ::deep span {
-        color: var(--text-primary) !important;
-        font-weight: 500;
+    color: var(--text-primary) !important;
+    font-weight: 500;
     }
     .sidebar-footer {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-        background-color: #f8f9ff;
-        border-top: 1px solid #e0e6ff;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: #f8f9ff;
+    border-top: 1px solid #e0e6ff;
     }
 </style>
 
 @code {
+
     [Parameter]
     public bool DrawerOpen { get; set; } = false;
 
@@ -202,19 +205,19 @@
         // Unsubscribe from event to prevent memory leaks
         NavigationManager.LocationChanged -= HandleLocationChanged;
     }
-    
+
     // Helper method to get appropriate icons based on menu item name
     private string GetIconForMenuItem(string itemName)
     {
-        itemName = itemName.Replace("HIDE_", "").ToLower();
-        
+        // itemName = itemName.Replace("HIDE_", "").ToLower();
+
         return itemName switch
         {
-            "dashboard" or "home" => Icons.Material.Filled.Dashboard,
-            "employees" or "employee" => Icons.Material.Filled.People,
-            "profile" => Icons.Material.Filled.Person,
+            "Dashboard"  => Icons.Material.Filled.Dashboard,
+            "Employee List"  => Icons.Material.Filled.People,
+            "Role Management" => Icons.Material.Filled.Person,
             "departments" => Icons.Material.Filled.BusinessCenter,
-            "leave" or "leaves" => Icons.Material.Filled.EventNote,
+            "ReportList"  => Icons.Material.Filled.EventNote,
             "attendance" => Icons.Material.Filled.EventAvailable,
             "projects" => Icons.Material.Filled.Assignment,
             "tasks" => Icons.Material.Filled.Task,
@@ -222,11 +225,11 @@
             "payroll" => Icons.Material.Filled.Payments,
             "benefits" => Icons.Material.Filled.HealthAndSafety,
             "settings" => Icons.Material.Filled.Settings,
-            "analytics" or "reports" => Icons.Material.Filled.BarChart,
-            "calendar" => Icons.Material.Filled.CalendarMonth,
+            "analytics"  => Icons.Material.Filled.BarChart,
+            "Holiday Calendar"  => Icons.Material.Filled.CalendarMonth,
             "messages" or "chat" => Icons.Material.Filled.Chat,
             "notifications" => Icons.Material.Filled.Notifications,
-            "admin" => Icons.Material.Filled.AdminPanelSettings,
+            "Organizational Hierarchy" => Icons.Material.Filled.AdminPanelSettings,
             "logout" => Icons.Material.Filled.Logout,
             "help" => Icons.Material.Filled.Help,
             "about" => Icons.Material.Filled.Info,

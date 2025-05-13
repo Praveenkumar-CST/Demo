@@ -46,7 +46,7 @@
                     <MudTh>Progress%</MudTh>
                     <MudTh>Remark1</MudTh>
                     <MudTh>Remark2</MudTh>       
-                    <MudTh>File</MudTh>
+                    @* <MudTh>File</MudTh> *@
                     @if (Role?.ToLower() != "employee")
                     {
                         <MudTh>Actions</MudTh>
@@ -75,18 +75,18 @@
                     <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
                     <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
 
-                    <MudTd>
-                        @if (!string.IsNullOrEmpty(report.FileName))
-                        {
-                            <MudButton Color="Color.Primary" OnClick="() => DownloadFile(report)">
-                                ⬇️
-                            </MudButton>
-                        }
-                        else
-                        {
-                            <span>No File</span>
-                        }
-                    </MudTd>
+                    @* <MudTd> *@
+                    @*     @if (!string.IsNullOrEmpty(report.FileName)) *@
+                    @*     { *@
+                    @*         <MudButton Color="Color.Primary" OnClick="() => DownloadFile(report)"> *@
+                    @*             ⬇️ *@
+                    @*         </MudButton> *@
+                    @*     } *@
+                    @*     else *@
+                    @*     { *@
+                    @*         <span>No File</span> *@
+                    @*     } *@
+                    @* </MudTd> *@
                     @if (Role?.ToLower() != "employee")
                     {
                         <MudTd>

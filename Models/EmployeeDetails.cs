@@ -8,15 +8,15 @@ namespace WiseHR.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Employee ID is required")]
-        public string EmployeeID { get; set; } = string.Empty;
+        public string EmployeeID { get; set; }
 
         [Required(ErrorMessage = "First Name is required")]
-        public string FirstName { get; set; } = string.Empty;
+        public string FirstName { get; set; }
 
-        public string? MiddleName { get; set; }
+        public string MiddleName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Last Name is required")]
-        public string LastName { get; set; } = string.Empty;
+        public string LastName { get; set; }
 
         [Required(ErrorMessage = "Father's Name is required")]
         public string FatherName { get; set; }
@@ -34,7 +34,7 @@ namespace WiseHR.Models
 
         public string Level { get; set; } = string.Empty;
 
-        public string? Designation { get; set; }
+        public string Designation { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Joining Location is required")]
         public string JoiningLocation { get; set; }
@@ -46,29 +46,14 @@ namespace WiseHR.Models
         public string MaritalStatus { get; set; }
 
         [Required(ErrorMessage = "Blood Group is required")]
-        public string? BloodGroup { get; set; }
+        public string BloodGroup { get; set; }
 
         [Required(ErrorMessage = "Nationality is required")]
         public string Nationality { get; set; }
 
         public string? Allergies { get; set; } = string.Empty;
-
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (MaritalStatus == "Single")
-            {
-                Sons = "Nill";
-                Daughters = "Nill";
-            }
-            else
-            {
-                if (string.IsNullOrWhiteSpace(Sons))
-                    yield return new ValidationResult("The Sons field is required.", new[] { nameof(Sons) });
-
-                if (string.IsNullOrWhiteSpace(Daughters))
-                    yield return new ValidationResult("The Daughters field is required.", new[] { nameof(Daughters) });
-            }
-
             if (DateOfJoining > DateTime.Today)
             {
                 yield return new ValidationResult(
@@ -76,11 +61,21 @@ namespace WiseHR.Models
                     new[] { nameof(DateOfJoining) });
             }
 
+            if (MaritalStatus != "Single")
+            {
+                if (string.IsNullOrWhiteSpace(Sons))
+                    yield return new ValidationResult("The Sons field is required.", new[] { nameof(Sons) });
+
+                if (string.IsNullOrWhiteSpace(Daughters))
+                    yield return new ValidationResult("The Daughters field is required.", new[] { nameof(Daughters) });
+            }
         }
+
         public string? Medications { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Physically Challenged status is required")]
         public string PhysicallyChallenged { get; set; }
+
 
         public string? Sons { get; set; }
 
@@ -133,20 +128,18 @@ namespace WiseHR.Models
         [RegularExpression(@"^[a-zA-Z0-9._%+-]+@gmail\.com$", ErrorMessage = "Email must be a valid Gmail address")]
         public string PermanentEmail { get; set; }
 
-        // Passport Details
-        public string PassportFullName { get; set; }
+        public string? PassportFullName { get; set; } = string.Empty;
 
-        [RegularExpression(@"^[A-Z]{1,2}[0-9]{7}$", ErrorMessage = "Enter a valid passport number (e.g., A1234567 or AB1234567)")]
+        public string? PassportNo { get; set; } = string.Empty;
 
-        public string PassportNo { get; set; }
-
-        public string PassportNationality { get; set; }
+        public string? PassportNationality { get; set; } = string.Empty;
 
         public DateTime? PassportIssueDate { get; set; }
 
+
         public DateTime? PassportExpiryDate { get; set; }
 
-        public string PassportPlaceOfIssue { get; set; }
+        public string? PassportPlaceOfIssue { get; set; } = string.Empty;
 
         // Emergency Contact Fields
         [Required(ErrorMessage = "Emergency Contact 1 Name is required")]
@@ -175,47 +168,29 @@ namespace WiseHR.Models
         public string EmergencyContact1Mobile { get; set; }
 
         // Emergency Contact 2 Fields
-        public string EmergencyContact2Name { get; set; }
 
-        public string EmergencyContact2Relationship { get; set; }
+        public string? EmergencyContact2Name { get; set; } = string.Empty;
 
-        public string EmergencyContact2Address { get; set; }
+        public string? EmergencyContact2Relationship { get; set; } = string.Empty;
 
-        public string EmergencyContact2City { get; set; }
 
-        public string EmergencyContact2State { get; set; }
+        public string? EmergencyContact2Address { get; set; } = string.Empty;
 
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Zip / Pin Code must be exactly 6 digits")]
-        public string EmergencyContact2ZipCode { get; set; }
+        public string? EmergencyContact2City { get; set; } = string.Empty;
 
-        [RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter a valid 10-digit mobile number starting with 6-9")]
+        public string? EmergencyContact2State { get; set; } = string.Empty;
 
-        public string EmergencyContact2Mobile { get; set; }
+        public string? EmergencyContact2ZipCode { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Nominee Name is required")]
-        public string NomineeName { get; set; }
+        public string? EmergencyContact2Mobile { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Nominee Relationship with Employee is required")]
-        public string NomineeRelationship { get; set; }
 
-        [Required(ErrorMessage = "Nominee Address is required")]
-        public string NomineeAddress { get; set; }
 
-        [Required(ErrorMessage = "Nominee City is required")]
-        public string NomineeCity { get; set; }
+        [Required]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Required(ErrorMessage = "Nominee State is required")]
-        public string NomineeState { get; set; }
-
-        [Required(ErrorMessage = "Nominee Zip/Pin Code is required")]
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Zip / Pin Code must be exactly 6 digits")]
-
-        public string NomineeZipCode { get; set; }
-
-        [Required(ErrorMessage = "Nominee Mobile No is required")]
-        [RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter a valid 10-digit mobile number starting with 6-9")]
-
-        public string NomineeMobile { get; set; }
+        [Required]
+        public DateTime LastModifiedAt { get; set; } = DateTime.UtcNow;
 
         public string PhotoFileName { get; set; }
 
@@ -224,13 +199,5 @@ namespace WiseHR.Models
 
         public string? PhotoContentType { get; set; }
 
-        [Required(ErrorMessage = "Profile Picture is required")]
-        public string? ProfilePicture { get; set; }
-
-        [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        public DateTime LastModifiedAt { get; set; } = DateTime.UtcNow;
     }
 }
