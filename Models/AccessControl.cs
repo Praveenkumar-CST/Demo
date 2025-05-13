@@ -1,4 +1,6 @@
-﻿namespace WiseHR.Models
+﻿using MudBlazor;
+
+namespace WiseHR.Models
 {
     public static class AccessControl
     {
@@ -87,5 +89,20 @@
             return RoleAccess.FirstOrDefault(r => r.Key.ToLowerInvariant() == normalizedRole).Value
                 ?? new List<(string, string)>();
         }
+        public static string GetIconForMenu(string menuName)
+        {
+            return menuName switch
+            {
+                "Dashboard" => Icons.Material.Filled.Dashboard,
+                "Employee List" => Icons.Material.Filled.People,
+                "Role Management" => Icons.Material.Filled.Security,
+                "Organizational Hierarchy" => Icons.Material.Filled.AccountTree,
+                "Holiday Calendar" => Icons.Material.Filled.Event,
+                "Fortnight Report" => Icons.Material.Filled.Assignment,
+                "ReportList" => Icons.Material.Filled.Assessment,
+                _ => Icons.Material.Filled.Menu
+            };
+        }
+
     }
 }

@@ -44,9 +44,9 @@
                     <MudTh>Projects</MudTh>
                     <MudTh>Pro-Stage</MudTh>
                     <MudTh>Progress%</MudTh>
-                    <MudTh>Remark1</MudTh>
-                    <MudTh>Remark2</MudTh>       
-                    @* <MudTh>File</MudTh> *@
+                    <MudTh>FortnightRemarks1</MudTh>
+                    <MudTh>FortnightRemarks2</MudTh>
+                    <MudTh>File</MudTh>
                     @if (Role?.ToLower() != "employee")
                     {
                         <MudTh>Actions</MudTh>
@@ -75,18 +75,18 @@
                     <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
                     <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
 
-                    @* <MudTd> *@
-                    @*     @if (!string.IsNullOrEmpty(report.FileName)) *@
-                    @*     { *@
-                    @*         <MudButton Color="Color.Primary" OnClick="() => DownloadFile(report)"> *@
-                    @*             ⬇️ *@
-                    @*         </MudButton> *@
-                    @*     } *@
-                    @*     else *@
-                    @*     { *@
-                    @*         <span>No File</span> *@
-                    @*     } *@
-                    @* </MudTd> *@
+                    <MudTd> 
+                         @if (!string.IsNullOrEmpty(report.FileName)) 
+                         { 
+                            <MudButton Color="Color.Primary" OnClick="() => DownloadFile(report)"> 
+                                ⬇️ 
+                           </MudButton> 
+                        } 
+                        else 
+                         { 
+                             <span>No File</span> 
+                         } 
+                     </MudTd>
                     @if (Role?.ToLower() != "employee")
                     {
                         <MudTd>
@@ -315,12 +315,11 @@
         if (report.UploadedFile != null && !string.IsNullOrEmpty(report.FileName))
         {
             var base64 = Convert.ToBase64String(report.UploadedFile);
-            var fileType = "application/octet-stream"; // Or determine MIME type dynamically
-            var fileUrl = $"data:{fileType};base64,{base64}";
-
-            await JS.InvokeVoidAsync("downloadFile", fileUrl, report.FileName);
+            var fileType = "application/octet-stream"; // Optional: detect actual file type
+            await JS.InvokeVoidAsync("downloadBase64File", fileType, base64, report.FileName);
         }
     }
+
 
     // Optional: Legacy placeholder model (not used if ReportModel is defined in Models)
     public class Report
