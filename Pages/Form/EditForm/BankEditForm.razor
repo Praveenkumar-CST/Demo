@@ -5,6 +5,8 @@
 @using Components.sidebar
 @inject IDialogService DialogService
 @layout HomeLayout
+@inject ISnackbar Snackbar
+
 @if (bankingInfo != null)
 {
 <EditForm Model="@bankingInfo" OnValidSubmit="HandleUpdateBank">
@@ -166,9 +168,21 @@
 
         <!-- Action Buttons -->
             <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
-                    update
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="HandleUpdateBank"
+                           Disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Inherit" />
+                        <span class="ms-2">Updating...</span>
+                    }
+                    else
+                    {
+                        <span>Update</span>
+                    }
                 </MudButton>
+
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@CloseForm">
                     Close
                 </MudButton>
@@ -191,6 +205,7 @@ else
 
     private string? SuccessMessage;
     
+    private bool isSubmitting = false;
 
     [Parameter]
     public EventCallback<EmployeeDetails> OnSubmit { get; set; }
@@ -258,9 +273,13 @@ else
                         bankingInfo.PassbookFileName = fileName;  // Corrected for Passbook
                         break;
                 }
+                Snackbar.Add($"{fileType.ToUpper()} file uploaded successfully!", Severity.Success);
+
             }
             catch (Exception ex)
             {
+                Snackbar.Add($"Error uploading file: {ex.Message}", Severity.Error);
+
                 Console.WriteLine($"Error reading file: {ex.Message}");
             }
         }
@@ -304,10 +323,15 @@ else
 
     private async Task HandleUpdateBank()
     {
+        isSubmitting = true;         
+        StateHasChanged();
         bool result = await BankingService.UpdateBankingInfo(bankingInfo);
+        isSubmitting = false;        
+        StateHasChanged();
         if (result)
         {
             SuccessMessage = "Bank details updated successfully!";
+            Snackbar.Add("Banking information updated successfully!", Severity.Success);
 
             var parameters = new DialogParameters
         {
@@ -321,7 +345,7 @@ else
         }
         else
         {
-            // Show an error message
+            Snackbar.Add("Failed to update banking information.", Severity.Error);
             Console.WriteLine("Update failed");
         }
     }

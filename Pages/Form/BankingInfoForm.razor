@@ -4,6 +4,8 @@
 @using System.Text.Json;
 @using Components.sidebar
 @layout HomeLayout
+@inject ISnackbar Snackbar
+
 @using static WiseHR.Models.BankingInformation
 @inject NavigationManager NavigationManager
 
@@ -399,6 +401,8 @@
 
                 // 🔁 Update localStorage immediately
                 await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
+                Snackbar.Add($"{fileType.ToUpper()} file uploaded successfully!", Severity.Success);
+                Console.WriteLine($"File uploaded: {file.Name}, Type: {fileType}");
 
                 //await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "bankingInfo", JsonSerializer.Serialize(bankingInfo));
             }
@@ -431,6 +435,8 @@
                 PassbookUploadError = message;
                 break;
         }
+        Snackbar.Add(message, Severity.Error);
+
     }
 }
 
