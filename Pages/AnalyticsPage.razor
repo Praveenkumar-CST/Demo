@@ -4,9 +4,15 @@
 @using WiseHR.Dtos
 @using System.Net.Http.Json
 @using MudBlazor
+@using System.Net.Http.Headers
+@using Microsoft.AspNetCore.Authorization
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @layout WiseHR.Components.sidebar.HomeLayout
+
+@attribute [Authorize(Roles = "Admin")]
+
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="height: calc(100vh - 64px); display: flex; flex-direction: column;">
     <MudText Typo="Typo.h5" Class="mb-2">Employee Analytics</MudText>
 
@@ -82,8 +88,8 @@
                                          SearchFunc="SearchQualifications"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudNumericField @bind-Value="_filterDto.YearOfPassingStart" Label="Passed From Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="1900" Max="DateTime.Now.Year" Class="mb-2" />
-                        <MudNumericField @bind-Value="_filterDto.YearOfPassingEnd" Label="Passed To Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.YearOfPassingStart ?? 1900" Max="DateTime.Now.Year" Class="mb-2" />
+                        <MudNumericField @bind-Value="_filterDto.YearOfPassingStart" Label="Passed From Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="1900" Max="DateTime.Now.Year" Class="mb-2" T="int?" />
+                        <MudNumericField @bind-Value="_filterDto.YearOfPassingEnd" Label="Passed To Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.YearOfPassingStart ?? 1900" Max="DateTime.Now.Year" Class="mb-2" T="int?" />
                         <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer"
                                          SearchFunc="SearchWorkEmployers"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -268,7 +274,7 @@
                                 <ToolBarContent>
                                     <MudText Typo="Typo.subtitle1">Filtered Employees</MudText>
                                     <MudSpacer />
-                                    <div class="d-flex">
+                                    <div class="d-flex align-center">
                                         <MudTextField @bind-Value="SearchString"
                                                       Placeholder="Search employees..."
                                                       Adornment="Adornment.Start"
@@ -288,6 +294,14 @@
                                                           Size="Size.Small"
                                                           Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
                                         }
+                                        <MudTooltip Text="Download Filtered Results (CSV)">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                                           Color="Color.Default"
+                                                           OnClick="DownloadFilteredEmployees"
+                                                           Disabled="@(!GetFilteredAndSortedEmployees().Any() || _isLoading)"
+                                                           Size="Size.Small"
+                                                           Class="ml-2" Style="margin-top: 4px !important;"></MudIconButton>
+                                        </MudTooltip>
                                     </div>
                                 </ToolBarContent>
                                 <HeaderContent>
@@ -348,6 +362,7 @@
     private List<AnalyticsResultDto> _filteredEmployees = new();
     private bool _isLoading = false;
     private bool _initialLoadComplete = false;
+    private TableState _lastTableState = new();
     private string? _errorMessage;
     private string _searchStringBackingField = "";
 
@@ -491,10 +506,18 @@
         StateHasChanged();
         try
         {
+			var Token = await JSRuntime.InvokeAsync<string>("localStorage.getItem" , "authToken");
+
             string queryString = BuildFilterQueryString(_filterDto);
+            
             string apiUrl = $"/api/Analytics/filter{queryString}";
             Console.WriteLine($"Applying filters with GET request to: {apiUrl}");
-            var response = await Http.GetAsync(apiUrl);
+			var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+			request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+          
+
+			
+            var response = await Http.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
                 _filteredEmployees = await response.Content.ReadFromJsonAsync<List<AnalyticsResultDto>>() ?? new List<AnalyticsResultDto>();
@@ -564,6 +587,8 @@
     private async Task<TableData<AnalyticsResultDto>> ServerReload(TableState state, CancellationToken token)
     {
         await Task.Delay(1, token);
+        _lastTableState = state;
+
         IEnumerable<AnalyticsResultDto> data = _filteredEmployees;
         if (!string.IsNullOrWhiteSpace(SearchString))
         {
@@ -576,12 +601,17 @@
                 (e.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false)
             );
         }
-        switch (state.SortLabel)
+
+        if (!string.IsNullOrEmpty(state.SortLabel))
         {
-            case "name_sort": data = data.OrderByDirection(state.SortDirection, e => $"{e.FirstName} {e.LastName}"); break;
-            case "designation_sort": data = data.OrderByDirection(state.SortDirection, e => e.Designation ?? ""); break;
-            case "id_sort": data = data.OrderByDirection(state.SortDirection, e => e.EmployeeID); break;
+            switch (state.SortLabel)
+            {
+                case "name_sort": data = data.OrderByDirection(state.SortDirection, e => $"{e.FirstName} {e.LastName}"); break;
+                case "designation_sort": data = data.OrderByDirection(state.SortDirection, e => e.Designation ?? ""); break;
+                case "id_sort": data = data.OrderByDirection(state.SortDirection, e => e.EmployeeID); break;
+            }
         }
+
         var totalItems = data.Count();
         var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
         return new TableData<AnalyticsResultDto>() { TotalItems = totalItems, Items = pagedData };
@@ -623,21 +653,846 @@
         return $"{parts[0][0]}{parts.Last()[0]}".ToUpper();
     }
 
-    private async Task<IEnumerable<string>> SearchNationalities(string value, CancellationToken token) { if (!_nationalityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/nationalities", token); if (r != null) _nationalitySuggestions = r.OrderBy(s => s).ToList(); _nationalityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading nationalities: {ex.Message}"); _nationalitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _nationalitySuggestions.Take(10); return _nationalitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchDesignations(string value, CancellationToken token) { if (!_designationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/designations", token); if (r != null) _designationSuggestions = r.OrderBy(s => s).ToList(); _designationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading designations: {ex.Message}"); _designationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _designationSuggestions.Take(10); return _designationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchJoiningLocations(string value, CancellationToken token) { if (!_joiningLocationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/joiningLocations", token); if (r != null) _joiningLocationSuggestions = r.OrderBy(s => s).ToList(); _joiningLocationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading joining locations: {ex.Message}"); _joiningLocationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _joiningLocationSuggestions.Take(10); return _joiningLocationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchLevels(string value, CancellationToken token) { if (!_levelLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/levels", token); if (r != null) _levelSuggestions = r.OrderBy(s => s).ToList(); _levelLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading levels: {ex.Message}"); _levelSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _levelSuggestions.Take(10); return _levelSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchEducationUniversities(string value, CancellationToken token) { if (!_educationUniversityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/educationUniversities", token); if (r != null) _educationUniversitySuggestions = r.OrderBy(s => s).ToList(); _educationUniversityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading education universities: {ex.Message}"); _educationUniversitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _educationUniversitySuggestions.Take(10); return _educationUniversitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchQualifications(string value, CancellationToken token) { if (!_qualificationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/qualifications", token); if (r != null) _qualificationSuggestions = r.OrderBy(s => s).ToList(); _qualificationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading qualifications: {ex.Message}"); _qualificationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _qualificationSuggestions.Take(10); return _qualificationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchWorkEmployers(string value, CancellationToken token) { if (!_workEmployerLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workEmployers", token); if (r != null) _workEmployerSuggestions = r.OrderBy(s => s).ToList(); _workEmployerLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading work employers: {ex.Message}"); _workEmployerSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _workEmployerSuggestions.Take(10); return _workEmployerSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchWorkDesignations(string value, CancellationToken token) { if (!_workDesignationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workDesignations", token); if (r != null) _workDesignationSuggestions = r.OrderBy(s => s).ToList(); _workDesignationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading work designations: {ex.Message}"); _workDesignationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _workDesignationSuggestions.Take(10); return _workDesignationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchWorkLocations(string value, CancellationToken token) { if (!_workLocationLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/workLocations", token); if (r != null) _workLocationSuggestions = r.OrderBy(s => s).ToList(); _workLocationLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading work locations: {ex.Message}"); _workLocationSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _workLocationSuggestions.Take(10); return _workLocationSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchCurrentCities(string value, CancellationToken token) { if (!_currentCityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/currentCities", token); if (r != null) _currentCitySuggestions = r.OrderBy(s => s).ToList(); _currentCityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading current cities: {ex.Message}"); _currentCitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _currentCitySuggestions.Take(10); return _currentCitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchCurrentStates(string value, CancellationToken token) { if (!_currentStateLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/currentStates", token); if (r != null) _currentStateSuggestions = r.OrderBy(s => s).ToList(); _currentStateLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading current states: {ex.Message}"); _currentStateSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _currentStateSuggestions.Take(10); return _currentStateSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchPermanentCities(string value, CancellationToken token) { if (!_permanentCityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/permanentCities", token); if (r != null) _permanentCitySuggestions = r.OrderBy(s => s).ToList(); _permanentCityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading permanent cities: {ex.Message}"); _permanentCitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _permanentCitySuggestions.Take(10); return _permanentCitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchPermanentStates(string value, CancellationToken token) { if (!_permanentStateLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/permanentStates", token); if (r != null) _permanentStateSuggestions = r.OrderBy(s => s).ToList(); _permanentStateLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading permanent states: {ex.Message}"); _permanentStateSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _permanentStateSuggestions.Take(10); return _permanentStateSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchPassportNationalities(string value, CancellationToken token) { if (!_passportNationalityLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/passportNationalities", token); if (r != null) _passportNationalitySuggestions = r.OrderBy(s => s).ToList(); _passportNationalityLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading passport nationalities: {ex.Message}"); _passportNationalitySuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _passportNationalitySuggestions.Take(10); return _passportNationalitySuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchBankNames(string value, CancellationToken token) { if (!_bankNameLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankNames", token); if (r != null) _bankNameSuggestions = r.OrderBy(s => s).ToList(); _bankNameLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading bank names: {ex.Message}"); _bankNameSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _bankNameSuggestions.Take(10); return _bankNameSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchBankBranches(string value, CancellationToken token) { if (!_bankBranchLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankBranches", token); if (r != null) _bankBranchSuggestions = r.OrderBy(s => s).ToList(); _bankBranchLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading bank branches: {ex.Message}"); _bankBranchSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _bankBranchSuggestions.Take(10); return _bankBranchSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
-    private async Task<IEnumerable<string>> SearchBankStates(string value, CancellationToken token) { if (!_bankStateLoaded) { try { var r = await Http.GetFromJsonAsync<List<string>>("api/Lookup/bankStates", token); if (r != null) _bankStateSuggestions = r.OrderBy(s => s).ToList(); _bankStateLoaded = true; } catch (Exception ex) { Console.WriteLine($"Error loading bank states: {ex.Message}"); _bankStateSuggestions = new List<string>(); } } if (string.IsNullOrEmpty(value)) return _bankStateSuggestions.Take(10); return _bankStateSuggestions.Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10); }
+    private async Task<IEnumerable<string>> SearchNationalities(string value, CancellationToken token)
+    {
+        if (!_nationalityLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/nationalities");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _nationalitySuggestions = r.OrderBy(s => s).ToList();
+                    _nationalityLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading nationalities ({response.StatusCode}): {errorContent}");
+                    _nationalitySuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading nationalities: {ex.Message}");
+                _nationalitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _nationalitySuggestions.Take(10);
+
+        return _nationalitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchDesignations(string value, CancellationToken token)
+    {
+        if (!_designationLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/designations");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _designationSuggestions = r.OrderBy(s => s).ToList();
+                    _designationLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading designations ({response.StatusCode}): {errorContent}");
+                    _designationSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading designations: {ex.Message}");
+                _designationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _designationSuggestions.Take(10);
+
+        return _designationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchJoiningLocations(string value, CancellationToken token)
+    {
+        if (!_joiningLocationLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/joiningLocations");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _joiningLocationSuggestions = r.OrderBy(s => s).ToList();
+                    _joiningLocationLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading joining locations ({response.StatusCode}): {errorContent}");
+                    _joiningLocationSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading joining locations: {ex.Message}");
+                _joiningLocationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _joiningLocationSuggestions.Take(10);
+
+        return _joiningLocationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchLevels(string value, CancellationToken token)
+    {
+        if (!_levelLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/levels");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _levelSuggestions = r.OrderBy(s => s).ToList();
+                    _levelLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading levels ({response.StatusCode}): {errorContent}");
+                    _levelSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading levels: {ex.Message}");
+                _levelSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _levelSuggestions.Take(10);
+
+        return _levelSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchEducationUniversities(string value, CancellationToken token)
+    {
+        if (!_educationUniversityLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/educationUniversities");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _educationUniversitySuggestions = r.OrderBy(s => s).ToList();
+                    _educationUniversityLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading education universities ({response.StatusCode}): {errorContent}");
+                    _educationUniversitySuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading education universities: {ex.Message}");
+                _educationUniversitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _educationUniversitySuggestions.Take(10);
+
+        return _educationUniversitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchQualifications(string value, CancellationToken token)
+    {
+        if (!_qualificationLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/qualifications");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _qualificationSuggestions = r.OrderBy(s => s).ToList();
+                    _qualificationLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading qualifications ({response.StatusCode}): {errorContent}");
+                    _qualificationSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading qualifications: {ex.Message}");
+                _qualificationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _qualificationSuggestions.Take(10);
+
+        return _qualificationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchWorkEmployers(string value, CancellationToken token)
+    {
+        if (!_workEmployerLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/workEmployers");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _workEmployerSuggestions = r.OrderBy(s => s).ToList();
+                    _workEmployerLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading work employers ({response.StatusCode}): {errorContent}");
+                    _workEmployerSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading work employers: {ex.Message}");
+                _workEmployerSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _workEmployerSuggestions.Take(10);
+
+        return _workEmployerSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchWorkDesignations(string value, CancellationToken token)
+    {
+        if (!_workDesignationLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/workDesignations");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _workDesignationSuggestions = r.OrderBy(s => s).ToList();
+                    _workDesignationLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading work designations ({response.StatusCode}): {errorContent}");
+                    _workDesignationSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading work designations: {ex.Message}");
+                _workDesignationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _workDesignationSuggestions.Take(10);
+
+        return _workDesignationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchWorkLocations(string value, CancellationToken token)
+    {
+        if (!_workLocationLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/workLocations");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _workLocationSuggestions = r.OrderBy(s => s).ToList();
+                    _workLocationLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading work locations ({response.StatusCode}): {errorContent}");
+                    _workLocationSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading work locations: {ex.Message}");
+                _workLocationSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _workLocationSuggestions.Take(10);
+
+        return _workLocationSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchCurrentCities(string value, CancellationToken token)
+    {
+        if (!_currentCityLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/currentCities");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _currentCitySuggestions = r.OrderBy(s => s).ToList();
+                    _currentCityLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading current cities ({response.StatusCode}): {errorContent}");
+                    _currentCitySuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading current cities: {ex.Message}");
+                _currentCitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _currentCitySuggestions.Take(10);
+
+        return _currentCitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchCurrentStates(string value, CancellationToken token)
+    {
+        if (!_currentStateLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/currentStates");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _currentStateSuggestions = r.OrderBy(s => s).ToList();
+                    _currentStateLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading current states ({response.StatusCode}): {errorContent}");
+                    _currentStateSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading current states: {ex.Message}");
+                _currentStateSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _currentStateSuggestions.Take(10);
+
+        return _currentStateSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchPermanentCities(string value, CancellationToken token)
+    {
+        if (!_permanentCityLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/permanentCities");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _permanentCitySuggestions = r.OrderBy(s => s).ToList();
+                    _permanentCityLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading permanent cities ({response.StatusCode}): {errorContent}");
+                    _permanentCitySuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading permanent cities: {ex.Message}");
+                _permanentCitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _permanentCitySuggestions.Take(10);
+
+        return _permanentCitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchPermanentStates(string value, CancellationToken token)
+    {
+        if (!_permanentStateLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/permanentStates");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _permanentStateSuggestions = r.OrderBy(s => s).ToList();
+                    _permanentStateLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading permanent states ({response.StatusCode}): {errorContent}");
+                    _permanentStateSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading permanent states: {ex.Message}");
+                _permanentStateSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _permanentStateSuggestions.Take(10);
+
+        return _permanentStateSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchPassportNationalities(string value, CancellationToken token)
+    {
+        if (!_passportNationalityLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/passportNationalities");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _passportNationalitySuggestions = r.OrderBy(s => s).ToList();
+                    _passportNationalityLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading passport nationalities ({response.StatusCode}): {errorContent}");
+                    _passportNationalitySuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading passport nationalities: {ex.Message}");
+                _passportNationalitySuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _passportNationalitySuggestions.Take(10);
+
+        return _passportNationalitySuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchBankNames(string value, CancellationToken token)
+    {
+        if (!_bankNameLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/bankNames");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _bankNameSuggestions = r.OrderBy(s => s).ToList();
+                    _bankNameLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading bank names ({response.StatusCode}): {errorContent}");
+                    _bankNameSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading bank names: {ex.Message}");
+                _bankNameSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _bankNameSuggestions.Take(10);
+
+        return _bankNameSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchBankBranches(string value, CancellationToken token)
+    {
+        if (!_bankBranchLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/bankBranches");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _bankBranchSuggestions = r.OrderBy(s => s).ToList();
+                    _bankBranchLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading bank branches ({response.StatusCode}): {errorContent}");
+                    _bankBranchSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading bank branches: {ex.Message}");
+                _bankBranchSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _bankBranchSuggestions.Take(10);
+
+        return _bankBranchSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private async Task<IEnumerable<string>> SearchBankStates(string value, CancellationToken token)
+    {
+        if (!_bankStateLoaded)
+        {
+            try
+            {
+                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/bankStates");
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                }
+
+                var response = await Http.SendAsync(request, token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                    if (r != null)
+                        _bankStateSuggestions = r.OrderBy(s => s).ToList();
+                    _bankStateLoaded = true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
+                    Console.WriteLine($"Error loading bank states ({response.StatusCode}): {errorContent}");
+                    _bankStateSuggestions = new List<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading bank states: {ex.Message}");
+                _bankStateSuggestions = new List<string>();
+            }
+        }
+
+        if (string.IsNullOrEmpty(value))
+            return _bankStateSuggestions.Take(10);
+
+        return _bankStateSuggestions
+            .Where(s => s.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Take(10);
+    }
+
+    private List<AnalyticsResultDto> GetFilteredAndSortedEmployees()
+    {
+        IEnumerable<AnalyticsResultDto> data = _filteredEmployees;
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(SearchString))
+        {
+            string lowerSearch = SearchString.ToLowerInvariant();
+            data = data.Where(e =>
+                (e.FirstName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.LastName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.MiddleName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.Designation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false)
+            );
+        }
+
+        // Apply sorting based on stored state
+        if (_lastTableState != null && !string.IsNullOrEmpty(_lastTableState.SortLabel))
+        {
+            switch (_lastTableState.SortLabel)
+            {
+                case "name_sort": data = data.OrderByDirection(_lastTableState.SortDirection, e => $"{e.FirstName} {e.LastName}"); break;
+                case "designation_sort": data = data.OrderByDirection(_lastTableState.SortDirection, e => e.Designation ?? ""); break;
+                case "id_sort": data = data.OrderByDirection(_lastTableState.SortDirection, e => e.EmployeeID); break;
+            }
+        }
+        else // Default sort if none applied
+        {
+            data = data.OrderBy(e => e.FirstName).ThenBy(e => e.LastName);
+        }
+
+        return data.ToList();
+    }
+
+    private async Task DownloadFilteredEmployees()
+    {
+        var employeesToDownload = GetFilteredAndSortedEmployees();
+        if (!employeesToDownload.Any())
+        {
+            // Optionally show a message to the user
+            return;
+        }
+
+        try
+        {
+            // Generate CSV content
+            var csvContent = new System.Text.StringBuilder();
+ 
+            // === START: Helper Functions ===
+            Func<string?, string> escape = (val) =>
+            {
+                if (string.IsNullOrEmpty(val)) return "";
+                string escaped = val.Replace("\"", "\"\""); // Replace one quote with two quotes
+                if (escaped.Contains(',') || escaped.Contains('\"') || escaped.Contains('\n') || escaped.Contains('\r'))
+                {
+                    return $"\"{escaped}\""; // Wrap in quotes
+                }
+                return escaped;
+            };
+            Func<DateTime?, string> formatDate = (date) => date?.ToString("yyyy-MM-dd") ?? "";
+            Func<bool?, string> formatBool = (b) => b.HasValue ? b.Value.ToString() : "";
+            Func<double?, string> formatDouble = (d) => d.HasValue ? d.Value.ToString("F2") : "";
+            Func<int?, string> formatInt = (i) => i.HasValue ? i.Value.ToString() : "";
+            // === END: Helper Functions ===
+ 
+            // Header Row - Dynamically create based on updated AnalyticsResultDto properties (excluding ProfilePicture)
+            var header = string.Join(",", typeof(AnalyticsResultDto).GetProperties()
+                                        .Where(p => p.Name != nameof(AnalyticsResultDto.ProfilePicture))
+                                        .Select(p => escape(p.Name))); // Escape header names too
+            csvContent.AppendLine(header);
+
+            // Data rows
+            foreach (var emp in employeesToDownload)
+            {
+                // Create CSV row using properties from the updated AnalyticsResultDto
+                var values = typeof(AnalyticsResultDto).GetProperties()
+                    .Where(p => p.Name != nameof(AnalyticsResultDto.ProfilePicture))
+                    .Select(p =>
+                    {
+                        var value = p.GetValue(emp);
+                        return value switch
+                        {
+                            DateTime dt => formatDate(dt),
+                            DateTimeOffset dto => formatDate(dto.DateTime), // Handle DateTimeOffset if needed
+                            bool b => formatBool(b),
+                            int i => formatInt(i),
+                            double d => formatDouble(d),
+                            decimal dec => formatDouble((double?)dec), // Handle decimal if needed
+                            _ => escape(value?.ToString()),
+                        };
+                    });
+                csvContent.AppendLine(string.Join(",", values));
+            }
+
+            // Prepare for download
+            var fileBytes = System.Text.Encoding.UTF8.GetBytes(csvContent.ToString());
+            var base64Content = Convert.ToBase64String(fileBytes);
+            var fileName = $"FilteredEmployees_{DateTime.Now:yyyyMMddHHmmss}.csv";
+            var contentType = "text/csv";
+
+            // Trigger download using JavaScript interop
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, contentType, base64Content);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error generating or downloading file: {ex.Message}";
+            Console.WriteLine($"Download error: {ex}");
+            StateHasChanged(); // Update UI to show error
+        }
+    }
 }

@@ -799,6 +799,7 @@
     {
         UserRole = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "userRole");
         CurrentEmail = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+        Console.WriteLine($"EmployeeProfile OnInitializedAsync: UserRole = {UserRole}, CurrentEmail = {CurrentEmail}"); // DEBUG
 
         await LoadData();
     }
@@ -811,6 +812,7 @@
         Experience = null;
         BankingInfo = null;
         StateHasChanged(); // Update UI to show loading state
+        Console.WriteLine($"EmployeeProfile LoadData Start: ID = {id}, UserRole = {UserRole}"); // DEBUG
 
         try
         {
@@ -819,17 +821,33 @@
             if (Employee == null)
             {
                 errorMessage = "Employee not found.";
+                Console.WriteLine("EmployeeProfile LoadData: Employee not found."); // DEBUG
                 return;
             }
             Employee_Email = Employee.CurrentEmail; // Store the viewed employee's email
+            Console.WriteLine($"EmployeeProfile LoadData: Employee loaded. Employee_Email = {Employee_Email}"); // DEBUG
+            Console.WriteLine($"EmployeeProfile LoadData: Employee.PassportNo = {Employee.PassportNo}"); // DEBUG
+            Console.WriteLine($"EmployeeProfile LoadData: Employee.PassportFullName = {Employee.PassportFullName}"); // DEBUG
 
             // Fetch Experience Details (always needed, might be null)
             Experience = await ExperienceService.GetExperienceDetails(id);
 
             // Fetch Banking Info only if authorized
-            if (CanViewSensitiveInfo())
+            bool canViewSensitive = CanViewSensitiveInfo(); // Call it once
+            Console.WriteLine($"EmployeeProfile LoadData: CanViewSensitiveInfo() result = {canViewSensitive}"); // DEBUG
+            if (canViewSensitive)
             {
+                Console.WriteLine("EmployeeProfile LoadData: Attempting to fetch BankingInfo."); // DEBUG
                 BankingInfo = await BankingService.GetBankingInfo(id);
+                Console.WriteLine($"EmployeeProfile LoadData: BankingInfo is null = {BankingInfo == null}"); // DEBUG
+                if (BankingInfo != null)
+                {
+                    Console.WriteLine($"EmployeeProfile LoadData: BankingInfo.AccountNumber = {BankingInfo.AccountNumber}"); // DEBUG
+                }
+            }
+            else
+            {
+                Console.WriteLine("EmployeeProfile LoadData: Not authorized to view sensitive info, BankingInfo will not be fetched."); // DEBUG
             }
         }
         catch (Exception ex)
