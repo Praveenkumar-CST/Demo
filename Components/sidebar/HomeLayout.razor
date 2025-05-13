@@ -11,24 +11,25 @@
 @using WiseHR.Components.sidebar
 
 <MudThemeProvider />
-<MudLayout>
+
     <!-- Top Navigation Bar -->
-    <MudAppBar Elevation="3" Style="background-color: var(--primary); height: 72px;">
+    <MudAppBar Elevation="3" Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 78px; color: var(--primary); padding-top:5px">
         <MudItem xs="2" Class="d-flex align-center">
             <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                           Color="Color.Inherit"
+                           Color="Color.Primary"
                            Edge="Edge.Start"
-                           OnClick="@(() => sidebar?.ToggleDrawer())"
+                           OnClick="@(() => ToggleSidebar())"
+                           Size="Size.Large"
                            Class="mr-2" />
 
             <MudImage Src="images/logo1.png"
                       Alt="Company Logo"
-                      Height="48"
-                      Style="margin-left: 16px; color:white;" />
+                      Height="64"
+                      Style="margin-left: 16px;" />
         </MudItem>
 
         <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
-            <div class="d-flex align-center position-relative" style="width: 70%; max-width: 800px;">
+            <div class="d-flex align-center position-relative" style="width: 75%; max-width: 850px;">
                 <MudAutocomplete T="EmployeeSearchResult"
                                  SearchFunc="@SearchEmployeesAutocomplete"
                                  Placeholder="Search employees..."
@@ -37,7 +38,7 @@
                                  AdornmentIcon="@Icons.Material.Filled.Search"
                                  AdornmentColor="Color.Primary"
                                  Class="search-autocomplete"
-                                 Style="width: 100%; border-radius: 28px; background-color: var(--secondary);"
+                                 Style="width: 100%; border-radius: 28px; font-size: 1.1rem;"
                                  DebounceInterval="300"
                                  ResetValueOnEmptyText="true"
                                  ShowProgressIndicator="true"
@@ -46,14 +47,17 @@
                                  @onkeyup="HandleSearchInputKeyUp"
                                  ItemTemplate="@ResultTemplate"
                                  ToStringFunc="@(e => null)" />
-
-                <MudTooltip Text="Go to Advanced Search">
-                    <MudIconButton Icon="@Icons.Material.Filled.FilterList"
-                                   Color="Color.Primary"
-                                   Class="ml-2 filter-button"
-                                   OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
-                                   Style="background-color: var(--secondary); border-radius: 50%;" />
-                </MudTooltip>
+                @if (IsAdmin)
+                {
+                    <MudTooltip Text="Go to Advanced Search">
+                        <MudIconButton Icon="@Icons.Material.Filled.FilterList"
+                                       Color="Color.Primary"
+                                       Size="Size.Large"
+                                       Class="ml-2 filter-button"
+                                       OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
+                                       Style="border-radius: 50%;" />
+                    </MudTooltip>
+                }
             </div>
 
             @* Display error message if search fails *@
@@ -63,21 +67,21 @@
             }
         </MudItem>
 
-        <MudItem xs="2" Style="padding: 8px;">
+    <MudItem xs="2" Style="padding: 8px;display: flex;justify-content: flex-end;">
             <MudMenu AnchorOrigin="Origin.BottomLeft">
                 <ActivatorContent>
-                    <div class="d-flex align-center justify-end pr-4">
+                    <div class="d-flex align-center justify-end ">
                         @if (!string.IsNullOrEmpty(userProfilePicture))
                         {
                             <img src="@userProfilePicture"
                                  class="rounded-circle" alt="Employee Photo"
-                                 style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--secondary);" />
+                                 style="width: 56px; height: 56px; object-fit: cover; border: 2px solid var(--primary);" />
                         }
                         else
                         {
-                            <MudAvatar Size="Size.Medium"
+                            <MudAvatar Size="Size.Large"
                                        Class="cursor-pointer"
-                                       Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--dark);">
+                                       Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--primary);">
                                 @userInitials
                             </MudAvatar>
                         }
@@ -98,21 +102,30 @@
     </MudAppBar>
 
     <!-- Sidebar -->
-    <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
-
+     <div class="sidebar-container" @onmouseleave="HandleMouseLeave">
+        <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+    </div>
     <!-- Main Content -->
-    <MudMainContent Style="flex-grow: 1;">
-        <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
+  
+    <MudMainContent Style="@($"flex-grow: 1; margin-left: {(drawerOpen ? "260px" : "70px")}; transition: margin 0.3s ease;")">
+        <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge"> 
             @Body
         </MudContainer>
     </MudMainContent>
-
+  
     <!-- Popover Support -->
     <MudPopoverProvider />
 
-</MudLayout>
+
 
 <style>
+    .mud-divider {
+        margin: 0;
+        flex-shrink: 0;
+        border-color: rgb(22 21 21);
+        border-width: 2px;
+        border-style: solid none none none;
+    }
     .search-autocomplete ::deep .mud-input {
         border-radius: 28px;
         transition: all 0.3s ease;
@@ -154,10 +167,45 @@
             padding: 8px 12px;
         }
     }
+
+    /* Sidebar container styles */
+    .sidebar-container {
+        position: fixed;
+        top: 78px; /* Match the AppBar height */
+        left: 0;
+        height: calc(100vh - 78px);
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    /* Removed hover styles to prevent automatic opening on hover */
+    
+    ::deep .mud-drawer {
+        transition: width 0.3s ease;
+        width: 60px; /* Default collapsed width */
+        overflow: hidden;
+    }
+
+        ::deep .mud-drawer.open {
+            width: 250px !important; /* Expanded width */
+        }
+
+    ::deep .mud-nav-menu {
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    ::deep .mud-nav-link span {
+        display: none; /* Hide text when collapsed */
+    }
+
+    ::deep .mud-drawer.open .mud-nav-link span {
+        display: inline; /* Show text when expanded */
+    }
 </style>
 
 @code {
-    private bool drawerOpen = true;
+    private bool drawerOpen = false; // Start closed
     private HomeSidebar? sidebar;
     private string? userProfilePicture;
     private string? userName;
@@ -168,8 +216,32 @@
     private List<string> designations = new();
     private string? activeSearchQuery = "";
     private string? employeeId;
+    private bool IsAdmin = false;
 
-    // Clear search query method
+    private async Task ToggleSidebar()
+    {
+        drawerOpen = !drawerOpen;
+        if (sidebar != null)
+        {
+            await sidebar.ToggleDrawer(); // Sync with sidebar component
+        }
+        StateHasChanged();
+    }
+    
+    // Close sidebar when mouse leaves
+    private async Task HandleMouseLeave()
+    {
+        if (drawerOpen)
+        {
+            drawerOpen = false;
+            if (sidebar != null)
+            {
+                await sidebar.ToggleDrawer();
+            }
+            StateHasChanged();
+        }
+    }
+
     private async Task ClearSearchQuery()
     {
         activeSearchQuery = "";
@@ -193,9 +265,10 @@
         try
         {
             // Clear localStorage
-            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "accessToken");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "email");
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "empId");
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "userRole");
             Console.WriteLine("Logged out successfully. LocalStorage cleared.");
 
             // Navigate to login page
@@ -246,10 +319,6 @@
                             __builder4.AddContent(26, GetInitials(context.Name));
                         }));
                         __builder3.CloseComponent();
-                    }
-                    else
-                    {
-
                     }
                 }));
                 __builder2.CloseComponent();
@@ -319,7 +388,6 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadUserDetails();
-     
     }
 
     private async Task<string?> GetAccessToken()
@@ -342,7 +410,6 @@
         }
     }
 
-  
     private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
     {
         _lastSearchQuery = query;
@@ -358,7 +425,6 @@
         try
         {
             var accessToken = await GetAccessToken();
-          
             var apiUrl = $"/api/search/spotlight?query={System.Net.WebUtility.UrlEncode(query)}";
             Console.WriteLine($"Attempting Autocomplete API call to: {apiUrl}");
 
@@ -374,13 +440,16 @@
                 Console.WriteLine($"Autocomplete Search successful: Found {results.Count} actual employee results");
                 _searchError = null;
 
-                results.Add(new EmployeeSearchResult
-                    {
-                        EmployeeID = "ANALYTICS_LINK",
-                        Name = "Click for Advanced Search...",
-                        Designation = "Click to view full analytics",
-                        ProfileUrl = "/analytics"
-                    });
+                if (IsAdmin)
+                {
+                    results.Add(new EmployeeSearchResult
+                        {
+                            EmployeeID = "ANALYTICS_LINK",
+                            Name = "Click for Advanced Search...",
+                            Designation = "Click to view full analytics",
+                            ProfileUrl = "/analytics"
+                        });
+                }
 
                 return results;
             }
@@ -490,6 +559,9 @@
         try
         {
             var email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+            var value = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userRole");
+
+            IsAdmin = value == "Admin";
             Console.WriteLine($"Retrieved email from localStorage: {email}");
 
             userProfilePicture = null;
@@ -548,6 +620,7 @@
         userInitials = "?";
         userProfilePicture = null;
         employeeId = null;
+        IsAdmin = false;
     }
 
     private string GetInitials(string? name)
