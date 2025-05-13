@@ -3,32 +3,6 @@
 @inject AuthService AuthService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-<<<<<<< HEAD
-<MudDrawer @bind-Open="DrawerOpen"
-           Class="mud-drawer"
-           Width="@(DrawerOpen ? "250px" : "60px")"
-           Elevation="1"
-           Variant="@DrawerVariant.Responsive"
-           ClipMode="DrawerClipMode.Always">
-    <MudNavMenu Class="mud-nav-menu">
-        @if (accessibleMenuItems != null && accessibleMenuItems.Count > 0)
-        {
-            @foreach (var item in accessibleMenuItems)
-            {
-                if (!item.Name.StartsWith("HIDE_"))
-                {
-                    <MudNavLink Class="mud-nav-link"
-                                Match="NavLinkMatch.All"
-                                Icon="@AccessControl.GetIconForMenu(item.Name)"
-                                Href="@item.Url"
-                                ActiveClass="mud-nav-link-active">
-                        @if (DrawerOpen)
-                        {
-                            var displayName = item.Name.Replace("HIDE_", "");
-                            <span>@displayName</span>
-                        }
-=======
->>>>>>> 88f778cb4a920a9588b4a2644b53f1fd1c6dd466
 
 <div class="sidebar-wrapper">
     <MudDrawer @bind-Open="DrawerOpen"
