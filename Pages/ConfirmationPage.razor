@@ -446,13 +446,14 @@
                 }
                 @if (isSubmitting)
                 {
-                    <div class="loading-container" >
-                        <div class="spinner-border text-primary" role="status" >
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p><b>Submitting your details. Please wait...</b></p>
+                    <div class="d-flex flex-column align-items-center mt-4">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                        <MudText Class="mt-2" Typo="Typo.subtitle1">
+                            <b>Submitting your details. Please wait...</b>
+                        </MudText>
                     </div>
                 }
+
                 <!-- Submit Button -->
                 <div class="text-center mt-3">
                     <button type="button" class="btn btn-reset" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)">

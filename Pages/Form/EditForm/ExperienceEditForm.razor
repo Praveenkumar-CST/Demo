@@ -100,9 +100,21 @@
 
                 <!-- Only Back Button -->
                 <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
-            Update
-        </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@isSubmitting"
+                               ButtonType="ButtonType.Submit">
+                        @if (isSubmitting)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Inherit" />
+                            <span class="ms-2">Updating...</span>
+                        }
+                        else
+                        {
+                            <span>Update</span>
+                        }
+                    </MudButton>
+
         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@CloseForm">
             Close
         </MudButton>
@@ -117,6 +129,7 @@
 @code {
     [Parameter]
     public string EmployeeId { get; set; }
+    private bool isSubmitting = false;
 
     private Experience experience = new Experience();
     private List<Education> educationList = new();
@@ -153,13 +166,16 @@
 
     private async Task HandleValidSubmit()
     {
+        isSubmitting = true;
+        StateHasChanged();
         experience.EducationQualifications = educationList;
         experience.WorkExperiences = workList;
 
         Console.WriteLine("Updated experience data: " + JsonSerializer.Serialize(experience));
 
         bool result = await ExperienceService.UpdateExperienceAsync(experience);
-
+        isSubmitting = false;
+        StateHasChanged(); 
         if (result)
         {
             SuccessMessage = "Experience details updated successfully!";

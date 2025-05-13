@@ -29,6 +29,9 @@
                 </MudButton>
             </div>
         }
+    @if (reports != null && reports.Count > 0)
+    {
+
         <div style=" max-width: 100%;">
 
             <MudTable Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="width:fit-content;">
@@ -104,6 +107,11 @@
                 </RowTemplate>
             </MudTable>
         </div>
+        }
+        else
+        {
+            <MudText Color="Color.Secondary" Align="Align.Center" Class="mt-4">No reports found.</MudText>
+        }
     }
 </MudContainer>
 

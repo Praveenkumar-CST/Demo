@@ -6,6 +6,8 @@
 @inject EmployeeService EmployeeService
 @inject IDialogService DialogService
 @inject CountryService CountryService
+@inject ISnackbar Snackbar
+
 <h3>Edit Personal Details</h3>
 
 @if (employeeDetails == null)
@@ -460,9 +462,22 @@ else
 
         <!-- Buttons -->
         <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
-                update
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="@isSubmitting"
+                       OnClick="HandleUpdateEmployee"
+                       ButtonType="ButtonType.Button">
+                @if (isSubmitting)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Inherit" />
+                    <span class="ms-2">Updating...</span>
+                }
+                else
+                {
+                    <span>Update</span>
+                }
             </MudButton>
+
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@CloseForm">
                 Close
             </MudButton>
@@ -512,6 +527,7 @@ else
 @code {
     [Parameter]
     public string EmployeeId { get; set; }
+    private bool isSubmitting = false;
 
     private List<Country> countries = new();
     [Parameter]
@@ -601,9 +617,14 @@ else
     }
 
     private async Task HandleUpdateEmployee()
-    {
+    {  
+            isSubmitting = true;
+            StateHasChanged(); 
+
         bool result = await EmployeeService.UpdateEmployee(employeeDetails);
 
+            isSubmitting = false;
+            StateHasChanged(); 
         if (result)
         {
 
@@ -617,9 +638,13 @@ else
 
             DialogService.Show<SubmitSuccessDialog>("Success", parameters);
             // Navigate or show a success message
+            Snackbar.Add("Updated successfully!", Severity.Success); // ✅ Success message
+
         }
         else
         {
+            Snackbar.Add("Update failed. Please try again.", Severity.Error); // ❌ Failure message
+
             // Show an error message
             Console.WriteLine("Update failed");
         }
