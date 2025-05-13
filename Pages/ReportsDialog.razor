@@ -112,7 +112,14 @@
         {
             <MudText Color="Color.Secondary" Align="Align.Center" Class="mt-4">No reports found.</MudText>
         }
+    }@if (isSubmitting)
+    {
+        <MudOverlay Visible="true" DarkBackground="true" Class="d-flex justify-center align-center" ZIndex="1300">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true"  />
+            <MudText Class="ml-2" Typo="Typo.h6" Color="Color.Primary">Submitting...</MudText>
+        </MudOverlay>
     }
+
 </MudContainer>
 
 @code {
@@ -122,6 +129,8 @@
     private Dictionary<string, string> menteeMobiles = new();
     private Dictionary<string, string> menteeInstitutions = new(); // New dictionary for institutions                                                            // }
     private bool isLoading = true;
+    private bool isSubmitting = false;
+
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
@@ -135,6 +144,7 @@
             Console.WriteLine($"role: {Role}");
             Console.WriteLine($"email: {Email}");
             await LoadReportsBasedOnRole();
+            StateHasChanged();
         }
         finally
         {
@@ -273,14 +283,16 @@
                 CloseButton = true,
                 CloseOnEscapeKey = false
             };
-
+        isSubmitting = true;
         var dialog = DialogService.Show<FortnightReportForm>("Edit Fortnight Report", parameters, options);
         var result = await dialog.Result;
+        isSubmitting = false;
 
         if (!result.Canceled)
         {
             Snackbar.Add("Report updated successfully.", Severity.Success);
             await LoadReportsBasedOnRole(); // Refresh the list
+            StateHasChanged();
         }
     }
 
@@ -291,6 +303,7 @@
         {
             Snackbar.Add("Report deleted successfully.", Severity.Success);
             await LoadReportsBasedOnRole(); // Refresh list
+            StateHasChanged();
         }
         else
         {
@@ -308,6 +321,7 @@
                 CloseOnEscapeKey = false
             };
 
+        isSubmitting = true;
         var dialog = DialogService.Show<FortnightReportForm>("Submit Fortnight Report", options);
         var result = await dialog.Result;
 
@@ -315,8 +329,9 @@
         {
             Snackbar.Add("Report added successfully.", Severity.Success);
             await LoadReportsBasedOnRole();
+            StateHasChanged();
         }
-
+        isSubmitting = false;
     }
     private async Task DownloadFile(ReportModel report)
     {

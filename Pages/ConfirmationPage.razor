@@ -747,9 +747,10 @@
         };
 
         DialogService.Show<SubmitSuccessDialog>("Success", parameters);
+        Snackbar.Add("Submitted successfully!", Severity.Success); // ✅ Success message
 
         isSubmitted = true;
-
+        
     }
     private void NavigateToHome()
     {
