@@ -1,54 +1,125 @@
-﻿﻿@using System.Text.RegularExpressions
+﻿@using System.Text.RegularExpressions
 @using WiseHR.Models
 @inject AuthService AuthService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-<MudDrawer @bind-Open="DrawerOpen"
-           Class="mud-drawer"
-           Width="@(DrawerOpen ? "250px" : "60px")"
-           Elevation="1"
-           Variant="@DrawerVariant.Responsive"
-           ClipMode="DrawerClipMode.Always">
-    <MudNavMenu Class="mud-nav-menu">
-        @if (accessibleMenuItems != null && accessibleMenuItems.Count > 0)
-        {
-            @foreach (var item in accessibleMenuItems)
-            {
-                if (!item.Name.StartsWith("HIDE_"))
-                {
-                    <MudNavLink Class="mud-nav-link"
-                                Match="NavLinkMatch.All"
-                                Icon="@Icons.Material.Filled.Dashboard"
-                                Href="@item.Url"
-                                ActiveClass="mud-nav-link-active">
-                        @if (DrawerOpen)
-                        {
-                            var displayName = item.Name.Replace("HIDE_", "");
-                            <span>@displayName</span>
-                        }
 
-                    </MudNavLink>
+<div class="sidebar-wrapper">
+    <MudDrawer @bind-Open="DrawerOpen"
+    Class="@(DrawerOpen ? "mud-drawer open" : "mud-drawer")"
+    Width="@(DrawerOpen ? "260px" : "70px")"
+    Elevation="2"
+    Variant="@DrawerVariant.Responsive"
+    OpenMiniOnHover="true"
+    ClipMode="DrawerClipMode.Always">
+
+        <MudNavMenu Class="mud-nav-menu pa-2">
+            @if (accessibleMenuItems != null && accessibleMenuItems.Count > 0)
+            {
+                @foreach (var item in accessibleMenuItems)
+                {
+                    if (!item.Name.StartsWith("HIDE_"))
+                    {
+						Console.WriteLine($"Menu Item: {item.Name}, URL: {item.Url}");
+					
+                        <MudNavLink Class="sidebar-navlink mb-2 rounded-lg"
+                        Match="NavLinkMatch.All"
+                        Icon="@GetIconForMenuItem(item.Name)"
+                        IconColor="Color.Primary"
+                        Href="@item.Url"
+                        ActiveClass="sidebar-navlink-active">
+                            @if (DrawerOpen)
+                            {
+                                var displayName = item.Name.Replace("HIDE_", "");
+                                <span>@displayName</span>
+                            }
+                        </MudNavLink>
+                    }
                 }
             }
-
-        }
-        else if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <p>@errorMessage</p>
-        }
-        else
-        {
-            <p>No menu items available.</p>
-        }
-
-    </MudNavMenu>
-</MudDrawer>
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-2">@errorMessage</MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Class="mt-2">No menu items available.</MudAlert>
+            }
+        </MudNavMenu>
 
 
+    </MudDrawer>
+</div>
+
+<style>
+    .sidebar-wrapper {
+    height: 100%;
+    }
+
+    .mud-drawer {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
+    border-right: 1px solid #e0e6ff;
+    transition: all 0.3s ease;
+    }
+
+    .mud-primary-text {
+    color: rgb(19 19 20) !important;
+    --mud-ripple-color: var(--mud-palette-primary) !important;
+    }
+    .sidebar-header {
+    padding-top: 8px;
+    margin-bottom: 8px;
+    color: var(--primary);
+    }
+
+    .sidebar-navlink {
+    transition: all 0.3s ease;
+    margin: 4px 0;
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: var(--text-primary) !important;
+    }
+
+    .sidebar-navlink:hover {
+    background-color: rgba(25, 118, 210, 0.08);
+    transform: translateX(4px);
+    }
+
+    .sidebar-navlink-active {
+    background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%) !important;
+    color: white !important;
+    font-weight: 500;
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+    }
+
+    .sidebar-navlink-active:hover {
+    transform: translateX(4px);
+    box-shadow: 0 6px 12px rgba(25, 118, 210, 0.3);
+    }
+
+    /* Make sure icons match text color in active state */
+    .sidebar-navlink-active ::deep .mud-nav-link-icon {
+    color: white !important;
+    }
+
+    /* Style for inactive nav link text */
+    .sidebar-navlink ::deep span {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+    }
+    .sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: #f8f9ff;
+    border-top: 1px solid #e0e6ff;
+    }
+</style>
 
 @code {
+
     [Parameter]
-    public bool DrawerOpen { get; set; } = true;
+    public bool DrawerOpen { get; set; } = false;
 
     [Parameter]
     public EventCallback<bool> DrawerOpenChanged { get; set; }
@@ -115,12 +186,6 @@
             Console.WriteLine($"Access denied to {currentUrl}. Redirecting to /home.");
             NavigationManager.NavigateTo("/");
         }
-        // var allowedUrls = accessibleMenuItems.Select(i => i.Url.TrimEnd('/')).ToList();
-        // if (!allowedUrls.Contains(currentUrl) && currentUrl != "/") Allow root if needed
-        // {
-        //     Console.WriteLine($"Access denied to {currentUrl}. Redirecting to /home.");
-        //     NavigationManager.NavigateTo("/home"); Redirect to default page
-        // }
     }
 
     private void HandleLocationChanged(object sender, LocationChangedEventArgs args)
@@ -139,5 +204,36 @@
     {
         // Unsubscribe from event to prevent memory leaks
         NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+
+    // Helper method to get appropriate icons based on menu item name
+    private string GetIconForMenuItem(string itemName)
+    {
+        // itemName = itemName.Replace("HIDE_", "").ToLower();
+
+        return itemName switch
+        {
+            "Dashboard"  => Icons.Material.Filled.Dashboard,
+            "Employee List"  => Icons.Material.Filled.People,
+            "Role Management" => Icons.Material.Filled.Person,
+            "departments" => Icons.Material.Filled.BusinessCenter,
+            "ReportList"  => Icons.Material.Filled.EventNote,
+            "attendance" => Icons.Material.Filled.EventAvailable,
+            "projects" => Icons.Material.Filled.Assignment,
+            "tasks" => Icons.Material.Filled.Task,
+            "documents" => Icons.Material.Filled.Book,
+            "payroll" => Icons.Material.Filled.Payments,
+            "benefits" => Icons.Material.Filled.HealthAndSafety,
+            "settings" => Icons.Material.Filled.Settings,
+            "analytics"  => Icons.Material.Filled.BarChart,
+            "Holiday Calendar"  => Icons.Material.Filled.CalendarMonth,
+            "messages" or "chat" => Icons.Material.Filled.Chat,
+            "notifications" => Icons.Material.Filled.Notifications,
+            "Organizational Hierarchy" => Icons.Material.Filled.AdminPanelSettings,
+            "logout" => Icons.Material.Filled.Logout,
+            "help" => Icons.Material.Filled.Help,
+            "about" => Icons.Material.Filled.Info,
+            _ => Icons.Material.Filled.ChevronRight  // Default icon
+        };
     }
 }

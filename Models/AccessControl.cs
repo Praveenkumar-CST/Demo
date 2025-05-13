@@ -51,7 +51,7 @@
                     ("HIDE_Fortnight Report", "/fortnight-report"),
                     ("ReportList", "/reports"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
-                    ("HIDE_Analytics", "/analytics"),
+                  
 
                 }
             },
@@ -66,8 +66,8 @@
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("ReportList", "/reports"),
-                    ("HIDE_EmployeeProfile", "/employee/.*"),
-                    ("HIDE_Analytics", "/analytics"),
+                      ("HIDE_EmployeeProfile", "/employee/.*"),
+                      
 
                 }
             },
@@ -76,7 +76,7 @@
                 {
                     ("Dashboard", "/home"),
                     ("Fortnight Report", "/fortnight-report"),
-                     ("HIDE_Analytics", "/analytics"),
+                 
                 }
             }
         };
