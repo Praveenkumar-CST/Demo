@@ -23,6 +23,7 @@ namespace WiseHR.Services
 
             //_baseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5243";
 <<<<<<< HEAD
+
             _baseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7021";
 =======
            //_baseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7021";
