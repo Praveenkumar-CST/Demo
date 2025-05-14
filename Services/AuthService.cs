@@ -22,8 +22,12 @@ namespace WiseHR.Services
             _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
 
             //_baseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5243";
+<<<<<<< HEAD
 
             _baseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7021";
+=======
+           //_baseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7021";
+>>>>>>> c63dc3a77d5602799324c944cd977edf1ec5aa3d
             //_baseUrl = configuration["ApiBaseUrl"] ?? "http://172.210.14.62:5000/";
           //_baseUrl = configuration["ApiBaseUrl"] ?? "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net/";
 
