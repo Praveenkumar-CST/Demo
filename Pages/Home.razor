@@ -8,10 +8,10 @@
 @using MudBlazor
 @using System.Text.Json
 
-@* <MudContainer MaxWidth="MaxWidth.False" Style="min-height: 100vh; width: 100vw; padding: 0; margin: 0;" Class="d-flex justify-center align-center"> *@
-    @* <MudPaper Width="400px" Elevation="25" Class="pa-8 transition-transform" Style="border-radius: 16px; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15); transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" *@
-    @*           HoverStyle="transform: scale(1.02); box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.2);"> *@
-        @* <MudGrid> *@
+<MudContainer MaxWidth="MaxWidth.False" Style="min-height: 100vh; width: 100vw; padding: 0; margin: 0;" Class="d-flex justify-center align-center">
+    <MudPaper Width="400px" Elevation="25" Class="pa-8 transition-transform" Style="border-radius: 16px; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15); transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;"
+              HoverStyle="transform: scale(1.02); box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.2);">
+        <MudGrid>
             <MudItem xs="12" Class="d-flex flex-column align-center mb-6">
                 <!-- Logo -->
                 <MudImage Src="assets/wwlogo.png" Alt="Wise Work Logo" Width="160" Height="160" Class="mb-4" Style="border-radius: 8px;" />
@@ -172,9 +172,9 @@
                     </MudStack>
                 </MudItem>
             }
-        @* </MudGrid> *@
-    @* </MudPaper> *@
-@* </MudContainer> *@
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
 
 @code {
     private enum FormState { Login, Signup, ForgotPassword, ResetPassword }
