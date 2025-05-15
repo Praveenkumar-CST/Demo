@@ -12,24 +12,14 @@
 
 <MudThemeProvider />
 <MudSnackbarProvider />
-
-
-    <!-- Top Navigation Bar -->
+   <!-- Top Navigation Bar -->
     <MudAppBar Elevation="3" Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 78px; color: var(--primary); padding-top:5px">
         <MudItem xs="2" Class="d-flex align-center">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                           Color="Color.Primary"
-                           Edge="Edge.Start"
-                           OnClick="@(() => ToggleSidebar())"
-                           Size="Size.Large"
-                           Class="mr-2" />
-
             <MudImage Src="images/logo1.png"
                       Alt="Company Logo"
-                      Height="64"
-                      Style="margin-left: 16px;"/>
+                      Height="60"
+                   @onclick=@(() => NavigationManager.NavigateTo("/home")) />
         </MudItem>
-
         <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
             <div class="d-flex align-center position-relative" style="width: 75%; max-width: 850px;">
                 <MudAutocomplete T="EmployeeSearchResult"
@@ -221,15 +211,7 @@
     private string? employeeId;
     private bool IsAdmin = false;
 
-    private async Task ToggleSidebar()
-    {
-        drawerOpen = !drawerOpen;
-        if (sidebar != null)
-        {
-            await sidebar.ToggleDrawer(); // Sync with sidebar component
-        }
-        StateHasChanged();
-    }
+
     
     // Close sidebar when mouse leaves
     private async Task HandleMouseLeave()

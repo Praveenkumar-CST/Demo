@@ -6,10 +6,10 @@
 
 <div class="sidebar-wrapper">
     <MudDrawer @bind-Open="DrawerOpen"
-    Class="@(DrawerOpen ? "mud-drawer open" : "mud-drawer")"
+    Class="@(DrawerOpen ? "mud-drawer open" : "mud-drawer mini")"
     Width="@(DrawerOpen ? "260px" : "70px")"
     Elevation="2"
-    Variant="@DrawerVariant.Responsive"
+    Variant="@DrawerVariant.Mini"
     OpenMiniOnHover="true"
     ClipMode="DrawerClipMode.Always">
 
@@ -20,19 +20,14 @@
                 {
                     if (!item.Name.StartsWith("HIDE_"))
                     {
-						Console.WriteLine($"Menu Item: {item.Name}, URL: {item.Url}");
-					
+                        var displayName = item.Name.Replace("HIDE_", "");
                         <MudNavLink Class="sidebar-navlink mb-2 rounded-lg"
                         Match="NavLinkMatch.All"
                         Icon="@GetIconForMenuItem(item.Name)"
                         IconColor="Color.Primary"
                         Href="@item.Url"
                         ActiveClass="sidebar-navlink-active">
-                            @if (DrawerOpen)
-                            {
-                                var displayName = item.Name.Replace("HIDE_", "");
-                                <span>@displayName</span>
-                            }
+                            @displayName
                         </MudNavLink>
                     }
                 }
@@ -47,72 +42,171 @@
             }
         </MudNavMenu>
 
-
+        <div class="sidebar-toggle-button">
+            <MudIconButton Icon="@(DrawerOpen ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)" 
+                           OnClick="ToggleDrawer" 
+                           Color="Color.Primary" />
+        </div>
     </MudDrawer>
 </div>
 
 <style>
     .sidebar-wrapper {
-    height: 100%;
+        height: 100%;
     }
 
     .mud-drawer {
-    background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
-    border-right: 1px solid #e0e6ff;
-    transition: all 0.3s ease;
+        background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
+        border-right: 1px solid #e0e6ff;
+        transition: all 0.3s ease;
+    }
+
+    .mud-drawer.open {
+        width: 260px;
+    }
+
+    .mud-drawer.mini {
+        width: 70px;
     }
 
     .mud-primary-text {
-    color: rgb(19 19 20) !important;
-    --mud-ripple-color: var(--mud-palette-primary) !important;
+        color: rgb(19 19 20) !important;
+        --mud-ripple-color: var(--mud-palette-primary) !important;
     }
-    .sidebar-header {
-    padding-top: 8px;
-    margin-bottom: 8px;
-    color: var(--primary);
+
+    .mud-nav-link {
+        width: 100%;
+        font-weight: 400;
+        padding: 8px 0px 8px 1px;
+        color: inherit;
     }
 
     .sidebar-navlink {
-    transition: all 0.3s ease;
-    margin: 4px 0;
-    padding: 10px 16px;
-    border-radius: 8px;
-    color: var(--text-primary) !important;
+        transition: all 0.3s ease;
+        margin: 4px 0;
+        padding: 8px !important;
+        border-radius: 8px;
+        color: var(--text-primary) !important;
+        height: 48px;
+        display: flex;
+        align-items: center;
     }
 
     .sidebar-navlink:hover {
-    background-color: rgba(25, 118, 210, 0.08);
-    transform: translateX(4px);
+        background-color: rgba(25, 118, 210, 0.08);
+        transform: translateX(4px);
     }
 
     .sidebar-navlink-active {
-    background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%) !important;
-    color: white !important;
-    font-weight: 500;
-    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+        background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%) !important;
+        color: white !important;
+        font-weight: 500;
+        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
     }
 
     .sidebar-navlink-active:hover {
-    transform: translateX(4px);
-    box-shadow: 0 6px 12px rgba(25, 118, 210, 0.3);
+        transform: translateX(4px);
+        box-shadow: 0 6px 12px rgba(25, 118, 210, 0.3);
     }
 
     /* Make sure icons match text color in active state */
     .sidebar-navlink-active ::deep .mud-nav-link-icon {
-    color: white !important;
+        color: white !important;
     }
 
     /* Style for inactive nav link text */
     .sidebar-navlink ::deep span {
-    color: var(--text-primary) !important;
-    font-weight: 500;
+        color: var(--text-primary) !important;
+        font-weight: 500;
+        transition: opacity 0.3s ease;
     }
+
     .sidebar-footer {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    background-color: #f8f9ff;
-    border-top: 1px solid #e0e6ff;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        background-color: #f8f9ff;
+        border-top: 1px solid #e0e6ff;
+    }
+
+    .sidebar-toggle-button {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        z-index: 10;
+    }
+
+    /* Better icon visibility in mini mode */
+    .mud-drawer-mini ::deep .mud-nav-link {
+        padding: 12px 0 !important;
+        justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+
+    .mud-drawer-mini ::deep .mud-nav-link .mud-nav-link-icon {
+        margin: 0 auto !important;
+        font-size: 24px !important;
+        min-width: unset !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        transition: all 0.3s ease;
+    }
+
+    .mud-drawer-mini-hover ::deep .mud-nav-link {
+        padding-left: 16px !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+
+    .mud-drawer-mini-hover ::deep .mud-nav-link .mud-nav-link-icon {
+        margin-right: 16px !important;
+        margin-left: 0 !important;
+        justify-content: flex-start !important;
+    }
+
+    .mud-drawer-mini ::deep .mud-nav-link .mud-nav-link-text {
+        transition: opacity 0.3s ease;
+        opacity: 0;
+        display: none;
+    }
+
+    .mud-drawer-mini-hover ::deep .mud-nav-link .mud-nav-link-text {
+        opacity: 1;
+        display: inline;
+    }
+
+    /* Enhanced active state for mini mode */
+    .mud-drawer-mini ::deep .sidebar-navlink-active {
+        position: relative;
+        overflow: visible;
+    }
+
+    .mud-drawer-mini ::deep .sidebar-navlink-active::after {
+        content: '';
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: white;
+    }
+    
+    /* Fix icon alignment in mini mode */
+    .mud-drawer-mini ::deep .mud-nav-item {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .mud-drawer-mini ::deep .mud-icon-button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
     }
 </style>
 
