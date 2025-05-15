@@ -13,17 +13,40 @@
 
 @attribute [Authorize(Roles = "Admin")]
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="height: calc(100vh - 64px); display: flex; flex-direction: column;">
-    <MudText Typo="Typo.h5" Class="mb-2">Employee Analytics</MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-1" Style="height: calc(100vh - 64px); display: flex; flex-direction: column;">
+    <MudText Typo="Typo.h5" Class="mb-1" Style="font-weight: 600; background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Employee Analytics</MudText>
 
-    <MudGrid Spacing="2" Style="flex: 1; min-height: 0;">
-        @* Filter Section *@
-        <MudItem xs="12" md="3" Style="display: flex; flex-direction: column;">
-            <MudPaper Class="pa-3" Elevation="1" Style="height: 100%; display: flex; flex-direction: column; overflow-y: auto;">
-                <MudText Typo="Typo.subtitle1" GutterBottom="true">Filters</MudText>
+    <MudGrid Spacing="1" Style="flex: 1; min-height: 0; margin-top: 0;">
+        @* Filter Section - Fixed Height *@
+        <MudItem xs="12" Class="filter-container">
+            <div class="d-flex align-center mb-1 justify-space-between">
+                <div class="d-flex align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-2" Style="color: #34adb8;"/>
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 500;">Filters</MudText>
+                </div>
+                <div>
+                    <MudButton Variant="Variant.Filled" OnClick="ApplyFilters" Disabled="_isLoading" Class="mr-2 hover-scale" Size="Size.Small" Style="background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); color: white; text-transform: none; font-weight: 500; border-radius: 8px; box-shadow: 0 4px 12px rgba(142, 84, 233, 0.3);">
+                        @if (_isLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" Style="color:white;" />
+                            <span>Applying...</span>
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1" Size="Size.Small"/>
+                            <span>Apply Filters</span>
+                        }
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="text-transform: none; border-radius: 8px;" Size="Size.Small" Class="hover-scale">
+                        <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1" Size="Size.Small"/>
+                        <span>Clear Filters</span>
+                    </MudButton>
+                </div>
+            </div>
 
-                <MudExpansionPanels MultiExpansion="true">
-                    <MudExpansionPanel Text="Personal" IsInitiallyExpanded="true">
+            <div class="filter-bar">
+                <div class="filter-panel" @onmouseenter="@(() => _personalFilterHoverExpanded = true)" @onmouseleave="@(() => _personalFilterHoverExpanded = false)">
+                    <MudExpansionPanel Text="Personal" @bind-IsExpanded="_personalFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
                         <MudSelect T="string" @bind-Value="_filterDto.BloodGroup" Label="Blood Group" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var group in _bloodGroups)
                             {
@@ -37,7 +60,7 @@
                             }
                         </MudSelect>
                         <MudSelect T="string" @bind-Value="_filterDto.MaritalStatus" Label="Marital Status" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
-                             @foreach (var status in _maritalStatuses)
+                            @foreach (var status in _maritalStatuses)
                             {
                                 <MudSelectItem Value="@status">@status</MudSelectItem>
                             }
@@ -55,31 +78,35 @@
                         <MudDatePicker @bind-Date="_filterDto.DateOfBirthStart" Label="DOB From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.DateOfBirthEnd" Label="DOB To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfBirthStart" />
                     </MudExpansionPanel>
+                </div>
 
-                    <MudExpansionPanel Text="Employment">
-                         <MudAutocomplete T="string" @bind-Value="_filterDto.Designation" Label="Designation"
-                                          SearchFunc="SearchDesignations"
-                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                         <MudAutocomplete T="string" @bind-Value="_filterDto.JoiningLocation" Label="Joining Location"
-                                          SearchFunc="SearchJoiningLocations"
-                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                         <MudSelect T="string" @bind-Value="_filterDto.TypeOfEmployment" Label="Type of Employment" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                <div class="filter-panel" @onmouseenter="@(() => _employmentFilterHoverExpanded = true)" @onmouseleave="@(() => _employmentFilterHoverExpanded = false)">
+                    <MudExpansionPanel Text="Employment" @bind-IsExpanded="_employmentFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.Designation" Label="Designation"
+                                         SearchFunc="SearchDesignations"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.JoiningLocation" Label="Joining Location"
+                                         SearchFunc="SearchJoiningLocations"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudSelect T="string" @bind-Value="_filterDto.TypeOfEmployment" Label="Type of Employment" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var type in _employmentTypes)
                             {
                                 <MudSelectItem Value="@type">@type</MudSelectItem>
                             }
-                         </MudSelect>
-                         <MudAutocomplete T="string" @bind-Value="_filterDto.Level" Label="Level"
-                                          SearchFunc="SearchLevels"
-                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                         <MudDatePicker @bind-Date="_filterDto.DateOfJoiningStart" Label="Joined From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                         <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
+                        </MudSelect>
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.Level" Label="Level"
+                                         SearchFunc="SearchLevels"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudDatePicker @bind-Date="_filterDto.DateOfJoiningStart" Label="Joined From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
                     </MudExpansionPanel>
+                </div>
 
-                    <MudExpansionPanel Text="Experience">
+                <div class="filter-panel" @onmouseenter="@(() => _experienceFilterHoverExpanded = true)" @onmouseleave="@(() => _experienceFilterHoverExpanded = false)">
+                    <MudExpansionPanel Text="Experience" @bind-IsExpanded="_experienceFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.College" Label="College / University"
                                          SearchFunc="SearchEducationUniversities"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -109,8 +136,10 @@
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateStart" Label="Prev. Job End From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateEnd" Label="Prev. Job End To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PreviousJobEndDateStart" />
                     </MudExpansionPanel>
+                </div>
 
-                     <MudExpansionPanel Text="Address">
+                <div class="filter-panel" @onmouseenter="@(() => _addressFilterHoverExpanded = true)" @onmouseleave="@(() => _addressFilterHoverExpanded = false)">
+                    <MudExpansionPanel Text="Address" @bind-IsExpanded="_addressFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentCity" Label="Current City"
                                          SearchFunc="SearchCurrentCities"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -129,9 +158,11 @@
                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudTextField @bind-Value="_filterDto.CurrentZip" Label="Current Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudTextField @bind-Value="_filterDto.PermanentZip" Label="Permanent Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                     </MudExpansionPanel>
+                    </MudExpansionPanel>
+                </div>
 
-                    <MudExpansionPanel Text="Passport">
+                <div class="filter-panel" @onmouseenter="@(() => _passportFilterHoverExpanded = true)" @onmouseleave="@(() => _passportFilterHoverExpanded = false)">
+                    <MudExpansionPanel Text="Passport" @bind-IsExpanded="_passportFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.PassportNationality" Label="Passport Nationality"
                                          SearchFunc="SearchPassportNationalities"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -141,8 +172,10 @@
                         <MudDatePicker @bind-Date="_filterDto.PassportExpiryDateStart" Label="Passport Expires From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PassportExpiryDateEnd" Label="Passport Expires To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PassportExpiryDateStart" />
                     </MudExpansionPanel>
+                </div>
 
-                    <MudExpansionPanel Text="Banking">
+                <div class="filter-panel" @onmouseenter="@(() => _bankingFilterHoverExpanded = true)" @onmouseleave="@(() => _bankingFilterHoverExpanded = false)">
+                    <MudExpansionPanel Text="Banking" @bind-IsExpanded="_bankingFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.BankName" Label="Bank Name"
                                          SearchFunc="SearchBankNames"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -156,7 +189,7 @@
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
-                             @foreach (var type in _accountTypes)
+                            @foreach (var type in _accountTypes)
                             {
                                 <MudSelectItem Value="@type">@type</MudSelectItem>
                             }
@@ -164,8 +197,10 @@
                         <MudTextField @bind-Value="_filterDto.PANNumber" Label="PAN Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudTextField @bind-Value="_filterDto.AadhaarNumber" Label="Aadhaar Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                     </MudExpansionPanel>
+                </div>
 
-                    <MudExpansionPanel Text="Misc">
+                <div class="filter-panel" @onmouseenter="@(() => _miscFilterHoverExpanded = true)" @onmouseleave="@(() => _miscFilterHoverExpanded = false)">
+                    <MudExpansionPanel Text="Misc" @bind-IsExpanded="_miscFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
                         <MudSelect T="bool?" @bind-Value="_filterDto.HasAllergies" Label="Has Allergies?" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             <MudSelectItem Value="@( (bool?)null )">Any</MudSelectItem>
                             <MudSelectItem Value="@( (bool?)true )">Yes</MudSelectItem>
@@ -177,34 +212,14 @@
                             <MudSelectItem Value="@( (bool?)false )">No</MudSelectItem>
                         </MudSelect>
                     </MudExpansionPanel>
-
-                </MudExpansionPanels>
-
-                <div class="mt-auto pt-3 d-flex">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters" Disabled="_isLoading" Class="mr-1" Style="flex: 1;">
-                        @if (_isLoading)
-                        {
-                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
-                            <span>Applying...</span>
-                        }
-                        else
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1"/>
-                            <span>Apply</span>
-                        }
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="flex: 1;">
-                        <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1"/>
-                        <span>Clear</span>
-                    </MudButton>
                 </div>
-            </MudPaper>
+            </div>
         </MudItem>
 
         @* Results Section *@
-        <MudItem xs="12" md="9" Style="display: flex; flex-direction: column; min-height: 0;">
-            <MudPaper Class="pa-3" Elevation="1" Style="height: 100%; display: flex; flex-direction: column;">
-                <MudText Typo="Typo.subtitle1" GutterBottom="true">Results</MudText>
+        <MudItem xs="12" Style="display: flex; flex-direction: column; min-height: 0;">
+            <MudPaper Class="pa-2" Elevation="1" Style="height: 100%; display: flex; flex-direction: column;">
+                <MudText Typo="Typo.subtitle1" Class="mb-1" Style="font-weight: 500;">Results</MudText>
 
                 @if (_isLoading && !_initialLoadComplete)
                 {
@@ -229,37 +244,37 @@
 
                     @if (_filteredEmployees.Any() || (_isLoading && _initialLoadComplete))
                     {
-                        <MudGrid Spacing="2" Class="mb-2">
+                        <MudGrid Spacing="1" Class="mb-1">
                             <MudItem xs="12" sm="4">
-                                <MudCard Elevation="2" Class="hover-lift">
-                                    <MudCardHeader Style="background-color: rgb(100 203 146); padding: 8px 16px;">
-                                        <CardHeaderContent><MudText Typo="Typo.subtitle2">Total Employees</MudText></CardHeaderContent>
+                                <MudCard Elevation="3" Class="hover-lift rounded-lg" Style="transition: all 0.2s ease-in-out;">
+                                    <MudCardHeader Style="background: linear-gradient(135deg, #34adb8cc 0%, #8E54E9cc 100%); padding: 10px 16px; border-top-left-radius: inherit; border-top-right-radius: inherit;">
+                                        <CardHeaderContent><MudText Typo="Typo.subtitle2" Style="color:white; font-weight:500;">Total Employees</MudText></CardHeaderContent>
                                     </MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center pa-2">
-                                        <MudIcon Icon="@Icons.Material.Filled.Groups" Color="Color.Primary" Size="Size.Medium" Class="mr-3"/>
-                                        <MudText Typo="Typo.h6">@_totalEmployees<span class="mud-text-secondary" style="font-size: 0.8em;"> / @_systemTotalEmployees</span></MudText>
+                                    <MudCardContent Class="d-flex align-center pa-3">
+                                        <MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Large" Class="mr-3" Style="color: #34adb8;" />
+                                        <MudText Typo="Typo.h5" Style="font-weight: 600;">@_totalEmployees<span class="mud-text-secondary" style="font-size: 0.7em; font-weight: 400;"> / @_systemTotalEmployees</span></MudText>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
                             <MudItem xs="12" sm="4">
-                                <MudCard Elevation="2" Class="hover-lift">
-                                    <MudCardHeader Style="background-color: rgb(243 149 237); padding: 8px 16px;">
-                                        <CardHeaderContent><MudText Typo="Typo.subtitle2">Unique Designations</MudText></CardHeaderContent>
+                                <MudCard Elevation="3" Class="hover-lift rounded-lg" Style="transition: all 0.2s ease-in-out;">
+                                    <MudCardHeader Style="background: linear-gradient(135deg, #8E54E9cc 0%, #34adb8cc 100%); padding: 10px 16px; border-top-left-radius: inherit; border-top-right-radius: inherit;">
+                                        <CardHeaderContent><MudText Typo="Typo.subtitle2" Style="color:white; font-weight:500;">Unique Designations</MudText></CardHeaderContent>
                                     </MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center pa-2">
-                                        <MudIcon Icon="@Icons.Material.Filled.Work" Color="Color.Secondary" Size="Size.Medium" Class="mr-3"/>
-                                        <MudText Typo="Typo.h6">@_uniqueDesignations<span class="mud-text-secondary" style="font-size: 0.8em;"> / @_systemTotalDesignations</span></MudText>
+                                    <MudCardContent Class="d-flex align-center pa-3">
+                                        <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Large" Class="mr-3" Style="color: #8E54E9;" />
+                                        <MudText Typo="Typo.h5" Style="font-weight: 600;">@_uniqueDesignations<span class="mud-text-secondary" style="font-size: 0.7em; font-weight: 400;"> / @_systemTotalDesignations</span></MudText>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
                             <MudItem xs="12" sm="4">
-                                <MudCard Elevation="2" Class="hover-lift">
-                                    <MudCardHeader Style="background-color:rgb(93 188 245);; padding: 8px 16px;">
-                                        <CardHeaderContent><MudText Typo="Typo.subtitle2">Unique Blood Groups</MudText></CardHeaderContent>
+                                <MudCard Elevation="3" Class="hover-lift rounded-lg" Style="transition: all 0.2s ease-in-out;">
+                                    <MudCardHeader Style="background: linear-gradient(135deg, #526480cc 0%, #7887a0cc 100%); padding: 10px 16px; border-top-left-radius: inherit; border-top-right-radius: inherit;">
+                                        <CardHeaderContent><MudText Typo="Typo.subtitle2" Style="color:white; font-weight:500;">Unique Blood Groups</MudText></CardHeaderContent>
                                     </MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center pa-2">
-                                        <MudIcon Icon="@Icons.Material.Filled.Bloodtype" Color="Color.Info" Size="Size.Medium" Class="mr-3"/>
-                                        <MudText Typo="Typo.h6">@_uniqueBloodGroups<span class="mud-text-secondary" style="font-size: 0.8em;"> / @_systemTotalBloodGroups</span></MudText>
+                                    <MudCardContent Class="d-flex align-center pa-3">
+                                        <MudIcon Icon="@Icons.Material.Filled.Bloodtype" Size="Size.Large" Class="mr-3" Style="color: #526480;"/>
+                                        <MudText Typo="Typo.h5" Style="font-weight: 600;">@_uniqueBloodGroups<span class="mud-text-secondary" style="font-size: 0.7em; font-weight: 400;"> / @_systemTotalBloodGroups</span></MudText>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -268,11 +283,11 @@
                         <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
                             <MudTable ServerData="ServerReload" @ref="_table"
                                     T="AnalyticsResultDto"
-                                    Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Striped="true" Elevation="0"
+                                    Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Striped="false" Elevation="0" Rounded="true" Bordered="true"
                                     Loading="_isLoading" LoadingProgressColor="Color.Primary"
-                                    Style="flex: 1; overflow: auto;">
+                                    Style="flex: 1; overflow: auto; border: 1px solid #e0e6ff; background: #fdfdff;">
                                 <ToolBarContent>
-                                    <MudText Typo="Typo.subtitle1">Filtered Employees</MudText>
+                                    <MudText Typo="Typo.subtitle1" Style="font-weight: 500;">Filtered Employees</MudText>
                                     <MudSpacer />
                                     <div class="d-flex align-center">
                                         <MudTextField @bind-Value="SearchString"
@@ -365,6 +380,14 @@
     private TableState _lastTableState = new();
     private string? _errorMessage;
     private string _searchStringBackingField = "";
+
+    private bool _personalFilterHoverExpanded = false;
+    private bool _employmentFilterHoverExpanded = false;
+    private bool _experienceFilterHoverExpanded = false;
+    private bool _addressFilterHoverExpanded = false;
+    private bool _passportFilterHoverExpanded = false;
+    private bool _bankingFilterHoverExpanded = false;
+    private bool _miscFilterHoverExpanded = false;
 
     private string SearchString
     {
@@ -1496,3 +1519,158 @@
         }
     }
 }
+
+<style>
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08) !important;
+    }
+    .hover-scale:hover {
+        transform: scale(1.03);
+    }
+
+    .mud-table-toolbar {
+        background: linear-gradient(90deg, #f8f9ff 0%, #eef2ff 100%);
+        border-bottom: 1px solid #e0e6ff;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+
+    .mud-table-head .mud-table-cell {
+        background-color: #f3f5f9;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .mud-table-row:hover {
+        background-color: rgba(142, 84, 233, 0.05) !important;
+    }
+
+    .mud-table-row.mud-table-row-striped {
+        background-color: #fafbff;
+    }
+
+    .filter-container {
+        position: relative;
+        z-index: 10;
+        margin-bottom: 15px; /* Reduced space after filter section */
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: 8px;
+        height: 45px; /* Fixed height for filter bar */
+        position: relative;
+        background-color: white;
+    }
+
+    .filter-panel {
+        flex: 1;
+        min-width: 0;
+        position: relative;
+    }
+
+    .mud-expansion-panel {
+        background-color: white;
+        border: 1px solid #e8edff;
+        border-radius: 8px;
+        margin-bottom: 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        transition: all 0.2s ease-in-out;
+        height: 100%;
+    }
+
+    .mud-expansion-panel:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .mud-expansion-panel .mud-expansion-panel-header {
+        background-color: white;
+        border-radius: 8px;
+        padding: 4px 12px;
+        min-height: 36px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .mud-expansion-panel.mud-panel-expanded .mud-expansion-panel-header {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .mud-expansion-panel-content {
+        background-color: white;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        padding: 8px 12px;
+        position: absolute;
+        width: 100%;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-height: 400px;
+        overflow-y: auto;
+        top: 100%;
+        left: 0;
+        border: 1px solid #e8edff;
+        border-top: none;
+    }
+
+    .mud-expansion-panel-header-text {
+        font-weight: 500;
+        color: #2c3e50;
+        font-size: 0.875rem;
+    }
+
+    .mud-expansion-panel-header:hover {
+        background-color: #f8fafd !important;
+    }
+
+    .mud-expansion-panel-header:active {
+        background-color: #f0f4f8 !important;
+    }
+
+    .mud-select, .mud-text-field, .mud-autocomplete {
+        margin-bottom: 4px !important;
+    }
+
+    .mud-input-control {
+        margin-top: 0 !important;
+    }
+
+    .mud-input-label {
+        font-size: 0.75rem !important;
+    }
+
+    .mud-input {
+        font-size: 0.75rem !important;
+        min-height: 32px !important;
+    }
+
+    .mud-expansion-panel-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .mud-expansion-panel-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .mud-expansion-panel-content::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    .mud-expansion-panel-content::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    .mud-menu {
+        z-index: 1001;
+    }
+
+    .mud-container {
+        padding: var(--container-padding);
+        margin-top: 4px;
+    }
+</style>
