@@ -126,7 +126,7 @@
 
     private List<(string Name, string Url)> accessibleMenuItems = new List<(string Name, string Url)>();
     private string errorMessage;
-
+   
     protected override async Task OnInitializedAsync()
     {
         var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
@@ -167,7 +167,7 @@
         {
             accessibleMenuItems = new List<(string Name, string Url)>();
             errorMessage = $"No role assigned to the user. Error: {error ?? "Unknown"}";
-            NavigationManager.NavigateTo("/l"); // Redirect to login if no role
+            NavigationManager.NavigateTo("/"); // Redirect to login if no role
         }
 
         // Subscribe to location changes

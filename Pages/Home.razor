@@ -8,17 +8,20 @@
 @using MudBlazor
 @using System.Text.Json
 
-<MudContainer MaxWidth="MaxWidth.False" Style="min-height: 100vh; width: 100vw; padding: 0; margin: 0;" Class="d-flex justify-center align-center">
-    <MudPaper Width="400px" Elevation="25" Class="pa-8 transition-transform" Style="border-radius: 16px; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15); transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;"
-              HoverStyle="transform: scale(1.02); box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.2);">
+<MudContainer MaxWidth="MaxWidth.False" Style="min-height: 100vh; width: 100vw; padding: 0; margin: 0; background: white;" Class="d-flex justify-center align-center">
+    <MudPaper Width="450px" Elevation="25" Class="pa-8 transition-transform" Style="border-radius: 24px; background: linear-gradient(145deg, #ffffff, #f8f9fa); box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2); transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;"
+              HoverStyle="transform: scale(1.02); box-shadow: 0px 15px 35px rgba(0, 0, 0, 0.25);">
         <MudGrid>
             <MudItem xs="12" Class="d-flex flex-column align-center mb-6">
-                <!-- Logo -->
-                <MudImage Src="assets/wwlogo.png" Alt="Wise Work Logo" Width="160" Height="160" Class="mb-4" Style="border-radius: 8px;" />
-                <!-- Text Below Logo -->
-                <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2">"Empowering Your Future – Wise Work."</MudText>
-                <!-- Dynamic Form Title -->
-                <MudText Typo="Typo.h4" Align="Align.Center" Class="font-weight-bold mb-4">
+                <!-- Logo with glow effect -->
+                <div style="position: relative; margin-bottom: 24px;">
+                    <MudImage Src="assets/wwlogo.png" Alt="Wise Work Logo" Width="160" Height="160" Class="mb-2" Style="border-radius: 16px; filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.15));" />
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 16px; background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%); pointer-events: none;"></div>
+                </div>
+                <!-- Text Below Logo with styled typography -->
+                <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2" Style="font-style: italic; color: #526480; font-weight: 500;">"Empowering Your Future – Wise Work."</MudText>
+                <!-- Dynamic Form Title with gradient text -->
+                <MudText Typo="Typo.h4" Align="Align.Center" Class="font-weight-bold mb-4" Style="background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-top: 16px;">
                     @if (CurrentForm == FormState.Login)
                     {
                         <span>Login</span>
@@ -42,16 +45,24 @@
             {
                 <MudItem xs="12">
                     <MudForm @ref="loginForm" @onsubmit="HandleLogin">
-                        <MudTextField T="string" Label="Email" @bind-Value="Email" Variant="Variant.Outlined" Class="mb-4" Required="true" For="@(() => Email)" AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End" />
+                        <MudTextField T="string" Label="Email" @bind-Value="Email" Variant="Variant.Outlined" 
+                                     Class="mb-4" Required="true" For="@(() => Email)" 
+                                     AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End"
+                                     Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
                         <div class="d-flex">
-                            <MudTextField T="string" Label="Password" @bind-Value="Password" Variant="Variant.Outlined" InputType="@PasswordInput" Class="mb-2" Required="true" For="@(() => Password)"
-                                          Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
+                            <MudTextField T="string" Label="Password" @bind-Value="Password" Variant="Variant.Outlined" 
+                                         InputType="@PasswordInput" Class="mb-2" Required="true" For="@(() => Password)"
+                                         Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" 
+                                         OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password"
+                                         Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
                         </div>
                         @if (!string.IsNullOrEmpty(LoginErrorMessage))
                         {
                             <MudText Typo="Typo.caption" Color="Color.Error" Class="mb-4" Style="margin-top: -8px;">@LoginErrorMessage</MudText>
                         }
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mb-4" FullWidth="true" ButtonType="ButtonType.Submit" Disabled="IsLoading">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-6 mb-4" FullWidth="true" 
+                                  ButtonType="ButtonType.Submit" Disabled="IsLoading"
+                                  Style="border-radius: 12px; background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); height: 48px; text-transform: none; font-size: 16px; font-weight: 500; box-shadow: 0px 4px 12px rgba(142, 84, 233, 0.5);">
                             @if (IsLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -81,12 +92,20 @@
                         <MudAlert Severity="Severity.Error" Class="mb-4">@SignupErrorMessage</MudAlert>
                     }
                     <MudForm @ref="signupForm" @onsubmit="HandleSignup">
-                        <MudTextField T="string" Label="Email" @bind-Value="SignupEmail" Variant="Variant.Outlined" Class="mb-4" Required="true" For="@(() => SignupEmail)" AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End" />
+                        <MudTextField T="string" Label="Email" @bind-Value="SignupEmail" Variant="Variant.Outlined" 
+                                     Class="mb-4" Required="true" For="@(() => SignupEmail)" 
+                                     AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End"
+                                     Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
                         <div class="d-flex">
-                            <MudTextField T="string" Label="Password" @bind-Value="SignupPassword" Variant="Variant.Outlined" InputType="@PasswordInput" Class="mb-6" Required="true" For="@(() => SignupPassword)"
-                                          Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
+                            <MudTextField T="string" Label="Password" @bind-Value="SignupPassword" Variant="Variant.Outlined" 
+                                         InputType="@PasswordInput" Class="mb-6" Required="true" For="@(() => SignupPassword)"
+                                         Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" 
+                                         OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password"
+                                         Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
                         </div>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mb-4" FullWidth="true" ButtonType="ButtonType.Submit" Disabled="IsLoading">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mb-4" FullWidth="true" 
+                                  ButtonType="ButtonType.Submit" Disabled="IsLoading"
+                                  Style="border-radius: 12px; background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); height: 48px; text-transform: none; font-size: 16px; font-weight: 500; box-shadow: 0px 4px 12px rgba(142, 84, 233, 0.5);">
                             @if (IsLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -115,8 +134,13 @@
                         <MudAlert Severity="Severity.Error" Class="mb-4">@ForgotPasswordErrorMessage</MudAlert>
                     }
                     <MudForm @ref="forgotPasswordForm" @onsubmit="HandleForgotPassword">
-                        <MudTextField T="string" Label="Email" @bind-Value="ForgotPasswordEmail" Variant="Variant.Outlined" Class="mb-4" Required="true" For="@(() => ForgotPasswordEmail)" AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End" Disabled="IsLoading" />
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mb-4" FullWidth="true" ButtonType="ButtonType.Submit" Disabled="IsLoading">
+                        <MudTextField T="string" Label="Email" @bind-Value="ForgotPasswordEmail" Variant="Variant.Outlined" 
+                                     Class="mb-4" Required="true" For="@(() => ForgotPasswordEmail)" 
+                                     AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End" Disabled="IsLoading"
+                                     Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mb-4" FullWidth="true" 
+                                  ButtonType="ButtonType.Submit" Disabled="IsLoading"
+                                  Style="border-radius: 12px; background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); height: 48px; text-transform: none; font-size: 16px; font-weight: 500; box-shadow: 0px 4px 12px rgba(142, 84, 233, 0.5);">
                             @if (IsLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -145,17 +169,30 @@
                         <MudAlert Severity="Severity.Error" Class="mb-4">@ResetPasswordErrorMessage</MudAlert>
                     }
                     <MudForm @ref="resetPasswordForm" @onsubmit="HandleResetPassword">
-                        <MudTextField T="string" Label="Email" @bind-Value="ResetPasswordEmail" Variant="Variant.Outlined" Class="mb-4" Required="true" AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End" Disabled="true" />
-                        <MudTextField T="string" Label="OTP" @bind-Value="ResetPasswordOtp" Variant="Variant.Outlined" Class="mb-4" Required="true" For="@(() => ResetPasswordOtp)" Disabled="IsLoading" />
+                        <MudTextField T="string" Label="Email" @bind-Value="ResetPasswordEmail" Variant="Variant.Outlined" 
+                                     Class="mb-4" Required="true" AdornmentIcon="@Icons.Material.Filled.Email" 
+                                     Adornment="Adornment.End" Disabled="true"
+                                     Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
+                        <MudTextField T="string" Label="OTP" @bind-Value="ResetPasswordOtp" Variant="Variant.Outlined" 
+                                     Class="mb-4" Required="true" For="@(() => ResetPasswordOtp)" Disabled="IsLoading"
+                                     Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
                         <div class="d-flex">
-                            <MudTextField T="string" Label="New Password" @bind-Value="ResetPasswordNewPassword" Variant="Variant.Outlined" InputType="@PasswordInput" Class="mb-4" Required="true" For="@(() => ResetPasswordNewPassword)"
-                                          Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
+                            <MudTextField T="string" Label="New Password" @bind-Value="ResetPasswordNewPassword" Variant="Variant.Outlined" 
+                                         InputType="@PasswordInput" Class="mb-4" Required="true" For="@(() => ResetPasswordNewPassword)"
+                                         Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" 
+                                         OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password"
+                                         Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
                         </div>
                         <div class="d-flex">
-                            <MudTextField T="string" Label="Confirm New Password" @bind-Value="ResetPasswordConfirmPassword" Variant="Variant.Outlined" InputType="@PasswordInput" Class="mb-6" Required="true" For="@(() => ResetPasswordConfirmPassword)"
-                                          Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
+                            <MudTextField T="string" Label="Confirm New Password" @bind-Value="ResetPasswordConfirmPassword" Variant="Variant.Outlined" 
+                                         InputType="@PasswordInput" Class="mb-6" Required="true" For="@(() => ResetPasswordConfirmPassword)"
+                                         Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" 
+                                         OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password"
+                                         Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
                         </div>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mb-4" FullWidth="true" ButtonType="ButtonType.Submit" Disabled="IsLoading">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mb-4" FullWidth="true" 
+                                  ButtonType="ButtonType.Submit" Disabled="IsLoading"
+                                  Style="border-radius: 12px; background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); height: 48px; text-transform: none; font-size: 16px; font-weight: 500; box-shadow: 0px 4px 12px rgba(142, 84, 233, 0.5);">
                             @if (IsLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -217,8 +254,8 @@
     {
         if (string.IsNullOrWhiteSpace(email))
             return "Email is required";
-        if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
-            return "Invalid email address";
+        // if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+        //     return "Invalid email address";
         return null;
     };
 

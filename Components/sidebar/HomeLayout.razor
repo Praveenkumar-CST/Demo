@@ -11,6 +11,8 @@
 @using WiseHR.Components.sidebar
 
 <MudThemeProvider />
+<MudSnackbarProvider />
+
 
     <!-- Top Navigation Bar -->
     <MudAppBar Elevation="3" Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 78px; color: var(--primary); padding-top:5px">
@@ -25,7 +27,7 @@
             <MudImage Src="images/logo1.png"
                       Alt="Company Logo"
                       Height="64"
-                      Style="margin-left: 16px;" @onclick="ToggleSidebar"/>
+                      Style="margin-left: 16px;"/>
         </MudItem>
 
         <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
