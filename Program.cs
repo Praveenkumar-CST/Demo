@@ -5,6 +5,9 @@ using WiseHR.Services;
 using MudBlazor.Services;
 using MudBlazor;
 using Blazored.SessionStorage;
+using FingerFrontend.Models;
+using FingerFrontend.AdminAttendanceViewModel;
+
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");

@@ -15,6 +15,7 @@ namespace WiseHR.Models
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     //("Add Employees", "/home/employees"),
                     ("Holiday Calendar", "/calendar"),
+                    ("Attendance", "/AdminAttendanceView"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
                      ("HIDE_experienceEditForm","/experienceEditForm/.*"),
@@ -40,6 +41,7 @@ namespace WiseHR.Models
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Holiday Calendar", "/calendar"),
+                    ("Attendance", "/AdminAttendanceView"),
                     //("Add Employees", "/home/employees"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -62,6 +64,7 @@ namespace WiseHR.Models
                 {
                     ("Dashboard", "/home"),
                     ("Holiday Calendar", "/user"),
+                    ("Attendance", "/ab"),
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
