@@ -31,6 +31,7 @@ builder.Services.AddScoped<ExperienceService>();
 builder.Services.AddScoped<ReportService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<MentorAssignmentService>();
 
 builder.Services.AddScoped<CountryService>();
 

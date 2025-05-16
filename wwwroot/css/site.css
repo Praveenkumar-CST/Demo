@@ -376,3 +376,26 @@
 .mud-list-item:hover {
     background-color: var(--secondary);
 }
+.custom-table {
+    background-color: #f9f9ff; /* Light bluish background */
+    border-radius: 8px;
+    padding: 10px;
+}
+
+    .custom-table th, .custom-table td {
+        white-space: nowrap; /* Prevent line breaks */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px; /* Adjust as needed */
+    }
+    .cell-padding {
+    padding: 8px !important;
+    vertical-align: top;
+}
+
+.icon-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
