@@ -1,0 +1,353 @@
+﻿@page "/reports"
+@using WiseHR.Models
+@using WiseHR.Pages.Form
+@using Components.sidebar
+@using WiseHRServer.Models
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject ReportService ReportService
+@inject EmployeeService EmployeeService
+@inject ExperienceService ExperienceService
+@layout HomeLayout
+@inject IJSRuntime JS
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-1">
+    @if (isLoading)
+    {
+        <MudProgressCircular Color="Color.Primary" Align="Align.Center" Indeterminate="true" />
+        <MudText Align="Align.Center">Loading...</MudText>
+    }
+    else
+    {
+        <!-- Button to open dialog -->
+        @if (Role?.ToLower() != "employee")
+        {
+            <!-- Add Report Button -->
+            <div class="d-flex  mb-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"  OnClick="OpenReportDialog">
+                    Add Report
+                </MudButton>
+            </div>
+        }
+    @if (reports != null && reports.Count > 0)
+    {
+
+        <div style=" max-width: 100%;">
+
+            <MudTable Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="width:fit-content;">
+                <HeaderContent>
+                    @* <MudTh>Mentor ID</MudTh> *@
+                    @*  <MudTh>Mentee ID</MudTh> *@
+                    <MudTh>S.NO</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Email</MudTh>
+                    <MudTh>Phone</MudTh>
+                    <MudTh>Institution</MudTh>
+                    <MudTh>Mentor</MudTh>
+                    <MudTh>Projects</MudTh>
+                    <MudTh>Pro-Stage</MudTh>
+                    <MudTh>Progress%</MudTh>
+                    <MudTh>FortnightRemarks1</MudTh>
+                    <MudTh>FortnightRemarks2</MudTh>
+                    <MudTh>File</MudTh>
+                    @if (Role?.ToLower() != "employee")
+                    {
+                        <MudTh>Actions</MudTh>
+                    }       
+                </HeaderContent>
+                <RowTemplate Context="report" >
+                    @* <MudTd DataLabel="Mentor Id">@report.MentorId</MudTd> *@
+                    @* <MudTd DataLabel="Mentee Id">@report.MenteeId</MudTd> *@
+                    <MudTd DataLabel="S.NO">@((reports.IndexOf(report) + 1).ToString())</MudTd>
+
+                    <MudTd DataLabel="Mentee Name">@report.MenteeName</MudTd>
+                    <MudTd DataLabel="Mentee Email">@report.MenteeEmail</MudTd>
+                    <MudTd DataLabel="Phone">
+                        @(menteeMobiles.TryGetValue(report.MenteeId, out var phone) ? phone : "N/A")
+                    </MudTd>
+
+                    <MudTd DataLabel="Institution">
+                        @(menteeInstitutions.TryGetValue(report.MenteeId, out var institution) ? institution : "N/A")
+                    </MudTd>           
+                    <MudTd DataLabel="MentorName">@report.MentorName</MudTd> 
+
+                    @* <MudTd DataLabel="Mentor Designation">@report.MentorDesignation</MudTd> *@
+                    <MudTd DataLabel="Project">@report.ProjectsWorkedOn</MudTd>
+                    <MudTd DataLabel="Pro-Stage">@report.ProgressStage</MudTd>
+                    <MudTd DataLabel="Progress%">@report.ProgressPercentage %</MudTd>
+                    <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
+                    <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
+
+                    <MudTd> 
+                         @if (!string.IsNullOrEmpty(report.FileName)) 
+                         { 
+                            <MudButton Color="Color.Primary" OnClick="() => DownloadFile(report)"> 
+                                ⬇️ 
+                           </MudButton> 
+                        } 
+                        else 
+                         { 
+                             <span>No File</span> 
+                         } 
+                     </MudTd>
+                    @if (Role?.ToLower() != "employee")
+                    {
+                        <MudTd>
+                            <div style="display: flex; gap:2px;">
+
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                Color="Color.Primary"
+                                OnClick="() => OpenEditReportDialog(report)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                Color="Color.Error"
+                                OnClick="() => DeleteReport(report.Id)" />
+                            </div>
+                        </MudTd>
+                    }
+                </RowTemplate>
+            </MudTable>
+        </div>
+        }
+        else
+        {
+            <MudText Color="Color.Secondary" Align="Align.Center" Class="mt-4">No reports found.</MudText>
+        }
+    }@if (isSubmitting)
+    {
+        <MudOverlay Visible="true" DarkBackground="true" Class="d-flex justify-center align-center" ZIndex="1300">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true"  />
+            <MudText Class="ml-2" Typo="Typo.h6" Color="Color.Primary">Submitting...</MudText>
+        </MudOverlay>
+    }
+
+</MudContainer>
+
+@code {
+    private List<ReportModel> reports = new();
+    private string Role { get; set; }
+    private string Email { get; set; }
+    private Dictionary<string, string> menteeMobiles = new();
+    private Dictionary<string, string> menteeInstitutions = new(); // New dictionary for institutions                                                            // }
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        //role to userRole
+        try
+        {
+
+
+            Role = await JS.InvokeAsync<string>("sessionStorage.getItem", "userRole");
+            Email = await JS.InvokeAsync<string>("sessionStorage.getItem", "email");
+            Console.WriteLine($"role: {Role}");
+            Console.WriteLine($"email: {Email}");
+            await LoadReportsBasedOnRole();
+            StateHasChanged();
+        }
+        finally
+        {
+            isLoading = false; // Set loading to false when done
+            StateHasChanged(); // Ensure UI updates
+        }
+    }
+    private async Task LoadReportsBasedOnRole()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(Role) || string.IsNullOrEmpty(Email))
+            {
+                Console.WriteLine("empty");
+                Snackbar.Add("Role or Email is missing from session.", Severity.Error);
+                return;
+            }
+
+            var empDetails = await EmployeeService.GetEmployeeDetailsByEmail(Email);
+            Console.WriteLine($"empDetails : {empDetails}");
+
+            if (empDetails == null)
+            {
+                Snackbar.Add("Employee details not found.", Severity.Error);
+                return;
+            }
+
+            string empId = empDetails.EmployeeID;
+            Console.WriteLine($"empId: {empId}");
+
+            switch (Role.ToLower())
+            {
+                case "admin":
+                    reports = await ReportService.GetReportsAsync() ?? new List<ReportModel>();
+                    break;
+
+                case "manager":
+                    reports = await ReportService.GetReportsByMentorIdAsync(empId) ?? new List<ReportModel>();
+                    break;
+
+                case "employee":
+                    reports = await ReportService.GetReportsByMenteeIdAsync(empId) ?? new List<ReportModel>();
+                    break;
+
+                default:
+                    Snackbar.Add("Unknown role.", Severity.Warning);
+                    return;
+            }
+
+            // Clear and populate menteeMobiles
+            menteeMobiles.Clear();
+            menteeInstitutions.Clear();
+            var uniqueMenteeIds = reports.Select(r => r.MenteeId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToList();
+            Console.WriteLine($"Found {uniqueMenteeIds.Count} unique mentee IDs: {string.Join(", ", uniqueMenteeIds)}");
+            foreach (var menteeId in uniqueMenteeIds)
+            {
+                try
+                {
+                    // Fetch employee details for phone number
+                    var menteeDetail = await EmployeeService.GetEmployeeDetails(menteeId);
+                    if (menteeDetail != null && !string.IsNullOrEmpty(menteeDetail.CurrentMobile))
+                    {
+                        menteeMobiles[menteeId] = menteeDetail.CurrentMobile;
+                        Console.WriteLine($"Added phone for Mentee ID {menteeId}: {menteeDetail.CurrentMobile}");
+                    }
+                    else
+                    {
+                        menteeMobiles[menteeId] = "N/A";
+                        Console.WriteLine($"No phone found for Mentee ID {menteeId}");
+                    }
+
+                    // Fetch experience details for institution
+                    var experience = await ExperienceService.GetExperienceDetails(menteeId);
+                    if (experience != null)
+                    {
+                        string institution = "N/A";
+                        if (experience.WorkExperiences != null && experience.WorkExperiences.Any())
+                        {
+                            institution = experience.WorkExperiences.First().Employer;
+                            Console.WriteLine($"Added institution (work) for Mentee ID {menteeId}: {institution}");
+                        }
+                        else if (experience.EducationQualifications != null && experience.EducationQualifications.Any())
+                        {
+                            var latestEducation = experience.EducationQualifications
+                                .OrderByDescending(e => e.YearOfPassing)
+                                .First();
+                            institution = latestEducation.University; // Or use University if preferred
+                            Console.WriteLine($"Added institution (education) for Mentee ID {menteeId}: {institution}");
+                        }
+                        menteeInstitutions[menteeId] = institution;
+                    }
+                    else
+                    {
+                        menteeInstitutions[menteeId] = "N/A";
+                        Console.WriteLine($"No experience found for Mentee ID {menteeId}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error fetching data for Mentee ID {menteeId}: {ex.Message}");
+                    menteeMobiles[menteeId] = "N/A";
+                    menteeInstitutions[menteeId] = "N/A";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading reports: {ex.Message}", Severity.Error);
+            Console.WriteLine($"General error: {ex.Message}");
+        }
+    }
+  
+
+    // private async Task LoadReports()
+    // {
+    //     try
+    //     {
+    //         reports = await ReportService.GetReportsAsync() ?? new List<ReportModel>();
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Snackbar.Add($"Error loading reports: {ex.Message}", Severity.Error);
+    //     }
+    // }
+    private async Task OpenEditReportDialog(ReportModel report)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(FortnightReportForm.Report), report } // Pass the report to the dialog
+        };
+
+        var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = true,
+                CloseButton = true,
+                CloseOnEscapeKey = false
+            };
+        isSubmitting = true;
+        var dialog = DialogService.Show<FortnightReportForm>("Edit Fortnight Report", parameters, options);
+        var result = await dialog.Result;
+        isSubmitting = false;
+
+        if (!result.Canceled)
+        {
+            Snackbar.Add("Report updated successfully.", Severity.Success);
+            await LoadReportsBasedOnRole(); // Refresh the list
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteReport(int id)
+    {
+        bool isDeleted = await ReportService.DeleteReportAsync(id);
+        if (isDeleted)
+        {
+            Snackbar.Add("Report deleted successfully.", Severity.Success);
+            await LoadReportsBasedOnRole(); // Refresh list
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add("Failed to delete report.", Severity.Error);
+        }
+    }
+
+    private async Task OpenReportDialog()
+    {
+        var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = true,
+                CloseButton = true,
+                CloseOnEscapeKey = false
+            };
+
+        isSubmitting = true;
+        var dialog = DialogService.Show<FortnightReportForm>("Submit Fortnight Report", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled) // ✅ correct spelling and property name
+        {
+            Snackbar.Add("Report added successfully.", Severity.Success);
+            await LoadReportsBasedOnRole();
+            StateHasChanged();
+        }
+        isSubmitting = false;
+    }
+    private async Task DownloadFile(ReportModel report)
+    {
+        if (report.UploadedFile != null && !string.IsNullOrEmpty(report.FileName))
+        {
+            var base64 = Convert.ToBase64String(report.UploadedFile);
+            var fileType = "application/octet-stream"; // Optional: detect actual file type
+            await JS.InvokeVoidAsync("downloadBase64File", fileType, base64, report.FileName);
+        }
+    }
+
+
+    // Optional: Legacy placeholder model (not used if ReportModel is defined in Models)
+    public class Report
+    {
+        public string ReportName { get; set; }
+        public DateTime Date { get; set; }
+    }
+}

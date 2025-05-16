@@ -1,0 +1,266 @@
+﻿@page "/UserAbsenceReasons"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Nav
+@layout HomeLayout
+@using FingerFrontend.Models
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+<style>
+    .reasons-container {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border: 1px solid #e0e7ff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+    }
+
+    .table-header {
+        background-color: #eff6ff;
+        padding: 16px 20px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e40af;
+        border-bottom: 1px solid #e0e7ff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-row {
+        display: grid;
+        grid-template-columns: 120px 120px 150px 150px 100px 1fr;
+        padding: 12px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        align-items: center;
+        gap: 20px;
+        transition: background-color 0.2s;
+    }
+
+        .table-row:hover {
+            background-color: #f0f7ff;
+        }
+
+    .table-header-row {
+        font-weight: 600;
+        color: #1e40af;
+        background-color: #f0f7ff;
+    }
+
+    .search-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 20px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .search-input {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        width: 100%;
+        transition: border-color 0.2s;
+    }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+    .action-button {
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background-color 0.2s;
+    }
+
+    .primary-button {
+        background-color: #3b82f6;
+        color: #ffffff;
+    }
+
+        .primary-button:hover {
+            background-color: #2563eb;
+        }
+
+    .secondary-button {
+        background-color: #6b7280;
+        color: #ffffff;
+    }
+
+        .secondary-button:hover {
+            background-color: #4b5563;
+        }
+
+    .error-message {
+        color: #b91c1c;
+        background-color: #fef2f2;
+        padding: 10px 14px;
+        border-radius: 6px;
+        margin: 12px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .reason-text {
+        font-size: 14px;
+        color: #4b5563;
+        max-height: 80px;
+        overflow: hidden;
+        padding: 4px;
+    }
+
+    .status-approved {
+        color: #22c55e;
+        font-weight: 500;
+    }
+
+    .status-pending {
+        color: #f59e0b;
+        font-weight: 500;
+    }
+</style>
+
+<!-- Error Message -->
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">
+        <p>Error: @errorMessage</p>
+        <button @onclick="ClearError" class="action-button secondary-button">Clear</button>
+    </div>
+}
+
+<!-- Search bar -->
+<div class="search-container">
+    <label for="userIdInput" style="color: #1e40af; font-weight: 500; white-space: nowrap;"></label>
+    <input id="userIdInput" @bind="userIdInput" placeholder="Type a user ID" class="search-input" />
+    <button @onclick="FetchAbsenceReasons" class="action-button primary-button">
+        <i class="fas fa-search"></i> Search
+    </button>
+</div>
+
+<!-- Reasons Table -->
+<div class="reasons-container">
+    <div class="table-header">
+        Absence Reasons
+    </div>
+    @if (isLoading)
+    {
+        <p style="text-align: center; color: #1e40af; font-size: 16px;">Loading...</p>
+    }
+    else if (!absenceReasons.Any())
+    {
+        <p style="text-align: center; color: #1e40af; font-size: 16px;">No absence reasons found.</p>
+    }
+    else
+    {
+        <div class="table-row table-header-row">
+            <div>User ID</div>
+            <div>Date</div>
+            <div>Start Time</div>
+            <div>End Time</div>
+            <div>Status</div>
+            <div>Reason</div>
+        </div>
+        @foreach (var reason in absenceReasons)
+        {
+            <div class="table-row">
+                <div>@reason.UserId</div>
+                <div>@reason.Date.ToString("dd MMM yyyy")</div>
+                <div>@reason.StartTime.ToString("hh:mm tt")</div>
+                <div>@reason.EndTime.ToString("hh:mm tt")</div>
+                <div class="@(reason.IsApproved ? "status-approved" : "status-pending")">
+                    @(reason.IsApproved ? "Approved" : "Pending")
+                </div>
+                <div class="reason-text">@reason.Reason</div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private string userIdInput = "";
+    private List<AbsenceReasonDto> absenceReasons = new();
+    private bool isLoading = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        userIdInput = query["userId"] ?? "";
+
+        if (!string.IsNullOrEmpty(userIdInput))
+        {
+            await FetchAbsenceReasons();
+        }
+    }
+
+    private async Task FetchAbsenceReasons()
+    {
+        isLoading = true;
+        errorMessage = null;
+        absenceReasons.Clear();
+
+        try
+        {
+            if (string.IsNullOrEmpty(userIdInput))
+            {
+                errorMessage = "Please enter a user ID.";
+                return;
+            }
+
+            var endpoint = $"/api/AbsenceReason/{Uri.EscapeDataString(userIdInput)}";
+            var response = await Http.GetAsync(endpoint).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = $"Failed to fetch absence reasons: {response.StatusCode}";
+                return;
+            }
+
+            var reasons = await response.Content.ReadFromJsonAsync<List<AbsenceReasonDto>>() ?? new();
+            absenceReasons.AddRange(reasons.OrderBy(r => r.Date).ThenBy(r => r.StartTime));
+
+            if (!absenceReasons.Any())
+            {
+                errorMessage = "No absence reasons found for this user.";
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Network error: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ClearError()
+    {
+        errorMessage = null;
+    }
+}

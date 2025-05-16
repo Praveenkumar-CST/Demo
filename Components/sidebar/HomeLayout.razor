@@ -1,0 +1,738 @@
+﻿@inherits LayoutComponentBase
+@using WiseHR.Components.sidebar
+@using WiseHR.Models
+@using System.Net.Http.Json
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@using System.Text.RegularExpressions
+@inject EmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+@using WiseHR.Components.sidebar
+
+<MudThemeProvider />
+<MudSnackbarProvider />
+
+
+    <!-- Top Navigation Bar -->
+    <MudAppBar Elevation="3" Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 78px; color: var(--primary); padding-top:5px">
+        <MudItem xs="2" Class="d-flex align-center">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Primary"
+                           Edge="Edge.Start"
+                           OnClick="@(() => ToggleSidebar())"
+                           Size="Size.Large"
+                           Class="mr-2" />
+
+            <MudImage Src="images/logo1.png"
+                      Alt="Company Logo"
+                      Height="64"
+                      Style="margin-left: 16px;" @onclick="ToggleSidebar"/>
+        </MudItem>
+
+        <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
+            <div class="d-flex align-center position-relative" style="width: 75%; max-width: 850px;">
+                <MudAutocomplete T="EmployeeSearchResult"
+                                 SearchFunc="@SearchEmployeesAutocomplete"
+                                 Placeholder="Search employees..."
+                                 Variant="Variant.Outlined"
+                                 Adornment="Adornment.Start"
+                                 AdornmentIcon="@Icons.Material.Filled.Search"
+                                 AdornmentColor="Color.Primary"
+                                 Class="search-autocomplete"
+                                 Style="width: 100%; border-radius: 28px; font-size: 1.1rem;"
+                                 DebounceInterval="300"
+                                 ResetValueOnEmptyText="true"
+                                 ShowProgressIndicator="true"
+                                 ValueChanged="OnEmployeeSelected"
+                                 @bind-Text="_searchText"
+                                 @onkeyup="HandleSearchInputKeyUp"
+                                 ItemTemplate="@ResultTemplate"
+                                 MaxItems="15"
+                                 ToStringFunc="@(e => null)" />
+                @if (IsAdmin)
+                {
+                    <MudTooltip Text="Go to Advanced Search">
+                        <MudIconButton Icon="@Icons.Material.Filled.FilterList"
+                                       Color="Color.Primary"
+                                       Size="Size.Large"
+                                       Class="ml-2 filter-button"
+                                       OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
+                                       Style="border-radius: 50%;" />
+                    </MudTooltip>
+                }
+            </div>
+
+            @* Display error message if search fails *@
+            @if (!string.IsNullOrEmpty(_searchError))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_searchError</MudText>
+            }
+        </MudItem>
+
+    <MudItem xs="2" Style="padding: 8px;display: flex;justify-content: flex-end;">
+            <MudMenu AnchorOrigin="Origin.BottomLeft">
+                <ActivatorContent>
+                    <div class="d-flex align-center justify-end ">
+                        @if (!string.IsNullOrEmpty(userProfilePicture))
+                        {
+                            <img src="@userProfilePicture"
+                                 class="rounded-circle" alt="Employee Photo"
+                                 style="width: 56px; height: 56px; object-fit: cover; border: 2px solid var(--primary);" />
+                        }
+                        else
+                        {
+                            <MudAvatar Size="Size.Large"
+                                       Class="cursor-pointer"
+                                       Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--primary);">
+                                @userInitials
+                            </MudAvatar>
+                        }
+                    </div>
+                </ActivatorContent>
+                <ChildContent>
+                    <div class="px-2 py-3">
+                        <MudText Typo="Typo.subtitle1" Class="px-4 mb-2">@(userName ?? "Guest")</MudText>
+                        <MudDivider Class="mb-2" />
+                        <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person" IconColor="Color.Primary" OnClick="NavigateToProfile">My Profile</MudMenuItem>
+                        <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary">Settings</MudMenuItem>
+                        <MudDivider Class="my-2" />
+                        <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="Logout">Logout</MudMenuItem>
+                    </div>
+                </ChildContent>
+            </MudMenu>
+        </MudItem>
+    </MudAppBar>
+
+    <!-- Sidebar -->
+     <div class="sidebar-container" @onmouseleave="HandleMouseLeave">
+        <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+    </div>
+    <!-- Main Content -->
+  
+    <MudMainContent Style="@($"flex-grow: 1; margin-left: {(drawerOpen ? "260px" : "70px")}; transition: margin 0.3s ease;")">
+        <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge"> 
+            @Body
+        </MudContainer>
+    </MudMainContent>
+  
+    <!-- Popover Support -->
+    <MudPopoverProvider />
+
+
+
+<style>
+    .mud-divider {
+        margin: 0;
+        flex-shrink: 0;
+        border-color: rgb(22 21 21);
+        border-width: 2px;
+        border-style: solid none none none;
+    }
+    .search-autocomplete ::deep .mud-input {
+        border-radius: 28px;
+        transition: all 0.3s ease;
+    }
+
+        .search-autocomplete ::deep .mud-input:focus-within {
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+    .search-autocomplete ::deep .mud-input-adornment {
+        color: var(--primary);
+    }
+
+    .active-filters {
+        position: sticky;
+        top: 72px;
+        left: 0;
+        z-index: 99;
+        background-color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* Improved user menu styling */
+    ::deep .mud-menu-list {
+        border-radius: 12px;
+        overflow: hidden;
+        min-width: 200px;
+    }
+
+    ::deep .mud-list-item-icon {
+        min-width: 40px;
+    }
+
+    @@media (max-width: 960px) {
+        .active-filters {
+            padding: 8px 12px;
+        }
+    }
+
+    /* Sidebar container styles */
+    .sidebar-container {
+        position: fixed;
+        top: 78px; /* Match the AppBar height */
+        left: 0;
+        height: calc(100vh - 78px);
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    /* Removed hover styles to prevent automatic opening on hover */
+    
+    ::deep .mud-drawer {
+        transition: width 0.3s ease;
+        width: 60px; /* Default collapsed width */
+        overflow: hidden;
+    }
+
+        ::deep .mud-drawer.open {
+            width: 250px !important; /* Expanded width */
+        }
+
+    ::deep .mud-nav-menu {
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    ::deep .mud-nav-link span {
+        display: none; /* Hide text when collapsed */
+    }
+
+    ::deep .mud-drawer.open .mud-nav-link span {
+        display: inline; /* Show text when expanded */
+    }
+</style>
+
+@code {
+    private bool drawerOpen = false; // Start closed
+    private HomeSidebar? sidebar;
+    private string? userProfilePicture;
+    private string? userName;
+    private string? userInitials;
+    private string? _searchError = null;
+    private string _lastSearchQuery = string.Empty;
+    private string? _searchText = null;
+    private List<string> designations = new();
+    private string? activeSearchQuery = "";
+    private string? employeeId;
+    private bool IsAdmin = false;
+
+    private async Task ToggleSidebar()
+    {
+        drawerOpen = !drawerOpen;
+        if (sidebar != null)
+        {
+            await sidebar.ToggleDrawer(); // Sync with sidebar component
+        }
+        StateHasChanged();
+    }
+    
+    // Close sidebar when mouse leaves
+    private async Task HandleMouseLeave()
+    {
+        if (drawerOpen)
+        {
+            drawerOpen = false;
+            if (sidebar != null)
+            {
+                await sidebar.ToggleDrawer();
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearSearchQuery()
+    {
+        activeSearchQuery = "";
+        _searchText = "";
+        await RefreshMainEmployeeListAsync();
+        StateHasChanged();
+    }
+
+    private async Task HandleSearchInputKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            Console.WriteLine($"Enter key pressed. Finalizing search for: '{_searchText}'");
+            activeSearchQuery = _searchText ?? "";
+            await RefreshMainEmployeeListAsync();
+        }
+    }
+
+    private async Task Logout()
+    {
+        try
+        {
+            // Clear localStorage
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "email");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "empId");
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "userRole");
+            Console.WriteLine("Logged out successfully. LocalStorage cleared.");
+
+            // Navigate to login page
+            NavigationManager.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during logout: {ex.Message}");
+            _searchError = "Error logging out. Please try again.";
+            StateHasChanged();
+        }
+    }
+
+    private RenderFragment<EmployeeSearchResult> ResultTemplate => (context) => __builder =>
+    {
+        if (context.EmployeeID == "ANALYTICS_LINK")
+        {
+            __builder.OpenComponent<MudText>(0);
+            __builder.AddAttribute(1, "Typo", Typo.body2);
+            __builder.AddAttribute(2, "Color", Color.Primary);
+            __builder.AddAttribute(3, "Style", "font-style: italic; padding: 8px 16px;");
+            __builder.AddAttribute(4, "ChildContent", (RenderFragment)((__builder2) =>
+            {
+                __builder2.AddContent(5, context.Name);
+            }));
+            __builder.CloseComponent();
+        }
+        else
+        {
+            __builder.OpenComponent<MudGrid>(10);
+            __builder.AddAttribute(11, "Spacing", 2);
+            __builder.AddAttribute(12, "AlignItems", AlignItems.Center);
+            __builder.AddAttribute(13, "Class", "py-2 px-1");
+            __builder.AddAttribute(14, "ChildContent", (RenderFragment)((__builder2) =>
+            {
+                __builder2.OpenComponent<MudItem>(15);
+                __builder2.AddAttribute(16, "xs", 3);
+                __builder2.AddAttribute(17, "Class", "d-flex align-center justify-center");
+                __builder2.AddAttribute(18, "ChildContent", (RenderFragment)((__builder3) =>
+                {
+                    if (!string.IsNullOrEmpty(context.Name))
+                    {
+                        __builder3.OpenComponent<MudAvatar>(22);
+                        __builder3.AddAttribute(23, "Color", Color.Primary);
+                        __builder3.AddAttribute(24, "Size", Size.Large);
+                        __builder3.AddAttribute(25, "ChildContent", (RenderFragment)((__builder4) =>
+                        {
+                            __builder4.AddContent(26, GetInitials(context.Name));
+                        }));
+                        __builder3.CloseComponent();
+                    }
+                }));
+                __builder2.CloseComponent();
+
+                __builder2.OpenComponent<MudItem>(27);
+                __builder2.AddAttribute(28, "xs", 9);
+                __builder2.AddAttribute(29, "ChildContent", (RenderFragment)((__builder3) =>
+                {
+                    __builder3.OpenComponent<MudPaper>(30);
+                    __builder3.AddAttribute(31, "Elevation", 0);
+                    __builder3.AddAttribute(32, "Class", "pa-2 border-1 border-solid mud-border-grey-light rounded");
+                    __builder3.AddAttribute(33, "ChildContent", (RenderFragment)((__builder4) =>
+                    {
+                        __builder4.OpenComponent<MudText>(34);
+                        __builder4.AddAttribute(35, "Typo", Typo.body1);
+                        __builder4.AddAttribute(36, "Style", "line-height: 1.2;");
+                        __builder4.AddAttribute(37, "ChildContent", (RenderFragment)((__builder5) =>
+                        {
+                            __builder5.AddContent(38, (MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery));
+                        }));
+                        __builder4.CloseComponent();
+
+                        __builder4.OpenComponent<MudText>(39);
+                        __builder4.AddAttribute(40, "Typo", Typo.body2);
+                        __builder4.AddAttribute(41, "Color", Color.Dark);
+                        __builder4.AddAttribute(42, "Style", "line-height: 1.2;");
+                        __builder4.AddAttribute(43, "ChildContent", (RenderFragment)((__builder5) =>
+                        {
+                            __builder5.AddContent(44, (MarkupString)GetHighlightedHtml(context.Designation, _lastSearchQuery));
+                        }));
+                        __builder4.CloseComponent();
+
+                        __builder4.OpenComponent<MudText>(45);
+                        __builder4.AddAttribute(46, "Typo", Typo.caption);
+                        __builder4.AddAttribute(47, "Color", Color.Dark);
+                        __builder4.AddAttribute(48, "Style", "line-height: 1.2;");
+                        __builder4.AddAttribute(49, "ChildContent", (RenderFragment)((__builder5) =>
+                        {
+                            __builder5.AddContent(50, (MarkupString)GetHighlightedHtml(context.Email, _lastSearchQuery));
+                        }));
+                        __builder4.CloseComponent();
+
+                        if (context.MatchedFields.Any())
+                        {
+                            __builder4.OpenComponent<MudText>(51);
+                            __builder4.AddAttribute(52, "Typo", Typo.caption);
+                            __builder4.AddAttribute(53, "Color", Color.Info);
+                            __builder4.AddAttribute(54, "Style", "line-height: 1.2; font-style: italic; margin-top: 2px;");
+                            __builder4.AddAttribute(55, "ChildContent", (RenderFragment)((__builder5) =>
+                            {
+                                __builder5.AddContent(56, $" Matches: {string.Join(", ", context.MatchedFields)}");
+                            }));
+                            __builder4.CloseComponent();
+                        }
+                    }));
+                    __builder3.CloseComponent();
+                }));
+                __builder2.CloseComponent();
+            }));
+            __builder.CloseComponent();
+        }
+    };
+
+    [Parameter]
+    public EventCallback<string> OnSearchQueryChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserDetails();
+    }
+
+    private async Task<string?> GetAccessToken()
+    {
+        try
+        {
+            var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Console.WriteLine("Access token not found in localStorage.");
+                return null;
+            }
+            Console.WriteLine("Access token retrieved from localStorage.");
+            return token;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error retrieving access token from localStorage: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
+    {
+        _lastSearchQuery = query;
+        _searchError = null;
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            Console.WriteLine("No query provided for autocomplete, returning empty results.");
+            return Enumerable.Empty<EmployeeSearchResult>();
+        }
+
+        // Define field weights
+        var fieldWeights = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "EmployeeID", 100 },
+            { "FirstName", 90 },
+            { "LastName", 85 },
+            { "CurrentEmail", 80 },
+            { "PANNumber", 75 },
+            { "AadhaarNumber", 70 },
+            { "CurrentMobile", 65 },
+            { "MiddleName", 60 },
+            { "Designation", 55 },
+            { "PermanentEmail", 50 },
+            { "PermanentMobile", 45 },
+            { "FatherName", 30 },
+            { "MotherName", 28 },
+            { "Nationality", 25 },
+            { "PassportNo", 20 },
+            { "JoiningLocation", 15 },
+            { "Level", 12 },
+            { "CurrentCity", 10 },
+            { "CurrentState", 9 },
+            { "PermanentCity", 8 },
+            { "PermanentState", 7 },
+            { "TypeOfEmployment", 6 },
+            { "BloodGroup", 5 }
+        };
+        const int defaultWeight = 1;
+
+        try
+        {
+            var accessToken = await GetAccessToken();
+            var apiUrl = $"/api/search/spotlight?query={System.Net.WebUtility.UrlEncode(query)}";
+            var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await Http.SendAsync(request, token);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var results = await response.Content.ReadFromJsonAsync<List<EmployeeSearchResult>>(token) ?? new List<EmployeeSearchResult>();
+                _searchError = null;
+
+                // Calculate scores and sort
+                var scoredResults = results.Select(r =>
+                {
+                    if (r.EmployeeID == "ANALYTICS_LINK") // Keep analytics link as is, perhaps high score or handle separately
+                    {
+                        r.Score = int.MaxValue; // Ensure it's often at the top or bottom based on desired placement
+                    }
+                    else
+                    {
+                        r.Score = r.MatchedFields.Sum(mf => fieldWeights.TryGetValue(mf, out var weight) ? weight : defaultWeight);
+                    }
+                    return r;
+                })
+                .OrderByDescending(r => r.Score)
+                .ThenBy(r => r.Name) // Alphabetical by name for tie-breaking
+                .ToList();
+                
+                // Console.WriteLine($"Autocomplete Search successful: Found {scoredResults.Count} results after scoring and sorting.");
+                // foreach(var sr in scoredResults.Take(5)) { Console.WriteLine($"  - {sr.Name}, Score: {sr.Score}, Matched: {string.Join(",", sr.MatchedFields)}"); }
+
+
+                if (IsAdmin && !scoredResults.Any(r => r.EmployeeID == "ANALYTICS_LINK"))
+                {
+                     var analyticsLink = new EmployeeSearchResult
+                        {
+                            EmployeeID = "ANALYTICS_LINK",
+                            Name = "Click for Advanced Search...",
+                            Designation = "View full analytics (Admin)", // More descriptive
+                            ProfileUrl = "/analytics",
+                            Score = -1 // Or a very low score to place it at the bottom if preferred
+                        };
+                    // Decide where to put the analytics link. For now, adding to end if not highly scored.
+                    // Or, we could ensure it's always first or last irrespective of score.
+                    // A common UX is to have it at the end of "real" results or as a distinct option.
+                    // Let's try adding it at the end for now.
+                    var finalResults = new List<EmployeeSearchResult>(scoredResults.Where(r => r.EmployeeID != "ANALYTICS_LINK"));
+                    finalResults.Add(analyticsLink);
+                    return finalResults;
+                }
+                
+                return scoredResults.Where(r => r.EmployeeID != "ANALYTICS_LINK" || r.Score == int.MaxValue).ToList(); // Filter out if not special
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                _searchError = "Session expired. Please log in again.";
+                NavigationManager.NavigateTo("/login");
+                Console.WriteLine("Unauthorized: Redirecting to login.");
+            }
+            else
+            {
+                _searchError = $"Error fetching autocomplete results: {response.ReasonPhrase}";
+                Console.WriteLine($"Autocomplete Search HTTP Error: {_searchError}");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine($"Autocomplete Search cancelled.");
+            _searchError = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during autocomplete search API call: {ex.Message}");
+            _searchError = "An error occurred during autocomplete.";
+        }
+        finally
+        {
+            Console.WriteLine("Autocomplete SearchFunc finished.");
+        }
+
+        return Enumerable.Empty<EmployeeSearchResult>();
+    }
+
+    private async Task OnEmployeeSelected(EmployeeSearchResult selectedEmployee)
+    {
+        if (selectedEmployee != null)
+        {
+            Console.WriteLine($"OnEmployeeSelected triggered for: {selectedEmployee.Name} ({selectedEmployee.ProfileUrl})");
+            await NavigateToEmployeeInNewTab(selectedEmployee.ProfileUrl);
+        }
+        else
+        {
+            Console.WriteLine("OnEmployeeSelected triggered with null employee.");
+        }
+    }
+
+    private async Task NavigateToEmployeeInNewTab(string profileUrl)
+    {
+        if (!string.IsNullOrEmpty(profileUrl))
+        {
+            Console.WriteLine($"Attempting to navigate to {profileUrl} in new tab.");
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("open", profileUrl, "_blank");
+                Console.WriteLine("JavaScript window.open called successfully.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calling JavaScript open: {ex.Message}");
+                _searchError = "Could not open employee profile.";
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            Console.WriteLine("NavigateToEmployeeInNewTab called with empty or null URL.");
+        }
+    }
+
+    private async Task RefreshMainEmployeeListAsync()
+    {
+        Console.WriteLine($"Refreshing main content with Query: '{activeSearchQuery}'");
+        await Task.CompletedTask;
+        StateHasChanged();
+    }
+
+    private async Task<string?> CurrentUserEmail()
+    {
+        try
+        {
+            return await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error retrieving email from localStorage: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task NavigateToProfile()
+    {
+        Console.WriteLine($"Navigate to current user profile, employeeId: {employeeId}");
+        if (!string.IsNullOrEmpty(employeeId))
+        {
+            NavigationManager.NavigateTo($"/employee/{employeeId}");
+        }
+        else
+        {
+            Console.WriteLine("Cannot navigate to profile: employeeId is null or empty.");
+            _searchError = "Unable to load profile. Please try logging in again.";
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadUserDetails()
+    {
+        try
+        {
+
+            var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
+            var value = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem","userRole");
+
+
+
+            IsAdmin = value == "Admin";
+            Console.WriteLine($"Retrieved email from sessionStorage: {email}");
+
+            userProfilePicture = null;
+            userName = null;
+            userInitials = null;
+            employeeId = null;
+
+            employeeId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
+            Console.WriteLine($"Retrieved employeeId from localStorage: {employeeId}");
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var employee = await EmployeeService.GetEmployeeDetailsByEmail(email);
+                if (employee != null)
+                {
+                    employeeId ??= employee.EmployeeID;
+                    Console.WriteLine($"EmployeeID from API: {employee.EmployeeID}");
+                    Console.WriteLine($"Employee ID {employeeId}");
+
+                    if (!string.IsNullOrEmpty(employee.PhotoBase64Content) && !string.IsNullOrEmpty(employee.PhotoContentType))
+                    {
+                        userProfilePicture = $"data:{employee.PhotoContentType};base64,{employee.PhotoBase64Content}";
+                    }
+                    else
+                    {
+                        userProfilePicture = null;
+                    }
+
+                    userName = employee.FirstName ?? "User";
+                    userInitials = GetInitials(userName);
+                    return;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                userName = "User";
+                userInitials = GetInitialFromEmail(email);
+                userProfilePicture = null;
+            }
+            else
+            {
+                SetDefaultUser();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user details: {ex.Message}");
+            SetDefaultUser();
+        }
+    }
+
+    private void SetDefaultUser()
+    {
+        userName = "Guest";
+        userInitials = "?";
+        userProfilePicture = null;
+        employeeId = null;
+        IsAdmin = false;
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "?";
+
+        var parts = name.Split(new[] { ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+            return "?";
+        if (parts.Length == 1)
+            return parts[0].Length > 0 ? parts[0][0].ToString().ToUpper() : "?";
+
+        return $"{parts[0][0]}{parts.Last()[0]}".ToUpper();
+    }
+
+    private string GetInitialFromEmail(string? email)
+    {
+        if (!string.IsNullOrWhiteSpace(email) && email.Length > 0)
+            return char.ToUpper(email[0]).ToString();
+
+        return "?";
+    }
+
+    private string GetHighlightedHtml(string? text, string? highlightTerm)
+    {
+        if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(highlightTerm))
+        {
+            return text ?? string.Empty;
+        }
+
+        try
+        {
+            var regex = new Regex(Regex.Escape(highlightTerm), RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            return regex.Replace(text, match => $"<strong>{match.Value}</strong>");
+        }
+        catch (ArgumentException ex)
+        {
+            Console.WriteLine($"Regex error during highlighting: {ex.Message}");
+            return text;
+        }
+    }
+
+    public class EmployeeSearchResult
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty;
+        public string ProfileUrl { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? Mobile { get; set; }
+        public string? ProfilePicture { get; set; }
+        public string? EmployeeID { get; set; }
+        public List<string> MatchedFields { get; set; } = new List<string>();
+        public int Score { get; set; } // Added for sorting
+    }
+}
