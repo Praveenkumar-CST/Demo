@@ -28,6 +28,7 @@ namespace WiseHR.Models
                     ("ReportList", "/reports"),
                      ("HIDE_EmployeeProfile", "/employee/.*"),
                      ("HIDE_Analytics", "/analytics"),
+                     ("Assign Mentee","/managers")
 
 
                 }
@@ -67,8 +68,7 @@ namespace WiseHR.Models
                     ("HIDE_workExperience", "/workExperience"),
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
-                    ("ReportList", "/reports"),
-                      ("HIDE_EmployeeProfile", "/employee/.*"),
+                    ("HIDE_EmployeeProfile", "/employee/.*"),
                       
 
                 }

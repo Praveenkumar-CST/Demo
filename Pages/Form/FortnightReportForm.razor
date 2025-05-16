@@ -5,6 +5,9 @@
 @inject EmployeeService EmployeeService
 @inject ReportService ReportService
 @layout HomeLayout
+@inject IUserService UserService
+@inject MentorAssignmentService MentorAssignmentService
+
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
 <MudPaper Class="p-4 mx-auto mt-1" >
     @if (isLoading)
@@ -52,12 +55,12 @@
             <MudTextField @bind-Value="report.FortnightRemarks1" For="@(() => report.FortnightRemarks1)" Label="Fortnight Remarks 1" Lines="3" Required="true" />
             <MudTextField @bind-Value="report.FortnightRemarks2" For="@(() => report.FortnightRemarks2)" Label="Fortnight Remarks 2" Lines="3" Required="true" />
 
-            <MudText Typo="Typo.subtitle1">Upload Supporting File</MudText>
-            <InputFile OnChange="HandleFileChange" accept=".pdf,.docx,.xlsx,.jpg" />
-            @if (!string.IsNullOrEmpty(report.FileName))
-            {
-                <MudText Typo="Typo.body2" Class="mt-2">Current File: @report.FileName</MudText>
-            }
+            @* <MudText Typo="Typo.subtitle1">Upload Supporting File</MudText> *@
+            @* <InputFile OnChange="HandleFileChange" accept=".pdf,.docx,.xlsx,.jpg" /> *@
+            @* @if (!string.IsNullOrEmpty(report.FileName)) *@
+            @* { *@
+            @*     <MudText Typo="Typo.body2" Class="mt-2">Current File: @report.FileName</MudText> *@
+            @* } *@
 
             @* <MudText Typo="Typo.subtitle1" Color="Color.Info">Debug Info:</MudText> *@
             @* <MudPaper Class="p-2 mb-2" Style="background-color: #f5f5f5;"> *@
@@ -71,13 +74,19 @@
             @*     <MudText Typo="Typo.body2">File: @report.FileName</MudText> *@
             @* </MudPaper> *@
             <br />
+                
             <button type="submit" class="mud-button mud-button-filled mud-button-filled-primary mt-4">
                 @(isEditMode ? "Update Report" : "Submit Report")
             </button>
+            
         </EditForm>
+       
+       
     }
+
 </MudPaper>
 </MudContainer>
+  
 @code {
     [Parameter] public ReportModel Report { get; set; } // Accept report for editing
     private ReportModel report = new();
@@ -86,7 +95,7 @@
     private bool isLoading = true;
     private bool hasError = false;
     private bool isEditMode = false;
-
+ 
     protected override async Task OnInitializedAsync()
     {
         try
@@ -105,7 +114,23 @@
                 }
             }
 
-            employees = await EmployeeService.GetAllEmployees();
+            var assignments = await MentorAssignmentService.GetAllAssignmentsAsync();
+            var assignedMenteeIds = assignments
+                .Where(a => a.MentorEmployeeID == report.MentorId)
+                .Select(a => a.MenteeEmployeeID)
+                .Distinct()
+                .ToList();
+
+            employees = new List<EmployeeDetails>();
+
+            foreach (var menteeId in assignedMenteeIds)
+            {
+                var mentee = await EmployeeService.GetEmployeeDetails(menteeId);
+                if (mentee != null)
+                {
+                    employees.Add(mentee);
+                }
+            }
 
             // Check if editing an existing report
             if (Report != null)

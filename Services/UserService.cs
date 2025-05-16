@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 using WiseHR.Models;
 
@@ -65,5 +66,38 @@ namespace WiseHR.Services
             var user = await response.Content.ReadFromJsonAsync<User>();
             return user ?? throw new Exception("Failed to deserialize created user.");
         }
+        public async Task<List<User>> GetUsersByRoleAsync(string role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+                throw new ArgumentException("Role cannot be null or empty", nameof(role));
+
+            try
+            {
+                // Assuming your backend API endpoint is: api/users/by-role/{role}
+                var response = await _httpClient.GetAsync($"api/users/by-role/{role}");
+                response.EnsureSuccessStatusCode();
+
+                var users = await response.Content.ReadFromJsonAsync<List<User>>();
+                return users ?? new List<User>();
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Network error while fetching users with role '{role}': {ex.Message}", ex);
+            }
+            catch (NotSupportedException ex)
+            {
+                throw new Exception("The content type is not supported for deserialization.", ex);
+            }
+            catch (JsonException ex)
+            {
+                throw new Exception("Invalid JSON in the response.", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Unexpected error fetching users with role '{role}': {ex.Message}", ex);
+            }
+        }
+
+
     }
 }
