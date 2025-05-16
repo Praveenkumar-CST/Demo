@@ -197,5 +197,17 @@
             }
         });
     </script>
+
+    <!-- Add the downloadFile function here -->
+    <script>
+      function downloadFile(fileName, contentType, contentBase64) {
+        const link = document.createElement('a');
+        link.href = `data:${contentType};base64,${contentBase64}`;
+        link.download = fileName;
+        document.body.appendChild(link); // Required for some browsers like Firefox
+        link.click();
+        document.body.removeChild(link);
+      }
+    </script>
 </body>
 </html>
