@@ -207,7 +207,7 @@
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-primary" @onclick="CloseModal">Cancel</button>
-                            <button class="btn btn-primary" @onclick="AssignMenteesAsync">
+                            <button class="btn btn-primary" @onclick="AssignMenteesAsync" disabled="@isAssigning">
                                 @if (isAssigning)
                                 {
                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -403,7 +403,6 @@
 
         Console.WriteLine($"{(isManager ? "Manager" : "Admin")} Email: {selectedManagerEmail}");
         Console.WriteLine($"{(isManager ? "Manager" : "Admin")} Designation: {userDetails.Designation}");
-        isLoadingEmployees = false;
         StateHasChanged();
         await LoadEmployeesAsync();
         StateHasChanged();
@@ -729,6 +728,7 @@
                 }
                 return;
             }
+
         }
         catch (Exception ex)
         {
