@@ -74,17 +74,20 @@
         --mud-ripple-color: var(--mud-palette-primary) !important;
     }
 
+    .pa-2 {
+        padding: 4px !important;
+    }
     .mud-nav-link {
         width: 100%;
         font-weight: 400;
-        padding: 8px 0px 8px 1px;
+        padding: 8px 0px 8px 8px;
         color: inherit;
     }
 
     .sidebar-navlink {
         transition: all 0.3s ease;
         margin: 4px 0;
-        padding: 8px !important;
+        padding: 2px !important;
         border-radius: 8px;
         color: var(--text-primary) !important;
         height: 48px;
@@ -98,7 +101,7 @@
     }
 
     .sidebar-navlink-active {
-        background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%) !important;
+        background: linear-gradient(90deg, #69c6cf 0%, #57b0c0 100%) !important;
         color: white !important;
         font-weight: 500;
         box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
@@ -135,6 +138,15 @@
         right: 16px;
         z-index: 10;
     }
+       .sidebar-navlink-active {
+        background: linear-gradient(90deg, #69c6cf 0%, #57b0c0 100%) !important;
+        color: white !important;
+        font-weight: 500;
+        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+        padding: 12px !important; /* Equal padding on all sides */
+        border-radius: 8px;
+    }
+
 
     /* Better icon visibility in mini mode */
     .mud-drawer-mini ::deep .mud-nav-link {
@@ -207,6 +219,21 @@
         justify-content: center;
         align-items: center;
         margin: 0 auto;
+    }
+
+    .mud-drawer-mini ::deep .mud-nav-link .mud-nav-link-icon {
+        background: linear-gradient(135deg, #69c6cf 0%, #57b0c0 100%);
+        border-radius: 50%;
+        padding: 18px !important; /* More expanded padding on all sides */
+        color: white !important;
+        box-sizing: border-box;
+        margin: 0 auto !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        font-size: 24px !important;
+        min-width: unset !important;
+        transition: all 0.3s ease;
     }
 </style>
 

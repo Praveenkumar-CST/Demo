@@ -9,7 +9,7 @@
 @inject EmployeeService EmployeeService
 @inject NavigationManager NavigationManager
 @using WiseHR.Components.sidebar
-
+@inject IDialogService DialogService
 <MudThemeProvider />
 <MudSnackbarProvider />
    <!-- Top Navigation Bar -->
@@ -194,6 +194,17 @@
 
     ::deep .mud-drawer.open .mud-nav-link span {
         display: inline; /* Show text when expanded */
+    }
+
+    /* Gradient background and expanded padding for icons in mini (closed) mode */
+
+    .sidebar-navlink-active {
+        background: linear-gradient(90deg, #69c6cf 0%, #57b0c0 100%) !important;
+        color: white !important;
+        font-weight: 500;
+        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+        padding: 12px !important; /* Equal padding on all sides */
+        border-radius: 8px;
     }
 </style>
 
