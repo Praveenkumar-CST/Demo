@@ -7,6 +7,7 @@ using MudBlazor;
 using Blazored.SessionStorage;
 using FingerFrontend.Models;
 using FingerFrontend.AdminAttendanceViewModel;
+using Microsoft.Extensions.Caching.Memory;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -14,6 +15,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddBlazoredSessionStorage();
+builder.Services.AddMemoryCache();
 
 builder.Services.AddMudServices(config =>
 {
@@ -29,14 +31,16 @@ builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<BankingService>();
 builder.Services.AddScoped<ExperienceService>();
 builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<AnalyticsCacheService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<MentorAssignmentService>();
 
 builder.Services.AddScoped<CountryService>();
 
+builder.Services.AddScoped<SearchService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
+//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net") });
 await builder.Build().RunAsync();

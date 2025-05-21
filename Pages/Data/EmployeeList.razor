@@ -5,60 +5,111 @@
 @inject ExperienceService ExperienceService
 @inject NavigationManager NavigationManager
 @using WiseHRServer.Models
+@using MudBlazor
 @layout HomeLayout
-<h3 class="section-title">All Employees</h3>
 
-@if (isLoading)
-{
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <div class="d-flex align-center mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large" Class="mr-2"/>
+        <MudText Typo="Typo.h4" Color="Color.Primary">All Employees</MudText>
     </div>
-}
-else if (hasError)
-{
-    <div class="alert alert-danger custom-alert">Failed to load employee data.</div>
-}
-else if (employees != null && employees.Count > 0)
-{
-    <div class="row">
-        @foreach (var emp in employees)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="employee-card card shadow-sm"
-                     @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
-                    <div class="card-body d-flex align-items-center">
-                        @if (!string.IsNullOrEmpty(emp.PhotoBase64Content))
-                        {
-                            <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content" class="rounded-circle" alt="Employee Photo" style="width: 80px; height: 80px; object-fit: cover;" />
-                        }
-                        <div class="ms-3">
-                            <h5 class="card-title">@($"{emp.FirstName} {emp.LastName}")</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">@emp.EmployeeID</h6>
-                            <p class="card-text">@emp.CurrentEmail</p>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large"/>
+        </div>
+    }
+    else if (hasError)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">Failed to load employee data.</MudAlert>
+    }
+    else if (employees != null && employees.Count > 0)
+    {
+        <MudPaper Class="pa-4" Elevation="2" Style="border-radius: 8px;">
+            <MudTable Items="@employees" 
+                      Dense="true" 
+                      Hover="true" 
+                      Breakpoint="Breakpoint.Sm" 
+                      Striped="true"
+                      Loading="@isLoading"
+                      LoadingProgressColor="Color.Primary"
+                      Filter="new Func<EmployeeDetails,bool>(FilterFunc)"
+                      @bind-SelectedItem="selectedEmployee"
+                      OnRowClick="@((TableRowClickEventArgs<EmployeeDetails> args) => ShowEmployeeDetails(args.Item.EmployeeID))"
+                      Style="border-radius: 8px;">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Employee List</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="searchString" 
+                                Placeholder="Search employees..." 
+                                Adornment="Adornment.Start" 
+                                AdornmentIcon="@Icons.Material.Filled.Search"
+                                IconSize="Size.Medium" 
+                                Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="name">Name</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="id">Employee ID</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="email">Email</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="designation">Designation</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="joining">Joining Date</MudTableSortLabel></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">
+                        <div class="d-flex align-center">
+                            @if (!string.IsNullOrEmpty(context.PhotoBase64Content))
+                            {
+                                <MudAvatar Image="@($"data:{context.PhotoContentType};base64,{context.PhotoBase64Content}")" 
+                                          Size="Size.Small" 
+                                          Class="mr-2"
+                                          Style="width: 40px; height: 40px; object-fit: cover;"/>
+                            }
+                            else
+                            {
+                                <MudAvatar Color="Color.Primary" 
+                                          Size="Size.Small" 
+                                          Class="mr-2"
+                                          Style="width: 40px; height: 40px;">@GetInitials(context.FirstName)</MudAvatar>
+                            }
+                            <span>@($"{context.FirstName} {context.LastName}")</span>
                         </div>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-}
-else if (employees != null && employees.Count == 0)
-{
-    <div class="alert alert-info custom-alert">No employees found.</div>
-}
-
+                    </MudTd>
+                    <MudTd DataLabel="Employee ID">@context.EmployeeID</MudTd>
+                    <MudTd DataLabel="Email">@context.CurrentEmail</MudTd>
+                    <MudTd DataLabel="Designation">@context.Designation</MudTd>
+                    <MudTd DataLabel="Joining Date">@(context.DateOfJoining?.ToString("dd/MM/yyyy"))</MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudPaper>
+    }
+    else if (employees != null && employees.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-3">No employees found.</MudAlert>
+    }
+</MudContainer>
 
 @code {
     private List<EmployeeDetails> employees;
     private bool isLoading = true;
     private bool hasError = false;
+    private string searchString = "";
+    private EmployeeDetails selectedEmployee;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // Fetch employees data when the page loads
             employees = await EmployeeService.GetAllEmployees();
+            // Log the first employee's photo data for debugging
+            if (employees != null && employees.Any())
+            {
+                var firstEmp = employees.First();
+                Console.WriteLine($"First employee photo data - ContentType: {firstEmp.PhotoContentType}, HasBase64Content: {!string.IsNullOrEmpty(firstEmp.PhotoBase64Content)}");
+            }
         }
         catch (Exception ex)
         {
@@ -68,9 +119,29 @@ else if (employees != null && employees.Count == 0)
         isLoading = false;
     }
 
+    private bool FilterFunc(EmployeeDetails element)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        return element.FirstName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
+            || element.LastName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
+            || element.EmployeeID?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
+            || element.CurrentEmail?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
+            || element.Designation?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
     private void ShowEmployeeDetails(string employeeId)
     {
-        // Navigate to a detailed employee page or show details in a modal
         NavigationManager.NavigateTo($"employeeDetailsData/{employeeId}");
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(new[] { ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "?";
+        if (parts.Length == 1) return parts[0].Length > 0 ? parts[0][0].ToString().ToUpper() : "?";
+        return $"{parts[0][0]}{parts.Last()[0]}".ToUpper();
     }
 }
