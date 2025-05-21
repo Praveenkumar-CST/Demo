@@ -3,184 +3,161 @@
 @using WiseHR.Models
 @using System.Net.Http.Json
 @using System.Text.Json
+@using WiseHR.Services
+@using System.Net.Http.Headers
+@using WiseHR.Dtos
+@using WiseHRServer.Models
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
 @using System.Text.RegularExpressions
 @inject EmployeeService EmployeeService
 @inject NavigationManager NavigationManager
-@using WiseHR.Components.sidebar
+@inject SearchService SearchService
+@inject IDialogService DialogService
+@inject AnalyticsCacheService AnalyticsCache
+@inject ILogger<HomeLayout> Logger
 
 <MudThemeProvider />
 <MudSnackbarProvider />
-    <!-- Top Navigation Bar -->
-    <MudAppBar Elevation="3" Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 78px; color: var(--primary); padding-top:5px">
-        <MudItem xs="2" Class="d-flex align-center">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                           Color="Color.Primary"
-                           Edge="Edge.Start"
-                           OnClick="@(() => ToggleSidebar())"
-                           Size="Size.Large"
-                           Class="mr-2" />
-
-            <MudImage Src="images/logo1.png"
-                      Alt="Company Logo"
-                      Height="64"
-                      Style="margin-left: 16px;" @onclick="ToggleSidebar"/>
-        </MudItem>
-
-        <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
-            <div class="d-flex align-center position-relative" style="width: 75%; max-width: 850px;">
-                <MudAutocomplete T="EmployeeSearchResult"
-                                 SearchFunc="@SearchEmployeesAutocomplete"
-                                 Placeholder="Search employees..."
-                                 Variant="Variant.Outlined"
-                                 Adornment="Adornment.Start"
-                                 AdornmentIcon="@Icons.Material.Filled.Search"
-                                 AdornmentColor="Color.Primary"
-                                 Class="search-autocomplete"
-                                 Style="width: 100%; border-radius: 28px; font-size: 1.1rem;"
-                                 DebounceInterval="300"
-                                 ResetValueOnEmptyText="true"
-                                 ShowProgressIndicator="true"
-                                 ValueChanged="OnEmployeeSelected"
-                                 @bind-Text="_searchText"
-                                 @onkeyup="HandleSearchInputKeyUp"
-                                 ItemTemplate="@ResultTemplate"
-                                 MaxItems="15"
-                                 ToStringFunc="@(e => null)" />
-                @if (IsAdmin)
-                {
-                    <MudTooltip Text="Go to Advanced Search">
-                        <MudIconButton Icon="@Icons.Material.Filled.FilterList"
-                                       Color="Color.Primary"
-                                       Size="Size.Large"
-                                       Class="ml-2 filter-button"
-                                       OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
-                                       Style="border-radius: 50%;" />
-                    </MudTooltip>
-                }
-            </div>
-
-            @* Display error message if search fails *@
-            @if (!string.IsNullOrEmpty(_searchError))
+<!-- Top Navigation Bar -->
+<MudAppBar Elevation="5"  Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 67px; color: var(--primary); padding-top:2px">
+    <MudItem xs="2" Class="d-flex align-center">
+        <MudImage Src="images/logo1.png"
+        Alt="Company Logo"
+        Height="50"
+        @onclick=@(() => NavigationManager.NavigateTo("/home")) />
+    </MudItem>
+    <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
+        <div class="d-flex align-center position-relative" style="width: 75%; max-width: 800px;">
+            <MudAutocomplete T="EmployeeSearchResult"
+            SearchFunc="@SearchEmployeesAutocomplete"
+            Placeholder="Search employees..."
+            Variant="Variant.Outlined"
+            Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search"
+            AdornmentColor="Color.Primary"
+            Class="search-autocomplete"
+            Style="width: 100%; border-radius: 28px; font-size: 1.1rem;"
+            DebounceInterval="300"
+            ResetValueOnEmptyText="true"
+            ShowProgressIndicator="true"
+            ValueChanged="OnSearchItemSelected"
+            @bind-Text="_searchText"
+            @onkeyup="HandleSearchInputKeyUp"
+            ItemTemplate="@ResultTemplate"
+            MaxItems="15"
+            ToStringFunc="@(e => null)" />
+            @if (IsAdmin)
             {
-                <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_searchError</MudText>
+                <MudTooltip Text="Go to Advanced Search">
+                    <MudIconButton Icon="@Icons.Material.Filled.FilterList"
+                    Color="Color.Primary"
+                    Size="Size.Large"
+                    Class="ml-2 filter-button"
+                    OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
+                    Style="border-radius: 50%;" />
+                </MudTooltip>
             }
-        </MudItem>
+        </div>
+
+        @* Display error message if search fails *@
+        @if (!string.IsNullOrEmpty(_searchError))
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_searchError</MudText>
+        }
+    </MudItem>
 
     <MudItem xs="2" Style="padding: 8px;display: flex;justify-content: flex-end;">
-            <MudMenu AnchorOrigin="Origin.BottomLeft">
-                <ActivatorContent>
-                    <div class="d-flex align-center justify-end ">
-                        @if (!string.IsNullOrEmpty(userProfilePicture))
-                        {
-                            <img src="@userProfilePicture"
-                                 class="rounded-circle" alt="Employee Photo"
-                                 style="width: 56px; height: 56px; object-fit: cover; border: 2px solid var(--primary);" />
-                        }
-                        else
-                        {
-                            <MudAvatar Size="Size.Large"
-                                       Class="cursor-pointer"
-                                       Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--primary);">
-                                @userInitials
-                            </MudAvatar>
-                        }
-                    </div>
-                </ActivatorContent>
-                <ChildContent>
-                    <div class="px-2 py-3">
-                        <MudText Typo="Typo.subtitle1" Class="px-4 mb-2">@(userName ?? "Guest")</MudText>
-                        <MudDivider Class="mb-2" />
-                        <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person" IconColor="Color.Primary" OnClick="NavigateToProfile">My Profile</MudMenuItem>
-                        <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary">Settings</MudMenuItem>
-                        <MudDivider Class="my-2" />
-                        <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="Logout">Logout</MudMenuItem>
-                    </div>
-                </ChildContent>
-            </MudMenu>
-        </MudItem>
-    </MudAppBar>
+        <MudMenu AnchorOrigin="Origin.BottomLeft">
+            <ActivatorContent>
+                <div class="d-flex align-center justify-end ">
+                    @if (!string.IsNullOrEmpty(userProfilePicture))
+                    {
+                        <img src="@userProfilePicture"
+                        class="rounded-circle" alt="Employee Photo"
+                        style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(black);" />
+                    }
+                    else
+                    {
+                        <MudAvatar Size="Size.Large"
+                        Class="cursor-pointer"
+                        Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--primary);">
+                            @userInitials
+                        </MudAvatar>
+                    }
+                </div>
+            </ActivatorContent>
+            <ChildContent>
+                <div class="px-2 py-3">
+                    <MudText Typo="Typo.subtitle1" Class="px-4 mb-2">@(userName ?? "Guest")</MudText>
+                    <MudDivider Class="mb-2" />
+                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person" IconColor="Color.Primary" OnClick="NavigateToProfile">My Profile</MudMenuItem>
+                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary">Settings</MudMenuItem>
+                    <MudDivider Class="my-2" />
+                    <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="Logout">Logout</MudMenuItem>
+                </div>
+            </ChildContent>
+        </MudMenu>
+    </MudItem>
+</MudAppBar>
 
-    <!-- Sidebar -->
-     <div class="sidebar-container" @onmouseleave="HandleMouseLeave">
-        <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
-    </div>
-    <!-- Main Content -->
-  
-    <MudMainContent Style="@($"flex-grow: 1; margin-left: {(drawerOpen ? "260px" : "70px")}; transition: margin 0.3s ease;")">
-        <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge"> 
-            @Body
-        </MudContainer>
-    </MudMainContent>
-  
-    <!-- Popover Support -->
-    <MudPopoverProvider />
+<!-- Sidebar -->
+<div class="sidebar-container" @onmouseleave="HandleMouseLeave">
+    <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+</div>
 
+<!-- Main Content -->
+<MudMainContent Style="@($"flex-grow: 1; margin-left: {(drawerOpen ? "260px" : "70px")}; transition: margin 0.3s ease;")">
+    <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge"> 
+        @Body
+    </MudContainer>
+</MudMainContent>
+
+<!-- Popover Support -->
+<MudPopoverProvider />
 
 
 <style>
-    .mud-divider {
+    .sidebar-container {
+        height:100%;
+        position: fixed;
+        top: 67px;
+        z-index:1000;
+    }
+
+    ::deep .mud-divider {
         margin: 0;
         flex-shrink: 0;
         border-color: rgb(22 21 21);
         border-width: 2px;
         border-style: solid none none none;
     }
-    .search-autocomplete ::deep .mud-input {
+
+    ::deep .search-autocomplete .mud-input {
         border-radius: 28px;
         transition: all 0.3s ease;
     }
 
-        .search-autocomplete ::deep .mud-input:focus-within {
+        ::deep .search-autocomplete .mud-input:focus-within {
             box-shadow: 0 0 0 2px var(--primary-light);
         }
 
-    .search-autocomplete ::deep .mud-input-adornment {
+    ::deep .search-autocomplete .mud-input-adornment {
         color: var(--primary);
     }
 
-    .active-filters {
-        position: sticky;
-        top: 72px;
-        left: 0;
-        z-index: 99;
-        background-color: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    /* Improved user menu styling */
     ::deep .mud-menu-list {
         border-radius: 12px;
         overflow: hidden;
         min-width: 200px;
     }
 
+
+
     ::deep .mud-list-item-icon {
         min-width: 40px;
     }
 
-    @@media (max-width: 960px) {
-        .active-filters {
-            padding: 8px 12px;
-        }
-    }
-
-    /* Sidebar container styles */
-    .sidebar-container {
-        position: fixed;
-        top: 78px; /* Match the AppBar height */
-        left: 0;
-        height: calc(100vh - 78px);
-        z-index: 1000;
-        transition: all 0.3s ease;
-    }
-
-    /* Removed hover styles to prevent automatic opening on hover */
-    
     ::deep .mud-drawer {
         transition: width 0.3s ease;
         width: 60px; /* Default collapsed width */
@@ -206,6 +183,9 @@
 </style>
 
 @code {
+    [Parameter]
+    public EventCallback<string> OnSearchQueryChanged { get; set; }
+
     private bool drawerOpen = false; // Start closed
     private HomeSidebar? sidebar;
     private string? userProfilePicture;
@@ -218,17 +198,9 @@
     private string? activeSearchQuery = "";
     private string? employeeId;
     private bool IsAdmin = false;
+    private bool _isSearching;
+    private List<EmployeeSearchResult> _searchResults = new();
 
-    private async Task ToggleSidebar()
-    {
-        drawerOpen = !drawerOpen;
-        if (sidebar != null)
-        {
-            await sidebar.ToggleDrawer(); // Sync with sidebar component
-        }
-        StateHasChanged();
-    }
-    
     // Close sidebar when mouse leaves
     private async Task HandleMouseLeave()
     {
@@ -383,193 +355,94 @@
         }
     };
 
-    [Parameter]
-    public EventCallback<string> OnSearchQueryChanged { get; set; }
-
     protected override async Task OnInitializedAsync()
     {
-        await LoadUserDetails();
-    }
-
-    private async Task<string?> GetAccessToken()
-    {
+        await base.OnInitializedAsync();
+        
+        // Initialize cache service by preloading analytics data
         try
         {
-            var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
-            if (string.IsNullOrWhiteSpace(token))
+            var Token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+            if (!string.IsNullOrEmpty(Token))
             {
-                Console.WriteLine("Access token not found in localStorage.");
-                return null;
+                // Preload analytics data
+                await AnalyticsCache.GetOrSetAnalyticsDataAsync(new Func<Task<List<EmployeeAnalyticsResponseDto>>>(async () =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, "/api/Analytics/all");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+                    var response = await Http.SendAsync(request);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var data = await response.Content.ReadFromJsonAsync<List<EmployeeAnalyticsResponseDto>>() ?? new List<EmployeeAnalyticsResponseDto>();
+                        Console.WriteLine($"Preloaded analytics data: {data.Count} employees");
+                        return data;
+                    }
+                    return new List<EmployeeAnalyticsResponseDto>();
+                }));
+
+                // Preload common lookup data
+                var lookupTypes = new[] { "nationalities", "designations", "joiningLocations", "levels" };
+                foreach (var lookupType in lookupTypes)
+                {
+                    await AnalyticsCache.GetOrSetLookupDataAsync(lookupType, async () =>
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Get, $"api/Lookup/{lookupType}");
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+                        var response = await Http.SendAsync(request);
+                        
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var data = await response.Content.ReadFromJsonAsync<List<string>>() ?? new List<string>();
+                            Console.WriteLine($"Preloaded {lookupType}: {data.Count} items");
+                            return data.OrderBy(s => s).ToList();
+                        }
+                        return new List<string>();
+                    });
+                }
             }
-            Console.WriteLine("Access token retrieved from localStorage.");
-            return token;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error retrieving access token from localStorage: {ex.Message}");
-            return null;
+            Console.WriteLine($"Error preloading cache: {ex.Message}");
         }
+
+        await LoadUserDetails();
     }
 
     private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
     {
-        _lastSearchQuery = query;
-        _searchError = null;
-
         if (string.IsNullOrWhiteSpace(query))
         {
-            Console.WriteLine("No query provided for autocomplete, returning empty results.");
             return Enumerable.Empty<EmployeeSearchResult>();
         }
 
-        // Define field weights
-        var fieldWeights = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "EmployeeID", 100 },
-            { "FirstName", 90 },
-            { "LastName", 85 },
-            { "CurrentEmail", 80 },
-            { "PANNumber", 75 },
-            { "AadhaarNumber", 70 },
-            { "CurrentMobile", 65 },
-            { "MiddleName", 60 },
-            { "Designation", 55 },
-            { "PermanentEmail", 50 },
-            { "PermanentMobile", 45 },
-            { "FatherName", 30 },
-            { "MotherName", 28 },
-            { "Nationality", 25 },
-            { "PassportNo", 20 },
-            { "JoiningLocation", 15 },
-            { "Level", 12 },
-            { "CurrentCity", 10 },
-            { "CurrentState", 9 },
-            { "PermanentCity", 8 },
-            { "PermanentState", 7 },
-            { "TypeOfEmployment", 6 },
-            { "BloodGroup", 5 }
-        };
-        const int defaultWeight = 1;
-
         try
         {
-            var accessToken = await GetAccessToken();
-            var apiUrl = $"/api/search/spotlight?query={System.Net.WebUtility.UrlEncode(query)}";
-            var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-            var response = await Http.SendAsync(request, token);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var results = await response.Content.ReadFromJsonAsync<List<EmployeeSearchResult>>(token) ?? new List<EmployeeSearchResult>();
-                _searchError = null;
-
-                // Calculate scores and sort
-                var scoredResults = results.Select(r =>
-                {
-                    if (r.EmployeeID == "ANALYTICS_LINK") // Keep analytics link as is, perhaps high score or handle separately
-                    {
-                        r.Score = int.MaxValue; // Ensure it's often at the top or bottom based on desired placement
-                    }
-                    else
-                    {
-                        r.Score = r.MatchedFields.Sum(mf => fieldWeights.TryGetValue(mf, out var weight) ? weight : defaultWeight);
-                    }
-                    return r;
-                })
-                .OrderByDescending(r => r.Score)
-                .ThenBy(r => r.Name) // Alphabetical by name for tie-breaking
-                .ToList();
-                
-                // Console.WriteLine($"Autocomplete Search successful: Found {scoredResults.Count} results after scoring and sorting.");
-                // foreach(var sr in scoredResults.Take(5)) { Console.WriteLine($"  - {sr.Name}, Score: {sr.Score}, Matched: {string.Join(",", sr.MatchedFields)}"); }
-
-
-                if (IsAdmin && !scoredResults.Any(r => r.EmployeeID == "ANALYTICS_LINK"))
-                {
-                     var analyticsLink = new EmployeeSearchResult
-                        {
-                            EmployeeID = "ANALYTICS_LINK",
-                            Name = "Click for Advanced Search...",
-                            Designation = "View full analytics (Admin)", // More descriptive
-                            ProfileUrl = "/analytics",
-                            Score = -1 // Or a very low score to place it at the bottom if preferred
-                        };
-                    // Decide where to put the analytics link. For now, adding to end if not highly scored.
-                    // Or, we could ensure it's always first or last irrespective of score.
-                    // A common UX is to have it at the end of "real" results or as a distinct option.
-                    // Let's try adding it at the end for now.
-                    var finalResults = new List<EmployeeSearchResult>(scoredResults.Where(r => r.EmployeeID != "ANALYTICS_LINK"));
-                    finalResults.Add(analyticsLink);
-                    return finalResults;
-                }
-                
-                return scoredResults.Where(r => r.EmployeeID != "ANALYTICS_LINK" || r.Score == int.MaxValue).ToList(); // Filter out if not special
-            }
-            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                _searchError = "Session expired. Please log in again.";
-                NavigationManager.NavigateTo("/login");
-                Console.WriteLine("Unauthorized: Redirecting to login.");
-            }
-            else
-            {
-                _searchError = $"Error fetching autocomplete results: {response.ReasonPhrase}";
-                Console.WriteLine($"Autocomplete Search HTTP Error: {_searchError}");
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            Console.WriteLine($"Autocomplete Search cancelled.");
+            _isSearching = true;
             _searchError = null;
+            _searchResults = await SearchService.SearchEmployees(query);
+
+            return _searchResults;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error during autocomplete search API call: {ex.Message}");
-            _searchError = "An error occurred during autocomplete.";
+            Logger.LogError(ex, "Error searching employees");
+            _searchError = "An error occurred while searching. Please try again.";
+            return Enumerable.Empty<EmployeeSearchResult>();
         }
         finally
         {
-            Console.WriteLine("Autocomplete SearchFunc finished.");
-        }
-
-        return Enumerable.Empty<EmployeeSearchResult>();
-    }
-
-    private async Task OnEmployeeSelected(EmployeeSearchResult selectedEmployee)
-    {
-        if (selectedEmployee != null)
-        {
-            Console.WriteLine($"OnEmployeeSelected triggered for: {selectedEmployee.Name} ({selectedEmployee.ProfileUrl})");
-            await NavigateToEmployeeInNewTab(selectedEmployee.ProfileUrl);
-        }
-        else
-        {
-            Console.WriteLine("OnEmployeeSelected triggered with null employee.");
+            _isSearching = false;
         }
     }
 
-    private async Task NavigateToEmployeeInNewTab(string profileUrl)
+    private void OnSearchItemSelected(EmployeeSearchResult item)
     {
-        if (!string.IsNullOrEmpty(profileUrl))
+        if (item != null)
         {
-            Console.WriteLine($"Attempting to navigate to {profileUrl} in new tab.");
-            try
-            {
-                await JSRuntime.InvokeVoidAsync("open", profileUrl, "_blank");
-                Console.WriteLine("JavaScript window.open called successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error calling JavaScript open: {ex.Message}");
-                _searchError = "Could not open employee profile.";
-                StateHasChanged();
-            }
-        }
-        else
-        {
-            Console.WriteLine("NavigateToEmployeeInNewTab called with empty or null URL.");
+            NavigationManager.NavigateTo(item.ProfileUrl);
+            _searchText = null;
         }
     }
 
@@ -612,11 +485,8 @@
     {
         try
         {
-
             var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
-            var value = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem","userRole");
-
-
+            var value = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userRole");
 
             IsAdmin = value == "Admin";
             Console.WriteLine($"Retrieved email from sessionStorage: {email}");
@@ -719,18 +589,5 @@
             Console.WriteLine($"Regex error during highlighting: {ex.Message}");
             return text;
         }
-    }
-
-    public class EmployeeSearchResult
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Designation { get; set; } = string.Empty;
-        public string ProfileUrl { get; set; } = string.Empty;
-        public string? Email { get; set; }
-        public string? Mobile { get; set; }
-        public string? ProfilePicture { get; set; }
-        public string? EmployeeID { get; set; }
-        public List<string> MatchedFields { get; set; } = new List<string>();
-        public int Score { get; set; } // Added for sorting
     }
 }
