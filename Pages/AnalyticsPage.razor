@@ -664,7 +664,13 @@
                 (e.EmployeeDetails.LastName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
                 (e.EmployeeDetails.MiddleName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
                 (e.EmployeeDetails.Designation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false)
+                (e.EmployeeDetails.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
+                (e.EmployeeDetails.FatherName?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
+                (e.EmployeeDetails.MotherName?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
+                (e.EmployeeDetails.Level?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
+                (e.EmployeeDetails.CurrentMobile?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
+                (e.EmployeeDetails.PassportNo?.ToLowerInvariant().Contains(lowerSearch) ?? false)
+
             );
         }
 

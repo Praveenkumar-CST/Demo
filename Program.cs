@@ -34,6 +34,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<CountryService>();
 
+builder.Services.AddScoped<SearchService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
