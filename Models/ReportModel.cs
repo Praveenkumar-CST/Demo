@@ -55,8 +55,8 @@ namespace WiseHR.Models
         public int ProgressPercentage { get; set; }
 
         // File Upload
-        public byte[] UploadedFile { get; set; }
-        public string FileName { get; set; }
+        public byte[]? UploadedFile { get; set; }
+        public string? FileName { get; set; }
 
         // Time Tracking
         public DateTime SubmittedOn { get; set; } = DateTime.UtcNow;

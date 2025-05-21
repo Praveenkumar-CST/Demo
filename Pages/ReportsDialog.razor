@@ -11,11 +11,16 @@
 @layout HomeLayout
 @inject IJSRuntime JS
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-1">
-    @if (isLoading)
+<MudContainer MaxWidth="MaxWidth.Large" Class="m-1.5">    @if (isLoading)
     {
-        <MudProgressCircular Color="Color.Primary" Align="Align.Center" Indeterminate="true" />
-        <MudText Align="Align.Center">Loading...</MudText>
+        @if (isLoading)
+        {
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <MudText Align="Align.Center">Loading...</MudText>
+            </div>
+        }
+
     }
     else
     {
@@ -32,12 +37,10 @@
     @if (reports != null && reports.Count > 0)
     {
 
-        <div style=" max-width: 100%;">
+            <div style=" max-width: 100%;" class="rounded-table-wrapper">
 
-            <MudTable Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="width:fit-content;">
-                <HeaderContent>
-                    @* <MudTh>Mentor ID</MudTh> *@
-                    @*  <MudTh>Mentee ID</MudTh> *@
+            <MudTable  Class="small-table" Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="width:max-content; ">
+                <HeaderContent>             
                     <MudTh>S.NO</MudTh>
                     <MudTh>Name</MudTh>
                     <MudTh>Email</MudTh>
@@ -47,64 +50,89 @@
                     <MudTh>Projects</MudTh>
                     <MudTh>Pro-Stage</MudTh>
                     <MudTh>Progress%</MudTh>
-                    <MudTh>FortnightRemarks1</MudTh>
-                    <MudTh>FortnightRemarks2</MudTh>
-                    <MudTh>File</MudTh>
+                    <MudTh>FortnightRemark1</MudTh>
+                    <MudTh>FortnightRemark2</MudTh>
+                    @* <MudTh>File</MudTh> *@
                     @if (Role?.ToLower() != "employee")
                     {
                         <MudTh>Actions</MudTh>
                     }       
                 </HeaderContent>
-                <RowTemplate Context="report" >
-                    @* <MudTd DataLabel="Mentor Id">@report.MentorId</MudTd> *@
-                    @* <MudTd DataLabel="Mentee Id">@report.MenteeId</MudTd> *@
-                    <MudTd DataLabel="S.NO">@((reports.IndexOf(report) + 1).ToString())</MudTd>
+                <RowTemplate Context="report">
+    <MudTd DataLabel="S.NO">@((reports.IndexOf(report) + 1).ToString())</MudTd>
 
-                    <MudTd DataLabel="Mentee Name">@report.MenteeName</MudTd>
-                    <MudTd DataLabel="Mentee Email">@report.MenteeEmail</MudTd>
-                    <MudTd DataLabel="Phone">
-                        @(menteeMobiles.TryGetValue(report.MenteeId, out var phone) ? phone : "N/A")
-                    </MudTd>
+    <MudTd DataLabel="Mentee Name">@report.MenteeName</MudTd>
 
-                    <MudTd DataLabel="Institution">
-                        @(menteeInstitutions.TryGetValue(report.MenteeId, out var institution) ? institution : "N/A")
-                    </MudTd>           
-                    <MudTd DataLabel="MentorName">@report.MentorName</MudTd> 
+    <MudTd DataLabel="Mentee Email">
+                            <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Color=" Color.Primary" Class="mr-1" />
+        @report.MenteeEmail
+    </MudTd>
 
-                    @* <MudTd DataLabel="Mentor Designation">@report.MentorDesignation</MudTd> *@
-                    <MudTd DataLabel="Project">@report.ProjectsWorkedOn</MudTd>
-                    <MudTd DataLabel="Pro-Stage">@report.ProgressStage</MudTd>
-                    <MudTd DataLabel="Progress%">@report.ProgressPercentage %</MudTd>
-                    <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
-                    <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
+    <MudTd DataLabel="Phone">
+        <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Color="Color.Secondary" Class="mr-1" />
+        @(menteeMobiles.TryGetValue(report.MenteeId, out var phone) ? phone : "N/A")
+    </MudTd>
 
-                    <MudTd> 
-                         @if (!string.IsNullOrEmpty(report.FileName)) 
-                         { 
-                            <MudButton Color="Color.Primary" OnClick="() => DownloadFile(report)"> 
-                                ⬇️ 
-                           </MudButton> 
-                        } 
-                        else 
-                         { 
-                             <span>No File</span> 
-                         } 
-                     </MudTd>
-                    @if (Role?.ToLower() != "employee")
-                    {
-                        <MudTd>
-                            <div style="display: flex; gap:2px;">
+    <MudTd DataLabel="Institution">
+        <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Color="Color.Info" Class="mr-1" />
+        @(menteeInstitutions.TryGetValue(report.MenteeId, out var institution) ? institution : "N/A")
+    </MudTd>
 
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                Color="Color.Primary"
-                                OnClick="() => OpenEditReportDialog(report)" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                Color="Color.Error"
-                                OnClick="() => DeleteReport(report.Id)" />
-                            </div>
-                        </MudTd>
-                    }
-                </RowTemplate>
+   <MudTd DataLabel="Mentor">
+    <div style="display: flex; align-items: center; gap: 8px;">
+        @if (mentorPhotos.TryGetValue(report.MentorId, out var photo) && !string.IsNullOrEmpty(photo.Base64Content))
+        {
+            <img src="data:@photo.ContentType;base64,@photo.Base64Content" alt="Mentor Photo" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
+        }
+        <MudChip T="string" Color="Color.Tertiary" Variant="Variant.Filled">@report.MentorName</MudChip>
+    </div>
+</MudTd>
+
+    <MudTd DataLabel="Project">@report.ProjectsWorkedOn</MudTd>
+
+    <MudTd DataLabel="Pro-Stage">
+        <MudChip  T="string" Color="@GetStageColor(report.ProgressStage)" Variant="Variant.Outlined">@report.ProgressStage</MudChip>
+    </MudTd>
+
+    <MudTd DataLabel="Progress%">
+        <MudProgressLinear Value="@report.ProgressPercentage" Color="@GetProgressColor(report.ProgressPercentage)" Style="min-width:100px;" />
+        @if (report.ProgressPercentage == 100)
+        {
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="ml-1" />
+        }
+        else
+        {
+            <MudIcon Icon="@Icons.Material.Filled.Autorenew" Color="Color.Warning" Class="ml-1" />
+        }
+    </MudTd>
+
+    <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
+    <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
+
+    @* <MudTd> *@
+    @*     @if (!string.IsNullOrEmpty(report.FileName)) *@
+    @*     { *@
+    @*         <MudTooltip Text="Download Report File"> *@
+    @*             <MudIconButton Icon="@Icons.Material.Filled.Download" Color="Color.Primary" OnClick="() => DownloadFile(report)" /> *@
+    @*         </MudTooltip> *@
+    @*     } *@
+    @*     else *@
+    @*     { *@
+    @*         <MudText Color="Color.Error">No File</MudText> *@
+    @*     } *@
+    @* </MudTd> *@
+
+    @if (Role?.ToLower() != "employee")
+    {
+        <MudTd>
+            <div style="display: flex; gap: 2px;">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => OpenEditReportDialog(report)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteReport(report.Id)" />
+            </div>
+        </MudTd>
+    }
+</RowTemplate>
+
             </MudTable>
         </div>
         }
@@ -121,7 +149,21 @@
     }
 
 </MudContainer>
+<style>
+    .small-table td,
+    .small-table th {
+        font-size: 12px !important;
+        padding: 4px 8px !important;
+    }
 
+    .small-table .mud-icon {
+        font-size: 16px !important;
+    }
+    .rounded-table-wrapper {
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+</style>
 @code {
     private List<ReportModel> reports = new();
     private string Role { get; set; }
@@ -130,6 +172,28 @@
     private Dictionary<string, string> menteeInstitutions = new(); // New dictionary for institutions                                                            // }
     private bool isLoading = true;
     private bool isSubmitting = false;
+    private Dictionary<string, (string ContentType, string Base64Content)> mentorPhotos = new();
+
+    private Color GetProgressColor(int percentage)
+    {
+        return percentage switch
+        {
+            >= 80 => Color.Success,
+            >= 50 => Color.Warning,
+            _ => Color.Error
+        };
+    }
+
+    private Color GetStageColor(string stage)
+    {
+        return stage?.ToLower() switch
+        {
+            "completed" => Color.Success,
+            "in-progress" => Color.Warning,
+            "not started" => Color.Error,
+            _ => Color.Default
+        };
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -197,6 +261,23 @@
             // Clear and populate menteeMobiles
             menteeMobiles.Clear();
             menteeInstitutions.Clear();
+            var uniqueMentorIds = reports.Select(r => r.MentorId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToList();
+            foreach (var mentorId in uniqueMentorIds)
+            {
+                try
+                {
+                    var mentor = await EmployeeService.GetEmployeeDetails(mentorId);
+                    if (mentor != null && !string.IsNullOrEmpty(mentor.PhotoBase64Content))
+                    {
+                        mentorPhotos[mentorId] = (mentor.PhotoContentType, mentor.PhotoBase64Content);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error fetching mentor photo for {mentorId}: {ex.Message}");
+                }
+            }
+
             var uniqueMenteeIds = reports.Select(r => r.MenteeId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToList();
             Console.WriteLine($"Found {uniqueMenteeIds.Count} unique mentee IDs: {string.Join(", ", uniqueMenteeIds)}");
             foreach (var menteeId in uniqueMenteeIds)
@@ -256,19 +337,6 @@
             Console.WriteLine($"General error: {ex.Message}");
         }
     }
-  
-
-    // private async Task LoadReports()
-    // {
-    //     try
-    //     {
-    //         reports = await ReportService.GetReportsAsync() ?? new List<ReportModel>();
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Snackbar.Add($"Error loading reports: {ex.Message}", Severity.Error);
-    //     }
-    // }
     private async Task OpenEditReportDialog(ReportModel report)
     {
         var parameters = new DialogParameters
@@ -302,7 +370,9 @@
         if (isDeleted)
         {
             Snackbar.Add("Report deleted successfully.", Severity.Success);
-            await LoadReportsBasedOnRole(); // Refresh list
+            isLoading = true;
+            await LoadReportsBasedOnRole();
+            isLoading = false;// Refresh list
             StateHasChanged();
         }
         else
@@ -328,7 +398,11 @@
         if (!result.Canceled) // ✅ correct spelling and property name
         {
             Snackbar.Add("Report added successfully.", Severity.Success);
+            isLoading = true;
+
             await LoadReportsBasedOnRole();
+            isLoading = false;
+
             StateHasChanged();
         }
         isSubmitting = false;

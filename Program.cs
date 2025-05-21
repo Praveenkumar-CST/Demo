@@ -5,7 +5,10 @@ using WiseHR.Services;
 using MudBlazor.Services;
 using MudBlazor;
 using Blazored.SessionStorage;
+using FingerFrontend.Models;
+using FingerFrontend.AdminAttendanceViewModel;
 using Microsoft.Extensions.Caching.Memory;
+
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -31,6 +34,7 @@ builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<AnalyticsCacheService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<MentorAssignmentService>();
 
 builder.Services.AddScoped<CountryService>();
 
