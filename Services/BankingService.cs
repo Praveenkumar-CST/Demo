@@ -8,14 +8,18 @@
     using System.Threading.Tasks;
     using WiseHR.Models;
     using static WiseHR.Models.BankingInformation;
+    using Microsoft.Extensions.Caching.Memory;
 
     public class BankingService
     {
         private readonly HttpClient _httpClient;
+        private readonly IMemoryCache _cache;
 
-        public BankingService(HttpClient httpClient)
+        public BankingService(HttpClient httpClient, IMemoryCache cache)
         {
             _httpClient = httpClient;
+            _cache = cache;
+
         }
         public async Task<bool> RegisterBankingInfo(BankingInformation bankingInfo)
         {
@@ -24,11 +28,10 @@
             Console.WriteLine(await response.Content.ReadAsStringAsync());
             if (response.IsSuccessStatusCode)
             {
-                // Return the boolean value from the response
+                _cache.Remove($"BankingInfo_{bankingInfo.EmployeeID}");
                 return await response.Content.ReadFromJsonAsync<bool>();
             }
 
-            // Log and return false if the registration failed
             Console.WriteLine("Error registering employee bank details");
             return false;
         }
@@ -36,9 +39,20 @@
         // Get Banking Info by Employee ID
         public async Task<BankingInformation?> GetBankingInfo(string employeeId)
         {
+            string cacheKey = $"BankingInfo_{employeeId}";
+
+            if (_cache.TryGetValue(cacheKey, out BankingInformation cachedInfo))
+            {
+                return cachedInfo;
+            }
             try
             {
-                return await _httpClient.GetFromJsonAsync<BankingInformation>($"BankingInformation/GetBankingInfo/{employeeId}");
+                var result = await _httpClient.GetFromJsonAsync<BankingInformation>($"BankingInformation/GetBankingInfo/{employeeId}");
+                if (result != null)
+                {
+                    _cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+                }
+                return result;
             }
             catch (Exception ex)
             {
@@ -52,6 +66,11 @@
         public async Task<bool> DeleteBankingInfo(string employeeId)
         {
             var response = await _httpClient.DeleteAsync($"BankingInformation/DeleteBankingInfo/{employeeId}");
+            if (response.IsSuccessStatusCode)
+            {
+                _cache.Remove($"BankingInfo_{employeeId}");
+            }
+
             return response.IsSuccessStatusCode;
         }
 
@@ -59,6 +78,11 @@
         public async Task<bool> UpdateBankingInfo(BankingInformation bankingInfo)
         {
             var response = await _httpClient.PostAsJsonAsync("BankingInformation/UpdateBankingInfo", bankingInfo);
+            if (response.IsSuccessStatusCode)
+            {
+                _cache.Remove($"BankingInfo_{bankingInfo.EmployeeID}");
+            }
+
             return response.IsSuccessStatusCode;
         }
         public async Task<bool> UploadDocumentAsync(IBrowserFile file, string employeeId, string documentType)

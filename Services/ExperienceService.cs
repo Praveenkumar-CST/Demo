@@ -4,14 +4,20 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using WiseHRServer.Models;
 using WiseHR.Models;
+using Microsoft.Extensions.Caching.Memory;
+using Amazon.Runtime.Internal.Util;
 
 public class ExperienceService
 {
     private readonly HttpClient _httpClient;
+    private readonly IMemoryCache _cache;
 
-    public ExperienceService(HttpClient httpClient)
+
+    public ExperienceService(HttpClient httpClient, IMemoryCache cache)
     {
         _httpClient = httpClient;
+        _cache = cache;
+
     }
 
 
@@ -23,7 +29,10 @@ public class ExperienceService
         Console.WriteLine(await response.Content.ReadAsStringAsync());
         if (response.IsSuccessStatusCode)
         {
-            // Return the boolean value from the response
+            // Invalidate cache
+            _cache.Remove("AllExperience");
+            _cache.Remove($"Experience_{experience.EmployeeID}");
+
             return await response.Content.ReadFromJsonAsync<bool>();
         }
 
@@ -33,12 +42,22 @@ public class ExperienceService
 
     public async Task<List<Experience>> GetAllExperience()
     {
+        const string cacheKey = "AllExperience";
+
+        if (_cache.TryGetValue(cacheKey, out List<Experience> cachedExperiences))
+        {
+            return cachedExperiences;
+        }
+
         try
         {
-            var response = await _httpClient.GetAsync("Experience/GetAllExperience"); // ✅ Fixed endpoint
+            var response = await _httpClient.GetAsync("Experience/GetAllExperience");
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<List<Experience>>();
+                var experiences = await response.Content.ReadFromJsonAsync<List<Experience>>();
+
+                _cache.Set(cacheKey, experiences, TimeSpan.FromMinutes(5));
+                return experiences;
             }
             else
             {
@@ -56,19 +75,48 @@ public class ExperienceService
 
     public async Task<Experience> GetExperienceDetails(string employeeId)
     {
-        return await _httpClient.GetFromJsonAsync<Experience>($"Experience/GetExperienceInfo/{employeeId}");
+        string cacheKey = $"Experience_{employeeId}";
+
+        if (_cache.TryGetValue(cacheKey, out Experience cachedExperience))
+        {
+            return cachedExperience;
+        }
+
+        var experience = await _httpClient.GetFromJsonAsync<Experience>($"Experience/GetExperienceInfo/{employeeId}");
+
+        if (experience != null)
+        {
+            _cache.Set(cacheKey, experience, TimeSpan.FromMinutes(5));
+        }
+
+        return experience;
     }
     // Update experience
     public async Task<bool> UpdateExperienceAsync(Experience experience)
     {
         var response = await _httpClient.PostAsJsonAsync("Experience/UpdateExperience", experience);
-        return await response.Content.ReadFromJsonAsync<bool>();
+        var result = await response.Content.ReadFromJsonAsync<bool>();
+
+        if (result)
+        {
+            _cache.Remove("AllExperience");
+            _cache.Remove($"Experience_{experience.EmployeeID}");
+        }
+
+        return result;
     }
 
     // Delete experience by Employee ID
     public async Task<bool> DeleteExperienceAsync(string employeeId)
     {
         var response = await _httpClient.DeleteAsync($"Experience/DeleteExperience/{employeeId}");
+        var result = await response.Content.ReadFromJsonAsync<bool>();
+
+        if (result)
+        {
+            _cache.Remove("AllExperience");
+            _cache.Remove($"Experience_{employeeId}");
+        }
         return await response.Content.ReadFromJsonAsync<bool>();
     }
 }
