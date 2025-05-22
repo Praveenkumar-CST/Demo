@@ -43,8 +43,8 @@
         .header-icon {
             color: #3b82f6 !important;
             font-size: 2rem !important;
-            height:1.5em;
-            width:1.5em;
+            height:2em;
+            width:2em;
             margin-right: 0.75rem;
             background: rgba(59, 130, 246, 0.1);
             padding: 0.5rem;
@@ -138,7 +138,7 @@
                 </div>
 
                 <MudExpansionPanels>
-                    <MudExpansionPanel Text="Personal" IsInitiallyExpanded="true" Icon="@Icons.Material.Filled.Person">
+                    <MudExpansionPanel Text="Personal" IsInitiallyExpanded="true" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudSelect T="string" @bind-Value="_filterDto.BloodGroup" Label="Blood Group" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var group in _bloodGroups)
                             {
@@ -171,7 +171,7 @@
                         <MudDatePicker @bind-Date="_filterDto.DateOfBirthEnd" Label="DOB To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfBirthStart" />
                     </MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Employment" Icon="@Icons.Material.Filled.Work">
+                    <MudExpansionPanel Text="Employment" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                          <MudAutocomplete T="string" @bind-Value="_filterDto.Designation" Label="Designation"
                                           SearchFunc="SearchDesignations"
                                           Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -194,7 +194,7 @@
                          <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
                     </MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Experience" Icon="@Icons.Material.Filled.School">
+                    <MudExpansionPanel Text="Experience" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.College" Label="College / University"
                                          SearchFunc="SearchEducationUniversities"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -225,7 +225,7 @@
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateEnd" Label="Prev. Job End To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PreviousJobEndDateStart" />
                     </MudExpansionPanel>
 
-                     <MudExpansionPanel Text="Address" Icon="@Icons.Material.Filled.LocationOn">
+                    <MudExpansionPanel Text="Address" Icon="@Icons.Material.Filled.MoreHoriz"  Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentCity" Label="Current City"
                                          SearchFunc="SearchCurrentCities"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -246,7 +246,7 @@
                         <MudTextField @bind-Value="_filterDto.PermanentZip" Label="Permanent Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                      </MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Passport" Icon="@Icons.Material.Filled.CardTravel">
+                    <MudExpansionPanel Text="Passport" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.PassportNationality" Label="Passport Nationality"
                                          SearchFunc="SearchPassportNationalities"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -257,30 +257,30 @@
                         <MudDatePicker @bind-Date="_filterDto.PassportExpiryDateEnd" Label="Passport Expires To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PassportExpiryDateStart" />
                     </MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Banking" Icon="@Icons.Material.Filled.AccountBalance">
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankName" Label="Bank Name"
-                                         SearchFunc="SearchBankNames"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankBranch" Label="Bank Branch"
-                                         SearchFunc="SearchBankBranches"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankState" Label="Bank State"
-                                         SearchFunc="SearchBankStates"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
-                             @foreach (var type in _accountTypes)
-                            {
-                                <MudSelectItem Value="@type">@type</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudTextField @bind-Value="_filterDto.PANNumber" Label="PAN Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.AadhaarNumber" Label="Aadhaar Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                    </MudExpansionPanel>
+                   <MudExpansionPanel Text="Banking" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
+    <MudAutocomplete T="string" @bind-Value="_filterDto.BankName" Label="Bank Name"
+                     SearchFunc="SearchBankNames"
+                     Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+    <MudAutocomplete T="string" @bind-Value="_filterDto.BankBranch" Label="Bank Branch"
+                     SearchFunc="SearchBankBranches"
+                     Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+    <MudAutocomplete T="string" @bind-Value="_filterDto.BankState" Label="Bank State"
+                     SearchFunc="SearchBankStates"
+                     Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+    <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+         @foreach (var type in _accountTypes)
+        {
+            <MudSelectItem Value="@type">@type</MudSelectItem>
+        }
+    </MudSelect>
+    <MudTextField @bind-Value="_filterDto.PANNumber" Label="PAN Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+    <MudTextField @bind-Value="_filterDto.AadhaarNumber" Label="Aadhaar Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+</MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Misc" Icon="@Icons.Material.Filled.MoreHoriz">
+                    <MudExpansionPanel Text="Misc" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudSelect T="bool?" @bind-Value="_filterDto.HasAllergies" Label="Has Allergies?" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             <MudSelectItem Value="@( (bool?)null )">Any</MudSelectItem>
                             <MudSelectItem Value="@( (bool?)true )">Yes</MudSelectItem>
@@ -490,7 +490,7 @@
                                           Style="height: 100%; display: flex; flex-direction: column;"
                                           FixedHeader="true"
                                           Height="100%">
-
+                                            
                                     <HeaderContent>
                                         <MudTh Class="table-header-cell avatar-column"></MudTh>
                                         <MudTh Class="table-header-cell">
@@ -518,6 +518,7 @@
                                             </MudTableSortLabel>
                                         </MudTh>
                                     </HeaderContent>
+
 
                                     <RowTemplate Context="employeeContext">
                                         <MudTd Class="avatar-cell">
@@ -575,6 +576,160 @@
                                 </MudTable>
                             </div>
 
+
+
+
+                            <style>
+                                .table-header-cell {
+                                    border-bottom: none;
+                                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                                }
+                            </style>
+                            @* Filter Styles *@
+                            <style>
+                                /* Banking Expansion Panel Styles */
+
+                                .banking-expansion-panel {
+                                    margin-bottom: 16px;
+                                    border-radius: 12px;
+                                    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                                    border: 1px solid #e3f2fd;
+                                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                                    overflow: hidden;
+                                }
+
+                                    .banking-expansion-panel:hover {
+                                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+                                        transform: translateY(-2px);
+                                        border-color: #bbdefb;
+                                    }
+
+                                    /* Header Styling */
+                                    .banking-expansion-panel .mud-expand-panel-header {
+                                        background: linear-gradient(155deg, #4ba1f3 0%, #75cfd9);
+                                        color: white;
+                                        padding: 16px 20px;
+                                        border-radius: 12px 12px 0 0;
+                                        transition: all 0.3s ease;
+                                    }
+
+                                        .banking-expansion-panel .mud-expand-panel-header:hover {
+                                            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+                                        }
+
+                                        .banking-expansion-panel .mud-expand-panel-header .mud-expand-panel-text {
+                                            font-weight: 600;
+                                            font-size: 1.1rem;
+                                            letter-spacing: 0.5px;
+                                        }
+
+                                        .banking-expansion-panel .mud-expand-panel-header .mud-icon-button {
+                                            color: white;
+                                        }
+
+                                            .banking-expansion-panel .mud-expand-panel-header .mud-icon-button:hover {
+                                                background-color: rgba(255, 255, 255, 0.1);
+                                            }
+
+                                    /* Content Area Styling */
+                                    .banking-expansion-panel .mud-expand-panel-content {
+                                        padding: 24px 20px;
+                                        background-color: #ffffff;
+                                        border-radius: 0 0 12px 12px;
+                                        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                                    }
+
+                                    /* Animation for expand/collapse */
+                                    .banking-expansion-panel .mud-expand-panel-content {
+                                        animation: fadeInUp 0.4s ease-out;
+                                    }
+
+                                @@keyframes fadeInUp {
+                                    from
+
+                                {
+                                    opacity: 0;
+                                    transform: translateY(10px);
+                                }
+
+                                to {
+                                    opacity: 1;
+                                    transform: translateY(0);
+                                }
+
+                                }
+
+                                /* Icon Styling */
+                                .banking-expansion-panel .mud-expand-panel-header .mud-svg-icon {
+                                    transition: transform 0.3s ease;
+                                }
+
+                                .banking-expansion-panel.mud-expand-panel-expanded .mud-expand-panel-header .mud-svg-icon {
+                                    transform: rotate(180deg);
+                                }
+
+                               
+
+                                @@keyframes shimmer {
+                                    0%, 100%
+
+                                {
+                                    background-position: 200% 0;
+                                }
+
+                                50% {
+                                    background-position: -200% 0;
+                                }
+
+                                }
+
+                                /* Focus States for Accessibility */
+                                .banking-expansion-panel .mud-expand-panel-header:focus {
+                                    outline: 2px solid #1976d2;
+                                    outline-offset: 2px;
+                                }
+
+                                /* Responsive Design */
+                                @@media (max-width: 768px) {
+                                    .banking-expansion-panel
+
+                                {
+                                    margin-bottom: 12px;
+                                    border-radius: 8px;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header {
+                                    padding: 12px 16px;
+                                    border-radius: 8px 8px 0 0;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-content {
+                                    padding: 16px;
+                                    border-radius: 0 0 8px 8px;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header .mud-expand-panel-text {
+                                    font-size: 1rem;
+                                }
+
+                                }
+
+                                /* Dark Theme Support */
+                                @@media (prefers-color-scheme: dark) {
+                                    .banking-expansion-panel
+
+                                {
+                                        background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+                                    border-color:#ffffff;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-content {
+                                    background-color:#ffffff;
+                                }
+
+                                }
+                            </style>
                             <style>
                                 .table-container {
                                     background: #ffffff;
@@ -1187,6 +1342,12 @@
 
 
 <style>
+    .mud-chip-filled.mud-chip-color-primary {
+        color: var(--mud-palette-primary-text);
+        --mud-ripple-color: var(--mud-palette-primary-text) !important;
+        background-color: rgb(184 179 230);
+    }
+
     ::deep .analytics-container {
         padding: 16px;
         margin: 0;
