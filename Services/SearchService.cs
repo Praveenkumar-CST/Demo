@@ -15,6 +15,34 @@ namespace WiseHR.Services
         private readonly ILogger<SearchService> _logger;
         private const int FuzzyScoreThreshold = 60;
 
+        // Define field weights for prioritization
+        private static readonly Dictionary<string, int> FieldWeights = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "FirstName", 100 },
+            { "LastName", 95 },
+            { "MiddleName", 90 },
+            { "Designation", 85 },
+            { "FatherName", 80 },
+            { "MotherName", 75 },
+            { "CurrentEmail", 70 },
+            { "CurrentMobile", 65 },
+            { "EmployeeID", 60 },
+            { "PANNumber", 55 },
+            { "AadhaarNumber", 50 },
+            { "PermanentEmail", 45 },
+            { "PermanentMobile", 40 },
+            { "Nationality", 35 },
+            { "PassportNo", 30 },
+            { "JoiningLocation", 25 },
+            { "Level", 20 },
+            { "CurrentCity", 15 },
+            { "CurrentState", 10 },
+            { "PermanentCity", 5 },
+            { "PermanentState", 4 },
+            { "TypeOfEmployment", 3 },
+            { "BloodGroup", 2 }
+        };
+
         public SearchService(
             HttpClient httpClient, 
             IJSRuntime jsRuntime, 
@@ -85,14 +113,17 @@ namespace WiseHR.Services
                     // Check all relevant fields based on cache type
                     if (cacheResponse.Type == "admin")
                     {
-                        // Admin cache fields
+                        // Admin cache fields - check in order of priority
                         checkField(item.FirstName, "FirstName");
-                        checkField(item.MiddleName, "MiddleName");
                         checkField(item.LastName, "LastName");
+                        checkField(item.MiddleName, "MiddleName");
+                        checkField(item.Designation, "Designation");
+                        checkField(item.FatherName, "FatherName");
+                        checkField(item.MotherName, "MotherName");
                         checkField(item.CurrentEmail, "CurrentEmail");
                         checkField(item.CurrentMobile, "CurrentMobile");
+                        checkField(item.EmployeeID, "EmployeeID");
                         checkField(item.BloodGroup, "BloodGroup");
-                        checkField(item.Designation, "Designation");
                         checkField(item.TypeOfEmployment, "TypeOfEmployment");
                         checkField(item.Level, "Level");
                         checkField(item.JoiningLocation, "JoiningLocation");
@@ -124,8 +155,6 @@ namespace WiseHR.Services
                         checkField(item.EmergencyContact1State, "EmergencyContact1State");
                         checkField(item.EmergencyContact1ZipCode, "EmergencyContact1ZipCode");
                         checkField(item.EmergencyContact1Mobile, "EmergencyContact1Mobile");
-                        checkField(item.FatherName, "FatherName");
-                        checkField(item.MotherName, "MotherName");
                         checkField(item.BankName, "Bank.BankName");
                         checkField(item.BankBranch, "Bank.Branch");
                         checkField(item.BankAccountHolderName, "Bank.AccountHolderName");
@@ -141,12 +170,12 @@ namespace WiseHR.Services
                     {
                         // User cache fields (limited access)
                         checkField(item.FirstName, "FirstName");
-                        checkField(item.MiddleName, "MiddleName");
                         checkField(item.LastName, "LastName");
+                        checkField(item.MiddleName, "MiddleName");
+                        checkField(item.Designation, "Designation");
                         checkField(item.CurrentEmail, "CurrentEmail");
                         checkField(item.CurrentMobile, "CurrentMobile");
                         checkField(item.BloodGroup, "BloodGroup");
-                        checkField(item.Designation, "Designation");
                     }
 
                     if (matchedFields.Any())
@@ -162,18 +191,27 @@ namespace WiseHR.Services
                             MatchedFields = matchedFields,
                             ProfilePicture = !string.IsNullOrEmpty(item.PhotoBase64Content) 
                                 ? $"data:{item.PhotoContentType};base64,{item.PhotoBase64Content}"
-                                : null
+                                : null,
+                            Score = CalculateScore(matchedFields)
                         });
                     }
                 }
 
-                return results;
+                // Sort results by score (highest first) and then by name
+                return results.OrderByDescending(r => r.Score)
+                             .ThenBy(r => r.Name)
+                             .ToList();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching employees");
                 return new List<EmployeeSearchResult>();
             }
+        }
+
+        private int CalculateScore(List<string> matchedFields)
+        {
+            return matchedFields.Sum(field => FieldWeights.TryGetValue(field, out var weight) ? weight : 1);
         }
 
         private async Task<string?> GetAccessToken()

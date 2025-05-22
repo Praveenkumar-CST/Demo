@@ -37,7 +37,7 @@
             AdornmentIcon="@Icons.Material.Filled.Search"
             AdornmentColor="Color.Primary"
             Class="search-autocomplete"
-            Style="width: 100%; border-radius: 28px; font-size: 1.1rem;"
+            Style="width: 100%; border-radius: 28px; font-size: 1.1rem; outline: none; border: none; box-shadow: none;"
             DebounceInterval="300"
             ResetValueOnEmptyText="true"
             ShowProgressIndicator="true"
@@ -107,17 +107,25 @@
 </div>
 
 <!-- Main Content -->
-<MudMainContent Style="@($"flex-grow: 1; margin-left: {(drawerOpen ? "260px" : "70px")}; transition: margin 0.3s ease;")">
+<MudMainContent Style="@($"flex-grow: 1; margin-left: {(drawerOpen ? "260px" : "70px")}; transition: margin 0.3s ease; z-index = 1610")">
     <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge"> 
         @Body
     </MudContainer>
 </MudMainContent>
+<MudPopoverProvider/>
 
 <!-- Popover Support -->
-<MudPopoverProvider />
 
 
 <style>
+    .mud-input > input.mud-input-root-outlined.mud-input-root-adorned-start{
+        border: none;
+        outline: none;
+        box-shadow: none;
+    }
+    .mud-overlay {
+        z-index: -1;
+    }
     .sidebar-container {
         height:100%;
         position: fixed;
