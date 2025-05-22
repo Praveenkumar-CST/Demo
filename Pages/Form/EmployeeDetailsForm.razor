@@ -23,7 +23,7 @@
                     @* <ValidationSummary /> *@
 
                     <!-- Personal Information -->
-                <MudExpansionPanel Typo="Typo.h5" Text="Personal Information"
+                <MudExpansionPanel Typo="Typo.h5" Text="Personal Information*"
                                    Icon="@Icons.Material.Filled.Person"
                                    Class="section-tab"
                                    Style="margin-top: 16px;">
@@ -34,6 +34,7 @@
                         <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID"
                                       Required="true" Margin="Margin.Dense" Disabled="true" />
                     </MudItem>
+          
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="First Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FirstName" Required="true" Margin="Margin.Dense" />
                             <ValidationMessage For="@(() => employeeDetails.FirstName)" />
@@ -89,13 +90,13 @@
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Marital Status" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.MaritalStatus" Required="true">
-                                <MudSelectItem Value="@("Single")">Single</MudSelectItem>
+                                        <MudSelectItem Value="@("UnMarried")">UnMarried</MudSelectItem>
                                 <MudSelectItem Value="@("Married")">Married</MudSelectItem>
                                 <MudSelectItem Value="@("Divorced")">Divorced</MudSelectItem>
                                 <MudSelectItem Value="@("Widowed")">Widowed</MudSelectItem>
                             </MudSelect>
                         </MudItem>
-                        @if (employeeDetails.MaritalStatus != "Single")
+                                @if (employeeDetails.MaritalStatus != "UnMarried")
                         {
                             <MudItem xs="12" sm="4" md="3">
                                 <MudTextField Label="No of Sons" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Sons" />
@@ -156,7 +157,7 @@
                         </div>
                     </ChildContent>
                 </MudExpansionPanel>
-                  <MudExpansionPanel Typo="Typo.h5" Text="Work Information"
+                  <MudExpansionPanel Typo="Typo.h5" Text="Work Information*"
                                    Icon="@Icons.Material.Filled.Work"
                                    Class="section-tab">
                     <ChildContent>
@@ -248,7 +249,7 @@
        </ChildContent>
    </MudExpansionPanel>
                     @* break *@
-                      <MudExpansionPanel Typo="Typo.h5" Text="Address"
+                      <MudExpansionPanel Typo="Typo.h5" Text="Address*"
                                    Icon="@Icons.Material.Filled.LocationOn"
                                    Class="section-tab">
                     <ChildContent>
@@ -330,7 +331,7 @@
                     </ChildContent>
                 </MudExpansionPanel>
                     <!-- Emergency Contact Information -->
-                      <MudExpansionPanel Typo="Typo.h5" Text="Emergency Contact Information"
+                      <MudExpansionPanel Typo="Typo.h5" Text="Emergency Contact Information*"
                                    Icon="@Icons.Material.Filled.ContactPhone"
                                    Class="section-tab">
                     <ChildContent>

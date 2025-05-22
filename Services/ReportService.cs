@@ -2,102 +2,129 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using WiseHR.Models; // Adjust this namespace as needed
+using System.Linq;
+using WiseHR.Models;
+using System.Collections.Concurrent;
 
 public class ReportService
 {
     private readonly HttpClient _http;
+    private readonly ConcurrentDictionary<string, object> _cache = new();
 
     public ReportService(HttpClient http)
     {
         _http = http;
     }
 
-    // Get all reports
+    private const string AllReportsKey = "AllReports";
+    private string ReportByIdKey(int id) => $"Report_{id}";
+    private string MenteeReportsKey(string id) => $"MenteeReports_{id}";
+    private string MentorReportsKey(string id) => $"MentorReports_{id}";
+
+    // Get all reports with cache
     public async Task<List<ReportModel>> GetReportsAsync()
     {
-        return await _http.GetFromJsonAsync<List<ReportModel>>("api/reports");
+        if (_cache.TryGetValue(AllReportsKey, out var cachedReports))
+            return (List<ReportModel>)cachedReports;
+
+        var reports = await _http.GetFromJsonAsync<List<ReportModel>>("api/reports");
+        if (reports != null)
+            _cache[AllReportsKey] = reports;
+
+        return reports ?? new List<ReportModel>();
     }
 
-    // Get report by ID
+    // Get report by ID with cache
     public async Task<ReportModel?> GetReportByIdAsync(int id)
     {
-        return await _http.GetFromJsonAsync<ReportModel>($"api/reports/{id}");
+        var key = ReportByIdKey(id);
+        if (_cache.TryGetValue(key, out var cached))
+            return (ReportModel)cached;
+
+        var report = await _http.GetFromJsonAsync<ReportModel>($"api/reports/{id}");
+        if (report != null)
+            _cache[key] = report;
+
+        return report;
     }
-    // Get reports by Mentee ID
+
+    // Get reports by Mentee ID with cache
     public async Task<List<ReportModel>> GetReportsByMenteeIdAsync(string menteeId)
     {
-        return await _http.GetFromJsonAsync<List<ReportModel>>($"api/reports/mentee/{menteeId}");
+        var key = MenteeReportsKey(menteeId);
+        if (_cache.TryGetValue(key, out var cached))
+            return (List<ReportModel>)cached;
+
+        var reports = await _http.GetFromJsonAsync<List<ReportModel>>($"api/reports/mentee/{menteeId}");
+        if (reports != null)
+            _cache[key] = reports;
+
+        return reports ?? new List<ReportModel>();
     }
 
-    // Get reports by Mentor ID
+    // Get reports by Mentor ID with cache
     public async Task<List<ReportModel>> GetReportsByMentorIdAsync(string mentorId)
     {
-        return await _http.GetFromJsonAsync<List<ReportModel>>($"api/reports/mentor/{mentorId}");
+        var key = MentorReportsKey(mentorId);
+        if (_cache.TryGetValue(key, out var cached))
+            return (List<ReportModel>)cached;
+
+        var reports = await _http.GetFromJsonAsync<List<ReportModel>>($"api/reports/mentor/{mentorId}");
+        if (reports != null)
+            _cache[key] = reports;
+
+        return reports ?? new List<ReportModel>();
     }
 
-    // Get reports by mentee email
+    // Get reports by mentee email (filtered locally from all reports)
     public async Task<List<ReportModel>> GetReportsByMenteeEmailAsync(string email)
     {
         var reports = await GetReportsAsync();
         return reports.Where(r => r.MenteeEmail == email).ToList();
     }
 
-    // Submit new report
+    // Submit new report and invalidate cache
     public async Task<bool> SubmitReportAsync(ReportModel report)
     {
-        try
-        {
-            // Debug: print report data to console
-            Console.WriteLine("Submitting Report:");
-            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions
-            {
-                WriteIndented = true
-            }));
+        var response = await _http.PostAsJsonAsync("api/reports", report);
+        if (response.IsSuccessStatusCode)
+            InvalidateCache();
 
-            var response = await _http.PostAsJsonAsync("api/reports", report);
-
-            // Debug: print response info
-            Console.WriteLine($"Response Status: {response.StatusCode}");
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error Content: {errorContent}");
-            }
-
-            return response.IsSuccessStatusCode;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Exception during SubmitReportAsync: {ex.Message}");
-            return false;
-        }
+        return response.IsSuccessStatusCode;
     }
-    // Update report
+
+    // Update report and invalidate cache
     public async Task<bool> UpdateReportAsync(int id, ReportModel report)
     {
-        try
-        {
-            Console.WriteLine($"Updating report with ID: {id}");
-            var response = await _http.PutAsJsonAsync($"api/reports/{id}", report);
-            Console.WriteLine($"Response Status: {response.StatusCode}");
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error Content: {errorContent}");
-            }
-            return response.IsSuccessStatusCode;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Exception during UpdateReportAsync: {ex.Message}");
-            return false;
-        }
+        var response = await _http.PutAsJsonAsync($"api/reports/{id}", report);
+        if (response.IsSuccessStatusCode)
+            InvalidateCache(id);
+
+        return response.IsSuccessStatusCode;
     }
-    // Delete report
+
+    // Delete report and invalidate cache
     public async Task<bool> DeleteReportAsync(int id)
     {
         var response = await _http.DeleteAsync($"api/reports/{id}");
+        if (response.IsSuccessStatusCode)
+            InvalidateCache(id);
+
         return response.IsSuccessStatusCode;
+    }
+
+    // Invalidate all or specific cache entries
+    private void InvalidateCache(int? id = null)
+    {
+        _cache.TryRemove(AllReportsKey, out _);
+
+        if (id.HasValue)
+            _cache.TryRemove(ReportByIdKey(id.Value), out _);
+
+        // Optional: clear all mentee/mentor keys too
+        foreach (var key in _cache.Keys.Where(k => k.StartsWith("MenteeReports_") || k.StartsWith("MentorReports_")).ToList())
+        {
+            _cache.TryRemove(key, out _);
+        }
     }
 }

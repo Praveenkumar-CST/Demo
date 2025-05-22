@@ -60,14 +60,12 @@ namespace WiseHR.Models
         // PAN File Properties
         public string PanFileName { get; set; }
 
-        [Required(ErrorMessage = "Pan document is required")]
         public string? PanBase64Content { get; set; }
         public string? PanContentType { get; set; }
 
         // Passbook File Properties
-        public string PassbookFileName { get; set; }
+        public string? PassbookFileName { get; set; }
 
-        [Required(ErrorMessage = "Passbook document is required")]
         public string? PassbookBase64Content { get; set; }
         public string? PassbookContentType { get; set; }
     }

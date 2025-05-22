@@ -524,7 +524,8 @@
             if (allSuccess)
             {
                 showModal = false;
-                   isAssigning = false;
+                StateHasChanged();
+                isAssigning = false;
                 Snackbar.Add("Mentees assigned successfully!", Severity.Success);
                 CloseModal();
                 await ReloadManagersAndAdmins();

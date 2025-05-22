@@ -34,107 +34,107 @@
                 </MudButton>
             </div>
         }
-    @if (reports != null && reports.Count > 0)
-    {
+        @if (reports != null && reports.Count > 0)
+        {
 
             <div style=" max-width: 100%;" class="rounded-table-wrapper">
 
-            <MudTable  Class="small-table" Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="width:max-content; ">
-                <HeaderContent>             
-                    <MudTh>S.NO</MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Email</MudTh>
-                    <MudTh>Phone</MudTh>
-                    <MudTh>Institution</MudTh>
-                    <MudTh>Mentor</MudTh>
-                    <MudTh>Projects</MudTh>
-                    <MudTh>Pro-Stage</MudTh>
-                    <MudTh>Progress%</MudTh>
-                    <MudTh>FortnightRemark1</MudTh>
-                    <MudTh>FortnightRemark2</MudTh>
-                    @* <MudTh>File</MudTh> *@
-                    @if (Role?.ToLower() != "employee")
-                    {
-                        <MudTh>Actions</MudTh>
-                    }       
-                </HeaderContent>
-                <RowTemplate Context="report">
-    <MudTd DataLabel="S.NO">@((reports.IndexOf(report) + 1).ToString())</MudTd>
+                <MudTable  Class="small-table" Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="width:max-content; ">
+                    <HeaderContent>             
+                        <MudTh>S.NO</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Phone</MudTh>
+                        <MudTh>Institution</MudTh>
+                        <MudTh>Mentor</MudTh>
+                        <MudTh>Projects</MudTh>
+                        <MudTh>Pro-Stage</MudTh>
+                        <MudTh>Progress%</MudTh>
+                        <MudTh>FortnightRemark1</MudTh>
+                        <MudTh>FortnightRemark2</MudTh>
+                        @* <MudTh>File</MudTh> *@
+                        @if (Role?.ToLower() != "employee")
+                        {
+                            <MudTh>Actions</MudTh>
+                        }       
+                    </HeaderContent>
+                    <RowTemplate Context="report">
+                        <MudTd DataLabel="S.NO">@((reports.IndexOf(report) + 1).ToString())</MudTd>
 
-    <MudTd DataLabel="Mentee Name">@report.MenteeName</MudTd>
+                        <MudTd DataLabel="Mentee Name">@report.MenteeName</MudTd>
 
-    <MudTd DataLabel="Mentee Email">
+                        <MudTd DataLabel="Mentee Email">
                             <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Color=" Color.Primary" Class="mr-1" />
-        @report.MenteeEmail
-    </MudTd>
+                            @report.MenteeEmail
+                        </MudTd>
 
-    <MudTd DataLabel="Phone">
-        <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Color="Color.Secondary" Class="mr-1" />
-        @(menteeMobiles.TryGetValue(report.MenteeId, out var phone) ? phone : "N/A")
-    </MudTd>
+                        <MudTd DataLabel="Phone">
+                            <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Color="Color.Secondary" Class="mr-1" />
+                            @(menteeMobiles.TryGetValue(report.MenteeId, out var phone) ? phone : "N/A")
+                        </MudTd>
 
-    <MudTd DataLabel="Institution">
-        <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Color="Color.Info" Class="mr-1" />
-        @(menteeInstitutions.TryGetValue(report.MenteeId, out var institution) ? institution : "N/A")
-    </MudTd>
+                        <MudTd DataLabel="Institution">
+                            <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Color="Color.Info" Class="mr-1" />
+                            @(menteeInstitutions.TryGetValue(report.MenteeId, out var institution) ? institution : "N/A")
+                        </MudTd>
 
-   <MudTd DataLabel="Mentor">
-    <div style="display: flex; align-items: center; gap: 8px;">
-        @if (mentorPhotos.TryGetValue(report.MentorId, out var photo) && !string.IsNullOrEmpty(photo.Base64Content))
-        {
-            <img src="data:@photo.ContentType;base64,@photo.Base64Content" alt="Mentor Photo" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
-        }
-        <MudChip T="string" Color="Color.Tertiary" Variant="Variant.Filled">@report.MentorName</MudChip>
-    </div>
-</MudTd>
+                        <MudTd DataLabel="Mentor">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                @if (mentorPhotos.TryGetValue(report.MentorId, out var photo) && !string.IsNullOrEmpty(photo.Base64Content))
+                                {
+                                    <img src="data:@photo.ContentType;base64,@photo.Base64Content" alt="Mentor Photo" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
+                                }
+                                <MudChip T="string" Color="Color.Tertiary" Variant="Variant.Filled">@report.MentorName</MudChip>
+                            </div>
+                        </MudTd>
 
-    <MudTd DataLabel="Project">@report.ProjectsWorkedOn</MudTd>
+                        <MudTd DataLabel="Project">@report.ProjectsWorkedOn</MudTd>
 
-    <MudTd DataLabel="Pro-Stage">
-        <MudChip  T="string" Color="@GetStageColor(report.ProgressStage)" Variant="Variant.Outlined">@report.ProgressStage</MudChip>
-    </MudTd>
+                        <MudTd DataLabel="Pro-Stage">
+                            <MudChip  T="string" Color="@GetStageColor(report.ProgressStage)" Variant="Variant.Outlined">@report.ProgressStage</MudChip>
+                        </MudTd>
 
-    <MudTd DataLabel="Progress%">
-        <MudProgressLinear Value="@report.ProgressPercentage" Color="@GetProgressColor(report.ProgressPercentage)" Style="min-width:100px;" />
-        @if (report.ProgressPercentage == 100)
-        {
-            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="ml-1" />
-        }
-        else
-        {
-            <MudIcon Icon="@Icons.Material.Filled.Autorenew" Color="Color.Warning" Class="ml-1" />
-        }
-    </MudTd>
+                        <MudTd DataLabel="Progress%">
+                            <MudProgressLinear Value="@report.ProgressPercentage" Color="@GetProgressColor(report.ProgressPercentage)" Style="min-width:100px;" />
+                            @if (report.ProgressPercentage == 100)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="ml-1" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Autorenew" Color="Color.Warning" Class="ml-1" />
+                            }
+                        </MudTd>
 
-    <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
-    <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
+                        <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
+                        <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
 
-    @* <MudTd> *@
-    @*     @if (!string.IsNullOrEmpty(report.FileName)) *@
-    @*     { *@
-    @*         <MudTooltip Text="Download Report File"> *@
-    @*             <MudIconButton Icon="@Icons.Material.Filled.Download" Color="Color.Primary" OnClick="() => DownloadFile(report)" /> *@
-    @*         </MudTooltip> *@
-    @*     } *@
-    @*     else *@
-    @*     { *@
-    @*         <MudText Color="Color.Error">No File</MudText> *@
-    @*     } *@
-    @* </MudTd> *@
+                        @* <MudTd> *@
+                        @*     @if (!string.IsNullOrEmpty(report.FileName)) *@
+                        @*     { *@
+                        @*         <MudTooltip Text="Download Report File"> *@
+                        @*             <MudIconButton Icon="@Icons.Material.Filled.Download" Color="Color.Primary" OnClick="() => DownloadFile(report)" /> *@
+                        @*         </MudTooltip> *@
+                        @*     } *@
+                        @*     else *@
+                        @*     { *@
+                        @*         <MudText Color="Color.Error">No File</MudText> *@
+                        @*     } *@
+                        @* </MudTd> *@
 
-    @if (Role?.ToLower() != "employee")
-    {
-        <MudTd>
-            <div style="display: flex; gap: 2px;">
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => OpenEditReportDialog(report)" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteReport(report.Id)" />
+                        @if (Role?.ToLower() != "employee")
+                        {
+                            <MudTd>
+                                <div style="display: flex; gap: 2px;">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => OpenEditReportDialog(report)" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteReport(report.Id)" />
+                                </div>
+                            </MudTd>
+                        }
+                    </RowTemplate>
+
+                </MudTable>
             </div>
-        </MudTd>
-    }
-</RowTemplate>
-
-            </MudTable>
-        </div>
         }
         else
         {
@@ -152,16 +152,16 @@
 <style>
     .small-table td,
     .small-table th {
-        font-size: 12px !important;
-        padding: 4px 8px !important;
+    font-size: 12px !important;
+    padding: 4px 8px !important;
     }
 
     .small-table .mud-icon {
-        font-size: 16px !important;
+    font-size: 16px !important;
     }
     .rounded-table-wrapper {
-        border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
 </style>
 @code {
@@ -398,11 +398,7 @@
         if (!result.Canceled) // ✅ correct spelling and property name
         {
             Snackbar.Add("Report added successfully.", Severity.Success);
-            isLoading = true;
-
             await LoadReportsBasedOnRole();
-            isLoading = false;
-
             StateHasChanged();
         }
         isSubmitting = false;
@@ -412,13 +408,12 @@
         if (report.UploadedFile != null && !string.IsNullOrEmpty(report.FileName))
         {
             var base64 = Convert.ToBase64String(report.UploadedFile);
-            var fileType = "application/octet-stream"; // Optional: detect actual file type
+            var fileType = "application/octet-stream";
             await JS.InvokeVoidAsync("downloadBase64File", fileType, base64, report.FileName);
         }
     }
+    
 
-
-    // Optional: Legacy placeholder model (not used if ReportModel is defined in Models)
     public class Report
     {
         public string ReportName { get; set; }
