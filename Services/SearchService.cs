@@ -14,6 +14,9 @@ namespace WiseHR.Services
         private readonly IJSRuntime _jsRuntime;
         private readonly ILogger<SearchService> _logger;
         private const int FuzzyScoreThreshold = 60;
+        private SearchCacheResponse? _searchCache;
+        private DateTime _lastCacheRefresh = DateTime.MinValue;
+        private readonly TimeSpan _cacheRefreshInterval = TimeSpan.FromMinutes(1);
 
         // Define field weights for prioritization
         private static readonly Dictionary<string, int> FieldWeights = new(StringComparer.OrdinalIgnoreCase)
@@ -57,26 +60,13 @@ namespace WiseHR.Services
         {
             try
             {
-                var token = await GetAccessToken();
-                if (string.IsNullOrEmpty(token))
+                // Check if cache needs refresh
+                if (_searchCache == null || DateTime.UtcNow - _lastCacheRefresh > _cacheRefreshInterval)
                 {
-                    _logger.LogWarning("No access token found for search request");
-                    return new List<EmployeeSearchResult>();
+                    await RefreshCache();
                 }
 
-                // Get search cache data from the API
-                var request = new HttpRequestMessage(HttpMethod.Get, "/api/SearchCache");
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                var response = await _httpClient.SendAsync(request);
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Failed to get search cache data: {StatusCode}", response.StatusCode);
-                    return new List<EmployeeSearchResult>();
-                }
-
-                var cacheResponse = await response.Content.ReadFromJsonAsync<SearchCacheResponse>();
-                if (cacheResponse?.Data == null)
+                if (_searchCache?.Data == null)
                 {
                     return new List<EmployeeSearchResult>();
                 }
@@ -84,7 +74,7 @@ namespace WiseHR.Services
                 var queryLower = query?.ToLower() ?? string.Empty;
                 var results = new List<EmployeeSearchResult>();
 
-                foreach (var item in cacheResponse.Data)
+                foreach (var item in _searchCache.Data)
                 {
                     var matchedFields = new List<string>();
                     Action<string?, string> checkField = (fieldValue, fieldName) =>
@@ -111,7 +101,7 @@ namespace WiseHR.Services
                     };
 
                     // Check all relevant fields based on cache type
-                    if (cacheResponse.Type == "admin")
+                    if (_searchCache.Type == "admin")
                     {
                         // Admin cache fields - check in order of priority
                         checkField(item.FirstName, "FirstName");
@@ -198,14 +188,46 @@ namespace WiseHR.Services
                 }
 
                 // Sort results by score (highest first) and then by name
-                return results.OrderByDescending(r => r.Score)
+                var sortedResults = results.OrderByDescending(r => r.Score)
                              .ThenBy(r => r.Name)
                              .ToList();
+
+                return sortedResults;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching employees");
                 return new List<EmployeeSearchResult>();
+            }
+        }
+
+        private async Task RefreshCache()
+        {
+            try
+            {
+                var token = await GetAccessToken();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("No access token found for search cache refresh");
+                    return;
+                }
+
+                var request = new HttpRequestMessage(HttpMethod.Get, "/api/SearchCache");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.SendAsync(request);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Failed to refresh search cache: {StatusCode}", response.StatusCode);
+                    return;
+                }
+
+                _searchCache = await response.Content.ReadFromJsonAsync<SearchCacheResponse>();
+                _lastCacheRefresh = DateTime.UtcNow;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error refreshing search cache");
             }
         }
 
