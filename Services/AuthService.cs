@@ -21,6 +21,9 @@ namespace WiseHR.Services
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             //_baseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5243";
             _baseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7021";
             //_baseUrl = configuration["ApiBaseUrl"] ?? "http://172.210.14.62:5000/";
