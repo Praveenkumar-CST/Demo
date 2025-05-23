@@ -66,6 +66,40 @@
     .mud-tab-slider {
         background: #fff;
     }
+
+    .profile-section-title {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .profile-field-label {
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+
+    .profile-field-value {
+        color: #1e293b;
+        font-weight: 600;
+        font-size: 0.95rem;
+        line-height: 1.4;
+        word-break: break-word;
+        min-height: 1.4rem;
+    }
+
+        .profile-field-value.empty {
+            color: #94a3b8;
+            font-style: italic;
+            font-weight: 400;
+        }
 </style>
 
     <MudMainContent Style="flex-grow: 1;">
@@ -141,6 +175,9 @@
                                         </MudText>
                                     </MudCardHeader>
                                     <MudDivider Class="mb-3" />
+                                    <div  Style="profile-field-value profile-field-label profile-section-title">
+
+                                    
                                     <MudGrid Spacing="2">
                                         <MudItem xs="12" sm="6" md="4">
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">First Name</MudText>
@@ -175,15 +212,12 @@
                                             <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.Nationality)</MudText>
                                         </MudItem>
                                     </MudGrid>
+                                    </div>
                                 </MudCard>
 
                                 <!-- Family Information -->
-                                <MudCard Elevation="2" Class="rounded-lg pa-4 mb-4" Style="background: #f8fafd;">
-                                    <MudCardHeader>
-                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="d-flex align-center">
-                                            <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" Class="mr-2" /> Family Information
-                                        </MudText>
-                                    </MudCardHeader>
+                            <MudExpansionPanels MultiExpansion="true" Class="mb-4">
+                                <MudExpansionPanel  Text="Family Information" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
                                     <MudDivider Class="mb-3" />
                                     <MudGrid Spacing="2">
                                         <MudItem xs="12" sm="6">
@@ -211,15 +245,13 @@
                                             </MudPaper>
                                         </MudItem>
                                     </MudGrid>
-                                </MudCard>
+                                      </MudExpansionPanel>
+                                </MudExpansionPanels>
+                              
 
                                 <!-- Health Information -->
-                                <MudCard Elevation="2" Class="rounded-lg pa-4 mb-4" Style="background: #f8fafd;">
-                                    <MudCardHeader>
-                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="d-flex align-center">
-                                            <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Class="mr-2" /> Health Information
-                                        </MudText>
-                                    </MudCardHeader>
+                                <MudExpansionPanels MultiExpansion="true" Class="mb-4">
+                                    <MudExpansionPanel Text="Health Information" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
                                     <MudDivider Class="mb-3" />
                                     <MudGrid Spacing="2">
                                         <MudItem xs="12" sm="4">
@@ -241,19 +273,14 @@
                                             </MudPaper>
                                         </MudItem>
                                     </MudGrid>
-                                </MudCard>
-                            </MudTabPanel>
+                                        </MudExpansionPanel>
+                                </MudExpansionPanels>
+                              
+                                                     <!-- Primary Contact -->
+                                    <MudExpansionPanels MultiExpansion="true" Class="mb-4">
+                                        <MudExpansionPanel Text="Official Contact" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
 
-                            @* --- Contact Information Tab --- *@
-                            <MudTabPanel Text="Contact" Icon="@Icons.Material.Filled.ContactPhone">
-                                <!-- Primary Contact -->
-                                <MudCard Elevation="2" Class="rounded-lg pa-4 mb-4" Style="background: #f8fafd;">
-                                    <MudCardHeader>
-                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="d-flex align-center">
-                                            <MudIcon Icon="@Icons.Material.Filled.Contacts" Class="mr-2" /> Primary Contact
-                                        </MudText>
-                                    </MudCardHeader>
-                                    <MudDivider Class="mb-3" />
+                                            <MudDivider Class="mb-3" />
                                     <MudGrid Spacing="2">
                                         <MudItem xs="12" sm="6">
                                             <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
@@ -274,15 +301,13 @@
                                             </MudPaper>
                                         </MudItem>
                                     </MudGrid>
-                                </MudCard>
-
-                                <!-- Permanent Contact -->
-                                <MudCard Elevation="2" Class="rounded-lg pa-4 mb-4" Style="background: #f8fafd;">
-                                    <MudCardHeader>
-                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="d-flex align-center">
-                                            <MudIcon Icon="@Icons.Material.Filled.AlternateEmail" Class="mr-2" /> Permanent Contact
-                                        </MudText>
-                                    </MudCardHeader>
+                                         </MudExpansionPanel>
+                                </MudExpansionPanels>
+                              
+                            <!-- Permanent Contact -->
+                                <MudExpansionPanels MultiExpansion="true" Class="mb-4">
+                                    <MudExpansionPanel Text="Personal Contact" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
+                            
                                     <MudDivider Class="mb-3" />
                                     <MudGrid Spacing="2">
                                         <MudItem xs="12" sm="6">
@@ -304,17 +329,20 @@
                                             </MudPaper>
                                         </MudItem>
                                     </MudGrid>
-                                </MudCard>
+                               
+                                </MudExpansionPanel>
+                                </MudExpansionPanels>
+                              
 
                                 <!-- Emergency Contacts -->
                                 <MudExpansionPanels MultiExpansion="true" Class="mb-4">
-                                    <MudExpansionPanel Text="Emergency Contacts" Icon="@Icons.Material.Filled.EmergencyShare" IconColor="Color.Error" IsInitiallyExpanded="false">
+                                    <MudExpansionPanel Text="Emergency Contacts" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
                                         <MudGrid Spacing="3">
                                             <MudItem xs="12" md="6">
                                                 <MudCard Elevation="2" Class="rounded-lg pa-3 mb-2" Style="background: #fcf8f8;">
                                                     <MudCardHeader>
                                                         <MudText Typo="Typo.h6" Color="Color.Secondary" Class="d-flex align-center">
-                                                            <MudIcon Icon="@Icons.Material.Filled.ContactEmergency" Class="mr-2" /> Contact 1
+                                                            <MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Class="mr-2" /> Contact 1
                                                         </MudText>
                                                     </MudCardHeader>
                                                     <MudDivider Class="mb-3" />
@@ -357,7 +385,7 @@
                                                 <MudCard Elevation="2" Class="rounded-lg pa-3 mb-2" Style="background: #fcf8f8;">
                                                     <MudCardHeader>
                                                         <MudText Typo="Typo.h6" Color="Color.Secondary" Class="d-flex align-center">
-                                                            <MudIcon Icon="@Icons.Material.Filled.ContactEmergency" Class="mr-2" /> Contact 2
+                                                            <MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Class="mr-2" /> Contact 2
                                                         </MudText>
                                                     </MudCardHeader>
                                                     <MudDivider Class="mb-3" />
@@ -404,10 +432,11 @@
                             @* --- Address Tab --- *@
                             <MudTabPanel Text="Address" Icon="@Icons.Material.Filled.Home">
                                 <!-- Current Address -->
+                                  <!-- Employment Details -->
                                 <MudCard Elevation="2" Class="rounded-lg pa-4 mb-4" Style="background: #f8fafd;">
                                     <MudCardHeader>
                                         <MudText Typo="Typo.h6" Color="Color.Primary" Class="d-flex align-center">
-                                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Class="mr-2" /> Current Address
+                                            <MudIcon Icon="@Icons.Material.Filled.Work" Class="mr-2" /> Residential Address
                                         </MudText>
                                     </MudCardHeader>
                                     <MudDivider Class="mb-3" />
@@ -437,15 +466,16 @@
                                             </MudPaper>
                                         </MudItem>
                                     </MudGrid>
-                                </MudCard>
-
+                             </MudCard>
                                 <!-- Permanent Address -->
+                                     <!-- Employment Details -->
                                 <MudCard Elevation="2" Class="rounded-lg pa-4 mb-4" Style="background: #f8fafd;">
                                     <MudCardHeader>
                                         <MudText Typo="Typo.h6" Color="Color.Primary" Class="d-flex align-center">
-                                            <MudIcon Icon="@Icons.Material.Filled.HomeWork" Class="mr-2" /> Permanent Address
+                                            <MudIcon Icon="@Icons.Material.Filled.MyLocation" Class="mr-2" /> Permanent Address
                                         </MudText>
                                     </MudCardHeader>
+                                    <MudDivider Class="mb-3" />
                                     <MudDivider Class="mb-3" />
                                     <MudGrid Spacing="2">
                                         <MudItem xs="12">
