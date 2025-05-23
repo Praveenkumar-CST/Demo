@@ -19,10 +19,49 @@
 
 <MudThemeProvider />
 <MudSnackbarProvider />
+<style>
+    .logo-hover:hover {
+        animation: pulse 1s infinite;
+    }
+    @@keyframes pulse {
+        0%
+
+    {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+
+    }
+      .neon-glow {
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 5px #00ff88;
+        }
+        .neon-glow:hover {
+            border-color: #ff0088;
+            box-shadow: 
+                0 0 10px #ff0088,
+                0 0 20px #ff0088,
+                0 0 30px #ff0088;
+            animation: neon-flicker 0.5s infinite alternate;
+        }
+        @@keyframes neon-flicker {
+            0% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }   
+    }</style>
+
+
 <!-- Top Navigation Bar -->
-<MudAppBar Elevation="5"  Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 67px; color: var(--primary); padding-top:2px">
+<MudAppBar Elevation="5"  Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 67px; color: var(--primary); padding-top:2px;padding-left:4px">
     <MudItem xs="2" Class="d-flex align-center">
-        <MudImage Class="logo-hover-glow" Src="images/logo1.png"
+        <MudImage Class="logo-hover" Src="images/logo1.png"
         Alt="Company Logo"
         Height="50"
         @onclick=@(() => NavigationManager.NavigateTo("/home")) />
@@ -76,7 +115,7 @@
                     @if (!string.IsNullOrEmpty(userProfilePicture))
                     {
                         <img src="@userProfilePicture"
-                             class="profile-circle border-hover-color-shift profile-bounce " alt="Employee Photo"
+                             class="profile-circle border-hover-color-shift  neon-glow " alt="Employee Photo"
                              style="width: 55px; height: 55px; object-fit: cover;" />
                     }
                     else
