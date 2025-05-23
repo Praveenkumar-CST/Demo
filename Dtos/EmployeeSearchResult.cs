@@ -11,5 +11,6 @@ namespace WiseHR.Dtos
         public string? EmployeeID { get; set; }
         public List<string> MatchedFields { get; set; } = new List<string>();
         public int Score { get; set; }
+        public bool IsNoResultsMessage { get; set; }
     }
 } 

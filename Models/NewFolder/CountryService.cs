@@ -26,6 +26,8 @@ namespace WiseHR.Models.NewFolder
         {
             public string Country { get; set; }
         }
+     
+
     }
 
 }

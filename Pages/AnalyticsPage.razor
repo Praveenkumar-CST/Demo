@@ -16,23 +16,129 @@
 
 @attribute [Authorize(Roles = "Admin")]
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="height: calc(100vh - 64px); display: flex; flex-direction: column;">
-    <div class="d-flex align-center mb-4">
-        <MudIcon Icon="@Icons.Material.Filled.Analytics" Color="Color.Primary" Size="Size.Large" Class="mr-2"/>
-        <MudText Typo="Typo.h4" Color="Color.Primary">Employee Analytics</MudText>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4 analytics-container" Style="height: calc(100vh - 64px); display: flex; flex-direction: column; position: fixed; top: 64px; left: 60px; right: 5px; bottom:5px; overflow: hidden;">
+    <div class="analytics-header">
+        <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="header-icon" />
+        <MudText Typo="Typo.h4" Class="header-title">Employee Analytics</MudText>
     </div>
 
-    <MudGrid Spacing="2" Style="flex: 1; min-height: 0;">
+    <style>
+        .analytics-container {
+            background: #ffffff;
+            padding: 0.5rem;
+        }
+
+        .analytics-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 0px solid #f1f5f9;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border-radius: 8px;
+            padding-left: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-icon {
+            color: #3b82f6 !important;
+            font-size: 2rem !important;
+            height:2em;
+            width:2em;
+            margin-right: 0.75rem;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+            .header-icon:hover {
+                background: rgba(59, 130, 246, 0.15);
+                transform: scale(1.05);
+            }
+
+        .header-title {
+            color: #1e293b !important;
+            font-weight: 700 !important;
+            font-size: 1.75rem !important;
+            margin: 0 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Alternative clean version */
+        .analytics-header.clean {
+            background: transparent;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: none;
+            padding-left: 0;
+        }
+
+        /* Alternative with accent */
+        .analytics-header.accent {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 197, 253, 0.02) 100%);
+            border-left: 4px solid #3b82f6;
+        }
+
+        /* Responsive adjustments */
+       @@media (max-width: 960px) {
+            .analytics-container
+
+        {
+            padding: 1rem;
+        }
+
+        .analytics-header {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .header-icon {
+            font-size: 1.75rem !important;
+            padding: 0.4rem;
+        }
+
+        .header-title {
+            font-size: 1.5rem !important;
+        }
+
+        }
+
+        @@media (max-width: 600px) {
+            .analytics-container
+
+        {
+            padding: 0.75rem;
+        }
+
+        .analytics-header {
+            padding: 0.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .header-icon {
+            margin-right: 0;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-title {
+            font-size: 1.25rem !important;
+        }
+
+        }</style>
+
+    <MudGrid Spacing="2" Style="flex: 1; min-height: 0; overflow: hidden;">
         @* Filter Section *@
-        <MudItem xs="12" md="3" Style="display: flex; flex-direction: column;">
-            <MudPaper Class="pa-4" Elevation="2" Style="height: 100%; display: flex; flex-direction: column; overflow-y: auto; border-radius: 8px;">
+        <MudItem xs="12" md="3" Style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+            <MudPaper Class="pa-4" Elevation="4" Style="height: 100%; display: flex; flex-direction: column; overflow-y: auto; border-radius: 8px;">
                 <div class="d-flex align-center mb-3">
                     <MudIcon Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Class="mr-2"/>
                     <MudText Typo="Typo.h6" Color="Color.Primary">Filters</MudText>
                 </div>
 
                 <MudExpansionPanels>
-                    <MudExpansionPanel Text="Personal" IsInitiallyExpanded="true" Icon="@Icons.Material.Filled.Person">
+                    <MudExpansionPanel Text="Personal" IsInitiallyExpanded="true" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudSelect T="string" @bind-Value="_filterDto.BloodGroup" Label="Blood Group" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var group in _bloodGroups)
                             {
@@ -65,7 +171,7 @@
                         <MudDatePicker @bind-Date="_filterDto.DateOfBirthEnd" Label="DOB To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfBirthStart" />
                     </MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Employment" Icon="@Icons.Material.Filled.Work">
+                    <MudExpansionPanel Text="Employment" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                          <MudAutocomplete T="string" @bind-Value="_filterDto.Designation" Label="Designation"
                                           SearchFunc="SearchDesignations"
                                           Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -88,7 +194,28 @@
                          <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
                     </MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Experience" Icon="@Icons.Material.Filled.School">
+                    <MudExpansionPanel Text="Contact" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentCity" Label="Current City"
+                                         SearchFunc="SearchCurrentCities"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentState" Label="Current State"
+                                         SearchFunc="SearchCurrentStates"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudTextField @bind-Value="_filterDto.CurrentZip" Label="Current Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentCity" Label="Permanent City"
+                                         SearchFunc="SearchPermanentCities"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentState" Label="Permanent State"
+                                         SearchFunc="SearchPermanentStates"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudTextField @bind-Value="_filterDto.PermanentZip" Label="Permanent Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                    </MudExpansionPanel>
+
+                    <MudExpansionPanel Text="Experience" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.College" Label="College / University"
                                          SearchFunc="SearchEducationUniversities"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -99,6 +226,8 @@
                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudNumericField @bind-Value="_filterDto.YearOfPassingStart" Label="Passed From Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="1900" Max="DateTime.Now.Year" Class="mb-2" T="int?" />
                         <MudNumericField @bind-Value="_filterDto.YearOfPassingEnd" Label="Passed To Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.YearOfPassingStart ?? 1900" Max="DateTime.Now.Year" Class="mb-2" T="int?" />
+                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMin" Label="Min Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
+                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMax" Label="Max Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.EducationPercentageMin ?? 0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
                         <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer"
                                          SearchFunc="SearchWorkEmployers"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -111,36 +240,13 @@
                                          SearchFunc="SearchWorkLocations"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMin" Label="Min Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
-                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMax" Label="Max Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.EducationPercentageMin ?? 0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobStartDateStart" Label="Prev. Job Start From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobStartDateEnd" Label="Prev. Job Start To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PreviousJobStartDateStart" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateStart" Label="Prev. Job End From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateEnd" Label="Prev. Job End To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PreviousJobEndDateStart" />
                     </MudExpansionPanel>
 
-                     <MudExpansionPanel Text="Address" Icon="@Icons.Material.Filled.LocationOn">
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentCity" Label="Current City"
-                                         SearchFunc="SearchCurrentCities"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentState" Label="Current State"
-                                         SearchFunc="SearchCurrentStates"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentCity" Label="Permanent City"
-                                         SearchFunc="SearchPermanentCities"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentState" Label="Permanent State"
-                                         SearchFunc="SearchPermanentStates"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudTextField @bind-Value="_filterDto.CurrentZip" Label="Current Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PermanentZip" Label="Permanent Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                     </MudExpansionPanel>
-
-                    <MudExpansionPanel Text="Passport" Icon="@Icons.Material.Filled.CardTravel">
+                    <MudExpansionPanel Text="Passport" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.PassportNationality" Label="Passport Nationality"
                                          SearchFunc="SearchPassportNationalities"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -151,30 +257,30 @@
                         <MudDatePicker @bind-Date="_filterDto.PassportExpiryDateEnd" Label="Passport Expires To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PassportExpiryDateStart" />
                     </MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Banking" Icon="@Icons.Material.Filled.AccountBalance">
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankName" Label="Bank Name"
-                                         SearchFunc="SearchBankNames"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankBranch" Label="Bank Branch"
-                                         SearchFunc="SearchBankBranches"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankState" Label="Bank State"
-                                         SearchFunc="SearchBankStates"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
-                             @foreach (var type in _accountTypes)
-                            {
-                                <MudSelectItem Value="@type">@type</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudTextField @bind-Value="_filterDto.PANNumber" Label="PAN Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.AadhaarNumber" Label="Aadhaar Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                    </MudExpansionPanel>
+                   <MudExpansionPanel Text="Banking" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
+    <MudAutocomplete T="string" @bind-Value="_filterDto.BankName" Label="Bank Name"
+                     SearchFunc="SearchBankNames"
+                     Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+    <MudAutocomplete T="string" @bind-Value="_filterDto.BankBranch" Label="Bank Branch"
+                     SearchFunc="SearchBankBranches"
+                     Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+    <MudAutocomplete T="string" @bind-Value="_filterDto.BankState" Label="Bank State"
+                     SearchFunc="SearchBankStates"
+                     Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+    <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+         @foreach (var type in _accountTypes)
+        {
+            <MudSelectItem Value="@type">@type</MudSelectItem>
+        }
+    </MudSelect>
+    <MudTextField @bind-Value="_filterDto.PANNumber" Label="PAN Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+    <MudTextField @bind-Value="_filterDto.AadhaarNumber" Label="Aadhaar Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+</MudExpansionPanel>
 
-                    <MudExpansionPanel Text="Misc" Icon="@Icons.Material.Filled.MoreHoriz">
+                    <MudExpansionPanel Text="Misc" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudSelect T="bool?" @bind-Value="_filterDto.HasAllergies" Label="Has Allergies?" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             <MudSelectItem Value="@( (bool?)null )">Any</MudSelectItem>
                             <MudSelectItem Value="@( (bool?)true )">Yes</MudSelectItem>
@@ -189,7 +295,7 @@
                 </MudExpansionPanels>
 
                 <div class="mt-auto pt-4 d-flex">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters" Disabled="_isLoading" Class="mr-2" Style="flex: 1;">
+                    <MudButton Variant="Variant.Filled"onclick ="ApplyFilters" Disabled="_isLoading" Class="mr-2" Style="flex: 1;background-color:linear-gradient(90deg, #34adb8 0%, #8E54E9 100%);">
                         @if (_isLoading)
                         {
                             <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
@@ -197,11 +303,11 @@
                         }
                         else
                         {
-                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1"/>
+                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1" Style="padding-bottom:4px"/>
                             <span>Apply</span>
                         }
                     </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="flex: 1;">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="flex: 1;padding-bottom:4px">
                         <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1"/>
                         <span>Clear</span>
                     </MudButton>
@@ -210,21 +316,29 @@
         </MudItem>
 
         @* Results Section *@
-        <MudItem xs="12" md="9" Style="display: flex; flex-direction: column; min-height: 0;">
-            <MudPaper Class="pa-4" Elevation="2" Style="height: 100%; display: flex; flex-direction: column; border-radius: 8px;">
-                <div class="d-flex align-center mb-3">
+        <MudItem xs="12" md="9" Style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+            <MudPaper Class="pa-4" Elevation="4" Style="height: 100%; display: flex; flex-direction: column; border-radius: 8px; overflow: hidden;">
+                <div class="d-flex align-center">
                     <MudIcon Icon="@Icons.Material.Filled.Assessment" Color="Color.Primary" Class="mr-2"/>
                     <MudText Typo="Typo.h6" Color="Color.Primary">Results</MudText>
                     <MudSpacer />
+                    <MudTooltip Text="Download Results (CSV)">
+                        <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                       Color="Color.Primary"
+                                       OnClick="DownloadFilteredEmployees"
+                                       Disabled="@(!GetFilteredAndSortedEmployees().Any() || _isLoading)"
+                                       Size="Size.Small"
+                                       Class="ml-2" Style="margin-top: 4px !important;"></MudIconButton>
+                    </MudTooltip>
                     <MudTooltip Text="Sync Data">
                         <MudIconButton Icon="@Icons.Material.Filled.Sync" 
                                      Color="Color.Primary" 
                                      OnClick="SyncData" 
                                      Disabled="_isLoading"
-                                     Class="ml-2" />
+                                     Class="ml-2" />    
                     </MudTooltip>
                 </div>
-
+                    
                 @if (_isLoading && !_initialLoadComplete)
                 {
                     <div class="d-flex justify-center align-center" style="flex: 1;">
@@ -248,47 +362,69 @@
 
                     @if (_filteredEmployees.Any() || (_isLoading && _initialLoadComplete))
                     {
-                        <MudGrid Spacing="2" Class="mb-4">
-                            <MudItem xs="12" sm="4">
-                                <MudCard Elevation="2" Class="hover-lift" Style="border-radius: 12px; background: linear-gradient(135deg, #64cb92 0%, #4a9d6d 100%);">
-                                    <MudCardHeader Style="padding: 16px; border-radius: 12px 12px 0 0;">
-                                        <CardHeaderContent>
-                                            <MudText Typo="Typo.subtitle2" Color="Color.Default" Style="font-weight: 500;">Total Employees</MudText>
-                                        </CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center pa-3">
-                                        <MudIcon Icon="@Icons.Material.Filled.Groups" Color="Color.Default" Size="Size.Medium" Class="mr-3"/>
-                                        <MudText Typo="Typo.h6" Color="Color.Default">@_totalEmployees<span class="mud-text-default" style="font-size: 0.8em; opacity: 0.8;"> / @_systemTotalEmployees</span></MudText>
-                                    </MudCardContent>
-                                </MudCard>
+                        @* Employee Dashboard Component *@
+                        <MudGrid Spacing="3" Class="light-dashboard-grid">
+                            <!-- Total Employees Card -->
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudPaper Class="light-card employees-light-card" Elevation="3">
+                                    <div class="light-content">
+                                        <div class="light-header">
+                                            <MudIcon Icon="@Icons.Material.Filled.People" Class="light-icon employees-icon" />
+                                            <div class="simple-status">
+                                                <span class="status-badge employees-badge">ACTIVE</span>
+                                            </div>
+                                        </div>
+                                        <MudText Typo="Typo.subtitle1" Class="light-title">Total Employees</MudText>
+                                        <div class="light-metrics">
+                                            <span class="primary-num">@_totalEmployees</span>
+                                            <span class="divider-light">/</span>
+                                            <span class="secondary-num">@_systemTotalEmployees</span>
+                                        </div>
+                                    </div>
+                                </MudPaper>
                             </MudItem>
-                            <MudItem xs="12" sm="4">
-                                <MudCard Elevation="2" Class="hover-lift" Style="border-radius: 12px; background: linear-gradient(135deg, #f395ed 0%, #d17acd 100%);">
-                                    <MudCardHeader Style="padding: 16px; border-radius: 12px 12px 0 0;">
-                                        <CardHeaderContent>
-                                            <MudText Typo="Typo.subtitle2" Color="Color.Default" Style="font-weight: 500;">Unique Designations</MudText>
-                                        </CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center pa-3">
-                                        <MudIcon Icon="@Icons.Material.Filled.Work" Color="Color.Default" Size="Size.Medium" Class="mr-3"/>
-                                        <MudText Typo="Typo.h6" Color="Color.Default">@_uniqueDesignations<span class="mud-text-default" style="font-size: 0.8em; opacity: 0.8;"> / @_systemTotalDesignations</span></MudText>
-                                    </MudCardContent>
-                                </MudCard>
+
+                            <!-- Unique Designations Card -->
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudPaper Class="light-card roles-light-card" Elevation="3">
+                                    <div class="light-content">
+                                        <div class="light-header">
+                                            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="light-icon roles-icon" />
+                                            <div class="simple-status">
+                                                <span class="status-badge roles-badge">ROLES</span>
+                                            </div>
+                                        </div>
+                                        <MudText Typo="Typo.subtitle1" Class="light-title">Unique Designations</MudText>
+                                        <div class="light-metrics">
+                                            <span class="primary-num">@_uniqueDesignations</span>
+                                            <span class="divider-light">/</span>
+                                            <span class="secondary-num">@_systemTotalDesignations</span>
+                                        </div>
+                                    </div>
+                                </MudPaper>
                             </MudItem>
-                            <MudItem xs="12" sm="4">
-                                <MudCard Elevation="2" Class="hover-lift" Style="border-radius: 12px; background: linear-gradient(135deg, #5dbcf5 0%, #4a9cd6 100%);">
-                                    <MudCardHeader Style="padding: 16px; border-radius: 12px 12px 0 0;">
-                                        <CardHeaderContent>
-                                            <MudText Typo="Typo.subtitle2" Color="Color.Default" Style="font-weight: 500;">Unique Blood Groups</MudText>
-                                        </CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center pa-3">
-                                        <MudIcon Icon="@Icons.Material.Filled.Bloodtype" Color="Color.Default" Size="Size.Medium" Class="mr-3"/>
-                                        <MudText Typo="Typo.h6" Color="Color.Default">@_uniqueBloodGroups<span class="mud-text-default" style="font-size: 0.8em; opacity: 0.8;"> / @_systemTotalBloodGroups</span></MudText>
-                                    </MudCardContent>
-                                </MudCard>
+
+                            <!-- Unique Blood Groups Card -->
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudPaper Class="light-card health-light-card" Elevation="3">
+                                    <div class="light-content">
+                                        <div class="light-header">
+                                            <MudIcon Icon="@Icons.Material.Filled.Bloodtype" Class="light-icon health-icon" />
+                                            <div class="simple-status">
+                                                <span class="status-badge health-badge">HEALTH</span>
+                                            </div>
+                                        </div>
+                                        <MudText Typo="Typo.subtitle1" Class="light-title">Unique Blood Groups</MudText>
+                                        <div class="light-metrics">
+                                            <span class="primary-num">@_uniqueBloodGroups</span>
+                                            <span class="divider-light">/</span>
+                                            <span class="secondary-num">@_systemTotalBloodGroups</span>
+                                        </div>
+                                    </div>
+                                </MudPaper>
                             </MudItem>
                         </MudGrid>
+                
 
                         @* Active Filters Display *@
                         @if (HasActiveFilters())
@@ -316,80 +452,678 @@
                         }
 
                         <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
-                            <MudTable ServerData="ServerReload" @ref="_table"
-                                    T="EmployeeAnalyticsResponseDto"
-                                    Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Striped="true" Elevation="1"
-                                    Loading="_isLoading" LoadingProgressColor="Color.Primary"
-                                    Style="flex: 1; overflow: auto; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default);">
-                                <ToolBarContent>
-                                    <MudText Typo="Typo.subtitle1" Style="font-weight: 500;">Filtered Employees</MudText>
-                                    <MudSpacer />
-                                    <div class="d-flex align-center">
-                                        <MudTextField @bind-Value="SearchString"
-                                                      Placeholder="Search employees..."
-                                                      Adornment="Adornment.Start"
-                                                      AdornmentIcon="@Icons.Material.Filled.Search"
-                                                      IconSize="Size.Small"
-                                                      Variant="Variant.Outlined"
-                                                      Dense="true"
-                                                      Immediate="true"
-                                                      OnKeyDown="HandleKeyDown"
-                                                      Class="mt-0"
-                                                      Style="width: 300px; border-radius: 8px;"></MudTextField>
-                                        @if (!string.IsNullOrWhiteSpace(SearchString))
-                                        {
-                                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
-                                                          Color="Color.Default"
-                                                          OnClick="ClearSearchText"
-                                                          Size="Size.Small"
-                                                          Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
+                            <div class="d-flex align-center" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
+                                <MudText Typo="Typo.subtitle1" Style="font-weight: 500;">Filtered Employees</MudText>
+                                <MudSpacer />
+                                <div class="d-flex align-center">
+                                    <MudTextField @bind-Value="SearchString"
+                                                  Placeholder="Search employees..."
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                                  IconSize="Size.Small"
+                                                  Variant="Variant.Outlined"
+                                                  Dense="true"
+                                                  Immediate="true"
+                                                  OnKeyDown="HandleKeyDown"
+                                                  Class="mt-0"
+                                                  Style="width: 300px; border-radius: 8px; height: 35px;"></MudTextField>
+                                    @if (!string.IsNullOrWhiteSpace(SearchString))
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                                      Color="Color.Default"
+                                                      OnClick="ClearSearchText"
+                                                      Size="Size.Small"
+                                                      Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
+                                    }   
+                                  
+                                </div>
+                            </div>
+
+                            <div class="table-container">
+                                <MudTable ServerData="ServerReload" @ref="_table"
+                                          T="EmployeeAnalyticsResponseDto"
+                                          Dense="false" Hover="true" Breakpoint="Breakpoint.Sm" Striped="true" Elevation="0"
+                                          Loading="_isLoading" LoadingProgressColor="Color.Primary"
+                                          Class="professional-table"
+                                          Style="height: 100%; display: flex; flex-direction: column;"
+                                          FixedHeader="true"
+                                          Height="100%">
+                                            
+                                    <HeaderContent>
+                                        <MudTh Class="table-header-cell avatar-column"></MudTh>
+                                        <MudTh Class="table-header-cell">
+                                            <MudTableSortLabel SortLabel="name_sort" T="EmployeeAnalyticsResponseDto" Class="sort-label">
+                                                <div class="header-content">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Person" Class="header-icon" />
+                                                    <span>Employee Name</span>
+                                                </div>
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh Class="table-header-cell">
+                                            <MudTableSortLabel SortLabel="designation_sort" T="EmployeeAnalyticsResponseDto" Class="sort-label">
+                                                <div class="header-content">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Work" Class="header-icon" />
+                                                    <span>Designation</span>
+                                                </div>
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh Class="table-header-cell">
+                                            <MudTableSortLabel SortLabel="id_sort" T="EmployeeAnalyticsResponseDto" Class="sort-label">
+                                                <div class="header-content">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Badge" Class="header-icon" />
+                                                    <span>Employee ID</span>
+                                                </div>
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                    </HeaderContent>
+
+
+                                    <RowTemplate Context="employeeContext">
+                                        <MudTd Class="avatar-cell">
+                                            <MudAvatar Color="Color.Primary" Size="Size.Medium" Class="employee-avatar">
+                                                @GetInitials(employeeContext.EmployeeDetails.FirstName)
+                                            </MudAvatar>
+                                        </MudTd>
+                                        <MudTd DataLabel="Name" Class="name-cell">
+                                            <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" class="employee-link name-link">
+                                                <div class="employee-name">
+                                                    <span class="full-name">@employeeContext.EmployeeDetails.FirstName @employeeContext.EmployeeDetails.MiddleName @employeeContext.EmployeeDetails.LastName</span>
+                                                    <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Class="external-link-icon" />
+                                                </div>
+                                            </a>
+                                        </MudTd>
+                                        <MudTd DataLabel="Designation" Class="designation-cell">
+                                            <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" class="employee-link">
+                                                <div class="designation-info">
+                                                    <span class="designation-badge">@employeeContext.EmployeeDetails.Designation</span>
+                                                </div>
+                                            </a>
+                                        </MudTd>
+                                        <MudTd DataLabel="EmployeeID" Class="id-cell">
+                                            <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" class="employee-link">
+                                                <div class="employee-id">
+                                                    <span class="id-code">@employeeContext.EmployeeDetails.EmployeeID</span>
+                                                    
+                                                </div>
+                                            </a>
+                                        </MudTd>
+                                    </RowTemplate>
+
+                                    <NoRecordsContent>
+                                        <div class="no-records">
+                                            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Class="no-records-icon" />
+                                            <MudText Typo="Typo.h6" Class="no-records-title">No Employees Found</MudText>
+                                            <MudText Typo="Typo.body2" Class="no-records-subtitle">Try adjusting your search criteria or filters</MudText>
+                                        </div>
+                                    </NoRecordsContent>
+
+                                    <LoadingContent>
+                                        <div class="loading-content">
+                                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                                            <MudText Typo="Typo.body1" Class="loading-text">Loading employee data...</MudText>
+                                        </div>
+                                    </LoadingContent>
+
+                                    <PagerContent>
+                                        <div class="pager-container">
+                                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }"
+                                                           InfoFormat="{first_item}-{last_item} of {all_items}"
+                                                           RowsPerPageString="Rows per page:" />
+                                        </div>
+                                    </PagerContent>
+                                </MudTable>
+                            </div>
+
+
+
+
+                            <style>
+                                .table-header-cell {
+                                    border-bottom: none;
+                                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                                }
+                            </style>
+                            @* Filter Styles *@
+                            <style>
+                                /* Banking Expansion Panel Styles */
+                                
+                                .pa - 4 {
+                                    padding: 6px 0px 7px 2px !important;
+                                }
+                           
+                                .banking-expansion-panel {
+                                    margin-bottom: 16px;
+                                    border-radius: 12px;
+                                    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                                    border: 1px solid #e3f2fd;
+                                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                                    overflow: hidden;
+                                }
+
+                                    .banking-expansion-panel:hover {
+                                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+                                        transform: translateY(-2px);
+                                        border-color: #bbdefb;
+                                    }
+
+                                    /* Header Styling */
+                                    .banking-expansion-panel .mud-expand-panel-header {
+                                        background: linear-gradient(155deg, #4ba1f3 0%, #75cfd9);
+                                        color: white;
+                                        padding: 16px 20px;
+                                        border-radius: 12px 12px 0 0;
+                                        transition: all 0.3s ease;
+                                    }
+
+                                        .banking-expansion-panel .mud-expand-panel-header:hover {
+                                            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
                                         }
-                                        <MudTooltip Text="Download Filtered Results (CSV)">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Download"
-                                                           Color="Color.Primary"
-                                                           OnClick="DownloadFilteredEmployees"
-                                                           Disabled="@(!GetFilteredAndSortedEmployees().Any() || _isLoading)"
-                                                           Size="Size.Small"
-                                                           Class="ml-2" Style="margin-top: 4px !important;"></MudIconButton>
-                                        </MudTooltip>
-                                    </div>
-                                </ToolBarContent>
-                                <HeaderContent>
-                                    <MudTh Style="width: 60px;"></MudTh>
-                                    <MudTh><MudTableSortLabel SortLabel="name_sort" T="EmployeeAnalyticsResponseDto">Name</MudTableSortLabel></MudTh>
-                                    <MudTh><MudTableSortLabel SortLabel="designation_sort" T="EmployeeAnalyticsResponseDto">Designation</MudTableSortLabel></MudTh>
-                                    <MudTh><MudTableSortLabel SortLabel="id_sort" T="EmployeeAnalyticsResponseDto">Employee ID</MudTableSortLabel></MudTh>
-                                </HeaderContent>
-                                <RowTemplate Context="employeeContext">
-                                    <MudTd>
-                                        <MudAvatar Color="Color.Primary" Size="Size.Small" Style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">@GetInitials(employeeContext.EmployeeDetails.FirstName)</MudAvatar>
-                                    </MudTd>
-                                    <MudTd DataLabel="Name">
-                                        <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
-                                            @employeeContext.EmployeeDetails.FirstName @employeeContext.EmployeeDetails.MiddleName @employeeContext.EmployeeDetails.LastName
-                                        </a>
-                                    </MudTd>
-                                    <MudTd DataLabel="Designation">
-                                        <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
-                                            @employeeContext.EmployeeDetails.Designation
-                                        </a>
-                                    </MudTd>
-                                    <MudTd DataLabel="EmployeeID">
-                                        <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
-                                            @employeeContext.EmployeeDetails.EmployeeID
-                                        </a>
-                                    </MudTd>
-                                </RowTemplate>
-                                <NoRecordsContent>
-                                    <MudText>No matching records found.</MudText>
-                                </NoRecordsContent>
-                                <LoadingContent>
-                                    <MudText>Loading...</MudText>
-                                </LoadingContent>
-                                <PagerContent>
-                                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                                </PagerContent>
-                            </MudTable>
+
+                                        .banking-expansion-panel .mud-expand-panel-header .mud-expand-panel-text {
+                                            font-weight: 600;
+                                            font-size: 1.1rem;
+                                            letter-spacing: 0.5px;
+                                        }
+
+                                        .banking-expansion-panel .mud-expand-panel-header .mud-icon-button {
+                                            color: white;
+                                        }
+
+                                            .banking-expansion-panel .mud-expand-panel-header .mud-icon-button:hover {
+                                                background-color: rgba(255, 255, 255, 0.1);
+                                            }
+
+                                    /* Content Area Styling */
+                                    .banking-expansion-panel .mud-expand-panel-content {
+                                        padding: 24px 20px;
+                                        background-color: #ffffff;
+                                        border-radius: 0 0 12px 12px;
+                                        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                                    }
+
+                                    /* Animation for expand/collapse */
+                                    .banking-expansion-panel .mud-expand-panel-content {
+                                        animation: fadeInUp 0.4s ease-out;
+                                    }
+
+                                @@keyframes fadeInUp {
+                                    from
+
+                                {
+                                    opacity: 0;
+                                    transform: translateY(10px);
+                                }
+
+                                to {
+                                    opacity: 1;
+                                    transform: translateY(0);
+                                }
+
+                                }
+
+                                /* Icon Styling */
+                                .banking-expansion-panel .mud-expand-panel-header .mud-svg-icon {
+                                    transition: transform 0.3s ease;
+                                }
+
+                                .banking-expansion-panel.mud-expand-panel-expanded .mud-expand-panel-header .mud-svg-icon {
+                                    transform: rotate(180deg);
+                                }
+
+                               
+
+                                @@keyframes shimmer {
+                                    0%, 100%
+
+                                {
+                                    background-position: 200% 0;
+                                }
+
+                                50% {
+                                    background-position: -200% 0;
+                                }
+
+                                }
+
+                                /* Focus States for Accessibility */
+                                .banking-expansion-panel .mud-expand-panel-header:focus {
+                                    outline: 2px solid #1976d2;
+                                    outline-offset: 2px;
+                                }
+
+                                /* Responsive Design */
+                                @@media (max-width: 768px) {
+                                    .banking-expansion-panel
+
+                                {
+                                    margin-bottom: 12px;
+                                    border-radius: 8px;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header {
+                                    padding: 12px 16px;
+                                    border-radius: 8px 8px 0 0;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-content {
+                                    padding: 16px;
+                                    border-radius: 0 0 8px 8px;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header .mud-expand-panel-text {
+                                    font-size: 1rem;
+                                }
+
+                                }
+
+                                /* Dark Theme Support */
+                                @@media (prefers-color-scheme: dark) {
+                                    .banking-expansion-panel
+
+                                {
+                                        background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+                                    border-color:#ffffff;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-content {
+                                    background-color:#ffffff;
+                                }
+
+                                }
+                            </style>
+                            <style>
+                                .table-container {
+                                    background: #ffffff;
+                                    border-radius: 16px;
+                                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                                    border: 1px solid #e5e7eb;
+                                    overflow: hidden;
+                                    margin: 0.5rem 0;
+                                    height: 100%;
+                                    max-height: 100%;
+                                    display: flex;
+                                    flex-direction: column;
+                                }
+
+                                .professional-table {
+                                    background: transparent !important;
+                                    display: flex;
+                                    flex-direction: column;
+                                    height: 100%;
+                                    overflow: hidden;
+                                }
+
+                                    .professional-table .mud-table-container {
+                                        flex: 1;
+                                        overflow: auto;
+                                        max-height: calc(100vh - 300px); /* Adjust based on your container height */
+                                    }
+
+                                    .professional-table .mud-table {
+                                        height: 100%;
+                                    }
+
+                                /* Header Styling - Fixed Header */
+                                .mud-table .mud-table-head {
+                                    position: sticky;
+                                    top: 0;
+                                    z-index: 10;
+                                    background: #ffffff;
+                                }
+
+                                .mud-avatar.mud-avatar-medium {
+                                    width: 35px;
+                                    height: 35px;
+                                    font-size: 1.25rem;
+                                }
+
+
+                                .table-header-cell {
+                                    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+                                    border-bottom: 2px solid #e2e8f0 !important;
+                                    padding: 1rem 0.75rem !important;
+                                    font-weight: 600 !important;
+                                    color: #374151 !important;
+                                    height: 60px;
+                                    vertical-align: middle;
+                                    position: sticky;
+                                    top: 0;
+                                    z-index: 11;
+                                }
+
+                                .avatar-column {
+                                    width: 80px !important;
+                                    text-align: center;
+                                }
+
+                                .header-content {
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 0.5rem;
+                                    font-size: 0.875rem;
+                                    font-weight: 600;
+                                }
+
+                                .header-icon {
+                                    font-size: 1.125rem !important;
+                                    color: #6b7280;
+                                }
+
+                                /* Scrollable Table Body */
+                                .mud-table-container {
+                                    flex: 1;
+                                    overflow-y: auto;
+                                    overflow-x: auto;
+                                    min-height: 0;
+                                }
+
+                                .mud-table tbody {
+                                    overflow-y: auto;
+                                }
+
+                                /* Custom Scrollbar for better UX */
+                                .mud-table-container::-webkit-scrollbar {
+                                    width: 6px;
+                                    height: 6px;
+                                }
+
+                                .mud-table-container::-webkit-scrollbar-track {
+                                    background: #f1f5f9;
+                                    border-radius: 3px;
+                                }
+
+                                .mud-table-container::-webkit-scrollbar-thumb {
+                                    background: #cbd5e1;
+                                    border-radius: 3px;
+                                }
+
+                                    .mud-table-container::-webkit-scrollbar-thumb:hover {
+                                        background: #94a3b8;
+                                    }
+
+                                /* Row Styling */
+                                .mud-table tbody .mud-table-row {
+                                    transition: all 0.2s ease;
+                                    border-bottom: 1px solid #f3f4f6 !important;
+                                }
+
+                                    .mud-table tbody .mud-table-row:hover {
+                                        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+                                        transform: translateX(2px);
+                                        box-shadow: 4px 0 12px rgba(59, 130, 246, 0.1);
+                                        border-left: 3px solid #3b82f6;
+                                    }
+
+                                    .mud-table tbody .mud-table-row:nth-child(even) {
+                                        background: rgba(248, 250, 252, 0.5) !important;
+                                    }
+
+                                /* Cell Styling */
+                                .mud-table-cell {
+                                    padding: 0.5rem 0.75rem !important;
+                                    vertical-align: middle !important;
+                                    border-bottom: 0.5px solid #f3f4f6 !important;
+                                }
+
+                                .avatar-cell {
+                                    text-align: center;
+                                    width: 80px;
+                                }
+
+                                .employee-avatar {
+                                    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.2) !important;
+                                    border: 2px solid #ffffff;
+                                    transition: all 0.2s ease;
+                                }
+
+                                    .employee-avatar:hover {
+                                        transform: scale(1.1);
+                                        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+                                    }
+
+                                /* Link Styling */
+                                .employee-link {
+                                    text-decoration: none !important;
+                                    color: inherit !important;
+                                    display: block;
+                                    transition: all 0.2s ease;
+                                    padding: 0.25rem;
+                                    border-radius: 8px;
+                                }
+
+                                 .employee-link:hover {
+                                        background: rgba(59, 130, 246, 0.05);
+                                        color: #3b82f6 !important;
+                                    }
+
+                                /* Name Cell */
+                                .employee-name {
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: space-between;
+                                    gap: 0.5rem;
+                                }
+
+                                .full-name {
+                                    font-weight: 500;
+                                    color: #111827;
+                                    font-size: 0.95rem;
+                                }
+
+                                .external-link-icon {
+                                    font-size: 0.875rem !important;
+                                    color: #9ca3af;
+                                    opacity: 0;
+                                    transition: opacity 0.2s ease;
+                                }
+
+                                .employee-link:hover .external-link-icon {
+                                    opacity: 1;
+                                    color: #3b82f6;
+                                }
+
+                                /* Designation Cell */
+                                .designation-badge {
+                                    background: linear-gradient(135deg, #ddd6fe 0%, #e0e7ff 100%);
+                                    color: #5b21b6;
+                                    padding: 0.375rem 0.75rem;
+                                    border-radius: 20px;
+                                    font-size: 0.8rem;
+                                    font-weight: 500;
+                                    border: 1px solid rgba(139, 92, 246, 0.2);
+                                    display: inline-block;
+                                    transition: all 0.2s ease;
+                                }
+
+                                .employee-link:hover .designation-badge {
+                                    background: linear-gradient(135deg, #c4b5fd 0%, #ddd6fe 100%);
+                                    transform: translateY(-1px);
+                                    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+                                }
+
+                                /* ID Cell */
+                                .employee-id {
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: space-between;
+                                    gap: 0.5rem;
+                                }
+
+                                .id-code {
+                                    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                                    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                                    color: #92400e;
+                                    padding: 0.25rem 0.5rem;
+                                    border-radius: 6px;
+                                    font-size: 0.8rem;
+                                    font-weight: 600;
+                                    border: 1px solid rgba(217, 119, 6, 0.2);
+                                }
+
+                                .copy-icon {
+                                    font-size: 0.875rem !important;
+                                    color: #9ca3af;
+                                    opacity: 0;
+                                    transition: opacity 0.2s ease;
+                                    cursor: pointer;
+                                }
+
+                                .employee-link:hover .copy-icon {
+                                    opacity: 1;
+                                    color: #d97706;
+                                }
+
+                                .employee-link:hover .id-code {
+                                    background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+                                    transform: translateY(-1px);
+                                    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+                                }
+
+                                /* No Records Styling */
+                                .no-records {
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    padding: 3rem 2rem;
+                                    color: #6b7280;
+                                }
+
+                                .no-records-icon {
+                                    font-size: 3rem !important;
+                                    color: #d1d5db;
+                                    margin-bottom: 1rem;
+                                }
+
+                                .no-records-title {
+                                    color: #374151 !important;
+                                    margin-bottom: 0.5rem !important;
+                                }
+
+                                .no-records-subtitle {
+                                    color: #9ca3af !important;
+                                }
+
+                                /* Loading Styling */
+                                .loading-content {
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    padding: 3rem 2rem;
+                                    gap: 1rem;
+                                }
+
+                                .loading-text {
+                                    color: #6b7280 !important;
+                                }
+
+                                /* Pager Styling - Fixed Footer */
+                                .pager-container {
+                                    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                                    border-top: 1px solid #e5e7eb;
+                                    position: sticky;
+                                    bottom: 0;
+                                    z-index: 10;
+                                    margin-top: auto;
+                                }
+
+                                .mud-table-pagination {
+                                    color: #374151 !important;
+                                }
+
+                                    .mud-table-pagination .mud-button {
+                                        color: #6b7280 !important;
+                                    }
+
+                                        .mud-table-pagination .mud-button:hover {
+                                            background: rgba(59, 130, 246, 0.1) !important;
+                                            color: #3b82f6 !important;
+                                        }
+
+                                /* Responsive Design */
+                                @@media (max-width: 960px) {
+                                    .table-container
+
+                                {
+                                    border-radius: 12px;
+                                    margin: 0.5rem 0;
+                                }
+
+                                .header-content {
+                                    font-size: 0.8rem;
+                                }
+
+                                .header-icon {
+                                    display: none;
+                                }
+
+                                .mud-table-cell {
+                                    padding: 0.75rem 0.5rem !important;
+                                }
+
+                                .full-name {
+                                    font-size: 0.875rem;
+                                }
+
+                                .designation-badge {
+                                    font-size: 0.75rem;
+                                    padding: 0.25rem 0.5rem;
+                                }
+
+                                .id-code {
+                                    font-size: 0.75rem;
+                                }
+
+                                }
+
+                                @@media (max-width: 600px) {
+                                    .table-container
+
+                                {
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+                                }
+
+                                .employee-name,
+                                .employee-id {
+                                    flex-direction: column;
+                                    align-items: flex-start;
+                                    gap: 0.25rem;
+                                }
+
+                                .external-link-icon,
+                                .copy-icon {
+                                    display: none;
+                                }
+
+                                .avatar-cell {
+                                    width: 60px;
+                                }
+
+                                .employee-avatar {
+                                    width: 32px !important;
+                                    height: 32px !important;
+                                }
+
+                                }
+
+                                @@media (max-width: 480px) {
+                                    .mud-table-cell
+
+                                {
+                                    padding: 0.5rem 0.25rem !important;
+                                }
+
+                                .no-records,
+                                .loading-content {
+                                    padding: 2rem 1rem;
+                                }
+
+                                .pager-container {
+                                    padding: 0.75rem;
+                                }
+
+                                }</style>
                         </div>
                     }
                 }
@@ -397,6 +1131,324 @@
         </MudItem>
     </MudGrid>
 </MudContainer>
+<style>
+    .mud-grid-spacing-xs-3 > .mud-grid-item {
+        padding-top:1px;
+        padding-left:1px;
+        padding-right:8px;
+        padding-bottom:8px;
+    }
+
+    .light-dashboard-grid {
+        margin: 0.5rem;
+    }
+
+    .light-card {
+        border-radius: 12px !important;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0;
+        height: 140px;
+        min-height: 140px;
+    }
+
+        .light-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+        }
+
+    .employees-light-card {
+        border-left: 4px solid #3b82f6;
+    }
+
+        .employees-light-card:hover {
+            border-left-color: #1d4ed8;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15) !important;
+        }
+
+    .roles-light-card {
+        border-left: 4px solid #8b5cf6;
+    }
+
+        .roles-light-card:hover {
+            border-left-color: #7c3aed;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.15) !important;
+        }
+
+    .health-light-card {
+        border-left: 4px solid #ef4444;
+    }
+
+        .health-light-card:hover {
+            border-left-color: #dc2626;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15) !important;
+        }
+
+    .light-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .light-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.1rem;
+    }
+
+    .light-icon {
+        font-size: 1.5rem !important;
+        padding: 0.5rem;
+        border-radius: 8px;
+        height: 1.5em;
+        width: 1.5em;
+    }
+
+    .employees-icon {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        height: 1.5em;
+        width: 1.5em;
+    }
+
+    .roles-icon {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+        height: 1.5em;
+        width: 1.5em;
+    }
+
+    .health-icon {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        height: 1.5em;
+        width: 1.5em;
+    }
+
+    .simple-status {
+        display: flex;
+        align-items: center;
+    }
+
+    .status-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .employees-badge {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .roles-badge {
+        background: rgba(251, 191, 36, 0.1);
+        color: #d97706;
+    }
+
+    .health-badge {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .light-title {
+        margin-bottom: 0.3rem !important;
+        color: #374151;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+    }
+
+    .light-metrics {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        align-items: center;
+    }
+
+    .primary-num {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1;
+    }
+
+    .divider-light {
+        font-size: 1.25rem;
+        color: #9ca3af;
+        font-weight: 500;
+    }
+
+    .secondary-num {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    /* Clean Media Queries */
+    @@media (max-width: 960px) {
+        .light-card {
+            padding: 1.25rem;
+            height: 130px;
+            min-height: 130px;
+        }
+
+        .primary-num {
+            font-size: 1.75rem;
+        }
+
+        .secondary-num {
+            font-size: 1.1rem;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .light-card {
+            padding: 1rem;
+            height: 120px;
+            min-height: 120px;
+        }
+
+        .primary-num {
+            font-size: 1.5rem;
+        }
+
+        .secondary-num {
+            font-size: 1rem;
+        }
+
+        .light-icon {
+            font-size: 1.25rem !important;
+            padding: 0.4rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .light-metrics {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .divider-light {
+            display: none;
+        }
+
+        .light-header {
+            margin-bottom: 0.75rem;
+        }
+
+        .light-card {
+            height: 110px;
+            min-height: 110px;
+        }
+    }</style>
+
+
+<style>
+    .mud-chip-filled.mud-chip-color-primary {
+        color: var(--mud-palette-primary-text);
+        --mud-ripple-color: var(--mud-palette-primary-text) !important;
+        background-color: rgb(184 179 230);
+    }
+
+    ::deep .analytics-container {
+        padding: 16px;
+        margin: 0;
+        width: calc(100% - 60px);
+        transition: all 0.3s ease;
+    }
+
+    ::deep .mud-grid {
+        margin: 0;
+        width: 100%;
+    }
+
+    ::deep .mud-paper {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    ::deep .mud-table-container {
+        flex: 1;
+        overflow: auto;
+    }
+
+    ::deep .mud-table {
+        height: 100%;
+    }
+
+    ::deep .mud-table-head {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: var(--mud-palette-background);
+    }
+
+    /* Responsive styles */
+    @@media (min-width: 1280px) {
+        ::deep .analytics-container {
+            left: 240px;
+            width: calc(100% - 240px);
+        }
+    }
+
+    @@media (min-width: 600px) and (max-width: 1279px) {
+        ::deep .analytics-container {
+            left: 60px;
+            width: calc(100% - 60px);
+        }
+    }
+
+    @@media (max-width: 599px) {
+        ::deep .analytics-container {
+            left: 0;
+            width: 100%;
+            padding: 8px;
+        }
+
+        ::deep .mud-grid {
+            margin: 0;
+        }
+
+        ::deep .mud-item {
+            padding: 4px;
+        }
+
+        ::deep .mud-paper {
+            padding: 8px !important;
+        }
+
+        ::deep .mud-text {
+            font-size: 0.875rem;
+        }
+
+        ::deep .mud-table {
+            font-size: 0.875rem;
+        }
+    }
+
+    /* Additional responsive adjustments */
+    @@media (max-width: 960px) {
+        ::deep .mud-grid {
+            margin: 0;
+        }
+
+        ::deep .mud-item {
+            padding: 4px;
+        }
+
+        ::deep .mud-paper {
+            padding: 8px !important;
+        }
+    }
+</style>
 
 @code {
     private MudTable<EmployeeAnalyticsResponseDto>? _table;
@@ -660,18 +1712,105 @@
         {
             string lowerSearch = SearchString.ToLowerInvariant();
             data = data.Where(e =>
-                (e.EmployeeDetails.FirstName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.LastName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.MiddleName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.Designation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
-                (e.EmployeeDetails.FatherName?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
-                (e.EmployeeDetails.MotherName?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
-                (e.EmployeeDetails.Level?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
-                (e.EmployeeDetails.CurrentMobile?.ToLowerInvariant().Contains(lowerSearch) ?? false)||
-                (e.EmployeeDetails.PassportNo?.ToLowerInvariant().Contains(lowerSearch) ?? false)
+            {
+                var details = e.EmployeeDetails;
+                var banking = e.BankingInformation;
+                var experience = e.experience;
 
-            );
+                // Personal Information
+                if (details != null)
+                {
+                    if (details.FirstName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.LastName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.MiddleName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.FatherName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.MotherName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Gender?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.MaritalStatus?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.BloodGroup?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Nationality?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PhysicallyChallenged?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Professional Information
+                if (details != null)
+                {
+                    if (details.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Designation?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.TypeOfEmployment?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Level?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.JoiningLocation?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Contact Information
+                if (details != null)
+                {
+                    if (details.CurrentMobile?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentEmail?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentAddress?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentCity?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentState?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentZip?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentAddress?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentCity?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentState?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentZip?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Passport Information
+                if (details != null)
+                {
+                    if (details.PassportNo?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PassportNationality?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Banking Information
+                if (banking != null)
+                {
+                    if (banking.BankName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.Branch?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.State?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.AccountType?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.AccountNumber?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.IFSCode?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.PANNumber?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.AadhaarNumber?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Education Information
+                if (experience?.EducationQualifications != null)
+                {
+                    foreach (var edu in experience.EducationQualifications)
+                    {
+                        if (edu.Qualification?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            edu.University?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            edu.YearOfPassing.ToString().Contains(lowerSearch) ||
+                            edu.Percentage.ToString().Contains(lowerSearch))
+                            return true;
+                    }
+                }
+
+                // Work Experience Information
+                if (experience?.WorkExperiences != null)
+                {
+                    foreach (var work in experience.WorkExperiences)
+                    {
+                        if (work.Employer?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            work.Location?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            work.Designation?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            work.DateOfJoining.ToString().Contains(lowerSearch) ||
+                            work.DateOfLeaving.ToString().Contains(lowerSearch))
+                            return true;
+                    }
+                }
+
+                return false;
+            });
         }
 
         if (!string.IsNullOrEmpty(state.SortLabel))
@@ -1467,7 +2606,39 @@
                 (e.EmployeeDetails.LastName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
                 (e.EmployeeDetails.MiddleName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
                 (e.EmployeeDetails.Designation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false)
+                (e.EmployeeDetails.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.FatherName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.MotherName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.Level?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.CurrentMobile?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.PassportNo?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.TypeOfEmployment?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.JoiningLocation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.Gender?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.MaritalStatus?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.BloodGroup?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.Nationality?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.CurrentCity?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.CurrentState?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.PermanentCity?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.PermanentState?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.PassportNationality?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.BankingInformation?.BankName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 (e.BankingInformation?.AadhaarNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 (e.BankingInformation?.PANNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 (e.BankingInformation?.AccountNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 (e.BankingInformation?.IFSCode?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 
+                (e.BankingInformation?.Branch?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.BankingInformation?.State?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.BankingInformation?.AccountType?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.experience?.EducationQualifications?.Any(edu => 
+                    edu.Qualification?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                    edu.University?.ToLowerInvariant().Contains(lowerSearch) == true) ?? false) ||
+                (e.experience?.WorkExperiences?.Any(work => 
+                    work.Employer?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                    work.Location?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                    work.Designation?.ToLowerInvariant().Contains(lowerSearch) == true) ?? false)
             );
         }
 

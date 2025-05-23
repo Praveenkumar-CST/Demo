@@ -59,6 +59,8 @@
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudDatePicker Label="Date of Birth" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.DateOfBirth" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfBirth)" />
+                                    <ValidationMessage For="@(() => employeeDetails.DateOfBirth)" />
+
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Gender" Required="true">
@@ -67,6 +69,8 @@
                                 <MudSelectItem Value="@("Other")">Other</MudSelectItem>
                                 <MudSelectItem Value="@("Pefer not to mention")">Perfer not to mention</MudSelectItem>
                             </MudSelect>
+                                                        <ValidationMessage For="@(() => employeeDetails.Gender)" />
+
                         </MudItem>
                     </MudGrid>
                     @* break *@
@@ -78,7 +82,10 @@
                             <MudSelect T="string" Label="Physically Challenged" Margin="Margin.Dense" Variant="Variant.Outlined" @bind-Value="employeeDetails.PhysicallyChallenged" Required="true">
                                 <MudSelectItem Value="@("Yes")">Yes</MudSelectItem>
                                 <MudSelectItem Value="@("No")">No</MudSelectItem>
+
                             </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.PhysicallyChallenged)" />
+
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Allergies" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Allergies" />
@@ -90,11 +97,13 @@
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Marital Status" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.MaritalStatus" Required="true">
-                                        <MudSelectItem Value="@("UnMarried")">UnMarried</MudSelectItem>
                                 <MudSelectItem Value="@("Married")">Married</MudSelectItem>
+                                <MudSelectItem Value="@("UnMarried")">UnMarried</MudSelectItem>
                                 <MudSelectItem Value="@("Divorced")">Divorced</MudSelectItem>
                                 <MudSelectItem Value="@("Widowed")">Widowed</MudSelectItem>
                             </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.MaritalStatus)" />
+
                         </MudItem>
                                 @if (employeeDetails.MaritalStatus != "UnMarried")
                         {
@@ -118,6 +127,8 @@
                                 <MudSelectItem Value="@("AB+")">AB+</MudSelectItem>
                                 <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
                             </MudSelect>
+                          <ValidationMessage For="@(() => employeeDetails.BloodGroup)" />
+
                         </MudItem>
                     <MudItem xs="12" sm="4" md="3">
                         <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Nationality" Required="true">
@@ -129,6 +140,8 @@
                                 }
                             }
                         </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.Nationality)" />
+
                     </MudItem>
 
                     <MudItem xs="12" sm="6">
@@ -263,18 +276,29 @@
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentCity" Required="true" />
+                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentCity" Required="true" Disabled="true" />
                             <ValidationMessage For="@(() => employeeDetails.CurrentCity)" />
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentState" Required="true" />
+                                    <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentState" Required="true" Disabled="true" />
                             <ValidationMessage For="@(() => employeeDetails.CurrentState)" />
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentZip" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.CurrentZip)" />
+                                    <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.CurrentZip"
+                                                  Required="true"
+                                                  OnKeyDown="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await HandleZipCodeChange(employeeDetails.CurrentZip, 3); })" />
+                                    <ValidationMessage For="@(() => employeeDetails.CurrentZip)" />
+                                    @if (IsFetchingLocation && contactIndexBeingFetched == 3)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Info">Fetching location details...</MudText>
+                                    }
+                                    @if (!string.IsNullOrEmpty(zipErrorMessage) && contactIndexBeingFetched == 3)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
+                                    }
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
@@ -302,20 +326,32 @@
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentCity" Required="true" />
+                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentCity" Required="true" Disabled="true"/>
                             <ValidationMessage For="@(() => employeeDetails.PermanentCity)" />
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentState" Required="true" />
+                                    <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentState" Required="true" Disabled="true" />
                             <ValidationMessage For="@(() => employeeDetails.PermanentState)" />
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentZip" Required="true" />
+                                    <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.PermanentZip"
+                                                  Required="true"
+                                                  OnKeyDown="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await HandleZipCodeChange(employeeDetails.PermanentZip, 4); })" />
                             <ValidationMessage For="@(() => employeeDetails.PermanentZip)" />
+                                   @if (IsFetchingLocation && contactIndexBeingFetched == 4)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Info">Fetching location details...</MudText>
+                                    }
+                                    @if (!string.IsNullOrEmpty(zipErrorMessage) && contactIndexBeingFetched == 4)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
+                                    }
 
                         </MudItem>
+
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentMobile" Required="true" />
                             <ValidationMessage For="@(() => employeeDetails.PermanentMobile)" />
@@ -331,132 +367,112 @@
                     </ChildContent>
                 </MudExpansionPanel>
                     <!-- Emergency Contact Information -->
-                      <MudExpansionPanel Typo="Typo.h5" Text="Emergency Contact Information*"
+                <MudExpansionPanel Typo="Typo.h5" Text="Emergency Contact Information*"
                                    Icon="@Icons.Material.Filled.ContactPhone"
                                    Class="section-tab">
                     <ChildContent>
                         <div class="section-content">
-                    @* <MudText Typo="Typo.h6" Class="mb-4 mt-6">Emergency Contact Information</MudText> *@
-                    <MudGrid>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Contact 1 Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Name" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Name)" />
+                            <MudGrid>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Contact 1 Name" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1Name" Required="true" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Name)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1Relationship" Required="true" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1Address" Required="true" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Address)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1City" Required="true" Disabled="true" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1City)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1State" Required="true" Disabled="true"/>
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1State)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1ZipCode"
+                                                  Required="false"
+                                                  OnKeyDown="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await HandleZipCodeChange(employeeDetails.EmergencyContact1ZipCode, 1); })" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1ZipCode)" />
+                                    @if (IsFetchingLocation && contactIndexBeingFetched == 1)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Info">Fetching location details...</MudText>
+                                    }
+                                    @if (!string.IsNullOrEmpty(zipErrorMessage) && contactIndexBeingFetched == 1)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
+                                    }
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1Mobile" Required="true" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Mobile)" />
+                                </MudItem>
+                            </MudGrid>
 
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Relationship" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" />
+                            <strong><b><hr style="color:black" /></b></strong>
 
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Address" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Address)" />
+                            <MudGrid>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Contact 2 Name" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2Name" Required="false" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Name)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2Relationship" Required="false" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Relationship)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2Address" Required="false" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2City" Required="false" Disabled="true" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2City)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2State" Required="false" Disabled="true" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2State)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2ZipCode"
+                                                  Required="false"
+                                                  OnKeyDown="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await HandleZipCodeChange(employeeDetails.EmergencyContact2ZipCode, 2); })" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2ZipCode)" />
+                                    @if (IsFetchingLocation && contactIndexBeingFetched == 2)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Info">Fetching location details...</MudText>
+                                    }
+                                    @if (!string.IsNullOrEmpty(zipErrorMessage) && contactIndexBeingFetched == 2)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
+                                    }
+                                </MudItem>
 
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1City" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1City)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1State" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1State)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1ZipCode" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1ZipCode)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Mobile" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Mobile)" />
-
-                        </MudItem>
-                    </MudGrid>
-                       
-                    @* break *@
-                    <strong> <b><hr style="color:black" ; /></b></strong>
-                    <MudGrid>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Contact 2 Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Name" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Name)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Relationship" Variant="Variant.Outlined " Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Relationship" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Relationship)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Address" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2City" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2City)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2State" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2State)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2ZipCode" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2ZipCode)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Mobile" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" />
-
-                        </MudItem>
-                    </MudGrid>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2Mobile" Required="false" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" />
+                                </MudItem>
+                            </MudGrid>
                         </div>
                     </ChildContent>
                 </MudExpansionPanel>
-                    @* <!-- Nominee Information --> *@
-                    @* <MudText Typo="Typo.h6" Class="mb-4 mt-6">Nominee Information</MudText> *@
-                    @* <MudGrid> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Nominee Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeName" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeName)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeRelationship" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeRelationship)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeAddress" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeAddress)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeCity" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeCity)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeState" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeState)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeZipCode" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeZipCode)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeMobile" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeMobile)" /> *@
-
-                    @*     </MudItem> *@
-                    @* </MudGrid> *@
-
                     <!-- Buttons -->
                     <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
                         <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Reset">Reset</MudButton>
@@ -516,7 +532,123 @@
     [Parameter]
     public EmployeeDetails InitialData { get; set; }
     private List<Country> countries = new();
+    private int? contactIndexBeingFetched = null;
+    private string zipErrorMessage = null;
+    public class PinResponse
+    {
+        public List<PostOffice> PostOffice { get; set; }
+    }
+    public class PostOffice
+    {
+        public string State { get; set; }
+        public string District { get; set; }
+    }
+    private async Task GetCityStateFromPin(string pinCode, Action<string> setCity, Action<string> setState)
+    {
+        Console.WriteLine($"[DEBUG] Fetching city/state for pin: {pinCode}");
 
+        zipErrorMessage = null;
+        if (!string.IsNullOrWhiteSpace(pinCode) && pinCode.Length == 6)
+        {
+            try
+            {
+                using var http = new HttpClient();
+                var response = await http.GetFromJsonAsync<List<PinResponse>>($"https://api.postalpincode.in/pincode/{pinCode}");
+
+                if (response?.Any() == true && response.First().PostOffice?.Any() == true)
+                {
+                    var post = response.First().PostOffice.FirstOrDefault();
+                    Console.WriteLine($"[DEBUG] Found city: {post?.District}, state: {post?.State}");
+
+                    if (post != null)
+                    {
+                        setCity(post.District);
+                        setState(post.State);
+                    }
+                    else
+                    {
+                        setCity(string.Empty);
+                        setState(string.Empty);
+                        zipErrorMessage = $"No data found for PIN code: {pinCode}";
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[DEBUG] No data found for pin: {pinCode}");
+                    setCity(string.Empty);
+                    setState(string.Empty);
+                    zipErrorMessage = $"Invalid PIN code: {pinCode}";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] Error fetching pin data: {ex.Message}");
+                setCity(string.Empty);
+                setState(string.Empty);
+                zipErrorMessage = $"Error fetching city/state: {ex.Message}";
+            }
+        }
+        else
+        {
+            Console.WriteLine($"[DEBUG] Invalid pin format: {pinCode}");
+            setCity(string.Empty);
+            setState(string.Empty);
+            zipErrorMessage = "PIN code must be 6 digits.";
+        }
+    }
+    private bool IsFetchingLocation = false;
+    private async Task HandleZipCodeChange(string zip, int contactIndex)
+    {
+            if (string.IsNullOrWhiteSpace(zip) || zip.Length != 6)
+    {
+        Console.WriteLine($"[DEBUG] Skipping fetch for invalid pin: {zip}");
+        return;
+    }
+    IsFetchingLocation = true;
+        contactIndexBeingFetched = contactIndex;
+        StateHasChanged();
+
+        if (contactIndex == 1)
+        {
+            employeeDetails.EmergencyContact1ZipCode = zip;
+            await GetCityStateFromPin(
+                zip,
+                city => employeeDetails.EmergencyContact1City = city,
+                state => employeeDetails.EmergencyContact1State = state
+            );
+        }
+        else if (contactIndex == 2)
+        {
+            employeeDetails.EmergencyContact2ZipCode = zip;
+            await GetCityStateFromPin(
+                zip,
+                city => employeeDetails.EmergencyContact2City = city,
+                state => employeeDetails.EmergencyContact2State = state
+            );
+        }
+          else if (contactIndex == 3)
+        {
+            employeeDetails.CurrentZip = zip;
+            await GetCityStateFromPin(
+                zip,
+                city => employeeDetails.CurrentCity = city,
+                state => employeeDetails.CurrentState = state
+            );
+        }
+        else if (contactIndex == 4)
+        {
+            employeeDetails.PermanentZip = zip;
+            await GetCityStateFromPin(
+                zip,
+                city => employeeDetails.PermanentCity= city,
+                state => employeeDetails.PermanentState = state
+            );
+        }
+
+        IsFetchingLocation = false;
+        contactIndexBeingFetched = null;
+        StateHasChanged();
+    }
     protected async override void OnInitialized()
     {
         countries = await CountryService.GetCountriesAsync();
@@ -528,22 +660,6 @@
             employeeDetails = InitialData;
         }
     }
-    // private async Task LoadFromLocalStorage()
-    // {
-    //     // Load EmpId and Email from localStorage (set during signup/login)
-    //     var empId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
-    //     var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
-
-    //     if (!string.IsNullOrEmpty(empId))
-    //     {
-    //         employeeDetails.EmployeeID = empId;
-    //     }
-    //     if (!string.IsNullOrEmpty(email))
-    //     {
-    //         employeeDetails.CurrentEmail = email;
-    //     }
-    //     StateHasChanged();
-    // }
     private async Task LoadFromLocalStorage()
     {
         // Load EmpId and Email from localStorage (set during signup/login)
