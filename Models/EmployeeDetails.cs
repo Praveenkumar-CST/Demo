@@ -197,5 +197,7 @@ namespace WiseHR.Models
 
         public string? PhotoContentType { get; set; }
 
+        public string? EmployeeCode { get; set; }
+
     }
 }

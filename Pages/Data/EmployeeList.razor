@@ -1,134 +1,213 @@
 ﻿@page "/home/employeeList"
 @using WiseHRServer.Models
-@inject EmployeeService EmployeeService
-@inject BankingService BankingService
-@inject ExperienceService ExperienceService
-@inject NavigationManager NavigationManager
-@using WiseHRServer.Models
-@using MudBlazor
 @layout HomeLayout
+@inject EmployeeService EmployeeService
+@inject NavigationManager NavigationManager
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <div class="d-flex align-center mb-4">
-        <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large" Class="mr-2"/>
-        <MudText Typo="Typo.h4" Color="Color.Primary">All Employees</MudText>
+@if (isLoading)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else if (isFiltering)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Filtering...</span>
+    </div>
+}
+else if (hasError)
+{
+    <div class="alert alert-danger custom-alert">Failed to load employee data.</div>
+}
+else if (pagedEmployees.Any())
+{
+    <!-- Search and Filter Row -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="input-group w-50">
+            <input type="text"
+                   class="form-control"
+                   placeholder="Search Employee"
+                   @bind="searchQuery" />
+            <button class="btn btn-primary" @onclick="HandleSearch">Search</button>
+        </div>
+
+        <select class="form-select w-auto ms-2"
+                @bind="SelectedDesignation">
+            <option value="">All Designations</option>
+            @foreach (var designation in designations)
+            {
+                <option value="@designation">@designation</option>
+            }
+        </select>
     </div>
 
-    @if (isLoading)
-    {
-        <div class="d-flex justify-center align-center" style="height: 200px;">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large"/>
-        </div>
-    }
-    else if (hasError)
-    {
-        <MudAlert Severity="Severity.Error" Class="mb-3">Failed to load employee data.</MudAlert>
-    }
-    else if (employees != null && employees.Count > 0)
-    {
-        <MudPaper Class="pa-4" Elevation="2" Style="border-radius: 8px;">
-            <MudTable Items="@employees" 
-                      Dense="true" 
-                      Hover="true" 
-                      Breakpoint="Breakpoint.Sm" 
-                      Striped="true"
-                      Loading="@isLoading"
-                      LoadingProgressColor="Color.Primary"
-                      Filter="new Func<EmployeeDetails,bool>(FilterFunc)"
-                      @bind-SelectedItem="selectedEmployee"
-                      OnRowClick="@((TableRowClickEventArgs<EmployeeDetails> args) => ShowEmployeeDetails(args.Item.EmployeeID))"
-                      Style="border-radius: 8px;">
-                <ToolBarContent>
-                    <MudText Typo="Typo.h6">Employee List</MudText>
-                    <MudSpacer />
-                    <MudTextField @bind-Value="searchString" 
-                                Placeholder="Search employees..." 
-                                Adornment="Adornment.Start" 
-                                AdornmentIcon="@Icons.Material.Filled.Search"
-                                IconSize="Size.Medium" 
-                                Class="mt-0"></MudTextField>
-                </ToolBarContent>
-                <HeaderContent>
-                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="name">Name</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="id">Employee ID</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="email">Email</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="designation">Designation</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel T="EmployeeDetails" SortLabel="joining">Joining Date</MudTableSortLabel></MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Name">
-                        <div class="d-flex align-center">
-                            @if (!string.IsNullOrEmpty(context.PhotoBase64Content))
-                            {
-                                <MudAvatar Image="@($"data:{context.PhotoContentType};base64,{context.PhotoBase64Content}")" 
-                                          Size="Size.Small" 
-                                          Class="mr-2"
-                                          Style="width: 40px; height: 40px; object-fit: cover;"/>
-                            }
-                            else
-                            {
-                                <MudAvatar Color="Color.Primary" 
-                                          Size="Size.Small" 
-                                          Class="mr-2"
-                                          Style="width: 40px; height: 40px;">@GetInitials(context.FirstName)</MudAvatar>
-                            }
-                            <span>@($"{context.FirstName} {context.LastName}")</span>
-                        </div>
-                    </MudTd>
-                    <MudTd DataLabel="Employee ID">@context.EmployeeID</MudTd>
-                    <MudTd DataLabel="Email">@context.CurrentEmail</MudTd>
-                    <MudTd DataLabel="Designation">@context.Designation</MudTd>
-                    <MudTd DataLabel="Joining Date">@(context.DateOfJoining?.ToString("dd/MM/yyyy"))</MudTd>
-                </RowTemplate>
-                <PagerContent>
-                    <MudTablePager />
-                </PagerContent>
-            </MudTable>
-        </MudPaper>
-    }
-    else if (employees != null && employees.Count == 0)
-    {
-        <MudAlert Severity="Severity.Info" Class="mb-3">No employees found.</MudAlert>
-    }
-</MudContainer>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Designation</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var emp in pagedEmployees)
+                {
+                    <tr @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
+                        <td>@emp.EmployeeID</td>
+                        <td>
+                            <span>
+                                @if (!string.IsNullOrEmpty(emp.PhotoBase64Content))
+                                {
+                                    <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content"
+                                         class="rounded-circle"
+                                         alt="Employee Photo"
+                                         style="width: 30px; height: 30px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No photo</span>
+                                }
+                            </span>
+                            @($" {emp.FirstName} {emp.LastName}")
+                        </td>
+                        <td>@emp.CurrentEmail</td>
+                        <td>@emp.Designation</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary"
+                                    style="padding: 2px 6px; font-size: 0.75rem;"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <nav aria-label="Employee pagination">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <button class="page-link" @onclick="() => ChangePage(currentPage - 1)">Previous</button>
+            </li>
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                var pageNum = i;
+                <li class="page-item @(currentPage == pageNum ? "active" : "")">
+                    <button class="page-link" @onclick="() => ChangePage(pageNum)">@pageNum</button>
+                </li>
+            }
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <button class="page-link" @onclick="() => ChangePage(currentPage + 1)">Next</button>
+            </li>
+        </ul>
+    </nav>
+}
+else
+{
+    <div class="alert alert-info custom-alert">No employees found.</div>
+}
 
 @code {
-    private List<EmployeeDetails> employees;
+    private List<EmployeeDetails> employees = new();
+    private List<EmployeeDetails> pagedEmployees = new();
     private bool isLoading = true;
+    private bool isFiltering = false;
     private bool hasError = false;
-    private string searchString = "";
-    private EmployeeDetails selectedEmployee;
+    private int currentPage = 1;
+    private int itemsPerPage = 10;
+    private string searchQuery = string.Empty;
+    private string _selectedDesignation = string.Empty;
+    private HashSet<string> designations = new();
+    private List<EmployeeDetails> filteredEmployees = new();
+
+    private int totalPages => (int)Math.Ceiling((double)filteredEmployees.Count / itemsPerPage);
+
+    private string SelectedDesignation
+    {
+        get => _selectedDesignation;
+        set
+        {
+            if (_selectedDesignation != value)
+            {
+                _selectedDesignation = value;
+                _ = UpdateFilteredEmployeesAsync(); // Trigger filtering
+            }
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             employees = await EmployeeService.GetAllEmployees();
-            // Log the first employee's photo data for debugging
-            if (employees != null && employees.Any())
-            {
-                var firstEmp = employees.First();
-                Console.WriteLine($"First employee photo data - ContentType: {firstEmp.PhotoContentType}, HasBase64Content: {!string.IsNullOrEmpty(firstEmp.PhotoBase64Content)}");
-            }
+            designations = employees
+                .Select(e => e.Designation)
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .Distinct()
+                .ToHashSet();
+            await UpdateFilteredEmployeesAsync();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading employees: {ex.Message}");
             hasError = true;
         }
-        isLoading = false;
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 
-    private bool FilterFunc(EmployeeDetails element)
+    private async Task UpdateFilteredEmployeesAsync()
     {
-        if (string.IsNullOrWhiteSpace(searchString))
-            return true;
+        isFiltering = true;
+        StateHasChanged();
 
-        return element.FirstName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
-            || element.LastName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
-            || element.EmployeeID?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
-            || element.CurrentEmail?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true
-            || element.Designation?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true;
+        try
+        {
+            // Offload filtering to a background thread
+            filteredEmployees = await Task.Run(() => employees
+                .Where(emp =>
+                    (string.IsNullOrWhiteSpace(searchQuery) ||
+                     emp.FirstName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                     emp.LastName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                     emp.CurrentEmail.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                     emp.EmployeeID.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                     emp.Designation?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) &&
+                    (string.IsNullOrEmpty(_selectedDesignation) || emp.Designation == _selectedDesignation))
+                .ToList());
+
+            UpdatePagedEmployees();
+        }
+        finally
+        {
+            isFiltering = false;
+            StateHasChanged();
+        }
+    }
+
+    private void UpdatePagedEmployees()
+    {
+        var skip = (currentPage - 1) * itemsPerPage;
+        pagedEmployees = filteredEmployees.Skip(skip).Take(itemsPerPage).ToList();
+    }
+
+    private void ChangePage(int page)
+    {
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+            UpdatePagedEmployees();
+            StateHasChanged();
+        }
     }
 
     private void ShowEmployeeDetails(string employeeId)
@@ -136,12 +215,29 @@
         NavigationManager.NavigateTo($"employeeDetailsData/{employeeId}");
     }
 
-    private string GetInitials(string name)
+    private async Task HandleSearch()
     {
-        if (string.IsNullOrWhiteSpace(name)) return "?";
-        var parts = name.Split(new[] { ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0) return "?";
-        if (parts.Length == 1) return parts[0].Length > 0 ? parts[0][0].ToString().ToUpper() : "?";
-        return $"{parts[0][0]}{parts.Last()[0]}".ToUpper();
+        currentPage = 1;
+        await UpdateFilteredEmployeesAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        UpdatePagedEmployees();
+    }
+
+    private string ItemsPerPage
+    {
+        get => itemsPerPage.ToString();
+        set
+        {
+            if (int.TryParse(value, out int newVal) && itemsPerPage != newVal)
+            {
+                itemsPerPage = newVal;
+                currentPage = 1;
+                UpdatePagedEmployees();
+                StateHasChanged();
+            }
+        }
     }
 }
