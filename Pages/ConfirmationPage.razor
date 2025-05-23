@@ -446,9 +446,9 @@
                 }
                 @if (isSubmitting)
                 {
-                    <div class="d-flex flex-column align-items-center mt-4">
-                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
-                        <MudText Class="mt-2" Typo="Typo.subtitle1">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                        <MudText  Align="Align.Center">
                             <b>Submitting your details. Please wait...</b>
                         </MudText>
                     </div>
@@ -747,9 +747,11 @@
         };
 
         DialogService.Show<SubmitSuccessDialog>("Success", parameters);
-        Snackbar.Add("Submitted successfully!", Severity.Success); // ✅ Success message
-
         isSubmitted = true;
+
+        Snackbar.Add("Submitted successfully!", Severity.Success); // ✅ Success message
+         NavigateToHome();
+
         
     }
     private void NavigateToHome()
