@@ -22,7 +22,7 @@
 <!-- Top Navigation Bar -->
 <MudAppBar Elevation="5"  Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 67px; color: var(--primary); padding-top:2px">
     <MudItem xs="2" Class="d-flex align-center">
-        <MudImage Src="images/logo1.png"
+        <MudImage Class="logo-hover-glow" Src="images/logo1.png"
         Alt="Company Logo"
         Height="50"
         @onclick=@(() => NavigationManager.NavigateTo("/home")) />
@@ -37,8 +37,8 @@
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Search"
                 AdornmentColor="Color.Primary"
-                Class="search-autocomplete"
-                Style="width: 100%; border-radius: 28px; font-size: 1.1rem; outline: none; border: none; box-shadow: none;"
+                Class="search-elevated analytics-link "
+                Style="width: 100%;  font-size: 1.1rem; outline: none; border: none; box-shadow: none;"
                 DebounceInterval="300"
                 ResetValueOnEmptyText="true"
                 ShowProgressIndicator="true"
@@ -76,8 +76,8 @@
                     @if (!string.IsNullOrEmpty(userProfilePicture))
                     {
                         <img src="@userProfilePicture"
-                        class="rounded-circle" alt="Employee Photo"
-                        style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(black);" />
+                             class="profile-circle border-hover-color-shift profile-bounce " alt="Employee Photo"
+                             style="width: 55px; height: 55px; object-fit: cover;" />
                     }
                     else
                     {
@@ -120,10 +120,45 @@
 
 
 <style>
+    .search-elevated {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        border: 1px solid #e0e0e0 !important;
+        transition: all 0.3s ease !important;
+    }
+
+        .search-elevated:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+            transform: translateY(-2px);
+        }
+
+        .search-elevated:focus-within {
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2) !important;
+            border-color: var(--primary) !important;
+        }
+    .border-hover-color-shift {
+        border: 3px solid var(--primary);
+        border-radius: 50%;
+        transition: border-color 0.3s ease;
+    }
+
+        .border-hover-color-shift:hover {
+            border-color: #f093fb;
+        }
+
+    .profile-bounce {
+        transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        cursor: pointer;
+    }
+
+        .profile-bounce:hover {
+            transform: scale(1.15);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
     .mud-input > input.mud-input-root-outlined.mud-input-root-adorned-start{
     border: none;
     outline: none;
     box-shadow: none;
+    color:black;
     }
     .mud-overlay {
     z-index: -1;
@@ -189,6 +224,159 @@
 
     ::deep .mud-drawer.open .mud-nav-link span {
     display: inline; /* Show text when expanded */
+    }
+
+    /* Analytics Link Styles */
+    /* .analytics-link { */
+    /*     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+    /*     -webkit-background-clip: text; */
+    /*     -webkit-text-fill-color: transparent; */
+    /*     background-clip: text; */
+    /*     font-style: italic; */
+    /*     padding: 0px 0px; */
+    /*     text-align: center; */
+    
+    /*     font-weight: 500; */
+    /*     border-radius: 8px; */
+    /*     background-color: rgba(102, 126, 234, 0.1); */
+    /*     margin: 8px 0; */
+    /* } */
+
+    /* Main Grid Container */
+    .py-2.px-1 {
+        padding: 16px 8px;
+        margin: 12px 0;
+        border-radius: 16px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      
+    }
+
+        .py-2.px-1:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+    /* Avatar Container */
+    .d-flex.align-center.justify-center {
+        position: relative;
+    }
+
+    /* MudAvatar Custom Styling */
+    .mud-avatar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        border: 3px solid #ffffff;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+
+    /* Employee Details Card */
+    .pa-2.border-1.border-solid.mud-border-grey-light.rounded {
+        background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);
+        border: 1px solid rgba(0, 0, 0, 0.06) !important;
+        border-radius: 12px;
+        padding: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .pa-2.border-1.border-solid.mud-border-grey-light.rounded::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+    /* Name Text Styling */
+    .mud-typography-body1 {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+
+    /* Designation Text Styling */
+    .mud-typography-body2 {
+        color: #4a5568;
+        font-weight: 500;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+
+    /* Email Text Styling */
+    .mud-typography-caption {
+        color: #718096;
+        font-size: 13px;
+        line-height: 1.3;
+    }
+
+        /* Matched Fields Styling */
+        .mud-typography-caption.mud-info-text {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-style: italic;
+            font-weight: 500;
+            margin-top: 8px;
+            display: inline-block;
+            font-size: 12px;
+        }
+
+    /* Highlighted Text Styling */
+    mark, .highlight {
+        background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        color: #2d3748;
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-weight: 600;
+        box-shadow: 0 1px 3px rgba(253, 160, 133, 0.3);
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .py-2.px-1
+
+    {
+        padding: 12px 6px;
+        margin: 8px 0;
+        border-radius: 12px;
+    }
+
+    .pa-2.border-1.border-solid.mud-border-grey-light.rounded {
+        padding: 12px;
+    }
+
+    .mud-avatar {
+        width: 50px;
+        height: 50px;
+    }
+
+    }
+
+    /* Animation for Loading States */
+    @@keyframes shimmer {
+        0%
+
+    {
+        background-position: -200px 0;
+    }
+
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
+
+    }
+
+    .employee-loading {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200px 100%;
+        animation: shimmer 1.5s infinite;
     }
 </style>
 

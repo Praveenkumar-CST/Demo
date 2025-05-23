@@ -194,6 +194,27 @@
                          <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
                     </MudExpansionPanel>
 
+                    <MudExpansionPanel Text="Contact" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentCity" Label="Current City"
+                                         SearchFunc="SearchCurrentCities"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentState" Label="Current State"
+                                         SearchFunc="SearchCurrentStates"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudTextField @bind-Value="_filterDto.CurrentZip" Label="Current Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentCity" Label="Permanent City"
+                                         SearchFunc="SearchPermanentCities"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentState" Label="Permanent State"
+                                         SearchFunc="SearchPermanentStates"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudTextField @bind-Value="_filterDto.PermanentZip" Label="Permanent Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                    </MudExpansionPanel>
+
                     <MudExpansionPanel Text="Experience" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.College" Label="College / University"
                                          SearchFunc="SearchEducationUniversities"
@@ -205,6 +226,8 @@
                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudNumericField @bind-Value="_filterDto.YearOfPassingStart" Label="Passed From Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="1900" Max="DateTime.Now.Year" Class="mb-2" T="int?" />
                         <MudNumericField @bind-Value="_filterDto.YearOfPassingEnd" Label="Passed To Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.YearOfPassingStart ?? 1900" Max="DateTime.Now.Year" Class="mb-2" T="int?" />
+                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMin" Label="Min Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
+                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMax" Label="Max Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.EducationPercentageMin ?? 0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
                         <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer"
                                          SearchFunc="SearchWorkEmployers"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
@@ -217,34 +240,11 @@
                                          SearchFunc="SearchWorkLocations"
                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMin" Label="Min Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
-                        <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMax" Label="Max Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.EducationPercentageMin ?? 0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobStartDateStart" Label="Prev. Job Start From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobStartDateEnd" Label="Prev. Job Start To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PreviousJobStartDateStart" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateStart" Label="Prev. Job End From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateEnd" Label="Prev. Job End To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PreviousJobEndDateStart" />
                     </MudExpansionPanel>
-
-                    <MudExpansionPanel Text="Address" Icon="@Icons.Material.Filled.MoreHoriz"  Class="banking-expansion-panel">
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentCity" Label="Current City"
-                                         SearchFunc="SearchCurrentCities"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentState" Label="Current State"
-                                         SearchFunc="SearchCurrentStates"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentCity" Label="Permanent City"
-                                         SearchFunc="SearchPermanentCities"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentState" Label="Permanent State"
-                                         SearchFunc="SearchPermanentStates"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudTextField @bind-Value="_filterDto.CurrentZip" Label="Current Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PermanentZip" Label="Permanent Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Passport" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.PassportNationality" Label="Passport Nationality"
@@ -303,11 +303,11 @@
                         }
                         else
                         {
-                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1"/>
+                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1" Style="padding-bottom:4px"/>
                             <span>Apply</span>
                         }
                     </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="flex: 1;">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="flex: 1;padding-bottom:4px">
                         <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1"/>
                         <span>Clear</span>
                     </MudButton>
@@ -424,9 +424,7 @@
                                 </MudPaper>
                             </MudItem>
                         </MudGrid>
-
-                      
-                       
+                
 
                         @* Active Filters Display *@
                         @if (HasActiveFilters())
@@ -588,7 +586,11 @@
                             @* Filter Styles *@
                             <style>
                                 /* Banking Expansion Panel Styles */
-
+                                
+                                .pa - 4 {
+                                    padding: 6px 0px 7px 2px !important;
+                                }
+                           
                                 .banking-expansion-panel {
                                     margin-bottom: 16px;
                                     border-radius: 12px;
@@ -1710,42 +1712,105 @@
         {
             string lowerSearch = SearchString.ToLowerInvariant();
             data = data.Where(e =>
-                (e.EmployeeDetails.FirstName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.LastName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.MiddleName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.Designation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.FatherName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.MotherName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.Level?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.CurrentMobile?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.PassportNo?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.TypeOfEmployment?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.JoiningLocation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.Gender?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.MaritalStatus?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.BloodGroup?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.Nationality?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.CurrentCity?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.CurrentState?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.PermanentCity?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.PermanentState?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeDetails.PassportNationality?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.BankingInformation?.BankName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.BankingInformation?.Branch?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.BankingInformation?.State?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.BankingInformation?.AccountType?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.BankingInformation?.AccountNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.BankingInformation?.IFSCode?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-				(e.BankingInformation?.AadhaarNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-				(e.experience?.EducationQualifications?.Any(edu => 
-                    edu.Qualification?.ToLowerInvariant().Contains(lowerSearch) == true ||
-                    edu.University?.ToLowerInvariant().Contains(lowerSearch) == true) ?? false) ||
-                (e.experience?.WorkExperiences?.Any(work => 
-                    work.Employer?.ToLowerInvariant().Contains(lowerSearch) == true ||
-                    work.Location?.ToLowerInvariant().Contains(lowerSearch) == true ||
-                    work.Designation?.ToLowerInvariant().Contains(lowerSearch) == true) ?? false)
-            );
+            {
+                var details = e.EmployeeDetails;
+                var banking = e.BankingInformation;
+                var experience = e.experience;
+
+                // Personal Information
+                if (details != null)
+                {
+                    if (details.FirstName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.LastName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.MiddleName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.FatherName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.MotherName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Gender?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.MaritalStatus?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.BloodGroup?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Nationality?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PhysicallyChallenged?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Professional Information
+                if (details != null)
+                {
+                    if (details.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Designation?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.TypeOfEmployment?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Level?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.JoiningLocation?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Contact Information
+                if (details != null)
+                {
+                    if (details.CurrentMobile?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentEmail?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentAddress?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentCity?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentState?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentZip?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentAddress?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentCity?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentState?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentZip?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Passport Information
+                if (details != null)
+                {
+                    if (details.PassportNo?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PassportNationality?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Banking Information
+                if (banking != null)
+                {
+                    if (banking.BankName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.Branch?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.State?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.AccountType?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.AccountNumber?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.IFSCode?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.PANNumber?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.AadhaarNumber?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Education Information
+                if (experience?.EducationQualifications != null)
+                {
+                    foreach (var edu in experience.EducationQualifications)
+                    {
+                        if (edu.Qualification?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            edu.University?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            edu.YearOfPassing.ToString().Contains(lowerSearch) ||
+                            edu.Percentage.ToString().Contains(lowerSearch))
+                            return true;
+                    }
+                }
+
+                // Work Experience Information
+                if (experience?.WorkExperiences != null)
+                {
+                    foreach (var work in experience.WorkExperiences)
+                    {
+                        if (work.Employer?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            work.Location?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            work.Designation?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            work.DateOfJoining.ToString().Contains(lowerSearch) ||
+                            work.DateOfLeaving.ToString().Contains(lowerSearch))
+                            return true;
+                    }
+                }
+
+                return false;
+            });
         }
 
         if (!string.IsNullOrEmpty(state.SortLabel))
