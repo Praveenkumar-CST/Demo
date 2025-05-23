@@ -1,9 +1,10 @@
 namespace list.Models;
 public class Events
  {
-    public int Id { get; set; }
-    public string Date { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string HolidayType { get; set; } = string.Empty;
+        public string? Date { get; set; }
+        public string? Description { get; set; }
+        public string? HolidayType { get; set; }
+        public string? Location { get; set; }
+        public string? Day { get; set; }
     
   }
