@@ -59,6 +59,8 @@
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudDatePicker Label="Date of Birth" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.DateOfBirth" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfBirth)" />
+                                    <ValidationMessage For="@(() => employeeDetails.DateOfBirth)" />
+
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Gender" Required="true">
@@ -67,6 +69,8 @@
                                 <MudSelectItem Value="@("Other")">Other</MudSelectItem>
                                 <MudSelectItem Value="@("Pefer not to mention")">Perfer not to mention</MudSelectItem>
                             </MudSelect>
+                                                        <ValidationMessage For="@(() => employeeDetails.Gender)" />
+
                         </MudItem>
                     </MudGrid>
                     @* break *@
@@ -78,7 +82,10 @@
                             <MudSelect T="string" Label="Physically Challenged" Margin="Margin.Dense" Variant="Variant.Outlined" @bind-Value="employeeDetails.PhysicallyChallenged" Required="true">
                                 <MudSelectItem Value="@("Yes")">Yes</MudSelectItem>
                                 <MudSelectItem Value="@("No")">No</MudSelectItem>
+
                             </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.PhysicallyChallenged)" />
+
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Allergies" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Allergies" />
@@ -95,6 +102,8 @@
                                 <MudSelectItem Value="@("Divorced")">Divorced</MudSelectItem>
                                 <MudSelectItem Value="@("Widowed")">Widowed</MudSelectItem>
                             </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.MaritalStatus)" />
+
                         </MudItem>
                                 @if (employeeDetails.MaritalStatus != "UnMarried")
                         {
@@ -118,6 +127,8 @@
                                 <MudSelectItem Value="@("AB+")">AB+</MudSelectItem>
                                 <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
                             </MudSelect>
+                          <ValidationMessage For="@(() => employeeDetails.BloodGroup)" />
+
                         </MudItem>
                     <MudItem xs="12" sm="4" md="3">
                         <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Nationality" Required="true">
@@ -129,6 +140,8 @@
                                 }
                             }
                         </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.Nationality)" />
+
                     </MudItem>
 
                     <MudItem xs="12" sm="6">
