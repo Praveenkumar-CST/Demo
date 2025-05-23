@@ -6,8 +6,9 @@
 
 @if (isLoading)
 {
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText Align="Align.Center">Loading...</MudText>
     </div>
 }
 else if (isFiltering)
@@ -24,13 +25,11 @@ else if (pagedEmployees.Any())
 {
     <!-- Search and Filter Row -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="input-group w-50">
-            <input type="text"
-                   class="form-control"
-                   placeholder="Search Employee"
-                   @bind="searchQuery" />
-            <button class="btn btn-primary" @onclick="HandleSearch">Search</button>
-        </div>
+        <input type="text"
+               class="form-control w-50"
+               placeholder="Search Employee"
+               @bind="searchQuery"
+               @oninput="HandleSearchInput" />
 
         <select class="form-select w-auto ms-2"
                 @bind="SelectedDesignation">
@@ -125,9 +124,10 @@ else
     private string searchQuery = string.Empty;
     private string _selectedDesignation = string.Empty;
     private HashSet<string> designations = new();
-    private List<EmployeeDetails> filteredEmployees = new();
+    private CancellationTokenSource? debounceCts;
 
     private int totalPages => (int)Math.Ceiling((double)filteredEmployees.Count / itemsPerPage);
+    private List<EmployeeDetails> filteredEmployees = new();
 
     private string SelectedDesignation
     {
@@ -137,7 +137,7 @@ else
             if (_selectedDesignation != value)
             {
                 _selectedDesignation = value;
-                _ = UpdateFilteredEmployeesAsync(); // Trigger filtering
+                _ = UpdateFilteredEmployeesAsync();
             }
         }
     }
@@ -147,6 +147,13 @@ else
         try
         {
             employees = await EmployeeService.GetAllEmployees();
+            if (employees == null || !employees.Any())
+            {
+                Console.WriteLine("No employees returned from EmployeeService.");
+                hasError = true;
+                return;
+            }
+
             designations = employees
                 .Select(e => e.Designation)
                 .Where(d => !string.IsNullOrWhiteSpace(d))
@@ -173,19 +180,23 @@ else
 
         try
         {
-            // Offload filtering to a background thread
             filteredEmployees = await Task.Run(() => employees
-                .Where(emp =>
+                .Where(emp => emp != null && // Ensure emp is not null
                     (string.IsNullOrWhiteSpace(searchQuery) ||
-                     emp.FirstName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                     emp.LastName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                     emp.CurrentEmail.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                     emp.EmployeeID.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                     emp.Designation?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) &&
+                     (emp.FirstName?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
+                     (emp.LastName?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
+                     (emp.CurrentEmail?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
+                     (emp.EmployeeID?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
+                     (emp.Designation?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true)) &&
                     (string.IsNullOrEmpty(_selectedDesignation) || emp.Designation == _selectedDesignation))
                 .ToList());
 
             UpdatePagedEmployees();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error filtering employees: {ex.Message}");
+            hasError = true;
         }
         finally
         {
@@ -212,13 +223,29 @@ else
 
     private void ShowEmployeeDetails(string employeeId)
     {
-        NavigationManager.NavigateTo($"employeeDetailsData/{employeeId}");
+        if (!string.IsNullOrEmpty(employeeId))
+        {
+            NavigationManager.NavigateTo($"employeeDetailsData/{employeeId}");
+        }
     }
 
-    private async Task HandleSearch()
+    private async Task HandleSearchInput(ChangeEventArgs e)
     {
-        currentPage = 1;
-        await UpdateFilteredEmployeesAsync();
+        searchQuery = e.Value?.ToString() ?? string.Empty;
+
+        debounceCts?.Cancel();
+        debounceCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(300, debounceCts.Token);
+            currentPage = 1;
+            await UpdateFilteredEmployeesAsync();
+        }
+        catch (TaskCanceledException)
+        {
+            // Debounce cancelled, no action needed
+        }
     }
 
     protected override void OnParametersSet()
@@ -239,5 +266,10 @@ else
                 StateHasChanged();
             }
         }
+    }
+
+    public void Dispose()
+    {
+        debounceCts?.Dispose();
     }
 }

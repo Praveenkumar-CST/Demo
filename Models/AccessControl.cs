@@ -18,8 +18,8 @@ namespace WiseHR.Models
                     ("Attendance", "/AdminAttendanceView"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
-                     ("HIDE_experienceEditForm","/experienceEditForm/.*"),
-                      ("HIDE_bankEditForm","/bankEditForm/.*"),
+                    ("HIDE_experienceEditForm","/experienceEditForm/.*"),
+                    ("HIDE_bankEditForm","/bankEditForm/.*"),
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
@@ -39,7 +39,6 @@ namespace WiseHR.Models
                 {
                     ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
-                    ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
@@ -58,6 +57,28 @@ namespace WiseHR.Models
                     ("HIDE_EmployeeProfile", "/employee/.*"),
                   
 
+                }
+            },    {
+                "HR", new List<(string, string)>
+                {
+                    ("Dashboard", "/home"),
+                    ("Employee List", "/home/employeeList"),
+                    ("Organizational Hierarchy", "/home/hierarchy"),
+                    ("Holiday Calendar", "/calendar"),
+                    ("Attendance", "/AdminAttendanceView"),
+                    //("Add Employees", "/home/employees"),
+                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
+                    ("HIDE_personalEditForm", "/personalEditForm/.*"),
+                    ("HIDE_bankEditForm", "/bankEditForm/.*"),
+                    ("HIDE_experienceEditForm", "/experienceEditForm/.*"),
+                    ("HIDE_Registration", "/registration"),
+                    ("HIDE_confirmationPage", "/confirmation"),
+                    ("HIDE_workExperience", "/workExperience"),
+                    ("HIDE_employee-form", "/employee-form"),
+                    ("HIDE_bankingForm", "/bankingForm"),
+                    ("HIDE_Fortnight Report", "/fortnight-report"),
+                    ("ReportList", "/reports"),
+                    ("HIDE_EmployeeProfile", "/employee/.*"),
                 }
             },
             {

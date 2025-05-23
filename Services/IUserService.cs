@@ -10,6 +10,5 @@ namespace WiseHR.Services
         Task UpdateUserRoleAsync(string id, string role);
         Task DeleteUserAsync(string id);
         Task<User> CreateUserAsync(string email, string password);
-
     }
 }

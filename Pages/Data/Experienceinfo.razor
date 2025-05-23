@@ -59,7 +59,10 @@
 }
 else
 {
-    <MudText>No experience information available.</MudText>
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText Align="Align.Center">Loading...</MudText>
+    </div>
 }
 
 @code {

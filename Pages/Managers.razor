@@ -11,8 +11,9 @@
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     @if (isPageLoading)
     {
-        <div class="d-flex justify-center mt-10">
-            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText Align="Align.Center">Loading...</MudText>
         </div>
     }
     else
@@ -524,8 +525,7 @@
             if (allSuccess)
             {
                 showModal = false;
-                StateHasChanged();
-                isAssigning = false;
+                   isAssigning = false;
                 Snackbar.Add("Mentees assigned successfully!", Severity.Success);
                 CloseModal();
                 await ReloadManagersAndAdmins();

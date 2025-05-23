@@ -27,13 +27,22 @@ builder.Services.AddMudServices(config =>
 
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddHttpClient<EmployeeService>();
 builder.Services.AddScoped<EmployeeService>();
+
+builder.Services.AddHttpClient<BankingService>();
 builder.Services.AddScoped<BankingService>();
+
+builder.Services.AddHttpClient<ExperienceService>();
 builder.Services.AddScoped<ExperienceService>();
+
+builder.Services.AddHttpClient<ReportService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<AnalyticsCacheService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddHttpClient<MentorAssignmentService>();
 builder.Services.AddScoped<MentorAssignmentService>();
 
 builder.Services.AddScoped<CountryService>();
