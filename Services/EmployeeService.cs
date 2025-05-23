@@ -87,7 +87,7 @@
                 return null;
             }
         }
-        public async Task<List<EmployeeDetails>> GetAllEmployees(int page = 1, int pageSize = 50, bool includePhotos = true)
+        public async Task<List<EmployeeDetails>> GetAllEmployees(int page = 1, int pageSize = 50, bool includePhotos = false)
         {
             string cacheKey = $"AllEmployees_{page}_{pageSize}_Photos_{includePhotos}";
             if (_cache.TryGetValue(cacheKey, out List<EmployeeDetails> cachedEmployees))
