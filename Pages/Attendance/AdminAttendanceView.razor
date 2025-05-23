@@ -1,0 +1,1127 @@
+﻿@page "/AdminAttendanceView"
+@using System.Net.Http.Json
+@using ClosedXML.Excel
+@using System.IO
+@inject HttpClient Http
+@layout HomeLayout
+@inject NavigationManager Nav
+@using FingerFrontend.AdminAttendanceViewModel
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+<style>
+    .attendance-container {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .month-header {
+        background-color: #f8fafc;
+        padding: 16px 20px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e293b;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .timeline-dot {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+
+        .timeline-dot:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+            z-index: 2;
+        }
+
+        .timeline-dot.clock-in {
+            background-color: #22c55e;
+        }
+
+        .timeline-dot.clock-out {
+            background-color: #ef4444;
+        }
+
+    .absence-line {
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+        .absence-line:hover {
+            opacity: 0.85;
+        }
+
+    .day-row {
+        padding: 12px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        display: grid;
+        grid-template-columns: 80px 120px 1fr 120px 120px;
+        align-items: center;
+        gap: 20px;
+        transition: background-color 0.2s;
+    }
+
+        .day-row:hover {
+            background-color: #f8fafc;
+        }
+
+        .day-row.week-off {
+            background-color: #fefce8;
+        }
+
+    .date-display {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .weekday-display {
+        font-size: 12px;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .header-actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 16px 0;
+        margin-bottom: 16px;
+    }
+
+    .date-nav {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background-color: #f8fafc;
+        padding: 8px 16px;
+        border-radius: 6px;
+    }
+
+    .nav-button {
+        background: none;
+        border: none;
+        color: #475569;
+        cursor: pointer;
+        padding: 6px;
+        transition: color 0.2s;
+    }
+
+        .nav-button:hover {
+            color: #22c55e;
+        }
+
+    .action-button {
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background-color 0.2s;
+    }
+
+    .primary-button {
+        background-color: #22c55e;
+        color: #ffffff;
+    }
+
+        .primary-button:hover {
+            background-color: #16a34a;
+        }
+
+        .primary-button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+    .secondary-button {
+        background-color: #64748b;
+        color: #ffffff;
+    }
+
+        .secondary-button:hover {
+            background-color: #475569;
+        }
+
+    .download-button {
+        background-color: #17a2b8;
+        color: #ffffff;
+    }
+
+        .download-button:hover {
+            background-color: #138496;
+        }
+
+        .download-button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+    .search-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 20px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .search-input {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        width: 100%;
+        transition: border-color 0.2s;
+    }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+        }
+
+    .error-message {
+        color: #b91c1c;
+        background-color: #fef2f2;
+        padding: 10px 14px;
+        border-radius: 6px;
+        margin: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .success-message {
+        color: #065f46;
+        background-color: #ecfdf5;
+        padding: 10px 14px;
+        border-radius: 6px;
+        margin: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        width: 400px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 12px;
+    }
+
+    .modal-body {
+        margin-bottom: 20px;
+    }
+
+        .modal-body textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.2s;
+            background-color: #f8fafc;
+        }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .success-popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #ecfdf5;
+        color: #065f46;
+        padding: 12px 20px;
+        border-radius: 6px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+        .success-popup i {
+            font-size: 18px;
+        }
+
+        .success-popup p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+    .timeline-dot:hover::after,
+    .absence-line:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #1e293b;
+        color: #ffffff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 3;
+    }
+
+    .reason-display {
+        font-size: 14px;
+        color: #475569;
+        margin-bottom: 10px;
+        padding: 8px;
+        background-color: #f8fafc;
+        border-radius: 4px;
+        max-height: 80px;
+        overflow-y: auto;
+    }
+
+    .download-progress {
+        margin: 20px;
+        text-align: center;
+    }
+
+    .progress-bar {
+        width: 100%;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+        height: 20px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        width: @downloadProgress%;
+        background-color: #22c55e;
+        height: 100%;
+        border-radius: 5px;
+        transition: width 0.3s ease-in-out;
+    }
+
+    .reasons-button {
+        background-color: #2563eb; 
+        color: #ffffff;
+    }
+
+        .reasons-button:hover {
+            background-color: #1d4ed8;
+        }
+</style>
+
+<!-- Error Message -->
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">
+        <p>Error: @errorMessage</p>
+        <button @onclick="ClearError" class="action-button secondary-button">Clear</button>
+    </div>
+}
+
+<!-- Success Message -->
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="success-message">
+        <p>@successMessage</p>
+        <button @onclick="ClearSuccess" class="action-button secondary-button">Clear</button>
+    </div>
+}
+
+<!-- Success Pop-up -->
+@if (showSuccessPopup)
+{
+    <div class="success-popup">
+        <i class="fas fa-check-circle"></i>
+        <p>@successPopupMessage</p>
+    </div>
+}
+
+<!-- Download Progress -->
+@if (isDownloading)
+{
+    <div class="download-progress">
+        <p style="color: #1e293b; font-size: 16px;">Downloading... @downloadProgress.ToString("F1")%</p>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+}
+
+<!-- Search bar and Download buttons -->
+<div class="search-container">
+    <label for="userIdInput" style="color: #1e293b; font-weight: 500;"></label>
+    <input id="userIdInput" @bind="userIdInput" placeholder="Type a user ID" class="search-input" />
+    <button @onclick="FetchLogsById" class="action-button primary-button">
+        <i class="fas fa-search"></i> Search
+    </button>
+    <button @onclick="() => DownloadExcel(false)" class="action-button download-button" disabled="@(isDownloading || string.IsNullOrEmpty(userIdInput))">
+        <i class="fas fa-download"></i> Download for User
+    </button>
+    <button @onclick="() => DownloadExcel(true)" class="action-button download-button" disabled="@isDownloading">
+        <i class="fas fa-download"></i> Download All Users
+    </button>
+    <button @onclick="NavigateToReasons" class="action-button reasons-button">
+        <i class="fas fa-file-alt"></i> Reasons
+    </button>
+</div>
+
+
+<!-- Modal for viewing absence reason -->
+@if (showModal && absencePeriod != null)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                Absence Reason (@absencePeriod.StartTime.ToString("dd MMM yyyy hh:mm tt") - @absencePeriod.EndTime.ToString("hh:mm tt"))
+            </div>
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(absencePeriod.Reason))
+                {
+                    <div class="reason-display">
+                        Reason: @absencePeriod.Reason
+                    </div>
+                }
+                else
+                {
+                    <p style="color: #475569; font-size: 14px;">No reason provided.</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button @onclick="CloseModal" class="action-button secondary-button">Clear</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (isLoading)
+{
+    <p style="text-align: center; color: #1e293b; font-size: 16px;">Loading...</p>
+}
+else if (!attendanceMonths.Any())
+{
+    <p style="text-align: center; color: #1e293b; font-size: 16px;">No records found.</p>
+}
+else
+{
+    <!-- Header with month navigation -->
+    <div class="header-actions">
+        <div class="date-nav">
+            <button @onclick="PreviousMonth" class="nav-button">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                    <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+            <span style="font-size: 18px; font-weight: 500; color: #1e293b;">
+                @currentMonth.ToString("MMMM yyyy")
+            </span>
+            <button @onclick="NextMonth" class="nav-button">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                    <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Attendance by month -->
+    @foreach (var month in attendanceMonths.Where(m => m.Month.Year == currentMonth.Year && m.Month.Month == currentMonth.Month))
+    {
+        <div class="month-header">
+            @month.Month.ToString("MMMM yyyy")
+        </div>
+        <div class="attendance-container">
+            @foreach (var day in month.Days.Where(d => d.Date.Date <= DateTime.Now.Date))
+            {
+                <div class="day-row @(day.IsWeeklyOff ? "week-off" : "")">
+                    <!-- Date column -->
+                    <div>
+                        <div class="date-display">@day.Date.Day.ToString("00")</div>
+                        <div class="weekday-display">@day.Date.ToString("ddd")</div>
+                    </div>
+
+                    <!-- Check-in time -->
+                    <div style="font-size: 14px; color: #1e293b;">
+                        @(day.Sessions.Any() ? day.Sessions.First().ClockIn.ToString("hh:mm tt") : (day.IsWeeklyOff ? "Weekly Off" : "—"))
+                    </div>
+
+                    <!-- Timeline -->
+                    <div style="position: relative; height: 24px;">
+                        <!-- Background line -->
+                        <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background-color: #e2e8f0; transform: translateY(-50%);"></div>
+
+                        @if (day.IsWeeklyOff)
+                        {
+                            <!-- Weekly off display -->
+                            <div style="position: absolute; top: 50%; left: 10%; width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%; transform: translate(-50%, -50%);"></div>
+                            <div style="position: absolute; top: 50%; left: 10%; right: 10%; height: 2px; background-color: #f59e0b; transform: translateY(-50%);"></div>
+                            <div style="position: absolute; top: 50%; right: 10%; width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%; transform: translate(50%, -50%);"></div>
+                        }
+                        else if (!day.Sessions.Any())
+                        {
+                            <!-- Absent display -->
+                            <div style="position: absolute; top: 50%; left: 10%; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; transform: translate(-50%, -50%);"></div>
+                            <div class="absence-line"
+                                 data-tooltip="Absent"
+                                 @onclick="() => OpenModal(day, new FingerFrontend.AdminAttendanceViewModel.AbsencePeriod { StartTime = day.Date.AddHours(8), EndTime = day.Date.AddHours(20) })"
+                                 style="position: absolute; top: 50%; left: 10%; right: 10%; height: 2px; background-color: #ef4444; transform: translateY(-50%);"></div>
+                            <div style="position: absolute; top: 50%; right: 10%; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; transform: translate(50%, -50%);"></div>
+                        }
+                        else
+                        {
+                            @foreach (var session in day.Sessions)
+                            {
+                                <!-- Calculate position for clock-in and clock-out -->
+                                const int startHour = 8;
+                                const int totalHours = 12;
+                                var clockInHour = session.ClockIn.Hour + (session.ClockIn.Minute / 60.0);
+                                var clockInPosition = ((clockInHour - startHour) / totalHours) * 100;
+                                clockInPosition = Math.Max(10, Math.Min(90, clockInPosition));
+
+                                <!-- Green line and dot for clock-in to clock-out -->
+                                @if (session.ClockOut.HasValue)
+                                {
+                                    var clockOutHour = session.ClockOut!.Value.Hour + (session.ClockOut.Value.Minute / 60.0);
+                                    var clockOutPosition = ((clockOutHour - startHour) / totalHours) * 100;
+                                    clockOutPosition = Math.Max(10, Math.Min(90, clockOutPosition));
+
+                                    <div style="position: absolute; top: 50%; left: @clockInPosition%; right: calc(100% - @clockOutPosition%); height: 2px; background-color: #22c55e; transform: translateY(-50%);"></div>
+                                    <div class="timeline-dot clock-in"
+                                         data-tooltip="Clock In: @session.ClockIn.ToString("hh:mm tt")"
+                                         style="position: absolute; top: 50%; left: @clockInPosition%; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1;">
+                                    </div>
+                                    <div class="timeline-dot clock-out"
+                                         data-tooltip="Clock Out: @session.ClockOut.Value.ToString("hh:mm tt")"
+                                         style="position: absolute; top: 50%; left: @clockOutPosition%; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1;">
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- Incomplete session: green dot only -->
+                                    <div class="timeline-dot clock-in"
+                                         data-tooltip="Clock In: @session.ClockIn.ToString("hh:mm tt")"
+                                         style="position: absolute; top: 50%; left: @clockInPosition%; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1;">
+                                    </div>
+                                }
+                            }
+
+                            <!-- Red lines for absence periods between sessions -->
+                            @foreach (var absence in day.AbsencePeriods)
+                            {
+                                var startHour = absence.StartTime.Hour + (absence.StartTime.Minute / 60.0);
+                                var endHour = absence.EndTime.Hour + (absence.EndTime.Minute / 60.0);
+                                var startPosition = ((startHour - 8) / 12) * 100;
+                                var endPosition = ((endHour - 8) / 12) * 100;
+                                startPosition = Math.Max(10, Math.Min(90, startPosition));
+                                endPosition = Math.Max(10, Math.Min(90, endPosition));
+
+                                <div class="absence-line"
+                                     data-tooltip=@($"Absent: {absence.StartTime:hh:mm tt} - {absence.EndTime:hh:mm tt}{(string.IsNullOrEmpty(absence.Reason) ? "" : $"\nReason: {absence.Reason}")}")
+                                     @onclick="() => OpenModal(day, absence)"
+                                     style="position: absolute; top: 50%; left: @startPosition%; right: calc(100% - @endPosition%); height: 2px; background-color: #ef4444; transform: translateY(-50%); z-index: 0;">
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <!-- Check-out time -->
+                    <div style="text-align: right; font-size: 14px; color: #1e293b;">
+                        @(day.Sessions.Any() && day.Sessions.Last().ClockOut.HasValue ?
+                            day.Sessions.Last().ClockOut!.Value.ToString("hh:mm tt") :
+                            (day.IsWeeklyOff ? "Weekly Off" : "—"))
+                    </div>
+
+                    <!-- Total hours -->
+                    <div style="text-align: right;">
+                        <span style="font-size: 14px; color: @(day.TotalHours > 0 ? "#22c55e" : "#ef4444"); font-weight: 500;">
+                            @(day.TotalHours > 0 ? $"{day.TotalHours:F2} Hrs" : (day.IsWeeklyOff ? "Weekly Off" : "0 Hrs"))
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    private string userIdInput = "";
+    private readonly List<FingerFrontend.AdminAttendanceViewModel.AttendanceDto> logs = new();
+    private bool isLoading = false;
+    private bool isDownloading = false;
+    private double downloadProgress = 0;
+    private string? errorMessage;
+    private string? successMessage;
+    private bool showSuccessPopup;
+    private string successPopupMessage = "";
+    private readonly List<FingerFrontend.AdminAttendanceViewModel.AttendanceMonth> attendanceMonths = new();
+    private bool showModal;
+    private FingerFrontend.AdminAttendanceViewModel.AttendanceDay? selectedDay;
+    private FingerFrontend.AdminAttendanceViewModel.AbsencePeriod? absencePeriod;
+    private DateTime currentMonth = DateTime.Now;
+    private const int PageSize = 200;
+    private const int TotalRecordsExpected = 10022;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        userIdInput = query["userId"] ?? "";
+
+        if (!string.IsNullOrEmpty(userIdInput))
+        {
+            await FetchLogsById();
+        }
+    }
+
+    private void PreviousMonth()
+    {
+        currentMonth = currentMonth.AddMonths(-1);
+    }
+
+    private void NextMonth()
+    {
+        currentMonth = currentMonth.AddMonths(1);
+        if (currentMonth > DateTime.Now)
+        {
+            currentMonth = DateTime.Now;
+        }
+    }
+    private void NavigateToReasons()
+        {
+        try
+            {
+            Console.WriteLine("Navigating to /AdminAbsenceReasons");
+            Nav.NavigateTo("/AdminAbsenceReasons", forceLoad: true);
+            }
+        catch (Exception ex)
+            {
+            Console.WriteLine($"Navigation failed: {ex.Message}");
+            errorMessage = $"Navigation failed: {ex.Message}";
+            StateHasChanged();
+            }
+        }
+    private async Task FetchLogsById()
+    {
+        isLoading = true;
+        errorMessage = null;
+        successMessage = null;
+        logs.Clear();
+        attendanceMonths.Clear();
+
+        try
+        {
+            if (string.IsNullOrEmpty(userIdInput))
+            {
+                errorMessage = "Please enter a user ID.";
+                return;
+            }
+
+            var logsEndpoint = $"/api/Zkteco/get-logs-by-id/{Uri.EscapeDataString(userIdInput)}";
+            var logsResponse = await Http.GetAsync(logsEndpoint).ConfigureAwait(false);
+
+            if (!logsResponse.IsSuccessStatusCode)
+            {
+                errorMessage = $"Failed to fetch logs: {logsResponse.StatusCode}";
+                return;
+            }
+
+            var rawLogs = await logsResponse.Content.ReadFromJsonAsync<List<FingerFrontend.AdminAttendanceViewModel.AttendanceDto>>() ?? new();
+            logs.AddRange(DeduplicateLogs(rawLogs));
+
+            var reasonsEndpoint = $"/api/AbsenceReason/{Uri.EscapeDataString(userIdInput)}";
+            var reasonsResponse = await Http.GetAsync(reasonsEndpoint).ConfigureAwait(false);
+            var absenceReasons = reasonsResponse.IsSuccessStatusCode
+                ? await reasonsResponse.Content.ReadFromJsonAsync<List<FingerFrontend.AdminAttendanceViewModel.AbsenceReasonDto>>() ?? new()
+                : new List<FingerFrontend.AdminAttendanceViewModel.AbsenceReasonDto>();
+
+            GenerateAttendanceTable(absenceReasons);
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Network error: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private List<FingerFrontend.AdminAttendanceViewModel.AttendanceDto> DeduplicateLogs(List<FingerFrontend.AdminAttendanceViewModel.AttendanceDto> rawLogs)
+    {
+        return rawLogs
+            .GroupBy(l => (l.UserId, l.Timestamp, l.Status))
+            .Select(g => g.First())
+            .OrderBy(l => l.Timestamp)
+            .ToList();
+    }
+
+    private async Task<List<FingerFrontend.AdminAttendanceViewModel.AttendanceDto>> FetchAllLogs()
+    {
+        try
+        {
+            var allLogs = new List<FingerFrontend.AdminAttendanceViewModel.AttendanceDto>();
+            int page = 1;
+            bool hasMoreData = true;
+
+            while (hasMoreData)
+            {
+                var endpoint = $"/api/Zkteco/get-all-logs?page={page}&pageSize={PageSize}";
+                var response = await Http.GetAsync(endpoint).ConfigureAwait(false);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    errorMessage = $"Failed to fetch logs: {response.StatusCode}";
+                    return allLogs;
+                }
+
+                var pageLogs = await response.Content.ReadFromJsonAsync<List<FingerFrontend.AdminAttendanceViewModel.AttendanceDto>>();
+                if (pageLogs == null || pageLogs.Count == 0)
+                {
+                    hasMoreData = false;
+                    break;
+                }
+
+                allLogs.AddRange(pageLogs);
+                downloadProgress = Math.Min(100, (allLogs.Count * 100.0 / TotalRecordsExpected));
+                await InvokeAsync(StateHasChanged);
+
+                if (pageLogs.Count < PageSize || allLogs.Count >= TotalRecordsExpected)
+                {
+                    hasMoreData = false;
+                }
+
+                page++;
+                await Task.Delay(50);
+            }
+
+            return allLogs;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to fetch all logs: {ex.Message}";
+            return new List<FingerFrontend.AdminAttendanceViewModel.AttendanceDto>();
+        }
+    }
+
+    private void GenerateAttendanceTable(List<FingerFrontend.AdminAttendanceViewModel.AbsenceReasonDto> absenceReasons)
+    {
+        attendanceMonths.Clear();
+
+        var groupedByMonth = logs
+            .GroupBy(l => new DateTime(l.Timestamp.Year, l.Timestamp.Month, 1))
+            .OrderBy(g => g.Key);
+
+        foreach (var monthGroup in groupedByMonth)
+        {
+            var month = new FingerFrontend.AdminAttendanceViewModel.AttendanceMonth
+            {
+                Month = monthGroup.Key,
+                Days = new List<FingerFrontend.AdminAttendanceViewModel.AttendanceDay>()
+            };
+
+            var daysInMonth = DateTime.DaysInMonth(monthGroup.Key.Year, monthGroup.Key.Month);
+            for (int day = 1; day <= daysInMonth; day++)
+            {
+                var currentDate = new DateTime(monthGroup.Key.Year, monthGroup.Key.Month, day);
+                if (currentDate.Date > DateTime.Now.Date)
+                    continue;
+
+                var dayLogs = monthGroup.Where(l => l.Timestamp.Date == currentDate).OrderBy(l => l.Timestamp).ToList();
+
+                var attendanceDay = new FingerFrontend.AdminAttendanceViewModel.AttendanceDay
+                {
+                    Date = currentDate,
+                    IsWeeklyOff = currentDate.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday,
+                    Name = logs.FirstOrDefault()?.Name ?? userIdInput,
+                    UserId = userIdInput
+                };
+
+                if (!attendanceDay.IsWeeklyOff)
+                {
+                    FingerFrontend.AdminAttendanceViewModel.AttendanceSession? currentSession = null;
+                    foreach (var log in dayLogs)
+                    {
+                        if (log.Status == "Clock-In")
+                        {
+                            if (currentSession != null && !currentSession.ClockOut.HasValue)
+                                continue;
+                            currentSession = new FingerFrontend.AdminAttendanceViewModel.AttendanceSession { ClockIn = log.Timestamp };
+                            attendanceDay.Sessions.Add(currentSession);
+                        }
+                        else if (log.Status == "Clock-Out" && currentSession != null)
+                        {
+                            if (log.Timestamp >= currentSession.ClockIn)
+                            {
+                                currentSession.ClockOut = log.Timestamp;
+                                currentSession = null;
+                            }
+                        }
+                    }
+
+                    if (!attendanceDay.Sessions.Any() && !attendanceDay.IsWeeklyOff)
+                    {
+                        var absence = new FingerFrontend.AdminAttendanceViewModel.AbsencePeriod
+                        {
+                            StartTime = currentDate.AddHours(8),
+                            EndTime = currentDate.AddHours(20)
+                        };
+
+                        var matchingReason = absenceReasons.FirstOrDefault(r =>
+                            r.UserId == userIdInput &&
+                            r.Date.Date == currentDate.Date &&
+                            Math.Abs((r.StartTime - absence.StartTime).TotalSeconds) < 1 &&
+                            Math.Abs((r.EndTime - absence.EndTime).TotalSeconds) < 1);
+
+                        if (matchingReason != null)
+                        {
+                            absence.Reason = matchingReason.Reason;
+                        }
+
+                        attendanceDay.AbsencePeriods.Add(absence);
+                    }
+
+                    for (int i = 0; i < attendanceDay.Sessions.Count - 1; i++)
+                    {
+                        var currentSessionItem = attendanceDay.Sessions[i];
+                        var nextSession = attendanceDay.Sessions[i + 1];
+                        if (currentSessionItem.ClockOut.HasValue && nextSession.ClockIn > currentSessionItem.ClockOut.Value)
+                        {
+                            var absencePeriod = new FingerFrontend.AdminAttendanceViewModel.AbsencePeriod
+                            {
+                                StartTime = currentSessionItem.ClockOut.Value,
+                                EndTime = nextSession.ClockIn
+                            };
+
+                            var matchingReason = absenceReasons.FirstOrDefault(r =>
+                                r.UserId == userIdInput &&
+                                r.Date.Date == absencePeriod.StartTime.Date &&
+                                Math.Abs((r.StartTime - absencePeriod.StartTime).TotalSeconds) < 1 &&
+                                Math.Abs((r.EndTime - absencePeriod.EndTime).TotalSeconds) < 1);
+
+                            if (matchingReason != null)
+                            {
+                                absencePeriod.Reason = matchingReason.Reason;
+                            }
+
+                            attendanceDay.AbsencePeriods.Add(absencePeriod);
+                        }
+                    }
+                }
+
+                var dayReasons = absenceReasons.Where(r =>
+                    r.UserId == userIdInput &&
+                    r.Date.Date == currentDate.Date).ToList();
+
+                foreach (var reason in dayReasons)
+                {
+                    var existingAbsence = attendanceDay.AbsencePeriods.FirstOrDefault(p =>
+                        Math.Abs((p.StartTime - reason.StartTime).TotalSeconds) < 1 &&
+                        Math.Abs((p.EndTime - reason.EndTime).TotalSeconds) < 1);
+
+                    if (existingAbsence == null)
+                    {
+                        var newAbsence = new FingerFrontend.AdminAttendanceViewModel.AbsencePeriod
+                        {
+                            StartTime = reason.StartTime,
+                            EndTime = reason.EndTime,
+                            Reason = reason.Reason
+                        };
+                        attendanceDay.AbsencePeriods.Add(newAbsence);
+                    }
+                    else if (string.IsNullOrEmpty(existingAbsence.Reason))
+                    {
+                        existingAbsence.Reason = reason.Reason;
+                    }
+                }
+
+                month.Days.Add(attendanceDay);
+            }
+
+            attendanceMonths.Add(month);
+        }
+
+        if (attendanceMonths.Any())
+        {
+            currentMonth = attendanceMonths.Max(m => m.Month);
+        }
+    }
+
+    private async Task DownloadExcel(bool downloadAll)
+    {
+        isDownloading = true;
+        downloadProgress = 0;
+        errorMessage = null;
+        successMessage = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            List<FingerFrontend.AdminAttendanceViewModel.AttendanceDay> daysToExport = new();
+
+            if (!downloadAll)
+            {
+                daysToExport = attendanceMonths
+                    .SelectMany(m => m.Days)
+                    .OrderBy(d => d.Date.Year)
+                    .ThenBy(d => d.Date.Month)
+                    .ThenBy(d => d.Date.Day)
+                    .ToList();
+            }
+            else
+            {
+                var allLogs = await FetchAllLogs();
+                if (!allLogs.Any())
+                {
+                    errorMessage = "No data available to download.";
+                    isDownloading = false;
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                var groupedByUser = allLogs.GroupBy(l => l.UserId).OrderBy(g => g.Key).ToList();
+                int processedUsers = 0;
+
+                foreach (var userGroup in groupedByUser)
+                {
+                    var userId = userGroup.Key;
+                    var userLogs = userGroup.ToList();
+                    var userName = userLogs.FirstOrDefault()?.Name ?? userId;
+
+                    var cleanedLogs = DeduplicateLogs(userLogs);
+                    var groupedLogs = cleanedLogs
+                        .GroupBy(l => l.Timestamp.ToLocalTime().Date)
+                        .ToDictionary(g => g.Key, g => g.OrderBy(l => l.Timestamp).ToList());
+
+                    var userDays = new List<FingerFrontend.AdminAttendanceViewModel.AttendanceDay>();
+                    var allDates = cleanedLogs.Select(l => l.Timestamp.ToLocalTime().Date)
+                        .Distinct()
+                        .OrderBy(d => d.Year)
+                        .ThenBy(d => d.Month)
+                        .ThenBy(d => d.Day)
+                        .ToList();
+
+                    foreach (var date in allDates)
+                    {
+                        var day = new FingerFrontend.AdminAttendanceViewModel.AttendanceDay
+                        {
+                            Date = date,
+                            IsWeeklyOff = date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday,
+                            Name = userName,
+                            UserId = userId
+                        };
+
+                        if (!day.IsWeeklyOff && groupedLogs.TryGetValue(date, out var dayLogs))
+                        {
+                            FingerFrontend.AdminAttendanceViewModel.AttendanceSession? currentSession = null;
+                            foreach (var log in dayLogs.OrderBy(l => l.Timestamp))
+                            {
+                                if (log.Status == "Clock-In")
+                                {
+                                    if (currentSession != null && !currentSession.ClockOut.HasValue)
+                                        continue;
+                                    currentSession = new FingerFrontend.AdminAttendanceViewModel.AttendanceSession { ClockIn = log.Timestamp };
+                                    day.Sessions.Add(currentSession);
+                                }
+                                else if (log.Status == "Clock-Out" && currentSession != null)
+                                {
+                                    if (log.Timestamp >= currentSession.ClockIn)
+                                    {
+                                        currentSession.ClockOut = log.Timestamp;
+                                        currentSession = null;
+                                    }
+                                }
+                            }
+                        }
+
+                        userDays.Add(day);
+                    }
+
+                    daysToExport.AddRange(userDays);
+                    processedUsers++;
+                    downloadProgress = Math.Min(100, (processedUsers * 100.0 / groupedByUser.Count));
+                    await InvokeAsync(StateHasChanged);
+                    await Task.Delay(1);
+                }
+
+                daysToExport = daysToExport
+                    .OrderBy(d => d.UserId)
+                    .ThenBy(d => d.Date.Year)
+                    .ThenBy(d => d.Date.Month)
+                    .ThenBy(d => d.Date.Day)
+                    .ToList();
+            }
+
+            if (!daysToExport.Any())
+            {
+                errorMessage = "No data available to download after processing.";
+                isDownloading = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Attendance");
+
+                // Add title
+                worksheet.Cell(1, 1).Value = "Attendance Report";
+                worksheet.Cell(1, 1).Style.Font.Bold = true;
+                worksheet.Cell(1, 1).Style.Font.FontSize = 16;
+                worksheet.Range(1, 1, 1, 5).Merge();
+                worksheet.Cell(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                // Add headers
+                var headers = new[] { "User ID", "Name", "Date", "Clock In Time", "Clock Out Time", "Total Hours Worked" };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    var cell = worksheet.Cell(3, i + 1);
+                    cell.Value = headers[i];
+                    cell.Style.Font.Bold = true;
+                    cell.Style.Fill.BackgroundColor = XLColor.LightBlue;
+                    cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                }
+
+                // Add data
+                const int batchSize = 200;
+                for (int i = 0; i < daysToExport.Count; i += batchSize)
+                {
+                    var batch = daysToExport.Skip(i).Take(batchSize).ToList();
+
+                    for (int j = 0; j < batch.Count; j++)
+                    {
+                        var day = batch[j];
+                        var row = i + j + 4;
+                        worksheet.Cell(row, 1).Value = day.UserId;
+                        worksheet.Cell(row, 2).Value = day.Name;
+                        worksheet.Cell(row, 3).Value = day.Date.ToString("ddd, dd MMM yyyy");
+                        worksheet.Cell(row, 4).Value = day.Sessions.Any() ? day.Sessions.First().ClockIn.ToString("hh:mm tt") : "-";
+                        worksheet.Cell(row, 5).Value = day.Sessions.Any() && day.Sessions.Any(s => s.ClockOut.HasValue) ? 
+                            day.Sessions.Where(s => s.ClockOut.HasValue).Max(s => s.ClockOut.Value).ToString("hh:mm tt") : "-";
+                        worksheet.Cell(row, 6).Value = day.TotalHours > 0 ? $"{day.TotalHours:F2} hrs" : "0 hrs";
+
+                        for (int k = 1; k <= 6; k++)
+                        {
+                            var cell = worksheet.Cell(row, k);
+                            cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                        }
+                    }
+
+                    downloadProgress = Math.Min(100, ((i + batch.Count) * 100.0 / daysToExport.Count));
+                    await InvokeAsync(StateHasChanged);
+                    await Task.Delay(1);
+
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    var fileName = downloadAll ? "All_Users_Attendance.xlsx" : $"{userIdInput}_Attendance.xlsx";
+                    var base64 = Convert.ToBase64String(content);
+                    var dataUrl = $"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{base64}";
+                    Nav.NavigateTo(dataUrl, forceLoad: true);
+                }
+            }
+
+            successPopupMessage = $"Excel file for {(downloadAll ? "all users" : userIdInput)} downloaded successfully.";
+            showSuccessPopup = true;
+
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(3000);
+                showSuccessPopup = false;
+                successPopupMessage = "";
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error during download: {ex.Message}";
+        }
+        finally
+        {
+            isDownloading = false;
+            downloadProgress = 0;
+            await InvokeAsync(StateHasChanged);
+            GC.Collect();
+        }
+    }
+
+    private void OpenModal(FingerFrontend.AdminAttendanceViewModel.AttendanceDay day, FingerFrontend.AdminAttendanceViewModel.AbsencePeriod absence)
+    {
+        selectedDay = day;
+        absencePeriod = absence;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        selectedDay = null;
+        absencePeriod = null;
+    }
+
+    private void ClearError()
+    {
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    private void ClearSuccess()
+    {
+        successMessage = null;
+        StateHasChanged();
+    }
+}
