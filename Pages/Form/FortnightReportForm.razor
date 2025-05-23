@@ -12,8 +12,11 @@
 <MudPaper Class="p-4 mx-auto mt-1" >
     @if (isLoading)
     {
-            <MudProgressCircular Align="Align.Center" Indeterminate="true" Color="Color.Primary" />
-    }
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <MudProgressCircular Color="Color.Info" Indeterminate="true" />
+                <MudText Color="Color.Info" Align=" Align.Center">Loading...</MudText>
+            </div>
+        }
     else if (hasError)
     {
         <MudText Color="Color.Error">Failed to load employee data.</MudText>

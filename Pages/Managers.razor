@@ -11,8 +11,9 @@
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     @if (isPageLoading)
     {
-        <div class="d-flex justify-center mt-10">
-            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <MudProgressCircular Color="Color.Info" Indeterminate="true" />
+            <MudText Color="Color.Info" Align="Align.Center">Loading...</MudText>
         </div>
     }
     else
@@ -30,8 +31,6 @@
         else
         {
             <MudGrid>
-                <MudText Typo="Typo.h6">Managers:</MudText>
-
                 @foreach (var manager in managers)
                 {
                     if (manager != null)

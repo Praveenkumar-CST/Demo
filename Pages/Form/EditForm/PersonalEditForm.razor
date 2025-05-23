@@ -12,10 +12,10 @@
 
 @if (isLoading)
 {
-    <MudPaper Class="d-flex justify-center align-center" Style="height: 300px;">
-        <MudProgressCircular Indeterminate="true" Size="Size.Large" Color="Color.Primary" />
-        <span class="ms-2">Loading experience data...</span>
-    </MudPaper>
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <MudProgressCircular Color="Color.Info" Indeterminate="true" />
+        <MudText Color="Color.Info" Align="Align.Center">Loading...</MudText>
+    </div>
 }
 else if (employeeDetails == null)
 {
