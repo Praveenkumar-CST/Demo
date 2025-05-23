@@ -17,6 +17,9 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddMemoryCache();
 
+builder.Services.AddScoped<AssetStateService>();
+builder.Services.AddScoped<AssetsService>();
+
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
@@ -52,6 +55,6 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<SearchService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
+//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net") });
 await builder.Build().RunAsync();

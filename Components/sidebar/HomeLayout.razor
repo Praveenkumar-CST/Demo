@@ -19,83 +19,45 @@
 
 <MudThemeProvider />
 <MudSnackbarProvider />
-<style>
-    .logo-hover:hover {
-        animation: pulse 1s infinite;
-    }
-    @@keyframes pulse {
-        0%
-
-    {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.05);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-
-    }
-      .neon-glow {
-            border: 2px solid #00ff88;
-            box-shadow: 0 0 5px #00ff88;
-        }
-        .neon-glow:hover {
-            border-color: #ff0088;
-            box-shadow: 
-                0 0 10px #ff0088,
-                0 0 20px #ff0088,
-                0 0 30px #ff0088;
-            animation: neon-flicker 0.5s infinite alternate;
-        }
-        @@keyframes neon-flicker {
-            0% { opacity: 1; }
-            100% { opacity: 0.8; }
-        }   
-    }</style>
-
 
 <!-- Top Navigation Bar -->
-<MudAppBar Elevation="5"  Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 67px; color: var(--primary); padding-top:2px;padding-left:4px">
+<MudAppBar Elevation="5" Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 67px; color: var(--primary); padding-top:2px;padding-left:4px">
     <MudItem xs="2" Class="d-flex align-center">
         <MudImage Class="logo-hover" Src="images/logo1.png"
-        Alt="Company Logo"
-        Height="50"
-        @onclick=@(() => NavigationManager.NavigateTo("/home")) />
+                  Alt="Company Logo"
+                  Height="50"
+                  @onclick=@(() => NavigationManager.NavigateTo("/home")) />
     </MudItem>
     <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
         <div class="d-flex flex-column align-center position-relative" style="width: 75%; max-width: 800px;">
             <div class="d-flex align-center position-relative" style="width: 100%;">
                 <MudAutocomplete T="EmployeeSearchResult"
-                SearchFunc="@SearchEmployeesAutocomplete"
-                Placeholder="Search employees..."
-                Variant="Variant.Outlined"
-                Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Search"
-                AdornmentColor="Color.Primary"
-                Class="search-elevated analytics-link "
-                Style="width: 100%;  font-size: 1.1rem; outline: none; border: none; box-shadow: none;"
-                DebounceInterval="300"
-                ResetValueOnEmptyText="true"
-                ShowProgressIndicator="true"
-                ValueChanged="OnSearchItemSelected"
-                @bind-Text="_searchText"
-                @onkeyup="HandleSearchInputKeyUp"
-                ItemTemplate="@ResultTemplate"
-                MaxItems="15"
-                ToStringFunc="@(e => null)" />
+                                 SearchFunc="@SearchEmployeesAutocomplete"
+                                 Placeholder="Search employees..."
+                                 Variant="Variant.Outlined"
+                                 Adornment="Adornment.Start"
+                                 AdornmentIcon="@Icons.Material.Filled.Search"
+                                 AdornmentColor="Color.Primary"
+                                 Class="search-elevated analytics-link "
+                                 Style="width: 100%;  font-size: 1.1rem; outline: none; border: none; box-shadow: none;"
+                                 DebounceInterval="300"
+                                 ResetValueOnEmptyText="true"
+                                 ShowProgressIndicator="true"
+                                 ValueChanged="OnSearchItemSelected"
+                                 @bind-Text="_searchText"
+                                 @onkeyup="HandleSearchInputKeyUp"
+                                 ItemTemplate="@ResultTemplate"
+                                 MaxItems="15"
+                                 ToStringFunc="@(e => null)" />
                 @if (IsAdmin)
                 {
                     <MudTooltip Text="Go to Advanced Search">
                         <MudIconButton Icon="@Icons.Material.Filled.FilterList"
-                        Color="Color.Primary"
-                        Size="Size.Large"
-                        Class="ml-2 filter-button"
-                        OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
-                        Style="border-radius: 50%;" />
+                                       Color="Color.Primary"
+                                       Size="Size.Large"
+                                       Class="ml-2 filter-button"
+                                       OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
+                                       Style="border-radius: 50%;" />
                     </MudTooltip>
                 }
             </div>
@@ -115,14 +77,14 @@
                     @if (!string.IsNullOrEmpty(userProfilePicture))
                     {
                         <img src="@userProfilePicture"
-                             class="profile-circle border-hover-color-shift  neon-glow " alt="Employee Photo"
+                             class="border-hover-color-shift profile-bounce neon-glow " alt="Employee Photo"
                              style="width: 55px; height: 55px; object-fit: cover;" />
                     }
                     else
                     {
                         <MudAvatar Size="Size.Large"
-                        Class="cursor-pointer"
-                        Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--primary);">
+                                   Class="cursor-pointer"
+                                   Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--primary);">
                             @userInitials
                         </MudAvatar>
                     }
@@ -149,16 +111,55 @@
 
 <!-- Main Content -->
 <MudMainContent Style="@($"flex-grow: 1; margin-left: {(drawerOpen ? "260px" : "70px")}; transition: margin 0.3s ease; z-index = 1610")">
-    <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge"> 
+    <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
         @Body
     </MudContainer>
 </MudMainContent>
-<MudPopoverProvider/>
+<MudPopoverProvider />
 
 <!-- Popover Support -->
 
 
 <style>
+    .logo-hover:hover {
+        animation: pulse 1s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .neon-glow {
+        border: 2px solid #686f76;
+        box-shadow: 0 0 5px #686f76;
+    }
+
+        .neon-glow:hover {
+            border-color: #6f7984;
+            box-shadow: 0 0 10px #686f76, 0 0 20px #686f76, 0 0 30px #686f76;
+            animation: neon-flicker 0.5s infinite alternate;
+        }
+
+    @@keyframes neon-flicker {
+        0% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0.8;
+        }
+    }
+
     .search-elevated {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
         border: 1px solid #e0e0e0 !important;
@@ -174,14 +175,15 @@
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2) !important;
             border-color: var(--primary) !important;
         }
+
     .border-hover-color-shift {
-        border: 3px solid var(--primary);
+        border: 1.5px solid var(--primary);
         border-radius: 50%;
         transition: border-color 0.3s ease;
     }
 
         .border-hover-color-shift:hover {
-            border-color: #f093fb;
+            border-color: #e2e6ea;
         }
 
     .profile-bounce {
@@ -193,76 +195,79 @@
             transform: scale(1.15);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
-    .mud-input > input.mud-input-root-outlined.mud-input-root-adorned-start{
-    border: none;
-    outline: none;
-    box-shadow: none;
-    color:black;
+
+    .mud-input > input.mud-input-root-outlined.mud-input-root-adorned-start {
+        border: none;
+        outline: none;
+        box-shadow: none;
+        color: black;
     }
+
     .mud-overlay {
-    z-index: -1;
+        z-index: -1;
     }
+
     .sidebar-container {
-    height:100%;
-    position: fixed;
-    top: 67px;
-    z-index:1000;
+        height: 100%;
+        position: fixed;
+        top: 67px;
+        z-index: 1000;
     }
 
     ::deep .mud-divider {
-    margin: 0;
-    flex-shrink: 0;
-    border-color: rgb(22 21 21);
-    border-width: 2px;
-    border-style: solid none none none;
+        margin: 0;
+        flex-shrink: 0;
+        border-color: rgb(22 21 21);
+        border-width: 2px;
+        border-style: solid none none none;
     }
 
     ::deep .search-autocomplete .mud-input {
-    border-radius: 28px;
-    transition: all 0.3s ease;
+        border-radius: 28px;
+        transition: all 0.3s ease;
     }
 
-    ::deep .search-autocomplete .mud-input:focus-within {
-    box-shadow: 0 0 0 2px var(--primary-light);
-    }
+        ::deep .search-autocomplete .mud-input:focus-within {
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
 
     ::deep .search-autocomplete .mud-input-adornment {
-    color: var(--primary);
+        color: var(--primary);
     }
 
     ::deep .mud-menu-list {
-    border-radius: 12px;
-    overflow: hidden;
-    min-width: 200px;
+        border-radius: 12px;
+        overflow: hidden;
+        min-width: 200px;
     }
 
 
 
     ::deep .mud-list-item-icon {
-    min-width: 40px;
+        min-width: 40px;
     }
 
     ::deep .mud-drawer {
-    transition: width 0.3s ease;
-    width: 60px; /* Default collapsed width */
-    overflow: hidden;
+        transition: width 0.3s ease;
+        width: 60px; /* Default collapsed width */
+        overflow: hidden;
     }
 
-    ::deep .mud-drawer.open {
-    width: 250px !important; /* Expanded width */
-    }
+        ::deep .mud-drawer.open {
+            width: 250px !important; /* Expanded width */
+        }
 
     ::deep .mud-nav-menu {
-    opacity: 1;
-    transition: opacity 0.3s ease;
+        opacity: 1;
+        transition: opacity 0.3s ease;
     }
 
     ::deep .mud-nav-link span {
-    display: none; /* Hide text when collapsed */
+        display: none; /* Hide text when collapsed */
     }
 
     ::deep .mud-drawer.open .mud-nav-link span {
-    display: inline; /* Show text when expanded */
+        display: inline; /* Show text when expanded */
     }
 
     /* Analytics Link Styles */
@@ -274,7 +279,7 @@
     /*     font-style: italic; */
     /*     padding: 0px 0px; */
     /*     text-align: center; */
-    
+
     /*     font-weight: 500; */
     /*     border-radius: 8px; */
     /*     background-color: rgba(102, 126, 234, 0.1); */
@@ -288,7 +293,6 @@
         border-radius: 16px;
         box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      
     }
 
         .py-2.px-1:hover {
@@ -379,37 +383,31 @@
 
     /* Responsive Design */
     @@media (max-width: 768px) {
-        .py-2.px-1
+        .py-2.px-1 {
+            padding: 12px 6px;
+            margin: 8px 0;
+            border-radius: 12px;
+        }
 
-    {
-        padding: 12px 6px;
-        margin: 8px 0;
-        border-radius: 12px;
-    }
+        .pa-2.border-1.border-solid.mud-border-grey-light.rounded {
+            padding: 12px;
+        }
 
-    .pa-2.border-1.border-solid.mud-border-grey-light.rounded {
-        padding: 12px;
-    }
-
-    .mud-avatar {
-        width: 50px;
-        height: 50px;
-    }
-
+        .mud-avatar {
+            width: 50px;
+            height: 50px;
+        }
     }
 
     /* Animation for Loading States */
     @@keyframes shimmer {
-        0%
+        0% {
+            background-position: -200px 0;
+        }
 
-    {
-        background-position: -200px 0;
-    }
-
-    100% {
-        background-position: calc(200px + 100%) 0;
-    }
-
+        100% {
+            background-position: calc(200px + 100%) 0;
+        }
     }
 
     .employee-loading {
