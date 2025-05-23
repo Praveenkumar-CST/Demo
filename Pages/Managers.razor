@@ -30,6 +30,8 @@
         else
         {
             <MudGrid>
+                <MudText Typo="Typo.h6">Managers:</MudText>
+
                 @foreach (var manager in managers)
                 {
                     if (manager != null)
@@ -524,8 +526,7 @@
             if (allSuccess)
             {
                 showModal = false;
-                StateHasChanged();
-                isAssigning = false;
+                   isAssigning = false;
                 Snackbar.Add("Mentees assigned successfully!", Severity.Success);
                 CloseModal();
                 await ReloadManagersAndAdmins();

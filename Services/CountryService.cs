@@ -24,6 +24,30 @@ namespace WiseHR.Services
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<List<Country>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
+        public async Task<List<State>> GetStatesAsync(string countryCode)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.countrystatecity.in/v1/countries/{countryCode}/states");
+            request.Headers.Add("X-CSCAPI-KEY", _apiKey);
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode) return new List<State>();
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<State>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+
+        public async Task<List<City>> GetCitiesAsync(string countryCode, string stateCode)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.countrystatecity.in/v1/countries/{countryCode}/states/{stateCode}/cities");
+            request.Headers.Add("X-CSCAPI-KEY", _apiKey);
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode) return new List<City>();
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<City>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+
     }
 
 }
