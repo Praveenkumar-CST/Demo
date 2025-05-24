@@ -2,10 +2,58 @@
 @using System.Net.Http.Json
 @inject HttpClient Http
 @inject NavigationManager Nav
+@inject WiseHR.Services.AuthService AuthService
+@inject IJSRuntime JSRuntime
 @layout HomeLayout
 @using FingerFrontend.Models
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+<!-- Error Message -->
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">
+        <p>Error: @errorMessage</p>
+        <button @onclick="ClearError" class="action-button secondary-button">Clear</button>
+    </div>
+}
+
+<!-- Reasons Table -->
+<div class="reasons-container">
+    <div class="table-header">
+        Absence Reasons
+    </div>
+    @if (isLoading)
+    {
+        <div class="loading-spinner"></div>
+    }
+    else if (!absenceReasons.Any())
+    {
+        <p style="text-align: center; color: #1e40af; font-size: 16px;">No absence reasons found.</p>
+    }
+    else
+    {
+        <div class="table-row table-header-row">
+            <div>Date</div>
+            <div>Start Time</div>
+            <div>End Time</div>
+            <div>Status</div>
+            <div>Reason</div>
+        </div>
+        @foreach (var reason in absenceReasons)
+        {
+            <div class="table-row">
+                <div>@reason.Date.ToString("dd MMM yyyy")</div>
+                <div>@reason.StartTime.ToString("hh:mm:ss tt")</div>
+                <div>@reason.EndTime.ToString("hh:mm:ss tt")</div>
+                <div class="@(reason.IsApproved ? "status-approved" : "status-pending")">
+                    @(reason.IsApproved ? "Approved" : "Pending")
+                </div>
+                <div class="reason-text">@reason.Reason</div>
+            </div>
+        }
+    }
+</div>
 
 <style>
     .reasons-container {
@@ -34,7 +82,7 @@
 
     .table-row {
         display: grid;
-        grid-template-columns: 120px 120px 150px 150px 100px 1fr;
+        grid-template-columns: 120px 150px 150px 100px 1fr;
         padding: 12px 20px;
         border-bottom: 1px solid #f1f5f9;
         align-items: center;
@@ -51,31 +99,6 @@
         color: #1e40af;
         background-color: #f0f7ff;
     }
-
-    .search-container {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        margin-bottom: 20px;
-        max-width: 500px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .search-input {
-        padding: 8px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 14px;
-        width: 100%;
-        transition: border-color 0.2s;
-    }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-        }
 
     .action-button {
         border: none;
@@ -136,80 +159,159 @@
         color: #f59e0b;
         font-weight: 500;
     }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e2e8f0;
+        border-top: 4px solid #2563eb;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 
-<!-- Error Message -->
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="error-message">
-        <p>Error: @errorMessage</p>
-        <button @onclick="ClearError" class="action-button secondary-button">Clear</button>
-    </div>
-}
-
-<!-- Search bar -->
-<div class="search-container">
-    <label for="userIdInput" style="color: #1e40af; font-weight: 500; white-space: nowrap;"></label>
-    <input id="userIdInput" @bind="userIdInput" placeholder="Type a user ID" class="search-input" />
-    <button @onclick="FetchAbsenceReasons" class="action-button primary-button">
-        <i class="fas fa-search"></i> Search
-    </button>
-</div>
-
-<!-- Reasons Table -->
-<div class="reasons-container">
-    <div class="table-header">
-        Absence Reasons
-    </div>
-    @if (isLoading)
-    {
-        <p style="text-align: center; color: #1e40af; font-size: 16px;">Loading...</p>
-    }
-    else if (!absenceReasons.Any())
-    {
-        <p style="text-align: center; color: #1e40af; font-size: 16px;">No absence reasons found.</p>
-    }
-    else
-    {
-        <div class="table-row table-header-row">
-            <div>User ID</div>
-            <div>Date</div>
-            <div>Start Time</div>
-            <div>End Time</div>
-            <div>Status</div>
-            <div>Reason</div>
-        </div>
-        @foreach (var reason in absenceReasons)
-        {
-            <div class="table-row">
-                <div>@reason.UserId</div>
-                <div>@reason.Date.ToString("dd MMM yyyy")</div>
-                <div>@reason.StartTime.ToString("hh:mm tt")</div>
-                <div>@reason.EndTime.ToString("hh:mm tt")</div>
-                <div class="@(reason.IsApproved ? "status-approved" : "status-pending")">
-                    @(reason.IsApproved ? "Approved" : "Pending")
-                </div>
-                <div class="reason-text">@reason.Reason</div>
-            </div>
-        }
-    }
-</div>
-
 @code {
-    private string userIdInput = "";
+    private string userId = "";
     private List<AbsenceReasonDto> absenceReasons = new();
     private bool isLoading = false;
     private string? errorMessage;
+    private const string SupabaseUrl = "https://fhhnmffpdcyktnjahnwq.supabase.co";
+    private const string SupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoaG5tZmZwZGN5a3RuamFobndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzczNzA4MDAsImV4cCI6MjA1Mjk0NjgwMH0.1b7s7qJ-yyZXo9wgzq5ZlOnaSxsKRcHDZyYb9J7LU60";
 
     protected override async Task OnInitializedAsync()
     {
-        var uri = new Uri(Nav.Uri);
-        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-        userIdInput = query["userId"] ?? "";
+        isLoading = true;
+        errorMessage = null;
+        absenceReasons.Clear();
 
-        if (!string.IsNullOrEmpty(userIdInput))
+        try
         {
+            // Verify user is authenticated
+            var (role, error) = await AuthService.VerifyToken();
+            if (!string.IsNullOrEmpty(error))
+            {
+                errorMessage = "Please log in to view absence reasons.";
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            // Fetch the current user's email from Supabase
+            var email = await GetCurrentUserEmailAsync();
+            if (string.IsNullOrEmpty(email))
+            {
+                errorMessage = "Unable to retrieve user email. Please log in again.";
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            // Fetch user ID from the email
+            var userIdResponse = await GetUserIdFromEmailAsync(email);
+            if (string.IsNullOrEmpty(userIdResponse))
+            {
+                errorMessage = "Unable to retrieve user ID for the provided email.";
+                return;
+            }
+
+            userId = userIdResponse;
+            Console.WriteLine($"Assigned userId: {userId}");
             await FetchAbsenceReasons();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error initializing component: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task<string?> GetCurrentUserEmailAsync()
+    {
+        try
+        {
+            var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                Console.WriteLine("No authentication token found in localStorage.");
+                return null;
+            }
+
+            using var supabaseClient = new HttpClient { BaseAddress = new Uri(SupabaseUrl) };
+            supabaseClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            supabaseClient.DefaultRequestHeaders.Add("apikey", SupabaseKey);
+            supabaseClient.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoCache = true };
+
+            var userResponse = await supabaseClient.GetAsync("/auth/v1/user");
+            if (!userResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await userResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error fetching user from Supabase: Status {userResponse.StatusCode}, Content: {errorContent}");
+                return null;
+            }
+
+            var userData = await userResponse.Content.ReadFromJsonAsync<UserResponse>();
+            var email = userData?.Email;
+            if (string.IsNullOrEmpty(email))
+            {
+                Console.WriteLine("Error: User email is null or empty after fetching user data.");
+                return null;
+            }
+            Console.WriteLine($"User email from Supabase: {email}");
+            return email;
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"HTTP request error fetching user email: {ex.Message}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error fetching user email: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task<string?> GetUserIdFromEmailAsync(string email)
+    {
+        try
+        {
+            Console.WriteLine($"Fetching user ID for email: {email}");
+            var requestUrl = $"/EmployeeDetails/GetEmployeeCodeByEmail/{Uri.EscapeDataString(email)}";
+            Console.WriteLine($"Request URL: {requestUrl}");
+
+            Http.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoCache = true };
+
+            var response = await Http.GetAsync(requestUrl);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"API response: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<EmployeeCodeResponse>();
+                Console.WriteLine($"Parsed employeeCode: {result?.EmployeeCode}");
+                return result?.EmployeeCode;
+            }
+
+            Console.WriteLine($"Error fetching user ID: Status {response.StatusCode}, Content: {responseContent}");
+            return null;
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"HTTP error fetching user ID: {ex.Message}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception fetching user ID: {ex.Message}");
+            return null;
         }
     }
 
@@ -221,13 +323,13 @@
 
         try
         {
-            if (string.IsNullOrEmpty(userIdInput))
+            if (string.IsNullOrEmpty(userId))
             {
-                errorMessage = "Please enter a user ID.";
+                errorMessage = "User ID not available.";
                 return;
             }
 
-            var endpoint = $"/api/AbsenceReason/{Uri.EscapeDataString(userIdInput)}";
+            var endpoint = $"/api/AbsenceReason/{Uri.EscapeDataString(userId)}";
             var response = await Http.GetAsync(endpoint).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
@@ -262,5 +364,16 @@
     private void ClearError()
     {
         errorMessage = null;
+    }
+
+    private class EmployeeCodeResponse
+    {
+        public string EmployeeCode { get; set; } = string.Empty;
+    }
+
+    private class UserResponse
+    {
+        public string? Id { get; set; }
+        public string? Email { get; set; }
     }
 }

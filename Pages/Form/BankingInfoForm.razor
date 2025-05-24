@@ -152,7 +152,7 @@
                             <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" />
                         <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
 
-                            <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : "File selected")</MudText>
+                        <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : $"File selected: {bankingInfo.AadhaarFileName}")</MudText>
                             @if (!string.IsNullOrEmpty(AadhaarUploadError))
                             {
                                 <MudText Color="Color.Error">@AadhaarUploadError</MudText>
@@ -166,7 +166,7 @@
                             <InputFile OnChange="HandlePanFileChange" accept=".pdf,.jpg,.jpeg,.png" />
                         <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
 
-                            <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PanBase64Content) ? "No file selected" : "File selected")</MudText>
+                        <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PanBase64Content) ? "No file selected" : $"File selected: {bankingInfo.PanFileName}")</MudText>
                             @if (!string.IsNullOrEmpty(PanUploadError))
                             {
                                 <MudText Color="Color.Error">@PanUploadError</MudText>
@@ -180,7 +180,7 @@
                             <InputFile OnChange="OnPassbookFileChanged" accept=".pdf,.jpg,.jpeg,.png" />
                         <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
 
-                            <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) ? "No file selected" : "File selected")</MudText>
+                        <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) ? "No file selected" : $"File selected: {bankingInfo.PassbookFileName}")</MudText>
                             @if (!string.IsNullOrEmpty(PassbookUploadError))
                             {
                                 <MudText Color="Color.Error">@PassbookUploadError</MudText>
