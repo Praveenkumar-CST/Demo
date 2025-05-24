@@ -1,0 +1,1073 @@
+﻿@page "/UserAttendanceView"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject WiseHR.Services.AuthService AuthService
+@inject IJSRuntime JSRuntime
+@layout HomeLayout
+@using FingerFrontend.Models
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+<!-- Error Message -->
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="error-message">
+        <p>Error: @errorMessage</p>
+        <button @onclick="ClearError" class="action-button secondary-button">Clear</button>
+    </div>
+}
+
+<!-- Success Message -->
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="success-message">
+        <p>@successMessage</p>
+        <button @onclick="ClearSuccess" class="action-button secondary-button">Clear</button>
+    </div>
+}
+
+<!-- Success Pop-up -->
+@if (showSuccessPopup)
+{
+    <div class="success-popup">
+        <i class="fas fa-check-circle"></i>
+        <p>@successPopupMessage</p>
+    </div>
+}
+
+<!-- Modal for absence reason -->
+@if (showModal && absencePeriod != null)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                Reason for Absence (@absencePeriod.StartTime.ToString("dd MMM yyyy hh:mm:ss tt") - @absencePeriod.EndTime.ToString("hh:mm:ss tt"))
+            </div>
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(absencePeriod.Reason))
+                {
+                    <div class="reason-display">
+                        Reason: @absencePeriod.Reason
+                    </div>
+                }
+                <textarea @bind="reasonInput" placeholder="Enter reason for absence" disabled="@(!string.IsNullOrEmpty(absencePeriod.Reason))"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button @onclick="CloseModal" class="action-button secondary-button">Cancel</button>
+                <button @onclick="SubmitReason" class="action-button primary-button" disabled="@(!string.IsNullOrEmpty(absencePeriod.Reason))">Submit</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (isLoading)
+{
+    <div class="loading-container">
+        <div class="loading-spinner"></div>
+    </div>
+}
+else if (!attendanceMonths.Any())
+{
+    <p style="text-align: center; color: #1e293b; font-size: 16px;">No records found.</p>
+}
+else
+{
+    <!-- Header with month navigation -->
+    <div class="header-actions">
+        <div class="date-nav">
+            <button @onclick="PreviousMonth" class="nav-button">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                    <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+            <span style="font-size: 18px; font-weight: 500; color: #1e293b;">
+                @currentMonth.ToString("MMMM yyyy")
+            </span>
+            <button @onclick="NextMonth" class="nav-button">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                    <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+        </div>
+        <div>
+            <a href="/UserAbsenceReasons" class="request"> Reasons </a>
+        </div>
+    </div>
+
+    <!-- Attendance table -->
+    @foreach (var month in attendanceMonths.Where(m => m.Month.Year == currentMonth.Year && m.Month.Month == currentMonth.Month))
+    {
+        <div class="attendance-container">
+            <!-- Table Header -->
+            <div class="table-header">
+                <div>Date</div>
+                <div>Clock In</div>
+                <div style="text-align: center;">Timeline</div>
+                <div style="text-align: right;">Clock Out</div>
+                <div style="text-align: right;">Total Hours</div>
+            </div>
+            @foreach (var day in month.Days.Where(d => d.Date.Date <= DateTime.Now.Date))
+            {
+                <div class="day-row @(day.IsWeeklyOff ? "week-off" : "")">
+                    <!-- Date column -->
+                    <div>
+                        <div class="date-display">@day.Date.Day.ToString("00")</div>
+                        <div class="weekday-display">@day.Date.ToString("ddd")</div>
+                    </div>
+
+                    <!-- Check-in time -->
+                    <div style="font-size: 14px; color: #1e293b;">
+                        @(day.Sessions.Any() ? day.Sessions.First().ClockIn.ToString("hh:mm:ss tt") : (day.IsWeeklyOff ? "Weekly Off" : "—"))
+                    </div>
+
+                    <!-- Timeline -->
+                    <div style="position: relative; height: 24px;">
+                        <!-- Background line -->
+                        <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background-color: #e2e8f0; transform: translateY(-50%);"></div>
+
+                        @if (day.IsWeeklyOff)
+                        {
+                            <!-- Weekly off display -->
+                            <div style="position: absolute; top: 50%; left: 10%; width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%; transform: translate(-50%, -50%);"></div>
+                            <div style="position: absolute; top: 50%; left: 10%; right: 10%; height: 2px; background-color: #f59e0b; transform: translateY(-50%);"></div>
+                            <div style="position: absolute; top: 50%; right: 10%; width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%; transform: translate(50%, -50%);"></div>
+                        }
+                        else if (!day.Sessions.Any())
+                        {
+                            <!-- Absent display (non-clickable) -->
+                            <div style="position: absolute; top: 50%; left: 10%; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; transform: translate(-50%, -50%);"></div>
+                            <div style="position: absolute; top: 50%; left: 10%; right: 10%; height: 2px; background-color: #ef4444; transform: translateY(-50%);"></div>
+                            <div style="position: absolute; top: 50%; right: 10%; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; transform: translate(50%, -50%);"></div>
+                        }
+                        else
+                        {
+                            <!-- Calculate positions for all dots to avoid overlap -->
+                            const int startHour = 8;
+                            const int totalHours = 12;
+                            const double minGap = 2.0;
+                            var dotPositions = new List<(double Position, string Type, DateTime Time, string Tooltip)>();
+
+                            <!-- Collect all dot positions -->
+                            @foreach (var session in day.Sessions)
+                            {
+                                var clockInHour = session.ClockIn.Hour + (session.ClockIn.Minute / 60.0) + (session.ClockIn.Second / 3600.0);
+                                var clockInPosition = ((clockInHour - startHour) / totalHours) * 100;
+                                clockInPosition = Math.Max(10, Math.Min(90, clockInPosition));
+                                dotPositions.Add((clockInPosition, "clock-in", session.ClockIn, $"Clock In: {session.ClockIn:hh:mm:ss tt}"));
+
+                                if (session.ClockOut.HasValue)
+                                {
+                                    var clockOutHour = session.ClockOut.Value.Hour + (session.ClockOut.Value.Minute / 60.0) + (session.ClockOut.Value.Second / 3600.0);
+                                    var clockOutPosition = ((clockOutHour - startHour) / totalHours) * 100;
+                                    clockOutPosition = Math.Max(10, Math.Min(90, clockOutPosition));
+                                    dotPositions.Add((clockOutPosition, "clock-out", session.ClockOut.Value, $"Clock Out: {session.ClockOut.Value:hh:mm:ss tt}"));
+                                }
+                            }
+
+                            <!-- Sort dots by position and adjust to prevent overlap -->
+                            dotPositions = dotPositions.OrderBy(p => p.Position).ToList();
+                            for (int i = 1; i < dotPositions.Count; i++)
+                            {
+                                if (dotPositions[i].Position - dotPositions[i - 1].Position < minGap)
+                                {
+                                    dotPositions[i] = (dotPositions[i - 1].Position + minGap, dotPositions[i].Type, dotPositions[i].Time, dotPositions[i].Tooltip);
+                                }
+                            }
+
+                            <!-- Render green lines first (behind dots) -->
+                            @foreach (var session in day.Sessions)
+                            {
+                                if (session.ClockOut.HasValue)
+                                {
+                                    var clockInPos = dotPositions.First(p => p.Time == session.ClockIn).Position;
+                                    var clockOutPos = dotPositions.First(p => p.Time == session.ClockOut.Value).Position;
+                                    <div style="position: absolute; top: 50%; left: @(clockInPos)%; right: calc(100% - @(clockOutPos)%); height: 2px; background-color: #22c55e; transform: translateY(-50%); z-index: 0;"></div>
+                                }
+                            }
+
+                            <!-- Render dots -->
+                            @foreach (var (position, type, time, tooltip) in dotPositions)
+                            {
+                                <div class="timeline-dot @(type)"
+                                     data-tooltip="@tooltip"
+                                     style="left: @(position)%; z-index: 1;">
+                                </div>
+                            }
+
+                            <!-- Red lines for absence periods between sessions -->
+                            @foreach (var absence in day.AbsencePeriods)
+                            {
+                                var absStartHour = absence.StartTime.Hour + (absence.StartTime.Minute / 60.0) + (absence.StartTime.Second / 3600.0);
+                                var absEndHour = absence.EndTime.Hour + (absence.EndTime.Minute / 60.0) + (absence.EndTime.Second / 3600.0);
+                                var startPosition = ((absStartHour - startHour) / totalHours) * 100;
+                                var endPosition = ((absEndHour - startHour) / totalHours) * 100;
+                                startPosition = Math.Max(10, Math.Min(90, startPosition));
+                                endPosition = Math.Max(10, Math.Min(90, endPosition));
+
+                                <!-- Ensure short periods are visible -->
+                                @if (endPosition <= startPosition)
+                                {
+                                    endPosition = startPosition + 0.5;
+                                }
+
+                                <div class="absence-line"
+                                     data-tooltip=@($"Absent: {absence.StartTime:hh:mm:ss tt} - {absence.EndTime:hh:mm:ss tt}{(string.IsNullOrEmpty(absence.Reason) ? "" : $"\nReason: {absence.Reason}")}")
+                                     @onclick="() => OpenModal(day, absence)"
+                                     style="position: absolute; top: 50%; left: @(startPosition)%; right: calc(100% - @(endPosition)%); height: 2px; background-color: #ef4444; transform: translateY(-50%); z-index: 0;">
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <!-- Check-out time -->
+                    <div style="text-align: right; font-size: 14px; color: #1e293b;">
+                        @(day.Sessions.Any() && day.Sessions.Last().ClockOut.HasValue ?
+                            day.Sessions.Last().ClockOut!.Value.ToString("hh:mm:ss tt") :
+                            (day.IsWeeklyOff ? "Weekly Off" : "—"))
+                    </div>
+
+                    <!-- Total hours -->
+                    <div style="text-align: right;">
+                        <span style="font-size: 14px; color: @(day.TotalHours > 0 ? "#22c55e" : "#ef4444"); font-weight: 500;">
+                            @(day.TotalHours > 0 ? $"{day.TotalHours:F2} Hrs" : (day.IsWeeklyOff ? "Weekly Off" : "0 Hrs"))
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+<style>
+    .attendance-container {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .table-header {
+        background-color: #f8fafc;
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        border-bottom: 1px solid #e2e8f0;
+        display: grid;
+        grid-template-columns: 80px 120px 1fr 120px 120px;
+        gap: 20px;
+        text-align: left;
+    }
+
+    .timeline-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        z-index: 1;
+    }
+
+        .timeline-dot:hover {
+            transform: translateY(-50%) scale(1.4);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+            z-index: 3;
+        }
+
+        .timeline-dot.clock-in {
+            background-color: #22c55e;
+        }
+
+        .timeline-dot.clock-out {
+            background-color: #ef4444;
+        }
+
+        .timeline-dot:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e293b;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 4;
+        }
+
+    .absence-line {
+        cursor: pointer;
+        transition: opacity 0.2s;
+        min-width: 2px;
+    }
+
+        .absence-line:hover {
+            opacity: 0.85;
+        }
+
+            .absence-line:hover::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                bottom: 16px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #1e293b;
+                color: #ffffff;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                white-space: nowrap;
+                z-index: 3;
+            }
+
+    .day-row {
+        padding: 12px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        display: grid;
+        grid-template-columns: 80px 120px 1fr 120px 120px;
+        align-items: center;
+        gap: 20px;
+        transition: background-color 0.2s;
+    }
+
+        .day-row:hover {
+            background-color: #f8fafc;
+        }
+
+        .day-row.week-off {
+            background-color: #fefce8;
+        }
+
+    .date-display {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .weekday-display {
+        font-size: 12px;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .header-actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 16px 0;
+        margin-bottom: 16px;
+        gap: 20px;
+    }
+
+    .date-nav {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background-color: #f8fafc;
+        padding: 8px 16px;
+        border-radius: 6px;
+    }
+
+    .nav-button {
+        background: none;
+        border: none;
+        color: #475569;
+        cursor: pointer;
+        padding: 6px;
+        transition: color 0.2s;
+    }
+
+        .nav-button:hover {
+            color: #22c55e;
+        }
+
+    .action-button {
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background-color 0.2s;
+    }
+
+    .primary-button {
+        background-color: #22c55e;
+        color: #ffffff;
+    }
+
+        .primary-button:hover {
+            background-color: #16a34a;
+        }
+
+        .primary-button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+    .secondary-button {
+        background-color: #64748b;
+        color: #ffffff;
+    }
+
+        .secondary-button:hover {
+            background-color: #475569;
+        }
+
+    .request {
+        display: flex;
+        gap: 10px;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+        background-color: #22c55e;
+        color: white;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+        .request:hover {
+            color: white;
+            background-color: #16a34a;
+        }
+
+    .error-message {
+        color: #b91c1c;
+        background-color: #fef2f2;
+        padding: 10px 14px;
+        border-radius: 6px;
+        margin: 12px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .success-message {
+        color: #065f46;
+        background-color: #ecfdf5;
+        padding: 10px 14px;
+        border-radius: 6px;
+        margin: 12px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        width: 400px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 12px;
+    }
+
+    .modal-body {
+        margin-bottom: 20px;
+    }
+
+        .modal-body textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.2s;
+        }
+
+            .modal-body textarea:focus {
+                outline: none;
+                border-color: #22c55e;
+                box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+            }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .success-popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #ecfdf5;
+        color: #065f46;
+        padding: 12px 20px;
+        border-radius: 6px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+        .success-popup i {
+            font-size: 18px;
+        }
+
+        .success-popup p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+    .reason-display {
+        font-size: 14px;
+        color: #475569;
+        margin-bottom: 10px;
+        padding: 8px;
+        background-color: #f8fafc;
+        border-radius: 4px;
+        max-height: 80px;
+        overflow-y: auto;
+    }
+
+    .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e2e8f0;
+        border-top: 4px solid #2563eb;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @@keyframes slideIn {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+    }
+</style>
+
+@code {
+    private string userId = "";
+    private readonly List<AttendanceDto> logs = new();
+    private bool isLoading = false;
+    private string? errorMessage;
+    private string? successMessage;
+    private bool showSuccessPopup;
+    private string successPopupMessage = "";
+    private readonly List<AttendanceMonth> attendanceMonths = new();
+    private bool showModal;
+    private AttendanceDay? selectedDay;
+    private AbsencePeriod? absencePeriod;
+    private string reasonInput = "";
+    private DateTime currentMonth = DateTime.Now;
+    private const string SupabaseUrl = "https://fhhnmffpdcyktnjahnwq.supabase.co";
+    private const string SupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoaG5tZmZwZGN5a3RuamFobndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzczNzA4MDAsImV4cCI6MjA1Mjk0NjgwMH0.1b7s7qJ-yyZXo9wgzq5ZlOnaSxsKRcHDZyYb9J7LU60";
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            // Verify user is authenticated
+            var (role, error) = await AuthService.VerifyToken();
+            if (!string.IsNullOrEmpty(error))
+            {
+                errorMessage = "Please log in to view attendance records.";
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            // Fetch the current user's email from Supabase
+            var email = await GetCurrentUserEmailAsync();
+            if (string.IsNullOrEmpty(email))
+            {
+                errorMessage = "Unable to retrieve user email. Please log in again.";
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            // Fetch user ID from the email
+            var userIdResponse = await GetUserIdFromEmailAsync(email);
+            if (string.IsNullOrEmpty(userIdResponse))
+            {
+                errorMessage = "Unable to retrieve user ID for the provided email.";
+                return;
+            }
+
+            userId = userIdResponse;
+            Console.WriteLine($"Assigned userId: {userId}");
+            await FetchLogsById();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error initializing component: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void PreviousMonth()
+    {
+        currentMonth = currentMonth.AddMonths(-1);
+    }
+
+    private void NextMonth()
+    {
+        currentMonth = currentMonth.AddMonths(1);
+        if (currentMonth > DateTime.Now)
+        {
+            currentMonth = DateTime.Now;
+        }
+    }
+
+    private async Task<string?> GetCurrentUserEmailAsync()
+    {
+        try
+        {
+            var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                Console.WriteLine("No authentication token found in localStorage.");
+                return null;
+            }
+
+            using var supabaseClient = new HttpClient { BaseAddress = new Uri(SupabaseUrl) };
+            supabaseClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            supabaseClient.DefaultRequestHeaders.Add("apikey", SupabaseKey);
+            supabaseClient.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoCache = true };
+
+            var userResponse = await supabaseClient.GetAsync("/auth/v1/user");
+            if (!userResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await userResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error fetching user from Supabase: Status {userResponse.StatusCode}, Content: {errorContent}");
+                return null;
+            }
+
+            var userData = await userResponse.Content.ReadFromJsonAsync<UserResponse>();
+            var email = userData?.Email;
+            if (string.IsNullOrEmpty(email))
+            {
+                Console.WriteLine("Error: User email is null or empty after fetching user data.");
+                return null;
+            }
+            Console.WriteLine($"User email from Supabase: {email}");
+            return email;
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"HTTP request error fetching user email: {ex.Message}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error fetching user email: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task<string?> GetUserIdFromEmailAsync(string email)
+    {
+        try
+        {
+            Console.WriteLine($"Fetching user ID for email: {email}");
+            var requestUrl = $"/EmployeeDetails/GetEmployeeCodeByEmail/{Uri.EscapeDataString(email)}";
+            Console.WriteLine($"Request URL: {requestUrl}");
+
+            // Ensure no caching
+            Http.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoCache = true };
+
+            var response = await Http.GetAsync(requestUrl);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"API response: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<EmployeeCodeResponse>();
+                Console.WriteLine($"Parsed employeeCode: {result?.EmployeeCode}");
+                return result?.EmployeeCode;
+            }
+
+            Console.WriteLine($"Error fetching user ID: Status {response.StatusCode}, Content: {responseContent}");
+            return null;
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"HTTP error fetching user ID: {ex.Message}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception fetching user ID: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task FetchLogsById()
+    {
+        isLoading = true;
+        errorMessage = null;
+        successMessage = null;
+        logs.Clear();
+        attendanceMonths.Clear();
+
+        try
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                errorMessage = "User ID not available.";
+                return;
+            }
+
+            var logsEndpoint = $"/api/Zkteco/get-logs-by-id/{Uri.EscapeDataString(userId)}";
+            var logsResponse = await Http.GetAsync(logsEndpoint).ConfigureAwait(false);
+
+            if (!logsResponse.IsSuccessStatusCode)
+            {
+                errorMessage = $"Failed to fetch logs: {logsResponse.StatusCode}";
+                return;
+            }
+
+            var rawLogs = await logsResponse.Content.ReadFromJsonAsync<List<AttendanceDto>>() ?? new();
+            logs.AddRange(DeduplicateLogs(rawLogs));
+
+            var reasonsEndpoint = $"/api/AbsenceReason/{Uri.EscapeDataString(userId)}";
+            var reasonsResponse = await Http.GetAsync(reasonsEndpoint).ConfigureAwait(false);
+            var absenceReasons = reasonsResponse.IsSuccessStatusCode
+                ? await reasonsResponse.Content.ReadFromJsonAsync<List<AbsenceReasonDto>>() ?? new()
+                : new List<AbsenceReasonDto>();
+
+            Console.WriteLine($"Fetched {absenceReasons.Count} absence reasons for UserId: {userId}");
+            foreach (var reason in absenceReasons)
+            {
+                Console.WriteLine($"Reason: {reason.Reason}, Date: {reason.Date:yyyy-MM-dd}, Start: {reason.StartTime:yyyy-MM-dd HH:mm:ss.fff}, End: {reason.EndTime:yyyy-MM-dd HH:mm:ss.fff}");
+            }
+
+            GenerateAttendanceTable(absenceReasons);
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Network error: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private List<AttendanceDto> DeduplicateLogs(List<AttendanceDto> rawLogs)
+    {
+        return rawLogs
+            .GroupBy(l => (l.UserId, l.Timestamp, l.Status))
+            .Select(g => g.First())
+            .OrderBy(l => l.Timestamp)
+            .ToList();
+    }
+
+    private void GenerateAttendanceTable(List<AbsenceReasonDto> absenceReasons)
+    {
+        Console.WriteLine($"Processing {absenceReasons.Count} absence reasons");
+        attendanceMonths.Clear();
+
+        var groupedByMonth = logs
+            .GroupBy(l => new DateTime(l.Timestamp.Year, l.Timestamp.Month, 1))
+            .OrderBy(g => g.Key);
+
+        foreach (var monthGroup in groupedByMonth)
+        {
+            var month = new AttendanceMonth
+            {
+                Month = monthGroup.Key,
+                Days = new List<AttendanceDay>()
+            };
+
+            var daysInMonth = DateTime.DaysInMonth(monthGroup.Key.Year, monthGroup.Key.Month);
+            for (int day = 1; day <= daysInMonth; day++)
+            {
+                var currentDate = new DateTime(monthGroup.Key.Year, monthGroup.Key.Month, day);
+                if (currentDate.Date > DateTime.Now.Date)
+                    continue;
+
+                var dayLogs = monthGroup.Where(l => l.Timestamp.Date == currentDate).OrderBy(l => l.Timestamp).ToList();
+
+                var attendanceDay = new AttendanceDay
+                {
+                    Date = currentDate,
+                    IsWeeklyOff = currentDate.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday,
+                    Sessions = new List<AttendanceSession>(),
+                    AbsencePeriods = new List<AbsencePeriod>()
+                };
+
+                if (!attendanceDay.IsWeeklyOff)
+                {
+                    AttendanceSession? currentSession = null;
+                    foreach (var log in dayLogs)
+                    {
+                        if (log.Status == "Clock-In")
+                        {
+                            if (currentSession != null && !currentSession.ClockOut.HasValue)
+                                continue;
+                            currentSession = new AttendanceSession { ClockIn = log.Timestamp };
+                            attendanceDay.Sessions.Add(currentSession);
+                        }
+                        else if (log.Status == "Clock-Out" && currentSession != null)
+                        {
+                            if (log.Timestamp >= currentSession.ClockIn)
+                            {
+                                currentSession.ClockOut = log.Timestamp;
+                                currentSession = null;
+                            }
+                        }
+                    }
+
+                    attendanceDay.TotalHours = attendanceDay.Sessions
+                        .Where(s => s.ClockOut.HasValue)
+                        .Sum(s => (s.ClockOut.Value - s.ClockIn).TotalHours);
+
+                    // Handle absence periods between sessions
+                    for (int i = 0; i < attendanceDay.Sessions.Count - 1; i++)
+                    {
+                        var currentSessionItem = attendanceDay.Sessions[i];
+                        var nextSession = attendanceDay.Sessions[i + 1];
+                        if (currentSessionItem.ClockOut.HasValue && nextSession.ClockIn > currentSessionItem.ClockOut.Value)
+                        {
+                            var absencePeriod = new AbsencePeriod
+                            {
+                                StartTime = currentSessionItem.ClockOut.Value,
+                                EndTime = nextSession.ClockIn
+                            };
+
+                            var matchingReason = absenceReasons.FirstOrDefault(r =>
+                                r.UserId == userId &&
+                                r.Date.Date == absencePeriod.StartTime.Date &&
+                                Math.Abs((r.StartTime - absencePeriod.StartTime).TotalSeconds) <= 1 &&
+                                Math.Abs((r.EndTime - absencePeriod.EndTime).TotalSeconds) <= 1);
+
+                            if (matchingReason != null)
+                            {
+                                absencePeriod.Reason = matchingReason.Reason;
+                                Console.WriteLine($"Matched absence reason for period on {currentDate:yyyy-MM-dd}: {absencePeriod.Reason}, Start: {matchingReason.StartTime:yyyy-MM-dd HH:mm:ss.fff}, End: { matchingReason.EndTime:yyyy-MM-dd HH:mm:ss.fff}");
+                            }
+
+                            attendanceDay.AbsencePeriods.Add(absencePeriod);
+                        }
+                    }
+
+                    // Add any additional absence reasons that don't match existing periods
+                    var dayReasons = absenceReasons.Where(r =>
+                        r.UserId == userId &&
+                        r.Date.Date == currentDate.Date).ToList();
+
+                    foreach (var reason in dayReasons)
+                    {
+                        var existingAbsence = attendanceDay.AbsencePeriods.FirstOrDefault(p =>
+                            Math.Abs((p.StartTime - reason.StartTime).TotalSeconds) <= 1 &&
+                            Math.Abs((p.EndTime - reason.EndTime).TotalSeconds) <= 1);
+
+                        if (existingAbsence == null)
+                        {
+                            var newAbsence = new AbsencePeriod
+                            {
+                                StartTime = reason.StartTime,
+                                EndTime = reason.EndTime,
+                                Reason = reason.Reason
+                            };
+                            attendanceDay.AbsencePeriods.Add(newAbsence);
+                            Console.WriteLine($"Added new absence period for {currentDate:yyyy-MM-dd}: {reason.Reason}, Start: {reason.StartTime:yyyy-MM-dd HH:mm:ss.fff}, End: {reason.EndTime:yyyy-MM-dd HH:mm:ss.fff}");
+                        }
+                        else if (string.IsNullOrEmpty(existingAbsence.Reason))
+                        {
+                            existingAbsence.Reason = reason.Reason;
+                            Console.WriteLine($"Updated absence reason for {currentDate:yyyy-MM-dd}: {reason.Reason}, Start: {reason.StartTime:yyyy-MM-dd HH:mm:ss.fff}, End: {reason.EndTime:yyyy-MM-dd HH:mm:ss.fff}");
+                        }
+                    }
+                }
+
+                month.Days.Add(attendanceDay);
+            }
+
+            attendanceMonths.Add(month);
+        }
+
+        // Only set currentMonth if no month is currently selected
+        if (attendanceMonths.Any() && currentMonth == DateTime.MinValue)
+        {
+            currentMonth = attendanceMonths.Max(m => m.Month);
+        }
+
+        Console.WriteLine($"Generated {attendanceMonths.Count} months with {attendanceMonths.Sum(m => m.Days.Count)} days");
+    }
+
+    private void OpenModal(AttendanceDay day, AbsencePeriod absence)
+    {
+        selectedDay = day;
+        absencePeriod = absence;
+        reasonInput = absence.Reason ?? "";
+        showModal = true;
+        Console.WriteLine($"Opened modal for {absence.StartTime:yyyy-MM-dd HH:mm:ss.fff} - {absence.EndTime:yyyy-MM-dd HH:mm:ss.fff}, Reason: {reasonInput}");
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        selectedDay = null;
+        absencePeriod = null;
+        reasonInput = "";
+    }
+
+    private async Task SubmitReason()
+    {
+        if (selectedDay == null || absencePeriod == null || string.IsNullOrWhiteSpace(reasonInput))
+        {
+            errorMessage = "Please enter a valid reason.";
+            return;
+        }
+
+        // Store the current month before fetching new data
+        var preservedMonth = currentMonth;
+
+        try
+        {
+            var userLog = logs.FirstOrDefault();
+            if (userLog == null)
+            {
+                errorMessage = "User information not available.";
+                return;
+            }
+
+            var reasonDto = new AbsenceReasonDto
+            {
+                Id = 0,
+                UserId = userId,
+                Name = reasonInput,
+                Date = absencePeriod.StartTime.Date,
+                StartTime = absencePeriod.StartTime,
+                EndTime = absencePeriod.EndTime,
+                Reason = reasonInput,
+                IsApproved = false
+            };
+
+            Console.WriteLine($"Submitting reason: {reasonInput} for {reasonDto.Date:yyyy-MM-dd}, Start: {reasonDto.StartTime:yyyy-MM-dd HH:mm:ss.fff}, End: {reasonDto.EndTime:yyyy-MM-dd HH:mm:ss.fff}");
+
+            var response = await Http.PostAsJsonAsync("/api/AbsenceReason", reasonDto).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                errorMessage = $"Failed to submit reason: {(int)response.StatusCode} ({errorContent})";
+                return;
+            }
+
+            Console.WriteLine($"Reason submitted successfully: {reasonInput} for {absencePeriod.StartTime:yyyy-MM-dd HH:mm:ss.fff}");
+
+            absencePeriod.Reason = reasonInput;
+
+            // Fetch updated logs
+            await FetchLogsById();
+
+            // Restore the preserved month
+            currentMonth = preservedMonth;
+
+            Console.WriteLine($"Fetched {attendanceMonths.Count} months after submission, restored month to {currentMonth:MMMM yyyy}");
+
+            successPopupMessage = "Reason submitted successfully.";
+            showSuccessPopup = true;
+
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(3000);
+                showSuccessPopup = false;
+                successPopupMessage = "";
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Network error submitting reason: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error submitting reason: {ex.Message}";
+        }
+        finally
+        {
+            CloseModal();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ClearError()
+    {
+        errorMessage = null;
+    }
+
+    private void ClearSuccess()
+    {
+        successMessage = null;
+    }
+
+    private class EmployeeCodeResponse
+    {
+        public string EmployeeCode { get; set; } = string.Empty;
+    }
+
+    private class UserResponse
+    {
+        public string? Id { get; set; }
+        public string? Email { get; set; }
+    }
+}

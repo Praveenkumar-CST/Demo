@@ -1,0 +1,214 @@
+﻿@page "/fortnight-report"
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject EmployeeService EmployeeService
+@inject ReportService ReportService
+@layout HomeLayout
+@inject IUserService UserService
+@inject MentorAssignmentService MentorAssignmentService
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+<MudPaper Class="p-4 mx-auto mt-1" >
+    @if (isLoading)
+    {
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <MudText  Align=" Align.Center">Loading...</MudText>
+            </div>
+        }
+    else if (hasError)
+    {
+        <MudText Color="Color.Error">Failed to load employee data.</MudText>
+    }
+    else
+    {
+            <EditForm Model="@report" OnValidSubmit="HandleValidSubmit" Class="p-1">
+            <DataAnnotationsValidator />
+            <MudTextField @bind-Value="report.MentorName" Label="Mentor Name" Disabled="true" />
+            <MudTextField @bind-Value="report.MentorEmail" Label="Mentor Email" Disabled="true" />
+            <MudTextField @bind-Value="report.MentorDesignation" Label="Mentor Designation" Disabled="true" />
+
+            <MudSelect T="string"
+                       Label="Select Mentee Email"
+                       Value="selectedMenteeEmail"
+                       ValueChanged="OnMenteeEmailChanged"
+                       Required="true"
+                       For="@(() => report.MenteeEmail)">
+                @foreach (var emp in employees)
+                {
+                    <MudSelectItem Value="@emp.CurrentEmail">@emp.CurrentEmail</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField @bind-Value="report.MenteeName" Label="Mentee Name" Disabled="true" />
+            <MudTextField @bind-Value="report.MenteeEmail" Label="Mentee Email" Disabled="true" />
+
+            <MudTextField @bind-Value="report.ProjectsWorkedOn" Label="Projects Worked On" For="@(() => report.ProjectsWorkedOn)" Required="true" />
+
+            <MudSelect T="string" @bind-Value="report.ProgressStage" For="@(() => report.ProgressStage)" Label="Progress Stage" Required="true">
+                <MudSelectItem Value=@("Planning")>Planning</MudSelectItem>
+                <MudSelectItem Value=@("In Progress")>In Progress</MudSelectItem>
+                <MudSelectItem Value=@("Completed")>Completed</MudSelectItem>
+            </MudSelect>
+
+            <MudText Typo="Typo.subtitle1">Progress % — <span class="text-primary">@report.ProgressPercentage%</span></MudText>
+            <MudSlider @bind-Value="report.ProgressPercentage" For="@(() => report.ProgressPercentage)" Min="0" Max="100" Step="1" />
+
+            <MudTextField @bind-Value="report.FortnightRemarks1" For="@(() => report.FortnightRemarks1)" Label="Fortnight Remarks 1" Lines="3" Required="true" />
+            <MudTextField @bind-Value="report.FortnightRemarks2" For="@(() => report.FortnightRemarks2)" Label="Fortnight Remarks 2" Lines="3" Required="true" />
+
+            @* <MudText Typo="Typo.subtitle1">Upload Supporting File</MudText> *@
+            @* <InputFile OnChange="HandleFileChange" accept=".pdf,.docx,.xlsx,.jpg" /> *@
+            @* @if (!string.IsNullOrEmpty(report.FileName)) *@
+            @* { *@
+            @*     <MudText Typo="Typo.body2" Class="mt-2">Current File: @report.FileName</MudText> *@
+            @* } *@
+
+            @* <MudText Typo="Typo.subtitle1" Color="Color.Info">Debug Info:</MudText> *@
+            @* <MudPaper Class="p-2 mb-2" Style="background-color: #f5f5f5;"> *@
+            @*     <MudText Typo="Typo.body2">Mentor: @report.MentorName (Email: @report.MentorEmail, Designation: @report.MentorDesignation, id:@report.MentorId)</MudText> *@
+            @*     <MudText Typo="Typo.body2">Mentee: @report.MenteeName (Email: @report.MenteeEmail, id:@report.MenteeId)</MudText> *@
+            @*     <MudText Typo="Typo.body2">Projects Worked On: @report.ProjectsWorkedOn</MudText> *@
+            @*     <MudText Typo="Typo.body2">Progress Stage: @report.ProgressStage</MudText> *@
+            @*     <MudText Typo="Typo.body2">Progress %: @report.ProgressPercentage%</MudText> *@
+            @*     <MudText Typo="Typo.body2">Remarks 1: @report.FortnightRemarks1</MudText> *@
+            @*     <MudText Typo="Typo.body2">Remarks 2: @report.FortnightRemarks2</MudText> *@
+            @*     <MudText Typo="Typo.body2">File: @report.FileName</MudText> *@
+            @* </MudPaper> *@
+            <br />
+                
+            <button type="submit" class="mud-button mud-button-filled mud-button-filled-primary mt-4">
+                @(isEditMode ? "Update Report" : "Submit Report")
+            </button>
+            
+        </EditForm>
+       
+       
+    }
+
+</MudPaper>
+</MudContainer>
+  
+@code {
+    [Parameter] public ReportModel Report { get; set; } // Accept report for editing
+    private ReportModel report = new();
+    private List<EmployeeDetails> employees = new();
+    private string selectedMenteeEmail;
+    private bool isLoading = true;
+    private bool hasError = false;
+    private bool isEditMode = false;
+ 
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Load mentor and employees
+            var email = await JS.InvokeAsync<string>("localStorage.getItem", "email");
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var mentor = await EmployeeService.GetEmployeeDetailsByEmail(email);
+                if (mentor != null)
+                {
+                    report.MentorName = $"{mentor.FirstName} {mentor.LastName}";
+                    report.MentorEmail = mentor.CurrentEmail;
+                    report.MentorDesignation = mentor.Designation;
+                    report.MentorId = mentor.EmployeeID;
+                }
+            }
+
+            var assignments = await MentorAssignmentService.GetAllAssignmentsAsync();
+            var assignedMenteeIds = assignments
+                .Where(a => a.MentorEmployeeID == report.MentorId)
+                .Select(a => a.MenteeEmployeeID)
+                .Distinct()
+                .ToList();
+
+            employees = new List<EmployeeDetails>();
+
+            foreach (var menteeId in assignedMenteeIds)
+            {
+                var mentee = await EmployeeService.GetEmployeeDetails(menteeId);
+                if (mentee != null)
+                {
+                    employees.Add(mentee);
+                }
+            }
+
+            // Check if editing an existing report
+            if (Report != null)
+            {
+                isEditMode = true;
+                report = Report; // Use the passed report
+                selectedMenteeEmail = report.MenteeEmail; // Set the selected mentee email
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+            hasError = true;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnMenteeEmailChanged(string email)
+    {
+        selectedMenteeEmail = email;
+
+        if (!string.IsNullOrWhiteSpace(selectedMenteeEmail))
+        {
+            var mentee = await EmployeeService.GetEmployeeDetailsByEmail(selectedMenteeEmail);
+            if (mentee != null)
+            {
+                report.MenteeName = $"{mentee.FirstName} {mentee.LastName}";
+                report.MenteeEmail = mentee.CurrentEmail;
+                report.MenteeId = mentee.EmployeeID;
+            }
+        }
+    }
+
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        using var stream = file.OpenReadStream(10 * 1024 * 1024); // 10 MB
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        report.UploadedFile = ms.ToArray();
+        report.FileName = file.Name;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        report.SubmittedOn = DateTime.Now;
+
+        try
+        {
+            bool response;
+            if (isEditMode)
+            {
+                // Update existing report
+                response = await ReportService.UpdateReportAsync(report.Id, report); // Pass report.Id and report
+                Snackbar.Add(response ? "Report updated successfully!" : "Failed to update the report.", response ? Severity.Success : Severity.Error);
+            }
+            else
+            {
+                // Create new report
+                response = await ReportService.SubmitReportAsync(report);
+                Snackbar.Add(response ? "Report submitted successfully!" : "Failed to submit the report.", response ? Severity.Success : Severity.Error);
+            }
+
+            if (response)
+            {
+                Navigation.NavigateTo("/reports");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during submission: {ex.Message}");
+            Snackbar.Add("An error occurred while submitting.", Severity.Error);
+        }
+    }
+}

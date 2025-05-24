@@ -1,0 +1,370 @@
+@page "/Calendar/holiday"
+@using list.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@implements IDisposable
+@layout HomeLayout
+
+<h3 class="holiday-title">Holiday List</h3>
+
+<div class="back-container">
+    <button class="back-button" @onclick="NavigateToCalendar">Back</button>
+</div>
+
+<div class="header-container">
+    <div class="location-selection">
+        <label for="location"><b>Select Location:</b></label>
+        <select id="location" @bind-value="_selectedLocation" @bind-value:event="oninput" @onchange="OnLocationChanged" class="location-dropdown">
+            <option value="Bangalore,India">Bangalore,India</option>
+            <option value="Delaware,USA">Delaware,USA</option>
+            <option value="Riyadh,KSA">Riyadh KSA</option>
+        </select>
+    </div>
+</div>
+
+<div class="holiday-boxes">
+    <div class="permanent-holidays">
+        <h4>Permanent Holidays</h4>
+        <table class="holiday-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Event</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var holiday in _permanentHolidays.OrderByDescending(h => DateTime.Parse(h.Date)))
+                {
+                    <tr>
+                        <td>@FormatDateString(holiday.Date)</td>
+                        <td>@GetDayOfWeek(holiday.Date)</td>
+                        <td class="event-description">
+                            <div class="event-content">@holiday.Description</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="optional-holidays">
+        <h4>Optional Holidays</h4>
+        <table class="holiday-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Event</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var holiday in _optionalHolidays.OrderByDescending(h => DateTime.Parse(h.Date)))
+                {
+                    <tr>
+                        <td>@FormatDateString(holiday.Date)</td>
+                        <td>@GetDayOfWeek(holiday.Date)</td>
+                        <td class="event-description">
+                            <div class="event-content">@holiday.Description</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (_isLoading)
+{
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading holidays...</p>
+    </div>
+}
+else if (_errorMessage != null)
+{
+    <p class="error-message">@_errorMessage</p>
+    <p>Raw API Response:</p>
+    <pre>@_rawResponse</pre>
+}
+else if (_holidays.Length == 0)
+{
+    <p>No holidays found for @_selectedLocation in 2025.</p>
+    <p>Raw API Response:</p>
+    <pre>@_rawResponse</pre>
+}
+
+<style>
+    body {
+        background-color: #ffffff;
+        color: #000000;
+        font-family: Arial, sans-serif;
+    }
+
+    h3 {
+        color: #1e90ff;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    h4 {
+        color: #1e90ff;
+        margin-bottom: 10px;
+    }
+
+    .header-container {
+        top: 100px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 10px;
+    }
+
+    .holiday-boxes {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 20px;
+    }
+
+    .permanent-holidays,
+    .optional-holidays {
+        width: 45%;
+        background-color: #d3d3d3;
+        padding: 15px;
+        border-radius: 10px;
+        box-sizing: border-box;
+    }
+
+    .holiday-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #f5f5f5;
+        table-layout: fixed;
+    }
+
+    .holiday-table th {
+        background-color: #1e90ff;
+        color: #ffffff;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .holiday-table td {
+        padding: 10px;
+        border-bottom: 1px solid #000000;
+        color: #000000;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .holiday-table td.event-description {
+        height: auto;
+    }
+
+    .holiday-table tr:nth-child(even) {
+        background-color: #ffffff;
+    }
+
+    .holiday-table tr:hover {
+        background-color: #87cefa;
+    }
+
+    .error-message {
+        color: #000000;
+        background-color: rgb(66, 200, 100);
+        padding: 10px;
+        text-align: center;
+        border-radius: 5px;
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #1e90ff;
+        border-top: 4px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    p {
+        text-align: center;
+        color: #000000;
+        font-family: Arial, sans-serif;
+    }
+
+    .back-button {
+        padding: 8px 16px;
+        background-color: #1e90ff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .back-button:hover {
+        background-color: #4682b4;
+    }
+
+    .location-selection {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .location-selection label {
+        color: #2c3e50;
+        font-family: 'Segoe UI', sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+    }
+
+    .location-dropdown {
+        padding: 8px 16px;
+        border: 1px solid #3498db;
+        border-radius: 6px;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 14px;
+        background-color: #e8f4f8;
+        color: #2c3e50;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .location-dropdown:focus {
+        border-color: #3498db;
+        outline: none;
+    }
+
+    .holiday-title {
+        font-size: 27px;
+    }
+</style>
+
+@code {
+    private Events[] _holidays = Array.Empty<Events>();
+    private Events[] _permanentHolidays = Array.Empty<Events>();
+    private Events[] _optionalHolidays = Array.Empty<Events>();
+    private string? _errorMessage;
+    private bool _isLoading = true;
+    private string _rawResponse = "No response yet.";
+    private string _selectedLocation = "Bangalore,India";
+    private System.Timers.Timer? _refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchHolidaysAsync();
+        using var timer = new System.Timers.Timer(5000);
+        _refreshTimer = timer;
+        _refreshTimer.Elapsed += async (sender, e) => await RefreshHolidaysAsync();
+        _refreshTimer.AutoReset = true;
+        _refreshTimer.Start();
+    }
+
+    private async Task FetchHolidaysAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            string apiUrl = $"/api/Events?location={_selectedLocation}";
+
+            var httpResponse = await Http.GetAsync(apiUrl);
+            _rawResponse = await httpResponse.Content.ReadAsStringAsync();
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var holidays = await httpResponse.Content.ReadFromJsonAsync<Events[]>();
+                _holidays = holidays ?? Array.Empty<Events>();
+                _permanentHolidays = _holidays
+                    .Where(h => h.HolidayType == "Permanent" && h.Location == _selectedLocation)
+                    .ToArray();
+                _optionalHolidays = _holidays
+                    .Where(h => h.HolidayType == "Optional" && h.Location == _selectedLocation)
+                    .ToArray();
+                Console.WriteLine($"Fetched {_holidays.Length} holidays for {_selectedLocation}. Permanent: {_permanentHolidays.Length}, Optional: {_optionalHolidays.Length}");
+            }
+            else
+            {
+                _errorMessage = $"API request failed with status: {httpResponse.StatusCode}. Response: {_rawResponse}";
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Error fetching holidays: {ex.Message}. Response: {_rawResponse}";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unexpected error: {ex.Message}. Response: {_rawResponse}";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshHolidaysAsync()
+    {
+        await FetchHolidaysAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnLocationChanged(ChangeEventArgs e)
+    {
+        _selectedLocation = e.Value?.ToString() ?? "Bangalore,India";
+        _isLoading = true;
+        await FetchHolidaysAsync();
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private string FormatDateString(string date)
+    {
+        if (DateTime.TryParse(date, out var parsedDate))
+        {
+            return $"{parsedDate.Day:D2}/{parsedDate.Month:D2}/{parsedDate.Year}";
+        }
+        return date;
+    }
+
+    private string GetDayOfWeek(string date)
+    {
+        if (DateTime.TryParse(date, out var parsedDate))
+        {
+            return parsedDate.ToString("dddd");
+        }
+        return "Invalid Date";
+    }
+
+    private void NavigateToCalendar()
+    {
+        Navigation.NavigateTo("/calendar");
+    }
+
+    public void Dispose()
+    {
+        if (_refreshTimer != null)
+        {
+            _refreshTimer.Stop();
+            _refreshTimer.Dispose();
+        }
+    }
+}
