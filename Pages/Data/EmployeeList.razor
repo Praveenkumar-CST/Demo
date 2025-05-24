@@ -57,22 +57,27 @@ else if (pagedEmployees.Any())
                 {
                     <tr @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
                         <td>@emp.EmployeeID</td>
-                        <td>
-                            <span>
-                                @if (!string.IsNullOrEmpty(emp.PhotoBase64Content))
-                                {
-                                    <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content"
-                                         class="rounded-circle"
-                                         alt="Employee Photo"
-                                         style="width: 30px; height: 30px; object-fit: cover;" />
-                                }
-                                else
-                                {
-                                    <span class="text-muted">No photo</span>
-                                }
-                            </span>
-                            @($" {emp.FirstName} {emp.LastName}")
-                        </td>
+                       
+                     <td>
+    <span>
+        @if (!string.IsNullOrEmpty(emp.PhotoBase64Content) && !string.IsNullOrEmpty(emp.PhotoContentType))
+        {
+            <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content"
+                 class="rounded-circle"
+                 alt="Employee Photo"
+                 style="width: 30px; height: 30px; object-fit: cover;" />
+        }
+        else
+        {
+            <img src="/images/default-avatar.jpg"
+                 class="rounded-circle"
+                 alt="Loading..."
+                 style="width: 30px; height: 30px; object-fit: cover;"
+                 @onload="() => LoadPhotoAsync(emp)" />
+        }
+    </span>
+    @($" {emp.FirstName} {emp.LastName}")
+</td>
                         <td>@emp.CurrentEmail</td>
                         <td>@emp.Designation</td>
                         <td>
@@ -128,6 +133,33 @@ else
 
     private int totalPages => (int)Math.Ceiling((double)filteredEmployees.Count / itemsPerPage);
     private List<EmployeeDetails> filteredEmployees = new();
+    private Dictionary<string, string> employeePhotos = new();
+    private HashSet<string> loadingPhotos = new();
+
+    private async Task LoadPhotoAsync(EmployeeDetails emp)
+    {
+        if (string.IsNullOrEmpty(emp.EmployeeID) || !string.IsNullOrEmpty(emp.PhotoBase64Content) || loadingPhotos.Contains(emp.EmployeeID))
+            return;
+
+        loadingPhotos.Add(emp.EmployeeID);
+        try
+        {
+            var (photoBytes, contentType) = await EmployeeService.GetEmployeePhoto(emp.EmployeeID);
+            emp.PhotoBase64Content = Convert.ToBase64String(photoBytes);
+            emp.PhotoContentType = contentType;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading photo for {emp.EmployeeID}: {ex.Message}");
+        }
+        finally
+        {
+            loadingPhotos.Remove(emp.EmployeeID);
+        }
+    }
+
 
     private string SelectedDesignation
     {

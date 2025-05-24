@@ -9,7 +9,7 @@
 @inject NavigationManager NavigationManager
 @using System.Text.Json;
 @inject CountryService CountryService
-    <MudContainer MaxWidth="MaxWidth.Medium">
+    <MudContainer MaxWidth="MaxWidth.Large">
         <MudCard Elevation="2" Class="p-3">
              <MudCardHeader>
                 <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
@@ -195,7 +195,34 @@
                                             
                             </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Designation" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Designation" />
+                                    <MudSelect T="string" Label="Designation" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Designation">
+                                        <MudSelectItem Value="@("Software Engineer Intern")">Software Engineer Intern</MudSelectItem>
+                                        <MudSelectItem Value="@("Software Engineer trainee")">Software Engineer trainee</MudSelectItem>
+                                <MudSelectItem Value="@("Associate Software Engineer")">Associate Software Engineer</MudSelectItem>
+                                        <MudSelectItem Value="@("Software Engineer Product Manager")">Software Engineer Product Manager</MudSelectItem>
+                                        <MudSelectItem Value="@("Senior Software Engineer")"> Senior Software Engineer  </MudSelectItem>
+                                        <MudSelectItem Value="@("Vice President")">Vice President  </MudSelectItem>
+                                        <MudSelectItem Value="@("President")">President  </MudSelectItem>
+                                        <MudSelectItem Value="@("People Senior Analyst")">People Senior Analyst</MudSelectItem>
+                                        <MudSelectItem Value="@("People Analyst Lead")">People Analyst Lead </MudSelectItem>
+                                        <MudSelectItem Value="@("Executive Assistant ")"> Executive Assistant </MudSelectItem>
+                                        <MudSelectItem Value="@("Business Development Lead ")"> Business Development Lead </MudSelectItem>
+                                        <MudSelectItem Value="@("Business Development  Intern ")"> Business Development  Intern </MudSelectItem>
+                                        <MudSelectItem Value="@("Content Writing Intern")"> Content Writing Intern</MudSelectItem>
+                                        <MudSelectItem Value="@("Social Media Intern")">
+                                            Social Media Intern
+                                        </MudSelectItem>
+                                        <MudSelectItem Value="@("Video Creation Intern")">
+                                            Video Creation Intern
+                                        </MudSelectItem>
+                                        <MudSelectItem Value="@("AI Content Creator")">
+                                           AI Content Creator
+                                        </MudSelectItem>
+                                        <MudSelectItem Value="@("Content Creator Lead")">Content Creator Lead </MudSelectItem>
+                                        <MudSelectItem Value="@("Software Tester")">Software Tester </MudSelectItem>
+
+         
+                            </MudSelect>
                             <ValidationMessage For="@(() => employeeDetails.Designation)" />
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
@@ -285,11 +312,13 @@
                             <ValidationMessage For="@(() => employeeDetails.CurrentState)" />
 
                         </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                                    <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Zip/Pin Code"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
                                                   @bind-Value="employeeDetails.CurrentZip"
-                                                  Required="true"
-                                                  OnKeyDown="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await HandleZipCodeChange(employeeDetails.CurrentZip, 3); })" />
+                                                  @bind-Value:after="@(async () => await HandleZipCodeChange(employeeDetails.CurrentZip, 3))"
+                                                  Required="true" />
                                     <ValidationMessage For="@(() => employeeDetails.CurrentZip)" />
                                     @if (IsFetchingLocation && contactIndexBeingFetched == 3)
                                     {
@@ -299,8 +328,7 @@
                                     {
                                         <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
                                     }
-
-                        </MudItem>
+                                </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentMobile" Required="true" />
                             <ValidationMessage For="@(() => employeeDetails.CurrentMobile)" />
@@ -335,13 +363,15 @@
                             <ValidationMessage For="@(() => employeeDetails.PermanentState)" />
 
                         </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                                    <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Zip/Pin Code"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
                                                   @bind-Value="employeeDetails.PermanentZip"
-                                                  Required="true"
-                                                  OnKeyDown="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await HandleZipCodeChange(employeeDetails.PermanentZip, 4); })" />
-                            <ValidationMessage For="@(() => employeeDetails.PermanentZip)" />
-                                   @if (IsFetchingLocation && contactIndexBeingFetched == 4)
+                                                  @bind-Value:after="@(async () => await HandleZipCodeChange(employeeDetails.PermanentZip, 4))"
+                                                  Required="true" />
+                                    <ValidationMessage For="@(() => employeeDetails.PermanentZip)" />
+                                    @if (IsFetchingLocation && contactIndexBeingFetched == 4)
                                     {
                                         <MudText Typo="Typo.caption" Color="Color.Info">Fetching location details...</MudText>
                                     }
@@ -349,8 +379,7 @@
                                     {
                                         <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
                                     }
-
-                        </MudItem>
+                                </MudItem>
 
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentMobile" Required="true" />
@@ -399,10 +428,12 @@
                                     <ValidationMessage For="@(() => employeeDetails.EmergencyContact1State)" />
                                 </MudItem>
                                 <MudItem xs="12" sm="4" md="3">
-                                    <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                    <MudTextField Label="Zip/Pin Code"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
                                                   @bind-Value="employeeDetails.EmergencyContact1ZipCode"
-                                                  Required="false"
-                                                  OnKeyDown="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await HandleZipCodeChange(employeeDetails.EmergencyContact1ZipCode, 1); })" />
+                                                  @bind-Value:after="@(async () => await HandleZipCodeChange(employeeDetails.EmergencyContact1ZipCode, 1))"
+                                                  Required="false" />
                                     <ValidationMessage For="@(() => employeeDetails.EmergencyContact1ZipCode)" />
                                     @if (IsFetchingLocation && contactIndexBeingFetched == 1)
                                     {
@@ -449,10 +480,12 @@
                                     <ValidationMessage For="@(() => employeeDetails.EmergencyContact2State)" />
                                 </MudItem>
                                 <MudItem xs="12" sm="4" md="3">
-                                    <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                    <MudTextField Label="Zip/Pin Code"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
                                                   @bind-Value="employeeDetails.EmergencyContact2ZipCode"
-                                                  Required="false"
-                                                  OnKeyDown="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await HandleZipCodeChange(employeeDetails.EmergencyContact2ZipCode, 2); })" />
+                                                  @bind-Value:after="@(async () => await HandleZipCodeChange(employeeDetails.EmergencyContact2ZipCode, 2))"
+                                                  Required="false" />
                                     <ValidationMessage For="@(() => employeeDetails.EmergencyContact2ZipCode)" />
                                     @if (IsFetchingLocation && contactIndexBeingFetched == 2)
                                     {
@@ -485,44 +518,41 @@
         </MudCard>
     </MudContainer>
 <style>
-    .section-tab {
-        transition: all 0.2s ease;
-        border-radius: 8px 8px 0 0;
-        margin: 0 4px;
-        padding: 8px 16px;
-        background-color: var(--mud-palette-surface);
-        border: 1px solid var(--mud-palette-lines-default);
-        border-bottom: none;
+    .section-tab { 
+       background-color: var(--mud-palette-surface); 
+         border: 1px solid var(--mud-palette-lines-default); 
+         border-bottom: none; 
+    } 
+
+         .section-tab:hover:not(.mud-expanded) { 
+            border-color: var(--mud-palette-Secondary); 
+            cursor: pointer; 
+        } 
+
+        /* .section-tab:active:not(.mud-expanded) {  */
+        /*     transform: translateY(1px);  */
+        /*  }  */
+
+         .section-tab.mud-expanded { 
+           border-color: var(--mud-palette-lines-default); 
+       } 
+
+     .section-content { 
+         border: 1px solid var(--mud-palette-lines-default); 
+         border-top: none; 
+         border-radius: 0 0 8px 8px; 
+         padding: 16px; 
+         margin-bottom: 16px; 
+        background-color: var(--mud-palette-surface); 
+    } 
+
+    .section-tab .mud-expand-panel-header { 
+        padding: 0; 
+    } 
+    .mud-expand-panel .mud-expand-panel-header .mud-expand-panel-icon.mud-transform {
+        transform: none; 
     }
-
-        /* Subtle hover effect - border highlight only */
-        .section-tab:hover:not(.mud-expanded) {
-            border-color: var(--mud-palette-primary);
-            cursor: pointer;
-        }
-
-        /* Active state during click */
-        .section-tab:active:not(.mud-expanded) {
-            transform: translateY(1px);
-        }
-
-        /* Expanded state - clean look */
-        .section-tab.mud-expanded {
-            border-color: var(--mud-palette-lines-default);
-        }
-
-    .section-content {
-        border: 1px solid var(--mud-palette-lines-default);
-        border-top: none;
-        border-radius: 0 0 8px 8px;
-        padding: 16px;
-        margin-bottom: 16px;
-        background-color: var(--mud-palette-surface);
-    }
-
-    .section-tab .mud-expand-panel-header {
-        padding: 0;
-    }
+   
 </style>
 @code {
     [Parameter]
@@ -534,6 +564,8 @@
     private List<Country> countries = new();
     private int? contactIndexBeingFetched = null;
     private string zipErrorMessage = null;
+    private System.Timers.Timer debounceTimer = new System.Timers.Timer(500);
+    private string lastZipProcessed = string.Empty;
     public class PinResponse
     {
         public List<PostOffice> PostOffice { get; set; }
@@ -599,55 +631,74 @@
     private bool IsFetchingLocation = false;
     private async Task HandleZipCodeChange(string zip, int contactIndex)
     {
-            if (string.IsNullOrWhiteSpace(zip) || zip.Length != 6)
-    {
-        Console.WriteLine($"[DEBUG] Skipping fetch for invalid pin: {zip}");
-        return;
-    }
-    IsFetchingLocation = true;
-        contactIndexBeingFetched = contactIndex;
-        StateHasChanged();
-
-        if (contactIndex == 1)
+        if (string.IsNullOrWhiteSpace(zip) || zip.Length != 6 || zip == lastZipProcessed)
         {
-            employeeDetails.EmergencyContact1ZipCode = zip;
-            await GetCityStateFromPin(
-                zip,
-                city => employeeDetails.EmergencyContact1City = city,
-                state => employeeDetails.EmergencyContact1State = state
-            );
-        }
-        else if (contactIndex == 2)
-        {
-            employeeDetails.EmergencyContact2ZipCode = zip;
-            await GetCityStateFromPin(
-                zip,
-                city => employeeDetails.EmergencyContact2City = city,
-                state => employeeDetails.EmergencyContact2State = state
-            );
-        }
-          else if (contactIndex == 3)
-        {
-            employeeDetails.CurrentZip = zip;
-            await GetCityStateFromPin(
-                zip,
-                city => employeeDetails.CurrentCity = city,
-                state => employeeDetails.CurrentState = state
-            );
-        }
-        else if (contactIndex == 4)
-        {
-            employeeDetails.PermanentZip = zip;
-            await GetCityStateFromPin(
-                zip,
-                city => employeeDetails.PermanentCity= city,
-                state => employeeDetails.PermanentState = state
-            );
+            Console.WriteLine($"[DEBUG] Skipping fetch for invalid or unchanged pin: {zip}");
+            return;
         }
 
-        IsFetchingLocation = false;
-        contactIndexBeingFetched = null;
-        StateHasChanged();
+        // Cancel any existing timer
+        debounceTimer.Stop();
+
+        // Start a new debounce timer
+        await Task.Run(() =>
+        {
+            debounceTimer.Elapsed += async (s, e) =>
+            {
+                debounceTimer.Stop(); // Stop the timer after firing
+                await InvokeAsync(async () =>
+                {
+                    IsFetchingLocation = true;
+                    contactIndexBeingFetched = contactIndex;
+                    StateHasChanged();
+
+                    lastZipProcessed = zip; // Track the last processed ZIP to avoid duplicates
+
+                    if (contactIndex == 1)
+                    {
+                        employeeDetails.EmergencyContact1ZipCode = zip;
+                        await GetCityStateFromPin(
+                            zip,
+                            city => employeeDetails.EmergencyContact1City = city,
+                            state => employeeDetails.EmergencyContact1State = state
+                        );
+                    }
+                    else if (contactIndex == 2)
+                    {
+                        employeeDetails.EmergencyContact2ZipCode = zip;
+                        await GetCityStateFromPin(
+                            zip,
+                            city => employeeDetails.EmergencyContact2City = city,
+                            state => employeeDetails.EmergencyContact2State = state
+                        );
+                    }
+                    else if (contactIndex == 3)
+                    {
+                        employeeDetails.CurrentZip = zip;
+                        await GetCityStateFromPin(
+                            zip,
+                            city => employeeDetails.CurrentCity = city,
+                            state => employeeDetails.CurrentState = state
+                        );
+                    }
+                    else if (contactIndex == 4)
+                    {
+                        employeeDetails.PermanentZip = zip;
+                        await GetCityStateFromPin(
+                            zip,
+                            city => employeeDetails.PermanentCity = city,
+                            state => employeeDetails.PermanentState = state
+                        );
+                    }
+
+                    IsFetchingLocation = false;
+                    contactIndexBeingFetched = null;
+                    StateHasChanged();
+                });
+            };
+            debounceTimer.AutoReset = false; // Run only once
+            debounceTimer.Start();
+        });
     }
     protected async override void OnInitialized()
     {
@@ -659,6 +710,7 @@
         {
             employeeDetails = InitialData;
         }
+
     }
     private async Task LoadFromLocalStorage()
     {
@@ -715,8 +767,6 @@
         }
     }
    
-
-
     // Assuming you have a list to store all employees (this could be a local list, or you might pull from a service)
     private List<EmployeeDetails> allEmployees = new List<EmployeeDetails>();
 
@@ -758,7 +808,6 @@
     private async Task HandlePhotoFileChange(InputFileChangeEventArgs e)
     {
         PhotoUploadError = null;
-
         var file = e.File;
         if (file == null)
         {
@@ -767,7 +816,6 @@
 
             return;
         }
-
         // Size check: max 20 MB
         if (file.Size > 20 * 1024 * 1024)
         {

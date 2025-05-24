@@ -9,7 +9,7 @@
 @if (experience != null)
 {
     <div>
-        <h4>Education Details</h4>
+        <h4>Education</h4>
         @if (experience.EducationQualifications?.Any() == true)
         {
             <MudTable Items="experience.EducationQualifications" Bordered="true" Hover="true">
@@ -31,7 +31,8 @@
         {
             <MudText>No education details available.</MudText>
         }
-        <h4>Work Experience Details</h4>
+        <br/>
+        <h4>Work Experience</h4>
         @if (experience.WorkExperiences?.Any() == true)
         {
             <MudTable Items="experience.WorkExperiences" Bordered="true" Hover="true">

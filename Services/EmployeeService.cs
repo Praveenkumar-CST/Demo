@@ -9,6 +9,7 @@
     using Microsoft.Extensions.Caching.Memory;
     using Polly;
     using Polly.Extensions.Http;
+    using System.Text.Json;
 
     public class EmployeeService
     {
@@ -87,7 +88,8 @@
                 return null;
             }
         }
-        public async Task<List<EmployeeDetails>> GetAllEmployees(int page = 1, int pageSize = 50, bool includePhotos = true)
+
+        public async Task<List<EmployeeDetails>> GetAllEmployees(int page = 1, int pageSize = 50, bool includePhotos = false)
         {
             string cacheKey = $"AllEmployees_{page}_{pageSize}_Photos_{includePhotos}";
             if (_cache.TryGetValue(cacheKey, out List<EmployeeDetails> cachedEmployees))
@@ -142,6 +144,28 @@
                 return new List<EmployeeDetails>();
             }
         }
+        public async Task<(byte[] PhotoBytes, string ContentType)> GetEmployeePhoto(string employeeId)
+        {
+            var response = await _retryPolicy.ExecuteAsync(() =>
+                _timeoutPolicy.ExecuteAsync(() =>
+                    _httpClient.GetAsync($"EmployeeDetails/GetEmployeePhoto/{employeeId}")));
+
+            response.EnsureSuccessStatusCode();
+
+            var photoData = await response.Content.ReadFromJsonAsync<EmployeePhotoResponse>();
+            var base64Content = photoData.PhotoBase64Content;
+            var contentType = photoData.PhotoContentType;
+            var photoBytes = Convert.FromBase64String(base64Content);
+            return (photoBytes, contentType);
+        }
+
+
+        public class EmployeePhotoResponse
+        {
+            public string PhotoBase64Content { get; set; }
+            public string PhotoContentType { get; set; }
+        }
+
 
         public async Task<List<EmployeeDetails>> GetEmployeeDetailsByIds(IEnumerable<string> employeeIds)
         {
@@ -251,6 +275,11 @@
             {
                 _cache.Remove("AllEmployees");
                 _cache.Remove($"Employee_{employee.EmployeeID}");
+                foreach (var suffix in new[] { "", "_Photos_true", "_Photos_false" })
+                {
+                    _cache.Remove($"Employee_{employee.EmployeeID}{suffix}");
+                }
+
                 _cache.Remove($"EmployeeByEmail_{employee.CurrentEmail?.ToLower()}");
             }
 
