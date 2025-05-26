@@ -534,7 +534,7 @@
         new PolicyItem { Name = "Git Guidelines", Url = "/pdfs/Git Guidelines.pdf" },
         new PolicyItem { Name = "Code of Conduct", Url = "/pdfs/Wise Work Code of Conduct v1.pdf" },
         new PolicyItem { Name = "CSharp Coding Guidelines", Url = "/pdfs/CSharp Coding Guidelines.pdf" },
-        new PolicyItem { Name = "Json Coding Guidelines", Url = "/pdfs/Json Coding Guidelines.pdf" },
+        new PolicyItem { Name = "JSON Coding Guidelines", Url = "/pdfs/Json Coding Guidelines.pdf" },
         new PolicyItem { Name = "MongoDB Coding Guidelines", Url = "/pdfs/MongoDB Coding Guidelines.pdf" },
         new PolicyItem { Name = "Python Coding Guidelines", Url = "/pdfs/Python Coding Guidelines.pdf" }
 
@@ -542,6 +542,7 @@
 
     private string? activePdfUrl = null;
     private string? activePdfName = null;
+    private int renderCounter = 0;
 
     private bool CanSubmit => policyDocuments.All(p => p.HasPreviewed && p.IsAcknowledged);
     private async Task AcknowledgePolicy(PolicyItem item)
@@ -564,7 +565,7 @@
             }
         }
     }
-  
+
 
 
     public void Dispose()
@@ -572,8 +573,6 @@
         dotNetHelperRef?.Dispose();
     }
   
-
-    private int renderCounter = 0;
 
     [JSInvokable]
     public async Task OnPdfScrolledToEnd()
