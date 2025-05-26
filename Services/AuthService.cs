@@ -25,12 +25,7 @@ namespace WiseHR.Services
             _baseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7021";
             //_baseUrl = configuration["ApiBaseUrl"] ?? "http://172.210.14.62:5000/";
            //_baseUrl = configuration["ApiBaseUrl"] ?? "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net/";
-<<<<<<< HEAD
-=======
 
-
-
->>>>>>> cfcd051b59ead2ec49abbd6bff60ab0a6a26131a
             _supabaseUrl = configuration["Supabase:Url"] ?? _supabaseUrl;
             _supabaseKey = configuration["Supabase:AnonKey"] ?? _supabaseKey;
             _httpClient.BaseAddress = new Uri(_baseUrl);
