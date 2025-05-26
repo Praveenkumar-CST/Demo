@@ -4,11 +4,13 @@
 @inject BankingService BankingService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject IMemoryCache MemoryCache
 @using WiseHR.Models
 @using WiseHRServer.Models
 @using MudBlazor
 @using WiseHR.Components.sidebar
 @using System.Globalization
+@using Microsoft.Extensions.Caching.Memory
 @layout WiseHR.Components.sidebar.HomeLayout
 
 <MudThemeProvider />
@@ -38,6 +40,7 @@
     
     .gradient-tabs ::deep .mud-tab {
         color: rgba(255, 255, 255, 0.7);
+        font-size: 1.1rem;
     }
     
     .gradient-tabs ::deep .mud-tab.mud-tab-active {
@@ -70,7 +73,7 @@
     .profile-section-title {
         color: #2c3e50;
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 1.3rem;
         margin-bottom: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -78,7 +81,7 @@
 
     .profile-field-label {
         color: #64748b;
-        font-size: 0.75rem;
+        font-size: 0.9rem;
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -89,7 +92,7 @@
     .profile-field-value {
         color: #1e293b;
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 1.1rem;
         line-height: 1.4;
         word-break: break-word;
         min-height: 1.4rem;
@@ -100,6 +103,94 @@
             font-style: italic;
             font-weight: 400;
         }
+
+    /* Increased text sizes for MudText components */
+    ::deep .mud-typography-h4 {
+        font-size: 2rem !important;
+    }
+
+    ::deep .mud-typography-h6 {
+        font-size: 1.25rem !important;
+    }
+
+    ::deep .mud-typography-body1 {
+        font-size: 1.1rem !important;
+    }
+
+    ::deep .mud-typography-body2 {
+        font-size: 1rem !important;
+    }
+
+    ::deep .mud-typography-caption {
+        font-size: 0.9rem !important;
+    }
+
+    /* Styling for expansion panel headings */
+    ::deep .mud-expansion-panel-header {
+        font-weight: 700 !important;
+        font-size: 1.3rem !important;
+        color: #2c3e50 !important;
+        padding: 16px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    ::deep .mud-expansion-panel-header:hover {
+        background-color: rgba(52, 173, 184, 0.05) !important;
+    }
+
+    ::deep .mud-expansion-panel-header .mud-icon-root {
+        color: #34adb8 !important;
+        margin-right: 12px !important;
+        font-size: 1.5rem !important;
+    }
+
+    /* Custom styling for specific expansion panels */
+    ::deep .mud-expansion-panel[data-panel="family"] .mud-expansion-panel-header {
+        color: #8E54E9 !important;
+        border-left: 4px solid #8E54E9 !important;
+    }
+
+    ::deep .mud-expansion-panel[data-panel="health"] .mud-expansion-panel-header {
+        color: #e74c3c !important;
+        border-left: 4px solid #e74c3c !important;
+    }
+
+    ::deep .mud-expansion-panel[data-panel="emergency"] .mud-expansion-panel-header {
+        color: #e67e22 !important;
+        border-left: 4px solid #e67e22 !important;
+    }
+
+    ::deep .mud-expansion-panel[data-panel="official"] .mud-expansion-panel-header {
+        color: #2ecc71 !important;
+        border-left: 4px solid #2ecc71 !important;
+    }
+
+    ::deep .mud-expansion-panel[data-panel="personal"] .mud-expansion-panel-header {
+        color: #3498db !important;
+        border-left: 4px solid #3498db !important;
+    }
+
+    /* Add shadow and hover effect to expansion panels */
+    ::deep .mud-expansion-panel {
+        margin-bottom: 16px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        transition: all 0.3s ease !important;
+        text-align:center;
+        text-size-adjust:2 em;
+    }
+
+    ::deep .mud-expansion-panel:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* Style the expansion panel content */
+    ::deep .mud-expansion-panel-content {
+        padding: 16px !important;
+        background-color: #f8fafd !important;
+    }
 </style>
 
     <MudMainContent Style="flex-grow: 1;">
@@ -180,36 +271,54 @@
                                     
                                     <MudGrid Spacing="2">
                                         <MudItem xs="12" sm="6" md="4">
+                                              <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">First Name</MudText>
                                             <MudText Typo="Typo.body1" Class="font-weight-bold">@Employee.FirstName</MudText>
+
+                                             </MudPaper>
                                         </MudItem>
                                         <MudItem xs="12" sm="6" md="4">
+                                              <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">Middle Name</MudText>
                                             <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.MiddleName)</MudText>
+                                             </MudPaper>
                                         </MudItem>
                                         <MudItem xs="12" sm="6" md="4">
+                                              <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">Last Name</MudText>
                                             <MudText Typo="Typo.body1" Class="font-weight-bold">@Employee.LastName</MudText>
+
+                                             </MudPaper>
                                         </MudItem>
                                         <MudItem xs="12" sm="6" md="4">
+                                              <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">Date of Birth</MudText>
                                             <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderDate(Employee.DateOfBirth)</MudText>
+                                             </MudPaper>
                                         </MudItem>
                                         <MudItem xs="12" sm="6" md="4">
+                                              <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">Gender</MudText>
                                             <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.Gender)</MudText>
+                                             </MudPaper>
                                         </MudItem>
                                         <MudItem xs="12" sm="6" md="4">
+                                              <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">Blood Group</MudText>
                                             <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.BloodGroup)</MudText>
+                                            </MudPaper>
                                         </MudItem>
                                         <MudItem xs="12" sm="6" md="4">
+                                              <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">Marital Status</MudText>
                                             <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.MaritalStatus)</MudText>
+                                            </MudPaper>
                                         </MudItem>
                                         <MudItem xs="12" sm="6" md="4">
+                                              <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">Nationality</MudText>
                                             <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.Nationality)</MudText>
+                                             </MudPaper>
                                         </MudItem>
                                     </MudGrid>
                                     </div>
@@ -217,7 +326,12 @@
 
                                 <!-- Family Information -->
                             <MudExpansionPanels MultiExpansion="true" Class="mb-4">
-                                <MudExpansionPanel  Text="Family Information" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
+                                <MudExpansionPanel 
+                                    Text="Family Information" 
+                                    Icon="@Icons.Material.Filled.MoreHoriz" 
+                                    IconColor="Color.Primary" 
+                                    IsInitiallyExpanded="false"
+                                    DataPanel="family">
                                     <MudDivider Class="mb-3" />
                                     <MudGrid Spacing="2">
                                         <MudItem xs="12" sm="6">
@@ -251,34 +365,44 @@
 
                                 <!-- Health Information -->
                                 <MudExpansionPanels MultiExpansion="true" Class="mb-4">
-                                    <MudExpansionPanel Text="Health Information" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
-                                    <MudDivider Class="mb-3" />
-                                    <MudGrid Spacing="2">
-                                        <MudItem xs="12" sm="4">
-                                            <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Physically Challenged</MudText>
-                                                <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.PhysicallyChallenged)</MudText>
-                                            </MudPaper>
-                                        </MudItem>
-                                        <MudItem xs="12" sm="4">
-                                            <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(142, 84, 233, 0.05); border-radius: 8px;">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Allergies</MudText>
-                                                <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.Allergies)</MudText>
-                                            </MudPaper>
-                                        </MudItem>
-                                        <MudItem xs="12" sm="4">
-                                            <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Medications</MudText>
-                                                <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.Medications)</MudText>
-                                            </MudPaper>
-                                        </MudItem>
-                                    </MudGrid>
-                                        </MudExpansionPanel>
+                                    <MudExpansionPanel 
+                                        Text="Health Information" 
+                                        Icon="@Icons.Material.Filled.MoreHoriz" 
+                                        IconColor="Color.Error" 
+                                        IsInitiallyExpanded="false"
+                                        DataPanel="health">
+                                        <MudDivider Class="mb-3" />
+                                        <MudGrid Spacing="2">
+                                            <MudItem xs="12" sm="4">
+                                                <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Physically Challenged</MudText>
+                                                    <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.PhysicallyChallenged)</MudText>
+                                                </MudPaper>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="4">
+                                                <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(142, 84, 233, 0.05); border-radius: 8px;">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Allergies</MudText>
+                                                    <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.Allergies)</MudText>
+                                                </MudPaper>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="4">
+                                                <MudPaper Elevation="0" Class="pa-3" Style="background-color: rgba(52, 173, 184, 0.05); border-radius: 8px;">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Medications</MudText>
+                                                    <MudText Typo="Typo.body1" Class="font-weight-bold">@RenderString(Employee.Medications)</MudText>
+                                                </MudPaper>
+                                            </MudItem>
+                                        </MudGrid>
+                                    </MudExpansionPanel>
                                 </MudExpansionPanels>
                               
                                                      <!-- Primary Contact -->
                                     <MudExpansionPanels MultiExpansion="true" Class="mb-4">
-                                        <MudExpansionPanel Text="Official Contact" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
+                                        <MudExpansionPanel 
+                                            Text="Official Contact"
+                                                   Icon="@Icons.Material.Filled.MoreHoriz"
+                                                   IconColor="Color.Success" 
+                                            IsInitiallyExpanded="false"
+                                            DataPanel="official">
 
                                             <MudDivider Class="mb-3" />
                                     <MudGrid Spacing="2">
@@ -306,7 +430,12 @@
                               
                             <!-- Permanent Contact -->
                                 <MudExpansionPanels MultiExpansion="true" Class="mb-4">
-                                    <MudExpansionPanel Text="Personal Contact" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
+                                    <MudExpansionPanel 
+                                        Text="Personal Contact"
+                                                   Icon="@Icons.Material.Filled.MoreHoriz"
+                                                   IconColor="Color.Info" 
+                                        IsInitiallyExpanded="false"
+                                        DataPanel="personal">
                             
                                     <MudDivider Class="mb-3" />
                                     <MudGrid Spacing="2">
@@ -336,13 +465,18 @@
 
                                 <!-- Emergency Contacts -->
                                 <MudExpansionPanels MultiExpansion="true" Class="mb-4">
-                                    <MudExpansionPanel Text="Emergency Contacts" Icon="@Icons.Material.Filled.MoreHoriz" IconColor="Color.Error" IsInitiallyExpanded="false">
+                                    <MudExpansionPanel 
+                                        Text="Emergency Contacts"
+                                                   Icon="@Icons.Material.Filled.MoreHoriz"
+                                                   IconColor="Color.Warning" 
+                                        IsInitiallyExpanded="false"
+                                        DataPanel="emergency">
                                         <MudGrid Spacing="3">
                                             <MudItem xs="12" md="6">
                                                 <MudCard Elevation="2" Class="rounded-lg pa-3 mb-2" Style="background: #fcf8f8;">
                                                     <MudCardHeader>
-                                                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="d-flex align-center">
-                                                            <MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Class="mr-2" /> Contact 1
+                                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="d-flex align-center">
+                                                            <MudIcon Icon="@Icons.Material.Filled.ContactEmergency" Class="mr-2" /> Contact 1
                                                         </MudText>
                                                     </MudCardHeader>
                                                     <MudDivider Class="mb-3" />
@@ -384,8 +518,8 @@
                                             <MudItem xs="12" md="6">
                                                 <MudCard Elevation="2" Class="rounded-lg pa-3 mb-2" Style="background: #fcf8f8;">
                                                     <MudCardHeader>
-                                                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="d-flex align-center">
-                                                            <MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Class="mr-2" /> Contact 2
+                                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="d-flex align-center">
+                                                            <MudIcon Icon="@Icons.Material.Filled.ContactEmergency" Class="mr-2" /> Contact 2
                                                         </MudText>
                                                     </MudCardHeader>
                                                     <MudDivider Class="mb-3" />
@@ -820,16 +954,22 @@
     private bool isLoading = true;
     private string? errorMessage;
     private string? UserRole;
-    private string? CurrentEmail; // Email of the logged-in user
-    private string? Employee_Email; // Email of the employee being viewed
+    private string? CurrentEmail;
+    private string? Employee_Email;
     private HomeSidebar sidebar;
     private bool drawerOpen;
+
+    // Cache keys
+    private const string EMPLOYEE_CACHE_KEY = "Employee_{0}";
+    private const string EXPERIENCE_CACHE_KEY = "Experience_{0}";
+    private const string BANKING_CACHE_KEY = "Banking_{0}";
+    private const int CACHE_DURATION_MINUTES = 30;
 
     protected override async Task OnInitializedAsync()
     {
         UserRole = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "userRole");
         CurrentEmail = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
-        Console.WriteLine($"EmployeeProfile OnInitializedAsync: UserRole = {UserRole}, CurrentEmail = {CurrentEmail}"); // DEBUG
+        Console.WriteLine($"EmployeeProfile OnInitializedAsync: UserRole = {UserRole}, CurrentEmail = {CurrentEmail}");
 
         await LoadData();
     }
@@ -841,43 +981,58 @@
         Employee = null;
         Experience = null;
         BankingInfo = null;
-        StateHasChanged(); // Update UI to show loading state
-        Console.WriteLine($"EmployeeProfile LoadData Start: ID = {id}, UserRole = {UserRole}"); // DEBUG
+        StateHasChanged();
 
         try
         {
-            // Fetch Employee Details (always needed)
-            Employee = await EmployeeService.GetEmployeeDetails(id);
+            // Try to get employee details from cache
+            string employeeCacheKey = string.Format(EMPLOYEE_CACHE_KEY, id);
+            if (!MemoryCache.TryGetValue(employeeCacheKey, out Employee))
+            {
+                Employee = await EmployeeService.GetEmployeeDetails(id);
+                if (Employee != null)
+                {
+                    var cacheEntryOptions = new MemoryCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(CACHE_DURATION_MINUTES));
+                    MemoryCache.Set(employeeCacheKey, Employee, cacheEntryOptions);
+                }
+            }
+
             if (Employee == null)
             {
                 errorMessage = "Employee not found.";
-                Console.WriteLine("EmployeeProfile LoadData: Employee not found."); // DEBUG
                 return;
             }
-            Employee_Email = Employee.CurrentEmail; // Store the viewed employee's email
-            Console.WriteLine($"EmployeeProfile LoadData: Employee loaded. Employee_Email = {Employee_Email}"); // DEBUG
-            Console.WriteLine($"EmployeeProfile LoadData: Employee.PassportNo = {Employee.PassportNo}"); // DEBUG
-            Console.WriteLine($"EmployeeProfile LoadData: Employee.PassportFullName = {Employee.PassportFullName}"); // DEBUG
 
-            // Fetch Experience Details (always needed, might be null)
-            Experience = await ExperienceService.GetExperienceDetails(id);
+            Employee_Email = Employee.CurrentEmail;
 
-            // Fetch Banking Info only if authorized
-            bool canViewSensitive = CanViewSensitiveInfo(); // Call it once
-            Console.WriteLine($"EmployeeProfile LoadData: CanViewSensitiveInfo() result = {canViewSensitive}"); // DEBUG
-            if (canViewSensitive)
+            // Try to get experience details from cache
+            string experienceCacheKey = string.Format(EXPERIENCE_CACHE_KEY, id);
+            if (!MemoryCache.TryGetValue(experienceCacheKey, out Experience))
             {
-                Console.WriteLine("EmployeeProfile LoadData: Attempting to fetch BankingInfo."); // DEBUG
-                BankingInfo = await BankingService.GetBankingInfo(id);
-                Console.WriteLine($"EmployeeProfile LoadData: BankingInfo is null = {BankingInfo == null}"); // DEBUG
-                if (BankingInfo != null)
+                Experience = await ExperienceService.GetExperienceDetails(id);
+                if (Experience != null)
                 {
-                    Console.WriteLine($"EmployeeProfile LoadData: BankingInfo.AccountNumber = {BankingInfo.AccountNumber}"); // DEBUG
+                    var cacheEntryOptions = new MemoryCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(CACHE_DURATION_MINUTES));
+                    MemoryCache.Set(experienceCacheKey, Experience, cacheEntryOptions);
                 }
             }
-            else
+
+            // Try to get banking info from cache if authorized
+            if (CanViewSensitiveInfo())
             {
-                Console.WriteLine("EmployeeProfile LoadData: Not authorized to view sensitive info, BankingInfo will not be fetched."); // DEBUG
+                string bankingCacheKey = string.Format(BANKING_CACHE_KEY, id);
+                if (!MemoryCache.TryGetValue(bankingCacheKey, out BankingInfo))
+                {
+                    BankingInfo = await BankingService.GetBankingInfo(id);
+                    if (BankingInfo != null)
+                    {
+                        var cacheEntryOptions = new MemoryCacheEntryOptions()
+                            .SetSlidingExpiration(TimeSpan.FromMinutes(CACHE_DURATION_MINUTES));
+                        MemoryCache.Set(bankingCacheKey, BankingInfo, cacheEntryOptions);
+                    }
+                }
             }
         }
         catch (Exception ex)
@@ -889,7 +1044,7 @@
         finally
         {
             isLoading = false;
-            StateHasChanged(); // Update UI with data or error
+            StateHasChanged();
         }
     }
 
@@ -925,5 +1080,17 @@
     {
         // Using "d" for short date pattern based on current culture
         return date.HasValue ? date.Value.ToString("d", CultureInfo.CurrentCulture) : defaultValue; 
+    }
+
+    // Method to clear cache for a specific employee
+    private void ClearEmployeeCache(string employeeId)
+    {
+        string employeeCacheKey = string.Format(EMPLOYEE_CACHE_KEY, employeeId);
+        string experienceCacheKey = string.Format(EXPERIENCE_CACHE_KEY, employeeId);
+        string bankingCacheKey = string.Format(BANKING_CACHE_KEY, employeeId);
+
+        MemoryCache.Remove(employeeCacheKey);
+        MemoryCache.Remove(experienceCacheKey);
+        MemoryCache.Remove(bankingCacheKey);
     }
 }

@@ -59,6 +59,7 @@ namespace WiseHR.Models
 
         // PAN File Properties
         public string PanFileName { get; set; }
+        [Required(ErrorMessage = "PAN document is required")]
 
         public string? PanBase64Content { get; set; }
         public string? PanContentType { get; set; }
