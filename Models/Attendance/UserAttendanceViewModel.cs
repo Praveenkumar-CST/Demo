@@ -25,9 +25,10 @@
 
         public class AbsencePeriod
         {
-            public DateTime StartTime { get; set; }
-            public DateTime EndTime { get; set; }
-            public string? Reason { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string? Reason { get; set; }
+
         }
 
         public class AttendanceDay
@@ -35,10 +36,10 @@
             public DateTime Date { get; set; }
             public List<AttendanceSession> Sessions { get; set; } = new();
             public List<AbsencePeriod> AbsencePeriods { get; set; } = new();
-            public double TotalHours => Math.Round(Sessions.Sum(s => s.Hours), 2);
+            public double TotalHours { get; set; }
             public bool IsWeeklyOff { get; set; }
-        public string Name { get; set; } = "";
-        public string UserId { get; set; } = "";
+            public string Name { get; set; } = "";
+            public string UserId { get; set; } = "";
     }
 
         public class AttendanceMonth

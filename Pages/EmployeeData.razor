@@ -111,16 +111,15 @@ else if (employees != null && employees.Count > 0)
                     <td>@emp.MaritalStatus</td>
                     <td>@emp.BloodGroup</td>
                     <td>@emp.Nationality</td>
-                    <td>@emp.DateOfBirth.HasValue ? emp.DateOfBirth.Value.ToString("yyyy-MM-dd")</td>
+                    <td>@(emp.DateOfBirth.HasValue ? emp.DateOfBirth.Value.ToString("yyyy-MM-dd") : "N/A")</td>
                     <td>@emp.Sons</td>
                     <td>@emp.Daughters</td>
                     <td>@emp.TypeOfEmployment</td>
                     <td>@emp.Level</td>
                     <td>@emp.Designation</td>
                     <td>@emp.JoiningLocation</td>
-                
-                    <td>@(emp.DateOfJoining.HasValue ? emp.DateOfJoining.Value.ToString("yyyy-MM-dd") : "Not Set")</td>
-                            
+
+                    <td>@(emp.DateOfJoining.HasValue ? emp.DateOfJoining.Value.ToString("yyyy-MM-dd") : "N/A")</td>
                     <td>@emp.Allergies</td>
                     <td>@emp.Medications</td>
                     <td>@emp.PhysicallyChallenged</td>

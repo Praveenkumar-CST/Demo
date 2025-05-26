@@ -10,9 +10,16 @@
 
 <h3>Edit Personal Details</h3>
 
-@if (employeeDetails == null)
+@if (isLoading)
 {
-    <p>Loading employee data...</p>
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <MudProgressCircular Color="Color.Info" Indeterminate="true" />
+        <MudText Color="Color.Info" Align="Align.Center">Loading...</MudText>
+    </div>
+}
+else if (employeeDetails == null)
+{
+    <MudText Color="Color.Error">Failed to load employee data.</MudText>
 }
 else
 {
@@ -540,6 +547,7 @@ else
     public EmployeeDetails employeeDetails { get; set; } = new EmployeeDetails();
     [Parameter]
     public EmployeeDetails InitialData { get; set; }
+    private bool isLoading = true;
 
     private bool IsSameAsCurrentAddress { get; set; }
 
@@ -559,12 +567,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;
+
          countries = await CountryService.GetCountriesAsync();
 
         if (!string.IsNullOrEmpty(EmployeeId))
         {
             employeeDetails = await EmployeeService.GetEmployeeDetails(EmployeeId);
         }
+        isLoading = false;
     }
     private async Task HandlePhotoFileChange(InputFileChangeEventArgs e)
     {

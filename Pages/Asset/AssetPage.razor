@@ -1,0 +1,492 @@
+﻿@page "/asset"
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject AssetStateService AssetService
+@layout HomeLayout
+@using WiseHR.Models
+@using System.Text.Json
+
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Asset Dashboard</h1>
+        <button class="btn add-asset-btn" @onclick="NavigateToAddAsset">+ Add Asset</button>
+    </div>
+
+    <div class="statistics-bar">
+        <div class="company-logo">
+            <div class="logo-placeholder">
+                <img src="images/logo1.png" alt="company" />
+            </div>
+        </div>
+
+        <div class="stats-wrapper">
+            <div class="stat-item">
+                <span class="stat-value">@TotalAssets</span>
+                <span class="stat-label">Total Assets</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">@InStock</span>
+                <span class="stat-label">In Stock</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">@OutOfStock</span>
+                <span class="stat-label">Out of Stock</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="category-sections">
+        <div class="category-section">
+            <div class="category-header">
+                <h2>Electronics</h2>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>NAME</th>
+                            <th>ASSET TAG PREFIX</th>
+                            <th>QUANTITY</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ElectronicsItems == null)
+                        {
+                            <tr><td colspan="4">Loading...</td></tr>
+                        }
+                        else if (!ElectronicsItems.Any())
+                        {
+                            <tr><td colspan="4">No Electronics Assets</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in ElectronicsItems)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td>@item.AssetTagPrefix</td>
+                                    <td>@item.Count</td>
+                                    <td>
+                                        <a href="/assets/@item.Id" class="view-link">View Details</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="category-section">
+            <div class="category-header">
+                <h2>Non-Electronics</h2>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>NAME</th>
+                            <th>ASSET TAG PREFIX</th>
+                            <th>QUANTITY</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (NonElectronicsItems == null)
+                        {
+                            <tr><td colspan="4">Loading...</td></tr>
+                        }
+                        else if (!NonElectronicsItems.Any())
+                        {
+                            <tr><td colspan="4">No Non-Electronics Assets</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in NonElectronicsItems)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td>@item.AssetTagPrefix</td>
+                                    <td>@item.Count</td>
+                                    <td>
+                                        <a href="/assets/@item.Id" class="view-link">View Details</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3">@errorMessage</div>
+    }
+</div>
+
+<style>
+    :root {
+        --fb-blue: #1877F2;
+        --fb-blue-dark: #166FE5;
+        --fb-blue-light: #E7F3FF;
+        --fb-blue-lighter: #F0F6FF;
+        --fb-blue-hover: #1564C0;
+        --fb-grey: #E4E6EB;
+        --fb-text-dark: #050505;
+        --fb-text-secondary: #65676B;
+        --fb-border: #DADDE1;
+    }
+
+    body, html {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f4f6f9;
+        height: 100%;
+    }
+
+    .dashboard-container {
+        position: relative;
+        min-height: 100vh;
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 15px rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--fb-border);
+    }
+
+        .dashboard-header h1 {
+            color: var(--fb-text-dark);
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+    .add-asset-btn {
+        background-color: var(--fb-blue);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+        .add-asset-btn:hover {
+            background-color: var(--fb-blue-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+        }
+
+    .statistics-bar {
+        display: flex;
+        background-color: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border: 1px solid var(--fb-border);
+    }
+
+        .statistics-bar:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+        }
+
+    .company-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 120px;
+        height: 120px;
+        background-color: var(--fb-blue-lighter);
+        border-radius: 8px;
+        margin-right: 20px;
+        border: 1px dashed var(--fb-blue);
+        overflow: hidden;
+    }
+
+    .logo-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--fb-blue);
+        font-weight: 600;
+        font-size: 16px;
+        width: 100%;
+        height: 100%;
+    }
+
+        .logo-placeholder img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+    .stats-wrapper {
+        display: flex;
+        flex: 1;
+        justify-content: space-around;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 15px;
+        transition: all 0.3s ease;
+    }
+
+        .stat-item:hover {
+            transform: scale(1.05);
+        }
+
+    .stat-value {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--fb-blue);
+        margin-bottom: 8px;
+    }
+
+    .stat-label {
+        color: var(--fb-text-secondary);
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .category-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .category-section {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--fb-border);
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+
+        .category-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+    .category-header {
+        background-color: var(--fb-blue);
+        padding: 14px 18px;
+    }
+
+        .category-header h2 {
+            margin: 0;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table th {
+            background-color: var(--fb-blue-lighter);
+            padding: 14px 18px;
+            text-align: left;
+            color: var(--fb-blue-dark);
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid var(--fb-border);
+        }
+
+        .table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--fb-border);
+            color: var(--fb-text-dark);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tr:hover td {
+            background-color: var(--fb-blue-lighter);
+        }
+
+    .view-link {
+        text-decoration: none;
+        color: var(--fb-blue);
+        font-weight: 500;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        padding: 6px 12px;
+        border-radius: 4px;
+        background-color: transparent;
+    }
+
+        .view-link:hover {
+            background-color: var(--fb-blue);
+            color: white;
+            text-decoration: none;
+        }
+
+    @@media (min-width: 768px) {
+        .category-sections {
+            flex-direction: row;
+        }
+
+        .category-section {
+            flex: 1;
+        }
+    }
+
+    @@media (max-width: 767px) {
+        .statistics-bar {
+            flex-direction: column;
+        }
+
+        .company-logo {
+            margin-right: 0;
+            margin-bottom: 20px;
+            width: 100%;
+            height: 100px;
+        }
+
+        .stats-wrapper {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stat-item {
+            padding: 10px 0;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .stat-value {
+            margin-bottom: 0;
+            margin-right: 10px;
+        }
+
+        .dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .add-asset-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+@code {
+    private int TotalAssets = 0;
+    private int OutOfStock = 0;
+    private int InStock => TotalAssets - OutOfStock;
+    private string logoPath = "logo1.png";
+    private List<AssetItem> ElectronicsItems = new();
+    private List<AssetItem> NonElectronicsItems = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            var assets = await AssetService.GetAssetsAsync();
+
+            if (assets.Any())
+            {
+                ElectronicsItems = assets
+                    .Where(a => a.Category.Equals("Electronics", StringComparison.OrdinalIgnoreCase))
+                    .Select(a => new AssetItem
+                        {
+                            Id = a.Id,
+                            Name = a.Name,
+                            AssetTagPrefix = a.AssetTagPrefix,
+                            Count = a.Instances?.Count ?? 0
+                        })
+                    .OrderBy(a => a.Name)
+                    .ToList();
+
+                NonElectronicsItems = assets
+                    .Where(a => a.Category.Equals("Non-Electronics", StringComparison.OrdinalIgnoreCase))
+                    .Select(a => new AssetItem
+                        {
+                            Id = a.Id,
+                            Name = a.Name,
+                            AssetTagPrefix = a.AssetTagPrefix,
+                            Count = a.Instances?.Count ?? 0
+                        })
+                    .OrderBy(a => a.Name)
+                    .ToList();
+
+                TotalAssets = assets.Sum(a => a.Instances?.Count ?? 0);
+                OutOfStock = assets.Sum(a => a.Instances?.Count(i => i.Status != "Available") ?? 0);
+            }
+            else
+            {
+                errorMessage = "No assets found.";
+                ElectronicsItems = new();
+                NonElectronicsItems = new();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading assets: {ex.Message}";
+            ElectronicsItems = new();
+            NonElectronicsItems = new();
+        }
+    }
+
+    private void NavigateToAddAsset()
+    {
+        Navigation.NavigateTo("/add-asset");
+    }
+
+    public class AssetItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string AssetTagPrefix { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
+}
