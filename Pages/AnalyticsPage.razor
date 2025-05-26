@@ -1132,7 +1132,323 @@
         </MudItem>
     </MudGrid>
 </MudContainer>
+<style>
+    .mud-grid-spacing-xs-3 > .mud-grid-item {
+    padding-top:1px;
+    padding-left:1px;
+    padding-right:8px;
+    padding-bottom:8px;
+    }
 
+    .light-dashboard-grid {
+    margin: 0rem;
+    }
+
+    .light-card {
+    border-radius: 12px !important;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0;
+    height: 140px;
+    min-height: 140px;
+    }
+
+    .light-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .employees-light-card {
+    border-left: 4px solid #3b82f6;
+    }
+
+    .employees-light-card:hover {
+    border-left-color: #1d4ed8;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15) !important;
+    }
+
+    .roles-light-card {
+    border-left: 4px solid #8b5cf6;
+    }
+
+    .roles-light-card:hover {
+    border-left-color: #7c3aed;
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.15) !important;
+    }
+
+    .health-light-card {
+    border-left: 4px solid #ef4444;
+    }
+
+    .health-light-card:hover {
+    border-left-color: #dc2626;
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15) !important;
+    }
+
+    .light-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    }
+
+    .light-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.1rem;
+    }
+
+    .light-icon {
+    font-size: 1.5rem !important;
+    padding: 0.5rem;
+    border-radius: 8px;
+    height: 1.5em;
+    width: 1.5em;
+    }
+
+    .employees-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    height: 1.5em;
+    width: 1.5em;
+    }
+
+    .roles-icon {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+    height: 1.5em;
+    width: 1.5em;
+    }
+
+    .health-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    height: 1.5em;
+    width: 1.5em;
+    }
+
+    .simple-status {
+    display: flex;
+    align-items: center;
+    }
+
+    .status-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    }
+
+    .employees-badge {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+    }
+
+    .roles-badge {
+    background: rgba(251, 191, 36, 0.1);
+    color: #d97706;
+    }
+
+    .health-badge {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    }
+
+    .light-title {
+    margin-left:25% !important;
+    margin-bottom: 0.3rem !important;
+    margin-top:0.4rem;
+    color: #374151;
+    font-weight: 700 !important;
+    font-size: 1.2rem !important;
+    }
+
+    .light-metrics {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    align-items: center;
+    }
+
+    .primary-num {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1;
+    }
+
+    .divider-light {
+    font-size: 1.25rem;
+    color: #9ca3af;
+    font-weight: 500;
+    }
+
+    .secondary-num {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #6b7280;
+    }
+
+    /* Clean Media Queries */
+    @@media (max-width: 960px) {
+    .light-card {
+    padding: 1.25rem;
+    height: 130px;
+    min-height: 130px;
+    }
+
+    .primary-num {
+    font-size: 1.75rem;
+    }
+
+    .secondary-num {
+    font-size: 1.1rem;
+    }
+    }
+
+    @@media (max-width: 600px) {
+    .light-card {
+    padding: 1rem;
+    height: 120px;
+    min-height: 120px;
+    }
+
+    .primary-num {
+    font-size: 1.5rem;
+    }
+
+    .secondary-num {
+    font-size: 1rem;
+    }
+
+    .light-icon {
+    font-size: 1.25rem !important;
+    padding: 0.4rem;
+    }
+    }
+
+    @@media (max-width: 480px) {
+    .light-metrics {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    }
+
+    .divider-light {
+    display: none;
+    }
+
+    .light-header {
+    margin-bottom: 0.75rem;
+    }
+
+    .light-card {
+    height: 110px;
+    min-height: 110px;
+    }
+    }
+    .mud-chip-filled.mud-chip-color-primary {
+    color: var(--mud-palette-primary-text);
+    --mud-ripple-color: var(--mud-palette-primary-text) !important;
+    background-color: rgb(184 179 230);
+    }
+
+    ::deep .analytics-container {
+    padding: 16px;
+    margin: 0;
+    width: calc(100% - 60px);
+    transition: all 0.3s ease;
+    }
+
+    ::deep .mud-grid {
+    margin: 0;
+    width: 100%;
+    }
+
+    ::deep .mud-paper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    }
+
+    ::deep .mud-table-container {
+    flex: 1;
+    overflow: auto;
+    }
+
+    ::deep .mud-table {
+    height: 100%;
+    }
+
+    ::deep .mud-table-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--mud-palette-background);
+    }
+
+    /* Responsive styles */
+    @@media (min-width: 1280px) {
+    ::deep .analytics-container {
+    left: 240px;
+    width: calc(100% - 240px);
+    }
+    }
+
+    @@media (min-width: 600px) and (max-width: 1279px) {
+    ::deep .analytics-container {
+    left: 60px;
+    width: calc(100% - 60px);
+    }
+    }
+
+    @@media (max-width: 599px) {
+    ::deep .analytics-container {
+    left: 0;
+    width: 100%;
+    padding: 8px;
+    }
+
+    ::deep .mud-grid {
+    margin: 0;
+    }
+
+    ::deep .mud-item {
+    padding: 4px;
+    }
+
+    ::deep .mud-paper {
+    padding: 8px !important;
+    }
+
+    ::deep .mud-text {
+    font-size: 0.875rem;
+    }
+
+    ::deep .mud-table {
+    font-size: 0.875rem;
+    }
+    }
+
+    /* Additional responsive adjustments */
+    @@media (max-width: 960px) {
+    ::deep .mud-grid {
+    margin: 0;
+    }
+
+    ::deep .mud-item {
+    padding: 4px;
+    }
+
+    ::deep .mud-paper {
+    padding: 8px !important;
+    }
+    }
+</style>
 
 @code {
 
