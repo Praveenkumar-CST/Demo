@@ -1,5 +1,5 @@
-﻿using System.Net.Http.Json;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Caching.Memory;
+using System.Net.Http.Json;
 using WiseHR.Models;
 
 namespace WiseHR.Services
@@ -7,63 +7,59 @@ namespace WiseHR.Services
     public class UserService : IUserService
     {
         private readonly HttpClient _httpClient;
+        private readonly IMemoryCache _cache;
 
-        public UserService(HttpClient httpClient)
+        public UserService(HttpClient httpClient, IMemoryCache cache)
         {
             _httpClient = httpClient;
+            _cache = cache;
         }
 
         public async Task<List<User>> GetUsersAsync()
         {
-            try
+            return await _cache.GetOrCreateAsync("AllUsers", async entry =>
             {
-                var users = await _httpClient.GetFromJsonAsync<List<User>>("api/users");
-                return users ?? new List<User>();
-            }
-            catch (Exception ex)
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await _httpClient.GetFromJsonAsync<List<User>>("api/users") ?? new();
+            });
+        }
+
+        public async Task<List<User>> GetUsersByRoleAsync(string role)
+        {
+            return await _cache.GetOrCreateAsync($"UsersByRole_{role}", async entry =>
             {
-                throw new Exception($"Error fetching users: {ex.Message}", ex);
-            }
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                var response = await _httpClient.GetAsync($"api/users/by-role/{role}");
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<List<User>>() ?? new();
+            });
         }
 
         public async Task UpdateUserRoleAsync(string id, string role)
         {
-            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(role))
-                throw new ArgumentException("ID and role cannot be null or empty");
+            var response = await _httpClient.PutAsJsonAsync($"api/users/{id}/role", role);
+            response.EnsureSuccessStatusCode();
 
-            try
-            {
-                var response = await _httpClient.PutAsJsonAsync($"api/users/{id}/role", role);
-                response.EnsureSuccessStatusCode();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error updating role: {ex.Message}", ex);
-            }
+            _cache.Remove("AllUsers");
+            _cache.Remove($"UsersByRole_{role}");
         }
 
         public async Task DeleteUserAsync(string id)
         {
-            if (string.IsNullOrEmpty(id))
-                throw new ArgumentException("ID cannot be null or empty");
+            var response = await _httpClient.DeleteAsync($"api/users/{id}");
+            response.EnsureSuccessStatusCode();
 
-            try
-            {
-                var response = await _httpClient.DeleteAsync($"api/users/{id}");
-                response.EnsureSuccessStatusCode();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error deleting user: {ex.Message}", ex);
-            }
+            _cache.Remove("AllUsers");
         }
+
         public async Task<User> CreateUserAsync(string email, string password)
         {
             var request = new CreateUserRequest { Email = email, Password = password };
             var response = await _httpClient.PostAsJsonAsync("api/Users", request);
             response.EnsureSuccessStatusCode();
-            var user = await response.Content.ReadFromJsonAsync<User>();
-            return user ?? throw new Exception("Failed to deserialize created user.");
+
+            _cache.Remove("AllUsers");
+            return await response.Content.ReadFromJsonAsync<User>() ?? throw new Exception("Failed to deserialize created user.");
         }
     }
 }

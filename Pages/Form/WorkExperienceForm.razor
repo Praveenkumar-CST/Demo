@@ -5,6 +5,7 @@
 @using System.Text.Json;
 @using Components.sidebar
 @layout HomeLayout
+@using System.ComponentModel.DataAnnotations;
 
 <MudContainer MaxWidth="MaxWidth.Medium">
     <MudCard Elevation="2" Class="p-2">
@@ -82,23 +83,38 @@
                             <div class="row g-1">
                                 <div class="col-md-3">
                                     <label>Employer</label>
-                                    <InputText class="form-control" @bind-Value="work.Employer" />
+                                    <InputText class="form-control" @bind-Value="work.Employer"
+                                               @onblur="@(() => ValidateField(nameof(work.Employer)))"
+                                               Error="@HasValidationError(nameof(work.Employer))"
+                                               ErrorText="@GetValidationError(nameof(work.Employer))" />
                                 </div>
                                 <div class="col-md-3">
                                     <label>Location</label>
-                                    <InputText class="form-control" @bind-Value="work.Location" />
+                                    <InputText class="form-control" @bind-Value="work.Location"
+                                               @onblur="@(() => ValidateField(nameof(work.Location)))"
+                                               Error="@HasValidationError(nameof(work.Location))"
+                                               ErrorText="@GetValidationError(nameof(work.Location))" />
                                 </div>
                                 <div class="col-md-2">
                                     <label>Join Date</label>
-                                    <InputDate class="form-control" @bind-Value="work.DateOfJoining" />
+                                    <InputDate class="form-control" @bind-Value="work.DateOfJoining"
+                                               @onblur="@(() => ValidateField(nameof(work.DateOfJoining)))"
+                                               Error="@HasValidationError(nameof(work.DateOfJoining))"
+                                               ErrorText="@GetValidationError(nameof(work.DateOfJoining))" />
                                 </div>
                                 <div class="col-md-2">
                                     <label>Leave Date</label>
-                                    <InputDate class="form-control" @bind-Value="work.DateOfLeaving" />
+                                    <InputDate class="form-control" @bind-Value="work.DateOfLeaving"
+                                               @onblur="@(() => ValidateField(nameof(work.DateOfLeaving)))"
+                                               Error="@HasValidationError(nameof(work.DateOfLeaving))"
+                                               ErrorText="@GetValidationError(nameof(work.DateOfLeaving))" />
                                 </div>
                                 <div class="col-md-3">
                                     <label>Designation</label>
-                                    <InputText class="form-control" @bind-Value="work.Designation" />
+                                    <InputText class="form-control" @bind-Value="work.Designation"
+                                               @onblur="@(() => ValidateField(nameof(work.Designation)))"
+                                               Error="@HasValidationError(nameof(work.Designation))"
+                                               ErrorText="@GetValidationError(nameof(work.Designation))" />
                                 </div>
                                 <div class="col-1 d-flex align-items-end">
                                     <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
@@ -133,6 +149,8 @@
     [Parameter] public EventCallback<Experience> OnSubmit { get; set; }
     [Parameter] public EventCallback OnBack { get; set; }
     [Parameter] public Experience InitialData { get; set; }
+    private EditContext EditContext;
+    private Dictionary<string, List<string>> validationErrors = new Dictionary<string, List<string>>();
 
     protected override void OnInitialized()
     {
@@ -141,6 +159,41 @@
         {
             YearList.Add(year);
         }
+    }
+    // Validate individual field on blur
+    private void ValidateField(string propertyName)
+    {
+        var validationContext = new ValidationContext(experience) { MemberName = propertyName };
+        var validationResults = new List<ValidationResult>();
+        var property = experience.GetType().GetProperty(propertyName);
+        var value = property?.GetValue(experience);
+
+        // Clear previous errors for this field
+        validationErrors.Remove(propertyName);
+
+        // Validate the specific property
+        var isValid = Validator.TryValidateProperty(value, validationContext, validationResults);
+
+        if (!isValid)
+        {
+            validationErrors[propertyName] = validationResults.Select(r => r.ErrorMessage).ToList();
+        }
+
+        StateHasChanged();
+    }
+
+    private bool HasValidationError(string propertyName)
+    {
+        return validationErrors.ContainsKey(propertyName) && validationErrors[propertyName].Any();
+    }
+
+    private string GetValidationError(string propertyName)
+    {
+        if (validationErrors.ContainsKey(propertyName) && validationErrors[propertyName].Any())
+        {
+            return validationErrors[propertyName].First();
+        }
+        return string.Empty;
     }
 
     protected async override Task OnInitializedAsync()
@@ -168,6 +221,7 @@
             await JSRuntime.InvokeVoidAsync("alert", "Please add at least one education qualification before submitting the form.");
             return;
         }
+        ValidateAllFields();
         var validWorkList = workList
         .Where(w => !string.IsNullOrWhiteSpace(w.Employer)
                  || !string.IsNullOrWhiteSpace(w.Designation)
@@ -187,6 +241,29 @@
         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "experienceDetails", json);
 
         NavigationManager.NavigateTo("/confirmation");
+    }
+
+    private void ValidateAllFields()
+    {
+        validationErrors.Clear();
+        var validationContext = new ValidationContext(experience);
+        var validationResults = new List<ValidationResult>();
+
+        Validator.TryValidateObject(experience, validationContext, validationResults, true);
+
+        foreach (var result in validationResults)
+        {
+            foreach (var memberName in result.MemberNames)
+            {
+                if (!validationErrors.ContainsKey(memberName))
+                {
+                    validationErrors[memberName] = new List<string>();
+                }
+                validationErrors[memberName].Add(result.ErrorMessage);
+            }
+        }
+
+        StateHasChanged();
     }
 
     private void AddEducation()

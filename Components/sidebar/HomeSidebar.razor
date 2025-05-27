@@ -59,14 +59,19 @@
         background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
         border-right: 1px solid #e0e6ff;
         transition: all 0.3s ease;
+       
     }
 
     .mud-drawer.open {
         width: 260px;
+            top: 67px;
+            position:fixed;
     }
 
     .mud-drawer.mini {
         width: 70px;
+            top: 67px;
+            position:fixed;
     }
 
     .mud-primary-text {
@@ -124,6 +129,7 @@
         transition: opacity 0.3s ease;
     }
 
+
     .sidebar-footer {
         position: absolute;
         bottom: 0;
@@ -132,10 +138,15 @@
         border-top: 1px solid #e0e6ff;
     }
 
+    .mud-toolbar-gutters {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
     .sidebar-toggle-button {
         position: absolute;
         bottom: 16px;
-        right: 16px;
+        right: 5px;
         z-index: 10;
     }
        .sidebar-navlink-active {
@@ -347,14 +358,16 @@
             "benefits" => Icons.Material.Filled.HealthAndSafety,
             "settings" => Icons.Material.Filled.Settings,
             "analytics"  => Icons.Material.Filled.BarChart,
-            "Holiday Calendar"  => Icons.Material.Filled.CalendarMonth,
+            "Holiday Calendar"  => Icons.Material.Filled.Festival,
+            "Attendance"  => Icons.Material.Filled.CalendarMonth,
             "messages" or "chat" => Icons.Material.Filled.Chat,
             "notifications" => Icons.Material.Filled.Notifications,
             "Organizational Hierarchy" => Icons.Material.Filled.AdminPanelSettings,
             "logout" => Icons.Material.Filled.Logout,
-            "help" => Icons.Material.Filled.Help,
+            "Assign Mentee" => Icons.Material.Filled.Add,
             "about" => Icons.Material.Filled.Info,
-            _ => Icons.Material.Filled.ChevronRight  // Default icon
+            "Asset" => Icons.Material.Filled.Inventory,
+            _ => Icons.Material.Filled.ChevronRight,  // Default icon
         };
     }
 }

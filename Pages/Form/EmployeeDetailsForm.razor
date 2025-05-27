@@ -5,11 +5,11 @@
 @layout HomeLayout
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
-
+@using System.ComponentModel.DataAnnotations;
 @inject NavigationManager NavigationManager
 @using System.Text.Json;
 @inject CountryService CountryService
-    <MudContainer MaxWidth="MaxWidth.Medium">
+    <MudContainer MaxWidth="MaxWidth.Large">
         <MudCard Elevation="2" Class="p-3">
              <MudCardHeader>
                 <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
@@ -23,7 +23,7 @@
                     @* <ValidationSummary /> *@
 
                     <!-- Personal Information -->
-                <MudExpansionPanel Typo="Typo.h5" Text="Personal Information"
+                <MudExpansionPanel Typo="Typo.h5" Text="Personal Information*"
                                    Icon="@Icons.Material.Filled.Person"
                                    Class="section-tab"
                                    Style="margin-top: 16px;">
@@ -34,38 +34,67 @@
                         <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID"
                                       Required="true" Margin="Margin.Dense" Disabled="true" />
                     </MudItem>
+          
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="First Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FirstName" Required="true" Margin="Margin.Dense" />
-                            <ValidationMessage For="@(() => employeeDetails.FirstName)" />
+                            <MudTextField Label="First Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FirstName" Required="true" Margin="Margin.Dense"
+                                                @onblur="@(() => ValidateField(nameof(employeeDetails.FirstName)))"
+                                                Error="@HasValidationError(nameof(employeeDetails.FirstName))"
+                                                ErrorText="@GetValidationError(nameof(employeeDetails.FirstName))"/>
+                            @* <ValidationMessage For="@(() => employeeDetails.FirstName)" /> *@
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Middle Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MiddleName" Margin="Margin.Dense" />
-                            <ValidationMessage For="@(() => employeeDetails.MiddleName)" />
+                            <MudTextField Label="Middle Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MiddleName" Margin="Margin.Dense" 
+                                                       @onblur="@(() => ValidateField(nameof(employeeDetails.MiddleName)))"
+                                                       Error="@HasValidationError(nameof(employeeDetails.MiddleName))"
+                                                       ErrorText="@GetValidationError(nameof(employeeDetails.MiddleName))" />
+                                                                                   @* <ValidationMessage For="@(() => employeeDetails.MiddleName)"/> *@
+
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Last Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.LastName" Required="true" Margin="Margin.Dense" />
-                            <ValidationMessage For="@(() => employeeDetails.LastName)" />
+                            <MudTextField Label="Last Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.LastName" Required="true" Margin="Margin.Dense" 
+                                                       @onblur="@(() => ValidateField(nameof(employeeDetails.LastName)))"
+                                                       Error="@HasValidationError(nameof(employeeDetails.LastName))"
+                                                       ErrorText="@GetValidationError(nameof(employeeDetails.LastName))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.LastName)" /> *@
+
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Father's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FatherName" Required="true" Margin="Margin.Dense" />
-                            <ValidationMessage For="@(() => employeeDetails.FatherName)" />
+                            <MudTextField Label="Father's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FatherName" Required="true" Margin="Margin.Dense" 
+                                                       @onblur="@(() => ValidateField(nameof(employeeDetails.FatherName)))"
+                                                       Error="@HasValidationError(nameof(employeeDetails.FatherName))"
+                                                       ErrorText="@GetValidationError(nameof(employeeDetails.FatherName))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.FatherName)" /> *@
+
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Mother's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MotherName" Required="true" Margin="Margin.Dense" />
-                            <ValidationMessage For="@(() => employeeDetails.MotherName)" />
+                            <MudTextField Label="Mother's Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.MotherName" Required="true" Margin="Margin.Dense"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.MotherName)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.MotherName))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.MotherName))" />
+                            @* <ValidationMessage For="@(() => employeeDetails.MotherName)" /> *@
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudDatePicker Label="Date of Birth" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.DateOfBirth" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfBirth)" />
+                            <MudDatePicker Label="Date of Birth" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.DateOfBirth" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfBirth)"
+                                                   @onblur="@(() => ValidateField(nameof(employeeDetails.DateOfBirth)))"
+                                                   Error="@HasValidationError(nameof(employeeDetails.DateOfBirth))"
+                                                   ErrorText="@GetValidationError(nameof(employeeDetails.DateOfBirth))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.DateOfBirth)" /> *@
+
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Gender" Required="true">
+                            <MudSelect T="string" Label="Gender" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Gender" Required="true"
+                                               @onblur="@(() => ValidateField(nameof(employeeDetails.Gender)))"
+                                               Error="@HasValidationError(nameof(employeeDetails.Gender))"
+                                               ErrorText="@GetValidationError(nameof(employeeDetails.Gender))" >
                                 <MudSelectItem Value="@("Male")">Male</MudSelectItem>
                                 <MudSelectItem Value="@("Female")">Female</MudSelectItem>
                                 <MudSelectItem Value="@("Other")">Other</MudSelectItem>
                                 <MudSelectItem Value="@("Pefer not to mention")">Perfer not to mention</MudSelectItem>
                             </MudSelect>
+                                                        <ValidationMessage For="@(() => employeeDetails.Gender)" />
+
                         </MudItem>
                     </MudGrid>
                     @* break *@
@@ -74,10 +103,16 @@
                     <MudGrid>
 
                         <MudItem xs="12" sm="4" md="3">
-                            <MudSelect T="string" Label="Physically Challenged" Margin="Margin.Dense" Variant="Variant.Outlined" @bind-Value="employeeDetails.PhysicallyChallenged" Required="true">
+                            <MudSelect T="string" Label="Physically Challenged" Margin="Margin.Dense" Variant="Variant.Outlined" @bind-Value="employeeDetails.PhysicallyChallenged" Required="true"
+                             @onblur="@(() => ValidateField(nameof(employeeDetails.PhysicallyChallenged)))"
+                                               Error="@HasValidationError(nameof(employeeDetails.PhysicallyChallenged))"
+                                               ErrorText="@GetValidationError(nameof(employeeDetails.PhysicallyChallenged))" >
                                 <MudSelectItem Value="@("Yes")">Yes</MudSelectItem>
                                 <MudSelectItem Value="@("No")">No</MudSelectItem>
+
                             </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.PhysicallyChallenged)" />
+
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Allergies" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Allergies" />
@@ -88,26 +123,40 @@
                             <ValidationMessage For="@(() => employeeDetails.Medications)" />
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudSelect T="string" Label="Marital Status" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.MaritalStatus" Required="true">
-                                <MudSelectItem Value="@("Single")">Single</MudSelectItem>
+                            <MudSelect T="string" Label="Marital Status" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.MaritalStatus" Required="true"
+                                               @onblur="@(() => ValidateField(nameof(employeeDetails.MaritalStatus)))"
+                                               Error="@HasValidationError(nameof(employeeDetails.MaritalStatus))"
+                                               ErrorText="@GetValidationError(nameof(employeeDetails.MaritalStatus))">
                                 <MudSelectItem Value="@("Married")">Married</MudSelectItem>
+                                <MudSelectItem Value="@("UnMarried")">UnMarried</MudSelectItem>
                                 <MudSelectItem Value="@("Divorced")">Divorced</MudSelectItem>
                                 <MudSelectItem Value="@("Widowed")">Widowed</MudSelectItem>
                             </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.MaritalStatus)" />
+
                         </MudItem>
-                        @if (employeeDetails.MaritalStatus != "Single")
+                                @if (employeeDetails.MaritalStatus != "UnMarried")
                         {
                             <MudItem xs="12" sm="4" md="3">
-                                <MudTextField Label="No of Sons" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Sons" />
-                                <ValidationMessage For="@(() => employeeDetails.Sons)" />
+                                <MudTextField Label="No of Sons" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Sons" 
+                                 @onblur="@(() => ValidateField(nameof(employeeDetails.Sons)))"
+                                                      Error="@HasValidationError(nameof(employeeDetails.Sons))"
+                                                      ErrorText="@GetValidationError(nameof(employeeDetails.Sons))" />
+                                @* <ValidationMessage For="@(() => employeeDetails.Sons)" /> *@
                             </MudItem>
                             <MudItem xs="12" sm="4" md="3">
-                                <MudTextField Label="No of Daughters" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Daughters" />
-                                <ValidationMessage For="@(() => employeeDetails.Daughters)" />
+                                <MudTextField Label="No of Daughters" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Daughters"
+                                                      @onblur="@(() => ValidateField(nameof(employeeDetails.Daughters)))"
+                                                      Error="@HasValidationError(nameof(employeeDetails.Daughters))"
+                                                      ErrorText="@GetValidationError(nameof(employeeDetails.Daughters))" />
+                                @* <ValidationMessage For="@(() => employeeDetails.Daughters)" /> *@
                             </MudItem>
                         }
                         <MudItem xs="12" sm="4" md="3">
-                            <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.BloodGroup" Required="true">
+                            <MudSelect T="string" Label="Blood Group" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.BloodGroup" Required="true"
+                                               @onblur="@(() => ValidateField(nameof(employeeDetails.BloodGroup)))"
+                                               Error="@HasValidationError(nameof(employeeDetails.BloodGroup))"
+                                               ErrorText="@GetValidationError(nameof(employeeDetails.BloodGroup))">
                                 <MudSelectItem Value="@("A+")">A+</MudSelectItem>
                                 <MudSelectItem Value="@("A-")">A-</MudSelectItem>
                                 <MudSelectItem Value="@("B+")">B+</MudSelectItem>
@@ -117,9 +166,14 @@
                                 <MudSelectItem Value="@("AB+")">AB+</MudSelectItem>
                                 <MudSelectItem Value="@("AB-")">AB-</MudSelectItem>
                             </MudSelect>
+                          <ValidationMessage For="@(() => employeeDetails.BloodGroup)" />
+
                         </MudItem>
                     <MudItem xs="12" sm="4" md="3">
-                        <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Nationality" Required="true">
+                        <MudSelect T="string" Label="Nationality" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Nationality" Required="true"
+                            @onblur="@(() => ValidateField(nameof(employeeDetails.Nationality)))"
+                            Error="@HasValidationError(nameof(employeeDetails.Nationality))"
+                            ErrorText="@GetValidationError(nameof(employeeDetails.Nationality))">
                             @if (countries != null)
                             {
                                 @foreach (var country in countries)
@@ -128,12 +182,16 @@
                                 }
                             }
                         </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.Nationality)" />
+
                     </MudItem>
 
                     <MudItem xs="12" sm="6">
                         <MudText Typo="Typo.body1">Upload Image </MudText>
 
-                        <InputFile OnChange="HandlePhotoFileChange" accept=".jpg,.jpeg,.png" />
+                                    <InputFile OnChange="HandlePhotoFileChange" accept=".jpg,.jpeg,.png" @onblur="@(() => ValidateField(nameof(employeeDetails.PhotoBase64Content)))"
+                                               Error="@HasValidationError(nameof(employeeDetails.PhotoBase64Content))"
+                                               ErrorText="@GetValidationError(nameof(employeeDetails.PhotoBase64Content))" />
 
                         <MudText Typo="Typo.body2" Color="Color.Primary">
                             Max 20MB. Ensure clarity.
@@ -156,7 +214,7 @@
                         </div>
                     </ChildContent>
                 </MudExpansionPanel>
-                  <MudExpansionPanel Typo="Typo.h5" Text="Work Information"
+                  <MudExpansionPanel Typo="Typo.h5" Text="Work Information*"
                                    Icon="@Icons.Material.Filled.Work"
                                    Class="section-tab">
                     <ChildContent>
@@ -165,31 +223,81 @@
                     @* <MudText Typo="Typo.h6" Class="mb-4 mt-6">Work Information</MudText> *@
                     <MudGrid>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudSelect T="string" Label="Type of Employment" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.TypeOfEmployment">
+                            <MudSelect T="string" Label="Type of Employment" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.TypeOfEmployment"
+                                               @onblur="@(() => ValidateField(nameof(employeeDetails.TypeOfEmployment)))"
+                                               Error="@HasValidationError(nameof(employeeDetails.TypeOfEmployment))"
+                                               ErrorText="@GetValidationError(nameof(employeeDetails.TypeOfEmployment))">
                                 <MudSelectItem Value="@("Full-Time")">Full-Time</MudSelectItem>
                                 <MudSelectItem Value="@("Part-Time")">Part-Time</MudSelectItem>
                                 <MudSelectItem Value="@("Contract")">Contract</MudSelectItem>
                                 <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
                             </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.TypeOfEmployment)" />
+
                         </MudItem>
                             <MudItem xs="12" sm="4" md="3">
                                 <MudTextField T="string"
                                               Label="Level"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                      @bind-Value="employeeDetails.Level" />
+                                      @bind-Value="employeeDetails.Level"
+                                          @onblur="@(() => ValidateField(nameof(employeeDetails.Level)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.Level))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.Level))" />
                                             
                             </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Designation" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Designation" />
+                                    <MudSelect T="string" Label="Designation" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Designation"
+                                               @onblur="@(() => ValidateField(nameof(employeeDetails.Designation)))"
+                                               Error="@HasValidationError(nameof(employeeDetails.Designation))"
+                                               ErrorText="@GetValidationError(nameof(employeeDetails.Designation))">
+                                        <MudSelectItem Value="@("Software Engineer Intern")">Software Engineer Intern</MudSelectItem>
+                                        <MudSelectItem Value="@("Software Engineer trainee")">Software Engineer trainee</MudSelectItem>
+                                        <MudSelectItem Value="@("Associate Software Engineer")">Associate Software Engineer</MudSelectItem>
+                                        <MudSelectItem Value="@("Software Engineer Product Manager")">Software Engineer Product Manager</MudSelectItem>
+                                        <MudSelectItem Value="@("Senior Software Engineer")"> Senior Software Engineer  </MudSelectItem>
+                                        <MudSelectItem Value="@("Vice President")">Vice President  </MudSelectItem>
+                                        <MudSelectItem Value="@("President")">President  </MudSelectItem>
+                                        <MudSelectItem Value="@("People Senior Analyst")">People Senior Analyst</MudSelectItem>
+                                        <MudSelectItem Value="@("People Analyst Lead")">People Analyst Lead </MudSelectItem>
+                                        <MudSelectItem Value="@("Executive Assistant ")"> Executive Assistant </MudSelectItem>
+                                        <MudSelectItem Value="@("Business Development Lead ")"> Business Development Lead </MudSelectItem>
+                                        <MudSelectItem Value="@("Business Development  Intern ")"> Business Development  Intern </MudSelectItem>
+                                        <MudSelectItem Value="@("Content Writing Intern")"> Content Writing Intern</MudSelectItem>
+                                        <MudSelectItem Value="@("Social Media Intern")">
+                                            Social Media Intern
+                                        </MudSelectItem>
+                                        <MudSelectItem Value="@("Video Creation Intern")">
+                                            Video Creation Intern
+                                        </MudSelectItem>
+                                        <MudSelectItem Value="@("AI Content Creator")">
+                                           AI Content Creator
+                                        </MudSelectItem>
+                                        <MudSelectItem Value="@("Content Creator Lead")">Content Creator Lead </MudSelectItem>
+                                        <MudSelectItem Value="@("Software Tester")">Software Tester </MudSelectItem>
+
+         
+                            </MudSelect>
                             <ValidationMessage For="@(() => employeeDetails.Designation)" />
                         </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudSelect T="string" Label="Joining Location" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                               @bind-Value="employeeDetails.JoiningLocation" Required="true"
+                                               @onblur="@(() => ValidateField(nameof(employeeDetails.JoiningLocation)))"
+                                               Error="@HasValidationError(nameof(employeeDetails.JoiningLocation))"
+    ErrorText="@GetValidationError(nameof(employeeDetails.JoiningLocation))">
+                                        <MudSelectItem Value=@("Bangalore, India")>Bangalore, India</MudSelectItem>
+                                        <MudSelectItem Value=@("Riyadh, Saudi Arabia")>Riyadh, Saudi Arabia</MudSelectItem>
+                                        <MudSelectItem Value=@("Delawer, USA")>Delawer, USA</MudSelectItem>
+                                    </MudSelect>
+                                    <ValidationMessage For="@(() => employeeDetails.JoiningLocation)" />
+                                </MudItem>
+
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Joining Location" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.JoiningLocation" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.JoiningLocation)" />
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudDatePicker Label="Date of Joining" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.DateOfJoining" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfJoining)" />
+                            <MudDatePicker Label="Date of Joining" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.DateOfJoining" Required="true" MaxDate="DateTime.Now" For="@(() => employeeDetails.DateOfJoining)"
+                                                   @onblur="@(() => ValidateField(nameof(employeeDetails.DateOfJoining)))"
+                                                   Error="@HasValidationError(nameof(employeeDetails.DateOfJoining))"
+                                                   ErrorText="@GetValidationError(nameof(employeeDetails.DateOfJoining))"/>
                         </MudItem>
 
                     </MudGrid>
@@ -208,12 +316,18 @@
 
                     <MudGrid>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Passport Full Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportFullName" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.PassportFullName)" />
+                            <MudTextField Label="Passport Full Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportFullName" Required="false" 
+                                                   @onblur="@(() => ValidateField(nameof(employeeDetails.PassportFullName)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.PassportFullName))"
+                                                         ErrorText="@GetValidationError(nameof(employeeDetails.PassportFullName))"/>
+                            @* <ValidationMessage For="@(() => employeeDetails.PassportFullName)" /> *@
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Passport No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportNo" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.PassportNo)" />
+                            <MudTextField Label="Passport No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportNo" Required="false" 
+                                @onblur="@(() => ValidateField(nameof(employeeDetails.PassportNo)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.PassportNo))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.PassportNo))" />
+                            @* <ValidationMessage For="@(() => employeeDetails.PassportNo)" /> *@
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudSelect T="string" 
@@ -221,7 +335,10 @@
                             Variant="Variant.Outlined"
                             Margin="Margin.Dense" 
                             @bind-Value="employeeDetails.PassportNationality" 
-                            Required="false">
+                            Required="false"
+                                               @onblur="@(() => ValidateField(nameof(employeeDetails.PassportNationality)))"
+                                               Error="@HasValidationError(nameof(employeeDetails.PassportNationality))"
+                                               ErrorText="@GetValidationError(nameof(employeeDetails.PassportNationality))">
                                 @if (countries != null)
                                 {
                                     @foreach (var country in countries)
@@ -230,25 +347,34 @@
                                     }
                                 }
                             </MudSelect>
-                            <ValidationMessage For="@(() => employeeDetails.PassportNationality)" />
+                            @* <ValidationMessage For="@(() => employeeDetails.PassportNationality)" /> *@
                         </MudItem>
 
                         <MudItem xs="12" sm="4" md="3">
-                            <MudDatePicker Label="Date of Issue" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.PassportIssueDate" Required="false" MaxDate="DateTime.Now" For="@(() => employeeDetails.PassportIssueDate)" />
+                            <MudDatePicker Label="Date of Issue" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.PassportIssueDate" Required="false" MaxDate="DateTime.Now" For="@(() => employeeDetails.PassportIssueDate)"
+                                                   @onblur="@(() => ValidateField(nameof(employeeDetails.PassportIssueDate)))"
+                                                   Error="@HasValidationError(nameof(employeeDetails.PassportIssueDate))"
+                                                   ErrorText="@GetValidationError(nameof(employeeDetails.PassportIssueDate))"/>
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudDatePicker Label="Date of Expiry" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.PassportExpiryDate" Required="false" MinDate="@employeeDetails.PassportIssueDate" For="@(() => employeeDetails.PassportExpiryDate)" />
+                            <MudDatePicker Label="Date of Expiry" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Date="employeeDetails.PassportExpiryDate" Required="false" MinDate="@employeeDetails.PassportIssueDate" For="@(() => employeeDetails.PassportExpiryDate)"
+                                    @onblur="@(() => ValidateField(nameof(employeeDetails.PassportExpiryDate)))"
+    Error="@HasValidationError(nameof(employeeDetails.PassportExpiryDate))"
+                                                   ErrorText="@GetValidationError(nameof(employeeDetails.PassportExpiryDate))" />
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Passport Place of Issue" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportPlaceOfIssue" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.PassportPlaceOfIssue)" />
+                            <MudTextField Label="Passport Place of Issue" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PassportPlaceOfIssue" Required="false"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.PassportPlaceOfIssue)))"
+    Error="@HasValidationError(nameof(employeeDetails.PassportPlaceOfIssue))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.PassportPlaceOfIssue))" />
+                            @* <ValidationMessage For="@(() => employeeDetails.PassportPlaceOfIssue)" /> *@
                         </MudItem>
                     </MudGrid>
                                </div>
        </ChildContent>
    </MudExpansionPanel>
                     @* break *@
-                      <MudExpansionPanel Typo="Typo.h5" Text="Address"
+                      <MudExpansionPanel Typo="Typo.h5" Text="Address*"
                                    Icon="@Icons.Material.Filled.LocationOn"
                                    Class="section-tab">
                     <ChildContent>
@@ -257,34 +383,64 @@
                     <MudText Typo="Typo.h6" Class="mb-4 mt-6">Current Address</MudText>
                     <MudGrid>
                         <MudItem xs="12">
-                            <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentAddress" Required="true" Lines="2" />
-                            <ValidationMessage For="@(() => employeeDetails.CurrentAddress)" />
+                            <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentAddress" Required="true" Lines="2"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.CurrentAddress)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.CurrentAddress))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.CurrentAddress))" />
+                            @* <ValidationMessage For="@(() => employeeDetails.CurrentAddress)" /> *@
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentCity" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.CurrentCity)" />
+                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentCity" Required="true" Disabled="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.CurrentCity)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.CurrentCity))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.CurrentCity))" />
+                            @* <ValidationMessage For="@(() => employeeDetails.CurrentCity)" /> *@
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentState" Required="true" />
+                                    <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentState" Required="true" Disabled="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.CurrentState)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.CurrentState))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.CurrentState))" />
                             <ValidationMessage For="@(() => employeeDetails.CurrentState)" />
 
                         </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Zip/Pin Code"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.CurrentZip"
+                                                  @bind-Value:after="@(async () => await HandleZipCodeChange(employeeDetails.CurrentZip, 3))"
+                                                  Required="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.CurrentZip)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.CurrentZip))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.CurrentZip))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.CurrentZip)" /> *@
+                                    @if (IsFetchingLocation && contactIndexBeingFetched == 3)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Info">Fetching location details...</MudText>
+                                    }
+                                    @if (!string.IsNullOrEmpty(zipErrorMessage) && contactIndexBeingFetched == 3)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
+                                    }
+                                </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentZip" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.CurrentZip)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentMobile" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.CurrentMobile)" />
+                            <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.CurrentMobile" Required="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.CurrentMobile)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.CurrentMobile))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.CurrentMobile))" />
+                            @* <ValidationMessage For="@(() => employeeDetails.CurrentMobile)" /> *@
 
                         </MudItem>
                           <MudItem xs="12" sm="4" md="3">
                         <MudTextField Label="Email" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                      @bind-Value="employeeDetails.CurrentEmail" Required="true" Disabled="true" />
-                        <ValidationMessage For="@(() => employeeDetails.CurrentEmail)" />
+                                      @bind-Value="employeeDetails.CurrentEmail" Required="true" Disabled="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.CurrentEmail)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.CurrentEmail))"
+                                              ErrorText="@GetValidationError(nameof(employeeDetails.CurrentEmail))" />
+                        @* <ValidationMessage For="@(() => employeeDetails.CurrentEmail)" /> *@
                     </MudItem>
 
                         <MudItem xs="12" sm="4" md="3">
@@ -296,33 +452,66 @@
                     <MudText Typo="Typo.h6" Class="mb-4 mt-6">Permanent Address</MudText>
                     <MudGrid>
                         <MudItem xs="12">
-                            <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentAddress" Required="true" Lines="2" />
-                            <ValidationMessage For="@(() => employeeDetails.PermanentAddress)" />
+                            <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentAddress" Required="true" Lines="2"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.PermanentAddress)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.PermanentAddress))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.PermanentAddress))" />
+                            @* <ValidationMessage For="@(() => employeeDetails.PermanentAddress)" /> *@
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentCity" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.PermanentCity)" />
+                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentCity" Required="true" Disabled="true"
+                                                   @onblur="@(() => ValidateField(nameof(employeeDetails.PermanentCity)))"
+                                                   Error="@HasValidationError(nameof(employeeDetails.PermanentCity))"
+                                                   ErrorText="@GetValidationError(nameof(employeeDetails.PermanentCity))" />
+
+                            @* <ValidationMessage For="@(() => employeeDetails.PermanentCity)" /> *@
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentState" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.PermanentState)" />
+                                    <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentState" Required="true" Disabled="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.CurrentAddress)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.CurrentAddress))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.CurrentAddress))" />
+                            @* <ValidationMessage For="@(() => employeeDetails.PermanentState)" /> *@
+
+                        </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Zip/Pin Code"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.PermanentZip"
+                                                  @bind-Value:after="@(async () => await HandleZipCodeChange(employeeDetails.PermanentZip, 4))"
+                                                  Required="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.PermanentZip)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.PermanentZip))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.PermanentZip))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.PermanentZip)" /> *@
+                                    @if (IsFetchingLocation && contactIndexBeingFetched == 4)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Info">Fetching location details...</MudText>
+                                    }
+                                    @if (!string.IsNullOrEmpty(zipErrorMessage) && contactIndexBeingFetched == 4)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
+                                    }
+                                </MudItem>
+
+                        <MudItem xs="12" sm="4" md="3">
+                            <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentMobile" Required="true"
+                              @onblur="@(() => ValidateField(nameof(employeeDetails.PermanentMobile)))"
+                       Error="@HasValidationError(nameof(employeeDetails.PermanentMobile))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.PermanentMobile))" />
+                            @* <ValidationMessage For="@(() => employeeDetails.PermanentMobile)" /> *@
 
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentZip" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.PermanentZip)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.PermanentMobile" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.PermanentMobile)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Email" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentEmail" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.PermanentEmail)" />
+                            <MudTextField Label="Email" Variant="Variant.Outlined" @bind-Value="employeeDetails.PermanentEmail" Required="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.PermanentEmail)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.PermanentEmail))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.PermanentEmail))" />
+                                      
+                            @* <ValidationMessage For="@(() => employeeDetails.PermanentEmail)" /> *@
 
                         </MudItem>
                     </MudGrid>
@@ -330,132 +519,158 @@
                     </ChildContent>
                 </MudExpansionPanel>
                     <!-- Emergency Contact Information -->
-                      <MudExpansionPanel Typo="Typo.h5" Text="Emergency Contact Information"
+                <MudExpansionPanel Typo="Typo.h5" Text="Emergency Contact Information*"
                                    Icon="@Icons.Material.Filled.ContactPhone"
                                    Class="section-tab">
                     <ChildContent>
                         <div class="section-content">
-                    @* <MudText Typo="Typo.h6" Class="mb-4 mt-6">Emergency Contact Information</MudText> *@
-                    <MudGrid>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Contact 1 Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Name" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Name)" />
+                            <MudGrid>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Contact 1 Name" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1Name" Required="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact1Name)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.EmergencyContact1Name))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact1Name))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Name)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1Relationship" Required="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact1Relationship)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.EmergencyContact1Relationship))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact1Relationship))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1Address" Required="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact1Address)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.EmergencyContact1Address))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact1Address))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Address)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1City" Required="true" Disabled="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact1City)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.EmergencyContact1City))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact1City))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact1City)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1State" Required="true" Disabled="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact1State)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.EmergencyContact1State))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact1State))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact1State)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Zip/Pin Code"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1ZipCode"
+                                                  @bind-Value:after="@(async () => await HandleZipCodeChange(employeeDetails.EmergencyContact1ZipCode, 1))"
+                                                  Required="false"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact1ZipCode)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.EmergencyContact1ZipCode))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact1ZipCode))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact1ZipCode)" /> *@
+                                    @if (IsFetchingLocation && contactIndexBeingFetched == 1)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Info">Fetching location details...</MudText>
+                                    }
+                                    @if (!string.IsNullOrEmpty(zipErrorMessage) && contactIndexBeingFetched == 1)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
+                                    }
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact1Mobile" Required="true"
+                                                  @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact1Mobile)))"
+                                                  Error="@HasValidationError(nameof(employeeDetails.EmergencyContact1Mobile))"
+                                                  ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact1Mobile))" />
+                                    <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Mobile)" />
+                                </MudItem>
+                            </MudGrid>
 
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Relationship" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Relationship)" />
+                            <strong><b><hr style="color:black" /></b></strong>
 
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Address" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Address)" />
+                            <MudGrid>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Contact 2 Name" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2Name" Required="false" 
+                                                   @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact2Name)))"
+ Error="@HasValidationError(nameof(employeeDetails.EmergencyContact2Name))"
+ ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact2Name))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Name)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2Relationship" Required="false" 
+                                                   @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact2Relationship)))"
+ Error="@HasValidationError(nameof(employeeDetails.EmergencyContact2Relationship))"
+ ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact2Relationship))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Relationship)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2Address" Required="false" 
+                                                              @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact2Address)))"
+            Error="@HasValidationError(nameof(employeeDetails.EmergencyContact2Address))"
+            ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact2Address))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2City" Required="false" Disabled="true" 
+                                                       @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact2City)))"
+     Error="@HasValidationError(nameof(employeeDetails.EmergencyContact2City))"
+     ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact2City))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact2City)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2State" Required="false" Disabled="true" 
+                                                                @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact2State)))"
+              Error="@HasValidationError(nameof(employeeDetails.EmergencyContact2State))"
+              ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact2State))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact2State)" /> *@
+                                </MudItem>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Zip/Pin Code"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2ZipCode"
+                                                  @bind-Value:after="@(async () => await HandleZipCodeChange(employeeDetails.EmergencyContact2ZipCode, 2))"
+                                                  Required="false" 
+                                                    @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact2ZipCode)))"
+  Error="@HasValidationError(nameof(employeeDetails.EmergencyContact2ZipCode))"
+  ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact2ZipCode))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact2ZipCode)" /> *@
+                                    @if (IsFetchingLocation && contactIndexBeingFetched == 2)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Info">Fetching location details...</MudText>
+                                    }
+                                    @if (!string.IsNullOrEmpty(zipErrorMessage) && contactIndexBeingFetched == 2)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Error">@zipErrorMessage</MudText>
+                                    }
+                                </MudItem>
 
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1City" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1City)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1State" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1State)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1ZipCode" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1ZipCode)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact1Mobile" Required="true" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact1Mobile)" />
-
-                        </MudItem>
-                    </MudGrid>
-                       
-                    @* break *@
-                    <strong> <b><hr style="color:black" ; /></b></strong>
-                    <MudGrid>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Contact 2 Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Name" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Name)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Relationship" Variant="Variant.Outlined " Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Relationship" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Relationship)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Address" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Address)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2City" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2City)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2State" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2State)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2ZipCode" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2ZipCode)" />
-
-                        </MudItem>
-                        <MudItem xs="12" sm="4" md="3">
-                            <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.EmergencyContact2Mobile" Required="false" />
-                            <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" />
-
-                        </MudItem>
-                    </MudGrid>
+                                <MudItem xs="12" sm="4" md="3">
+                                    <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  @bind-Value="employeeDetails.EmergencyContact2Mobile" Required="false" 
+                                                       @onblur="@(() => ValidateField(nameof(employeeDetails.EmergencyContact2Mobile)))"
+     Error="@HasValidationError(nameof(employeeDetails.EmergencyContact2Mobile))"
+     ErrorText="@GetValidationError(nameof(employeeDetails.EmergencyContact2Mobile))" />
+                                    @* <ValidationMessage For="@(() => employeeDetails.EmergencyContact2Mobile)" /> *@
+                                </MudItem>
+                            </MudGrid>
                         </div>
                     </ChildContent>
                 </MudExpansionPanel>
-                    @* <!-- Nominee Information --> *@
-                    @* <MudText Typo="Typo.h6" Class="mb-4 mt-6">Nominee Information</MudText> *@
-                    @* <MudGrid> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Nominee Name" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeName" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeName)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Relationship" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeRelationship" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeRelationship)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Address" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeAddress" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeAddress)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="City" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeCity" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeCity)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="State" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeState" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeState)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Zip/Pin Code" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeZipCode" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeZipCode)" /> *@
-
-                    @*     </MudItem> *@
-                    @*     <MudItem xs="12" sm="4" md="3"> *@
-                    @*         <MudTextField Label="Mobile No" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.NomineeMobile" Required="true" /> *@
-                    @*         <ValidationMessage For="@(() => employeeDetails.NomineeMobile)" /> *@
-
-                    @*     </MudItem> *@
-                    @* </MudGrid> *@
-
                     <!-- Buttons -->
                     <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
                         <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Reset">Reset</MudButton>
@@ -468,44 +683,41 @@
         </MudCard>
     </MudContainer>
 <style>
-    .section-tab {
-        transition: all 0.2s ease;
-        border-radius: 8px 8px 0 0;
-        margin: 0 4px;
-        padding: 8px 16px;
-        background-color: var(--mud-palette-surface);
-        border: 1px solid var(--mud-palette-lines-default);
-        border-bottom: none;
+    .section-tab { 
+       background-color: var(--mud-palette-surface); 
+         border: 1px solid var(--mud-palette-lines-default); 
+         border-bottom: none; 
+    } 
+
+         .section-tab:hover:not(.mud-expanded) { 
+            border-color: var(--mud-palette-Secondary); 
+            cursor: pointer; 
+        } 
+
+        /* .section-tab:active:not(.mud-expanded) {  */
+        /*     transform: translateY(1px);  */
+        /*  }  */
+
+         .section-tab.mud-expanded { 
+           border-color: var(--mud-palette-lines-default); 
+       } 
+
+     .section-content { 
+         border: 1px solid var(--mud-palette-lines-default); 
+         border-top: none; 
+         border-radius: 0 0 8px 8px; 
+         padding: 16px; 
+         margin-bottom: 16px; 
+        background-color: var(--mud-palette-surface); 
+    } 
+
+    .section-tab .mud-expand-panel-header { 
+        padding: 0; 
+    } 
+    .mud-expand-panel .mud-expand-panel-header .mud-expand-panel-icon.mud-transform {
+        transform: none; 
     }
-
-        /* Subtle hover effect - border highlight only */
-        .section-tab:hover:not(.mud-expanded) {
-            border-color: var(--mud-palette-primary);
-            cursor: pointer;
-        }
-
-        /* Active state during click */
-        .section-tab:active:not(.mud-expanded) {
-            transform: translateY(1px);
-        }
-
-        /* Expanded state - clean look */
-        .section-tab.mud-expanded {
-            border-color: var(--mud-palette-lines-default);
-        }
-
-    .section-content {
-        border: 1px solid var(--mud-palette-lines-default);
-        border-top: none;
-        border-radius: 0 0 8px 8px;
-        padding: 16px;
-        margin-bottom: 16px;
-        background-color: var(--mud-palette-surface);
-    }
-
-    .section-tab .mud-expand-panel-header {
-        padding: 0;
-    }
+   
 </style>
 @code {
     [Parameter]
@@ -515,6 +727,182 @@
     [Parameter]
     public EmployeeDetails InitialData { get; set; }
     private List<Country> countries = new();
+    private EditContext EditContext;
+    private Dictionary<string, List<string>> validationErrors = new Dictionary<string, List<string>>();
+
+
+    private int? contactIndexBeingFetched = null;
+    private string zipErrorMessage = null;
+    private System.Timers.Timer debounceTimer = new System.Timers.Timer(500);
+    private string lastZipProcessed = string.Empty;
+    public class PinResponse
+    {
+        public List<PostOffice> PostOffice { get; set; }
+    }
+    public class PostOffice
+    {
+        public string State { get; set; }
+        public string District { get; set; }
+    }
+    private async Task GetCityStateFromPin(string pinCode, Action<string> setCity, Action<string> setState)
+    {
+        Console.WriteLine($"[DEBUG] Fetching city/state for pin: {pinCode}");
+
+        zipErrorMessage = null;
+        if (!string.IsNullOrWhiteSpace(pinCode) && pinCode.Length == 6)
+        {
+            try
+            {
+                using var http = new HttpClient();
+                var response = await http.GetFromJsonAsync<List<PinResponse>>($"https://api.postalpincode.in/pincode/{pinCode}");
+
+                if (response?.Any() == true && response.First().PostOffice?.Any() == true)
+                {
+                    var post = response.First().PostOffice.FirstOrDefault();
+                    Console.WriteLine($"[DEBUG] Found city: {post?.District}, state: {post?.State}");
+
+                    if (post != null)
+                    {
+                        setCity(post.District);
+                        setState(post.State);
+                    }
+                    else
+                    {
+                        setCity(string.Empty);
+                        setState(string.Empty);
+                        zipErrorMessage = $"No data found for PIN code: {pinCode}";
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[DEBUG] No data found for pin: {pinCode}");
+                    setCity(string.Empty);
+                    setState(string.Empty);
+                    zipErrorMessage = $"Invalid PIN code: {pinCode}";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] Error fetching pin data: {ex.Message}");
+                setCity(string.Empty);
+                setState(string.Empty);
+                zipErrorMessage = $"Error fetching city/state: {ex.Message}";
+            }
+        }
+        else
+        {
+            Console.WriteLine($"[DEBUG] Invalid pin format: {pinCode}");
+            setCity(string.Empty);
+            setState(string.Empty);
+            zipErrorMessage = "PIN code must be 6 digits.";
+        }
+    }
+    private bool IsFetchingLocation = false;
+    private async Task HandleZipCodeChange(string zip, int contactIndex)
+    {
+        if (string.IsNullOrWhiteSpace(zip) || zip.Length != 6 || zip == lastZipProcessed)
+        {
+            Console.WriteLine($"[DEBUG] Skipping fetch for invalid or unchanged pin: {zip}");
+            return;
+        }
+
+        // Cancel any existing timer
+        debounceTimer.Stop();
+
+        // Start a new debounce timer
+        await Task.Run(() =>
+        {
+            debounceTimer.Elapsed += async (s, e) =>
+            {
+                debounceTimer.Stop(); // Stop the timer after firing
+                await InvokeAsync(async () =>
+                {
+                    IsFetchingLocation = true;
+                    contactIndexBeingFetched = contactIndex;
+                    StateHasChanged();
+
+                    lastZipProcessed = zip; // Track the last processed ZIP to avoid duplicates
+
+                    if (contactIndex == 1)
+                    {
+                        employeeDetails.EmergencyContact1ZipCode = zip;
+                        await GetCityStateFromPin(
+                            zip,
+                            city => employeeDetails.EmergencyContact1City = city,
+                            state => employeeDetails.EmergencyContact1State = state
+                        );
+                    }
+                    else if (contactIndex == 2)
+                    {
+                        employeeDetails.EmergencyContact2ZipCode = zip;
+                        await GetCityStateFromPin(
+                            zip,
+                            city => employeeDetails.EmergencyContact2City = city,
+                            state => employeeDetails.EmergencyContact2State = state
+                        );
+                    }
+                    else if (contactIndex == 3)
+                    {
+                        employeeDetails.CurrentZip = zip;
+                        await GetCityStateFromPin(
+                            zip,
+                            city => employeeDetails.CurrentCity = city,
+                            state => employeeDetails.CurrentState = state
+                        );
+                    }
+                    else if (contactIndex == 4)
+                    {
+                        employeeDetails.PermanentZip = zip;
+                        await GetCityStateFromPin(
+                            zip,
+                            city => employeeDetails.PermanentCity = city,
+                            state => employeeDetails.PermanentState = state
+                        );
+                    }
+
+                    IsFetchingLocation = false;
+                    contactIndexBeingFetched = null;
+                    StateHasChanged();
+                });
+            };
+            debounceTimer.AutoReset = false; // Run only once
+            debounceTimer.Start();
+        });
+    }
+    private void ValidateField(string propertyName)
+    {
+        var validationContext = new ValidationContext(employeeDetails) { MemberName = propertyName };
+        var validationResults = new List<ValidationResult>();
+        var property = employeeDetails.GetType().GetProperty(propertyName);
+        var value = property?.GetValue(employeeDetails);
+
+        // Clear previous errors for this field
+        validationErrors.Remove(propertyName);
+
+        // Validate the specific property
+        var isValid = Validator.TryValidateProperty(value, validationContext, validationResults);
+
+        if (!isValid)
+        {
+            validationErrors[propertyName] = validationResults.Select(r => r.ErrorMessage).ToList();
+        }
+
+        StateHasChanged();
+    }
+
+    private bool HasValidationError(string propertyName)
+    {
+        return validationErrors.ContainsKey(propertyName) && validationErrors[propertyName].Any();
+    }
+
+    private string GetValidationError(string propertyName)
+    {
+        if (validationErrors.ContainsKey(propertyName) && validationErrors[propertyName].Any())
+        {
+            return validationErrors[propertyName].First();
+        }
+        return string.Empty;
+    }
 
     protected async override void OnInitialized()
     {
@@ -526,23 +914,8 @@
         {
             employeeDetails = InitialData;
         }
-    }
-    // private async Task LoadFromLocalStorage()
-    // {
-    //     // Load EmpId and Email from localStorage (set during signup/login)
-    //     var empId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
-    //     var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
 
-    //     if (!string.IsNullOrEmpty(empId))
-    //     {
-    //         employeeDetails.EmployeeID = empId;
-    //     }
-    //     if (!string.IsNullOrEmpty(email))
-    //     {
-    //         employeeDetails.CurrentEmail = email;
-    //     }
-    //     StateHasChanged();
-    // }
+    }
     private async Task LoadFromLocalStorage()
     {
         // Load EmpId and Email from localStorage (set during signup/login)
@@ -598,37 +971,68 @@
         }
     }
    
-
-
     // Assuming you have a list to store all employees (this could be a local list, or you might pull from a service)
     private List<EmployeeDetails> allEmployees = new List<EmployeeDetails>();
 
     private async Task GoToNextPage()
-    {
-        // await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
-        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
+    {  if (employeeDetails == null)
+        {
+            Console.WriteLine("EmployeeDetails information is null");
+            return;
+        }
+
+        ValidateAllFields();
+        if (!validationErrors.Any())
+        {
+            Console.WriteLine("Form is valid, submitting...");
+            try
+            {
+                // await JSRuntime.InvokeVoidAsync("localStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
+                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "employeeDetails", JsonSerializer.Serialize(employeeDetails));
 
 
-        await OnSubmit.InvokeAsync(employeeDetails); // Pass data to parent to hold
-        Console.WriteLine("Navigating to next step without saving to database.");
-        NavigationManager.NavigateTo("/bankingForm");
+                await OnSubmit.InvokeAsync(employeeDetails); // Pass data to parent to hold
+                Console.WriteLine("Navigating to next step without saving to database.");
+                NavigationManager.NavigateTo("/bankingForm");
 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving to session storage: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Form has validation errors");
+            Snackbar.Add("Please fix all validation errors before proceeding", Severity.Error);
+        }
+     
 
     }
-    // private async Task LoadEmployeeInfo()
-    // {
-    //     Retrieve the employee details from local storage
-    //     var employeeJson = await JSRuntime.InvokeAsync<string>("localStorageHelper.getItem", "employeeDetails");
-    //     var employeeJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
+    private void ValidateAllFields()
+    {
+        validationErrors.Clear();
+        var validationContext = new ValidationContext(employeeDetails);
+        var validationResults = new List<ValidationResult>();
+
+        Validator.TryValidateObject(employeeDetails, validationContext, validationResults, true);
+
+        foreach (var result in validationResults)
+        {
+            foreach (var memberName in result.MemberNames)
+            {
+                if (!validationErrors.ContainsKey(memberName))
+                {
+                    validationErrors[memberName] = new List<string>();
+                }
+                validationErrors[memberName].Add(result.ErrorMessage);
+            }
+        }
+
+        StateHasChanged();
+    }
 
 
-    //     if (!string.IsNullOrEmpty(employeeJson))
-    //     {
-    //         employeeDetails = JsonSerializer.Deserialize<EmployeeDetails>(employeeJson);
-    //         StateHasChanged(); Force UI update if necessary
-
-    //     }
-    // }
     public void Reset()
     {
         // Reset the employee details
@@ -641,7 +1045,6 @@
     private async Task HandlePhotoFileChange(InputFileChangeEventArgs e)
     {
         PhotoUploadError = null;
-
         var file = e.File;
         if (file == null)
         {
@@ -650,7 +1053,6 @@
 
             return;
         }
-
         // Size check: max 20 MB
         if (file.Size > 20 * 1024 * 1024)
         {

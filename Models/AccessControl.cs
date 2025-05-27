@@ -13,12 +13,15 @@ namespace WiseHR.Models
                     ("Employee List", "/home/employeeList"),
                     ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
+                    
                     //("Add Employees", "/home/employees"),
                     ("Holiday Calendar", "/calendar"),
+                    ("Attendance", "/AdminAttendanceView"),
+                    ("HIDE_admin", "/AdminAbsenceReasons"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
-                     ("HIDE_experienceEditForm","/experienceEditForm/.*"),
-                      ("HIDE_bankEditForm","/bankEditForm/.*"),
+                    ("HIDE_experienceEditForm","/experienceEditForm/.*"),
+                    ("HIDE_bankEditForm","/bankEditForm/.*"),
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
@@ -28,7 +31,11 @@ namespace WiseHR.Models
                     ("ReportList", "/reports"),
                      ("HIDE_EmployeeProfile", "/employee/.*"),
                      ("HIDE_Analytics", "/analytics"),
-
+                     ("Assign Mentee","/managers"),
+                    ("Asset","/asset"),
+                    ("HIDE_product","/assets/{id:int}"),
+                    ("HIDE_addasset","/add-asset"),
+                    ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
 
                 }
             },
@@ -37,9 +44,10 @@ namespace WiseHR.Models
                 {
                     ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
-                    ("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     ("Holiday Calendar", "/calendar"),
+                    ("Attendance", "/AdminAttendanceView"),
+                    ("HIDE_admin", "/AdminAbsenceReasons"),
                     //("Add Employees", "/home/employees"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -56,19 +64,45 @@ namespace WiseHR.Models
                   
 
                 }
+            },    {
+                "HR", new List<(string, string)>
+                {
+                     ("Dashboard", "/home"),
+                    ("Employee List", "/home/employeeList"),
+                    ("Role Management", "/home/rolemanagement"),
+                    ("Organizational Hierarchy", "/home/hierarchy"),
+                    //("Add Employees", "/home/employees"),
+                    ("Holiday Calendar", "/calendar"),
+                    ("Attendance", "/AdminAttendanceView"),
+                    ("HIDE_admin", "/AdminAbsenceReasons"),
+                    ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
+                    ("HIDE_personalEditForm", "/personalEditForm/.*"),
+                    ("HIDE_experienceEditForm","/experienceEditForm/.*"),
+                    ("HIDE_bankEditForm","/bankEditForm/.*"),
+                    ("HIDE_Registration", "/registration"),
+                    ("HIDE_confirmationPage", "/confirmation"),
+                    ("HIDE_workExperience", "/workExperience"),
+                    ("HIDE_employee-form", "/employee-form"),
+                    ("HIDE_bankingForm", "/bankingForm"),
+                    ("HIDE_Fortnight Report", "/fortnight-report"),
+                    ("ReportList", "/reports"),
+                     ("HIDE_EmployeeProfile", "/employee/.*"),
+                     ("HIDE_Analytics", "/analytics"),
+                     ("Assign Mentee","/managers")
+                }
             },
             {
                 "employee", new List<(string, string)>
                 {
                     ("Dashboard", "/home"),
                     ("Holiday Calendar", "/user"),
+                    ("Attendance", "/UserAttendanceView"),
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
-                    ("ReportList", "/reports"),
-                      ("HIDE_EmployeeProfile", "/employee/.*"),
+                    ("HIDE_EmployeeProfile", "/employee/.*"),
                       
 
                 }

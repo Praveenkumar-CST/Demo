@@ -10,9 +10,16 @@
 
 <h3>Edit Personal Details</h3>
 
-@if (employeeDetails == null)
+@if (isLoading)
 {
-    <p>Loading employee data...</p>
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <MudProgressCircular Color="Color.Info" Indeterminate="true" />
+        <MudText Color="Color.Info" Align="Align.Center">Loading...</MudText>
+    </div>
+}
+else if (employeeDetails == null)
+{
+    <MudText Color="Color.Error">Failed to load employee data.</MudText>
 }
 else
 {
@@ -31,7 +38,11 @@ else
                     <MudGrid Margin="Margin.Dense">
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID"
-                                          Required="true" Margin="Margin.Dense" Disabled="true" />
+                                          Required="true" Margin="Margin.Dense" Disabled="false" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4" md="3">
+                            <MudTextField Label="EmployeeCode" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeCode"
+                                          Required="true" Margin="Margin.Dense" />
                         </MudItem>
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="First Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FirstName" Required="true" Margin="Margin.Dense" />
@@ -536,6 +547,7 @@ else
     public EmployeeDetails employeeDetails { get; set; } = new EmployeeDetails();
     [Parameter]
     public EmployeeDetails InitialData { get; set; }
+    private bool isLoading = true;
 
     private bool IsSameAsCurrentAddress { get; set; }
 
@@ -555,12 +567,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;
+
          countries = await CountryService.GetCountriesAsync();
 
         if (!string.IsNullOrEmpty(EmployeeId))
         {
             employeeDetails = await EmployeeService.GetEmployeeDetails(EmployeeId);
         }
+        isLoading = false;
     }
     private async Task HandlePhotoFileChange(InputFileChangeEventArgs e)
     {

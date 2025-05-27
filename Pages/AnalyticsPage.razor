@@ -2,51 +2,133 @@
 @using Microsoft.AspNetCore.Components
 @using WiseHR.Models
 @using WiseHR.Dtos
+@using WiseHRServer.Models
 @using System.Net.Http.Json
 @using MudBlazor
 @using System.Net.Http.Headers
 @using Microsoft.AspNetCore.Authorization
+@using WiseHR.Services
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject AnalyticsCacheService AnalyticsCache
 @layout WiseHR.Components.sidebar.HomeLayout
+
+
+<style>
+    .analytics-container {
+        background: #ffffff;
+        padding: 0.5rem;
+    }
+
+    .analytics-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 0;
+        border-bottom: 0px solid #f1f5f9;
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        border-radius: 8px;
+        padding-left: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-icon {
+        color: #3b82f6 !important;
+        font-size: 2rem !important;
+        height: 2em;
+        width: 2em;
+        margin-right: 0.75rem;
+        background: rgba(59, 130, 246, 0.1);
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .header-icon:hover {
+            background: rgba(59, 130, 246, 0.15);
+            transform: scale(1.05);
+        }
+
+    .header-title {
+        color: #1e293b !important;
+        font-weight: 700 !important;
+        font-size: 1.75rem !important;
+        margin: 0 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Alternative clean version */
+    .analytics-header.clean {
+        background: transparent;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: none;
+        padding-left: 0;
+    }
+
+    /* Alternative with accent */
+    .analytics-header.accent {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 197, 253, 0.02) 100%);
+        border-left: 4px solid #3b82f6;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 960px) {
+        .analytics-container {
+            padding: 1rem;
+        }
+
+        .analytics-header {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .header-icon {
+            font-size: 1.75rem !important;
+            padding: 0.4rem;
+        }
+
+        .header-title {
+            font-size: 1.5rem !important;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .analytics-container {
+            padding: 0.75rem;
+        }
+
+        .analytics-header {
+            padding: 0.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .header-icon {
+            margin-right: 0;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-title {
+            font-size: 1.25rem !important;
+        }
+    }</style>
 
 @attribute [Authorize(Roles = "Admin")]
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-1" Style="height: calc(100vh - 64px); display: flex; flex-direction: column;">
-    <MudText Typo="Typo.h5" Class="mb-1" Style="font-weight: 600; background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Employee Analytics</MudText>
-
-    <MudGrid Spacing="1" Style="flex: 1; min-height: 0; margin-top: 0;">
-        @* Filter Section - Fixed Height *@
-        <MudItem xs="12" Class="filter-container">
-            <div class="d-flex align-center mb-1 justify-space-between">
-                <div class="d-flex align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-2" Style="color: #34adb8;"/>
-                    <MudText Typo="Typo.subtitle1" Style="font-weight: 500;">Filters</MudText>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4 analytics-container" Style="height: calc(100vh - 64px); display: flex; flex-direction: column; position: fixed; top: 64px; left: 60px; right: 5px; bottom:5px; overflow: hidden;">
+   <MudGrid Spacing="2" Style="flex: 1; min-height: 0; overflow: hidden;">
+        @* Filter Section *@
+        <MudItem xs="12" md="3" Style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+            <MudPaper Class="pa-4" Elevation="4" Style="height: 100%; display: flex; flex-direction: column; overflow-y: auto; border-radius: 25px;">
+                <div class="d-flex align-center mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Class="mr-2"/>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">Filters</MudText>
                 </div>
-                <div>
-                    <MudButton Variant="Variant.Filled" OnClick="ApplyFilters" Disabled="_isLoading" Class="mr-2 hover-scale" Size="Size.Small" Style="background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); color: white; text-transform: none; font-weight: 500; border-radius: 8px; box-shadow: 0 4px 12px rgba(142, 84, 233, 0.3);">
-                        @if (_isLoading)
-                        {
-                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" Style="color:white;" />
-                            <span>Applying...</span>
-                        }
-                        else
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1" Size="Size.Small"/>
-                            <span>Apply Filters</span>
-                        }
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="text-transform: none; border-radius: 8px;" Size="Size.Small" Class="hover-scale">
-                        <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1" Size="Size.Small"/>
-                        <span>Clear Filters</span>
-                    </MudButton>
-                </div>
-            </div>
 
-            <div class="filter-bar">
-                <div class="filter-panel" @onmouseenter="@(() => _personalFilterHoverExpanded = true)" @onmouseleave="@(() => _personalFilterHoverExpanded = false)">
-                    <MudExpansionPanel Text="Personal" @bind-IsExpanded="_personalFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
+                <MudExpansionPanels>
+                    <MudExpansionPanel Text="Personal" IsInitiallyExpanded="true" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudSelect T="string" @bind-Value="_filterDto.BloodGroup" Label="Blood Group" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var group in _bloodGroups)
                             {
@@ -66,9 +148,9 @@
                             }
                         </MudSelect>
                         <MudAutocomplete T="string" @bind-Value="_filterDto.Nationality" Label="Nationality"
-                                         SearchFunc="SearchNationalities"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchNationalities"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudSelect T="string" @bind-Value="_filterDto.PhysicallyChallenged" Label="Physically Challenged" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var option in _physicallyChallengedOptions)
                             {
@@ -80,16 +162,15 @@
                     </MudExpansionPanel>
                 </div>
 
-                <div class="filter-panel" @onmouseenter="@(() => _employmentFilterHoverExpanded = true)" @onmouseleave="@(() => _employmentFilterHoverExpanded = false)">
-                    <MudExpansionPanel Text="Employment" @bind-IsExpanded="_employmentFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
+                    <MudExpansionPanel Text="Employment" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.Designation" Label="Designation"
-                                         SearchFunc="SearchDesignations"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchDesignations"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudAutocomplete T="string" @bind-Value="_filterDto.JoiningLocation" Label="Joining Location"
-                                         SearchFunc="SearchJoiningLocations"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchJoiningLocations"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudSelect T="string" @bind-Value="_filterDto.TypeOfEmployment" Label="Type of Employment" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var type in _employmentTypes)
                             {
@@ -97,40 +178,60 @@
                             }
                         </MudSelect>
                         <MudAutocomplete T="string" @bind-Value="_filterDto.Level" Label="Level"
-                                         SearchFunc="SearchLevels"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchLevels"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudDatePicker @bind-Date="_filterDto.DateOfJoiningStart" Label="Joined From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
                     </MudExpansionPanel>
                 </div>
 
-                <div class="filter-panel" @onmouseenter="@(() => _experienceFilterHoverExpanded = true)" @onmouseleave="@(() => _experienceFilterHoverExpanded = false)">
-                    <MudExpansionPanel Text="Experience" @bind-IsExpanded="_experienceFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
+                    <MudExpansionPanel Text="Contact" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentCity" Label="Current City"
+                        SearchFunc="SearchCurrentCities"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentState" Label="Current State"
+                        SearchFunc="SearchCurrentStates"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudTextField @bind-Value="_filterDto.CurrentZip" Label="Current Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentCity" Label="Permanent City"
+                        SearchFunc="SearchPermanentCities"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentState" Label="Permanent State"
+                        SearchFunc="SearchPermanentStates"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudTextField @bind-Value="_filterDto.PermanentZip" Label="Permanent Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                    </MudExpansionPanel>
+
+                    <MudExpansionPanel Text="Experience" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.College" Label="College / University"
-                                         SearchFunc="SearchEducationUniversities"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchEducationUniversities"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudAutocomplete T="string" @bind-Value="_filterDto.Qualification" Label="Qualification"
-                                         SearchFunc="SearchQualifications"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchQualifications"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudNumericField @bind-Value="_filterDto.YearOfPassingStart" Label="Passed From Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="1900" Max="DateTime.Now.Year" Class="mb-2" T="int?" />
                         <MudNumericField @bind-Value="_filterDto.YearOfPassingEnd" Label="Passed To Year" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.YearOfPassingStart ?? 1900" Max="DateTime.Now.Year" Class="mb-2" T="int?" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer"
-                                         SearchFunc="SearchWorkEmployers"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousDesignation" Label="Previous Designation"
-                                         SearchFunc="SearchWorkDesignations"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousLocation" Label="Previous Location"
-                                         SearchFunc="SearchWorkLocations"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMin" Label="Min Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
                         <MudNumericField T="double?" @bind-Value="_filterDto.EducationPercentageMax" Label="Max Education %" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Min="_filterDto.EducationPercentageMin ?? 0" Max="100" Step="0.01" Format="F2" Class="mb-2" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousEmployer" Label="Previous Employer"
+                        SearchFunc="SearchWorkEmployers"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousDesignation" Label="Previous Designation"
+                        SearchFunc="SearchWorkDesignations"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.PreviousLocation" Label="Previous Location"
+                        SearchFunc="SearchWorkLocations"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobStartDateStart" Label="Prev. Job Start From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobStartDateEnd" Label="Prev. Job Start To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PreviousJobStartDateStart" />
                         <MudDatePicker @bind-Date="_filterDto.PreviousJobEndDateStart" Label="Prev. Job End From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
@@ -138,35 +239,11 @@
                     </MudExpansionPanel>
                 </div>
 
-                <div class="filter-panel" @onmouseenter="@(() => _addressFilterHoverExpanded = true)" @onmouseleave="@(() => _addressFilterHoverExpanded = false)">
-                    <MudExpansionPanel Text="Address" @bind-IsExpanded="_addressFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentCity" Label="Current City"
-                                         SearchFunc="SearchCurrentCities"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.CurrentState" Label="Current State"
-                                         SearchFunc="SearchCurrentStates"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentCity" Label="Permanent City"
-                                         SearchFunc="SearchPermanentCities"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudAutocomplete T="string" @bind-Value="_filterDto.PermanentState" Label="Permanent State"
-                                         SearchFunc="SearchPermanentStates"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                        <MudTextField @bind-Value="_filterDto.CurrentZip" Label="Current Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                        <MudTextField @bind-Value="_filterDto.PermanentZip" Label="Permanent Zip Code" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                    </MudExpansionPanel>
-                </div>
-
-                <div class="filter-panel" @onmouseenter="@(() => _passportFilterHoverExpanded = true)" @onmouseleave="@(() => _passportFilterHoverExpanded = false)">
-                    <MudExpansionPanel Text="Passport" @bind-IsExpanded="_passportFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
+                    <MudExpansionPanel Text="Passport" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.PassportNationality" Label="Passport Nationality"
-                                         SearchFunc="SearchPassportNationalities"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchPassportNationalities"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudDatePicker @bind-Date="_filterDto.PassportIssueDateStart" Label="Passport Issued From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
                         <MudDatePicker @bind-Date="_filterDto.PassportIssueDateEnd" Label="Passport Issued To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PassportIssueDateStart" />
                         <MudDatePicker @bind-Date="_filterDto.PassportExpiryDateStart" Label="Passport Expires From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
@@ -174,20 +251,19 @@
                     </MudExpansionPanel>
                 </div>
 
-                <div class="filter-panel" @onmouseenter="@(() => _bankingFilterHoverExpanded = true)" @onmouseleave="@(() => _bankingFilterHoverExpanded = false)">
-                    <MudExpansionPanel Text="Banking" @bind-IsExpanded="_bankingFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
+                    <MudExpansionPanel Text="Banking" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudAutocomplete T="string" @bind-Value="_filterDto.BankName" Label="Bank Name"
-                                         SearchFunc="SearchBankNames"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchBankNames"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudAutocomplete T="string" @bind-Value="_filterDto.BankBranch" Label="Bank Branch"
-                                         SearchFunc="SearchBankBranches"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchBankBranches"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudAutocomplete T="string" @bind-Value="_filterDto.BankState" Label="Bank State"
-                                         SearchFunc="SearchBankStates"
-                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        SearchFunc="SearchBankStates"
+                        Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                        ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
                         <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var type in _accountTypes)
                             {
@@ -199,8 +275,7 @@
                     </MudExpansionPanel>
                 </div>
 
-                <div class="filter-panel" @onmouseenter="@(() => _miscFilterHoverExpanded = true)" @onmouseleave="@(() => _miscFilterHoverExpanded = false)">
-                    <MudExpansionPanel Text="Misc" @bind-IsExpanded="_miscFilterHoverExpanded" DisableGutters="true" Dense="true" Class="mb-2">
+                    <MudExpansionPanel Text="Misc" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudSelect T="bool?" @bind-Value="_filterDto.HasAllergies" Label="Has Allergies?" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             <MudSelectItem Value="@( (bool?)null )">Any</MudSelectItem>
                             <MudSelectItem Value="@( (bool?)true )">Yes</MudSelectItem>
@@ -212,14 +287,54 @@
                             <MudSelectItem Value="@( (bool?)false )">No</MudSelectItem>
                         </MudSelect>
                     </MudExpansionPanel>
+                </MudExpansionPanels>
+
+                <div class="mt-auto pt-4 d-flex">
+                    <MudButton Variant="Variant.Filled"onclick ="ApplyFilters" Disabled="_isLoading" Class="mr-2" Style="flex: 1;background-color:linear-gradient(90deg, #34adb8 0%, #8E54E9 100%);">
+                        @if (_isLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                            <span>Applying...</span>
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1" Style="padding-bottom:4px"/>
+                            <span>Apply</span>
+                        }
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="flex: 1;padding-bottom:4px">
+                        <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1"/>
+                        <span>Clear</span>
+                    </MudButton>
                 </div>
             </div>
         </MudItem>
 
         @* Results Section *@
-        <MudItem xs="12" Style="display: flex; flex-direction: column; min-height: 0;">
-            <MudPaper Class="pa-2" Elevation="1" Style="height: 100%; display: flex; flex-direction: column;">
-                <MudText Typo="Typo.subtitle1" Class="mb-1" Style="font-weight: 500;">Results</MudText>
+        <MudItem xs="12" md="9" Style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+            <MudPaper Class="pa-4" Elevation="5" Style="height: 100%; display: flex; flex-direction: column;border-radius: 25px; overflow: hidden;">
+                <div class="d-flex align-center">
+                    <div class="analytics-header">
+                        <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="header-icon" />
+                        <MudText Typo="Typo.h4" Class="header-title">Employee Analytics</MudText>
+                    </div>
+                    <MudSpacer />
+                    <MudTooltip Text="Download Results (CSV)">
+                        <MudIconButton Icon="@Icons.Material.Filled.Download"
+                        Color="Color.Primary"
+                        OnClick="DownloadFilteredEmployees"
+                        Disabled="@(!GetFilteredAndSortedEmployees().Any() || _isLoading)"
+                        Size="Size.Small"
+                        Class="ml-2" Style="margin-top: 4px !important;"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Sync Data">
+                        <MudIconButton Icon="@Icons.Material.Filled.Sync" 
+                        Color="Color.Primary" 
+                        OnClick="SyncData" 
+                        Disabled="_isLoading"
+                        Class="ml-2" />    
+                    </MudTooltip>
+                </div>
 
                 @if (_isLoading && !_initialLoadComplete)
                 {
@@ -231,7 +346,7 @@
                 {
                     @if (!string.IsNullOrEmpty(_errorMessage))
                     {
-                        <MudAlert Severity="Severity.Error" Class="mb-2">@_errorMessage</MudAlert>
+                        <MudAlert Severity="Severity.Error" Class="mb-3">@_errorMessage</MudAlert>
                     }
 
                     @if (!_filteredEmployees.Any() && _initialLoadComplete && string.IsNullOrEmpty(_errorMessage))
@@ -244,125 +359,777 @@
 
                     @if (_filteredEmployees.Any() || (_isLoading && _initialLoadComplete))
                     {
-                        <MudGrid Spacing="1" Class="mb-1">
-                            <MudItem xs="12" sm="4">
-                                <MudCard Elevation="3" Class="hover-lift rounded-lg" Style="transition: all 0.2s ease-in-out;">
-                                    <MudCardHeader Style="background: linear-gradient(135deg, #34adb8cc 0%, #8E54E9cc 100%); padding: 10px 16px; border-top-left-radius: inherit; border-top-right-radius: inherit;">
-                                        <CardHeaderContent><MudText Typo="Typo.subtitle2" Style="color:white; font-weight:500;">Total Employees</MudText></CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center pa-3">
-                                        <MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Large" Class="mr-3" Style="color: #34adb8;" />
-                                        <MudText Typo="Typo.h5" Style="font-weight: 600;">@_totalEmployees<span class="mud-text-secondary" style="font-size: 0.7em; font-weight: 400;"> / @_systemTotalEmployees</span></MudText>
-                                    </MudCardContent>
-                                </MudCard>
+                        @* Employee Dashboard Component *@
+                        <MudGrid Spacing="3" Class="light-dashboard-grid">
+                            <!-- Total Employees Card -->
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudPaper Class="light-card employees-light-card" Elevation="3">
+                                    <div class="light-content">
+                                        <div class="light-header">
+                                            <MudIcon Icon="@Icons.Material.Filled.People" Class="light-icon employees-icon" />
+                                            <div class="simple-status">
+                                                <span class="status-badge employees-badge">ACTIVE</span>
+                                            </div>
+                                        </div>
+                                        <MudText Typo="Typo.subtitle1" Class="light-title">Total Employees</MudText>
+                                        <div class="light-metrics">
+                                            <span class="primary-num">@_totalEmployees</span>
+                                            <span class="divider-light">/</span>
+                                            <span class="secondary-num">@_systemTotalEmployees</span>
+                                        </div>
+                                    </div>
+                                </MudPaper>
                             </MudItem>
-                            <MudItem xs="12" sm="4">
-                                <MudCard Elevation="3" Class="hover-lift rounded-lg" Style="transition: all 0.2s ease-in-out;">
-                                    <MudCardHeader Style="background: linear-gradient(135deg, #8E54E9cc 0%, #34adb8cc 100%); padding: 10px 16px; border-top-left-radius: inherit; border-top-right-radius: inherit;">
-                                        <CardHeaderContent><MudText Typo="Typo.subtitle2" Style="color:white; font-weight:500;">Unique Designations</MudText></CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center pa-3">
-                                        <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Large" Class="mr-3" Style="color: #8E54E9;" />
-                                        <MudText Typo="Typo.h5" Style="font-weight: 600;">@_uniqueDesignations<span class="mud-text-secondary" style="font-size: 0.7em; font-weight: 400;"> / @_systemTotalDesignations</span></MudText>
-                                    </MudCardContent>
-                                </MudCard>
+
+                            <!-- Unique Designations Card -->
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudPaper Class="light-card roles-light-card" Elevation="3">
+                                    <div class="light-content">
+                                        <div class="light-header">
+                                            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="light-icon roles-icon" />
+                                            <div class="simple-status">
+                                                <span class="status-badge roles-badge">ROLES</span>
+                                            </div>
+                                        </div>
+                                        <MudText Typo="Typo.subtitle1" Class="light-title">Unique Designations</MudText>
+                                        <div class="light-metrics">
+                                            <span class="primary-num">@_uniqueDesignations</span>
+                                            <span class="divider-light">/</span>
+                                            <span class="secondary-num">@_systemTotalDesignations</span>
+                                        </div>
+                                    </div>
+                                </MudPaper>
                             </MudItem>
-                            <MudItem xs="12" sm="4">
-                                <MudCard Elevation="3" Class="hover-lift rounded-lg" Style="transition: all 0.2s ease-in-out;">
-                                    <MudCardHeader Style="background: linear-gradient(135deg, #526480cc 0%, #7887a0cc 100%); padding: 10px 16px; border-top-left-radius: inherit; border-top-right-radius: inherit;">
-                                        <CardHeaderContent><MudText Typo="Typo.subtitle2" Style="color:white; font-weight:500;">Unique Blood Groups</MudText></CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent Class="d-flex align-center pa-3">
-                                        <MudIcon Icon="@Icons.Material.Filled.Bloodtype" Size="Size.Large" Class="mr-3" Style="color: #526480;"/>
-                                        <MudText Typo="Typo.h5" Style="font-weight: 600;">@_uniqueBloodGroups<span class="mud-text-secondary" style="font-size: 0.7em; font-weight: 400;"> / @_systemTotalBloodGroups</span></MudText>
-                                    </MudCardContent>
-                                </MudCard>
+
+                            <!-- Unique Blood Groups Card -->
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudPaper Class="light-card health-light-card" Elevation="3">
+                                    <div class="light-content">
+                                        <div class="light-header">
+                                            <MudIcon Icon="@Icons.Material.Filled.Bloodtype" Class="light-icon health-icon" />
+                                            <div class="simple-status">
+                                                <span class="status-badge health-badge">HEALTH</span>
+                                            </div>
+                                        </div>
+                                        <MudText Typo="Typo.subtitle1" Class="light-title">Unique Blood Groups</MudText>
+                                        <div class="light-metrics">
+                                            <span class="primary-num">@_uniqueBloodGroups</span>
+                                            <span class="divider-light">/</span>
+                                            <span class="secondary-num">@_systemTotalBloodGroups</span>
+                                        </div>
+                                    </div>
+                                </MudPaper>
                             </MudItem>
                         </MudGrid>
 
+
+                        @* Active Filters Display *@
+                        @if (HasActiveFilters())
+                        {
+                            <MudPaper Class="pa-4 mb-4" Elevation="1" Style="border-radius: 12px; background: linear-gradient(135deg, var(--mud-palette-background-grey) 0%, var(--mud-palette-background) 100%); border: 1px solid var(--mud-palette-lines-default);">
+                                <div class="d-flex align-center mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Class="mr-2"/>
+                                    <MudText Typo="Typo.subtitle1" Color="Color.Primary" Style="font-weight: 500;">Active Filters</MudText>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var filter in GetActiveFilters())
+                                    {
+                                        <MudChip T="object" 
+                                        Color="Color.Primary" 
+                                        Variant="Variant.Filled" 
+                                        Size="Size.Small"
+                                        OnClose="() => ClearFilter(filter.Key)"
+                                        Style="border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <MudText Class="mr-2" Style="font-size: 0.8rem; font-weight: 500;">@filter.Key:</MudText>
+                                            <MudText Style="font-size: 0.8rem;">@filter.Value</MudText>
+                                        </MudChip>
+                                    }
+                                </div>
+                            </MudPaper>
+                        }
+
                         <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
-                            <MudTable ServerData="ServerReload" @ref="_table"
-                                    T="AnalyticsResultDto"
-                                    Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Striped="false" Elevation="0" Rounded="true" Bordered="true"
-                                    Loading="_isLoading" LoadingProgressColor="Color.Primary"
-                                    Style="flex: 1; overflow: auto; border: 1px solid #e0e6ff; background: #fdfdff;">
-                                <ToolBarContent>
-                                    <MudText Typo="Typo.subtitle1" Style="font-weight: 500;">Filtered Employees</MudText>
-                                    <MudSpacer />
-                                    <div class="d-flex align-center">
-                                        <MudTextField @bind-Value="SearchString"
-                                                      Placeholder="Search employees..."
-                                                      Adornment="Adornment.Start"
-                                                      AdornmentIcon="@Icons.Material.Filled.Search"
-                                                      IconSize="Size.Small"
-                                                      Variant="Variant.Outlined"
-                                                      Dense="true"
-                                                      Immediate="true"
-                                                      OnKeyDown="HandleKeyDown"
-                                                      Class="mt-0"
-                                                      Style="width: 300px;"></MudTextField>
-                                        @if (!string.IsNullOrWhiteSpace(SearchString))
-                                        {
-                                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
-                                                          Color="Color.Default"
-                                                          OnClick="ClearSearchText"
-                                                          Size="Size.Small"
-                                                          Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
-                                        }
-                                        <MudTooltip Text="Download Filtered Results (CSV)">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Download"
-                                                           Color="Color.Default"
-                                                           OnClick="DownloadFilteredEmployees"
-                                                           Disabled="@(!GetFilteredAndSortedEmployees().Any() || _isLoading)"
-                                                           Size="Size.Small"
-                                                           Class="ml-2" Style="margin-top: 4px !important;"></MudIconButton>
-                                        </MudTooltip>
-                                    </div>
-                                </ToolBarContent>
-                                <HeaderContent>
-                                    <MudTh Style="width: 60px;"></MudTh>
-                                    <MudTh><MudTableSortLabel SortLabel="name_sort" T="AnalyticsResultDto">Name</MudTableSortLabel></MudTh>
-                                    <MudTh><MudTableSortLabel SortLabel="designation_sort" T="AnalyticsResultDto">Designation</MudTableSortLabel></MudTh>
-                                    <MudTh><MudTableSortLabel SortLabel="id_sort" T="AnalyticsResultDto">Employee ID</MudTableSortLabel></MudTh>
-                                </HeaderContent>
-                                <RowTemplate Context="employeeContext">
-                                    <MudTd DataLabel="Avatar">
-                                        @if (!string.IsNullOrEmpty(employeeContext.ProfilePicture))
-                                        {
-                                            var imageSrc = $"data:image/png;base64,{employeeContext.ProfilePicture}";
-                                            <MudAvatar Image="@imageSrc" Size="Size.Small" />
-                                        }
-                                        else
-                                        {
-                                            <MudAvatar Color="Color.Primary" Size="Size.Small">@GetInitials(employeeContext.FirstName )</MudAvatar>
-                                        }
-                                    </MudTd>
-                                    <MudTd DataLabel="Name">
-                                        <a href="/employee/@employeeContext.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
-                                            @employeeContext.FirstName @employeeContext.MiddleName @employeeContext.LastName
-                                        </a>
-                                    </MudTd>
-                                    <MudTd DataLabel="Designation">
-                                        <a href="/employee/@employeeContext.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
-                                            @employeeContext.Designation
-                                        </a>
-                                    </MudTd>
-                                    <MudTd DataLabel="EmployeeID">
-                                        <a href="/employee/@employeeContext.EmployeeID" target="_blank" style="text-decoration: none; color: inherit;">
-                                            @employeeContext.EmployeeID
-                                        </a>
-                                    </MudTd>
-                                </RowTemplate>
-                                <NoRecordsContent>
-                                    <MudText>No matching records found.</MudText>
-                                </NoRecordsContent>
-                                <LoadingContent>
-                                    <MudText>Loading...</MudText>
-                                </LoadingContent>
-                                <PagerContent>
-                                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                                </PagerContent>
-                            </MudTable>
+                            <div class="d-flex align-center" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
+                                <MudText Typo="Typo.subtitle1" Style="font-weight: 500;">Filtered Employees</MudText>
+                                <MudSpacer />
+                                <div class="d-flex align-center">
+                                    <MudTextField @bind-Value="SearchString"
+                                    Placeholder="Search employees..."
+                                    Adornment="Adornment.Start"
+                                    AdornmentIcon="@Icons.Material.Filled.Search"
+                                    IconSize="Size.Small"
+                                    Variant="Variant.Outlined"
+                                    Dense="true"
+                                    Immediate="true"
+                                    OnKeyDown="HandleKeyDown"
+                                    Class="mt-0"
+                                    Style="width: 300px; border-radius: 8px; height: 35px;"></MudTextField>
+                                    @if (!string.IsNullOrWhiteSpace(SearchString))
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                        Color="Color.Default"
+                                        OnClick="ClearSearchText"
+                                        Size="Size.Small"
+                                        Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
+                                    }   
+
+                                </div>
+                            </div>
+
+                            <div class="table-container">
+                                <MudTable ServerData="ServerReload" @ref="_table"
+                                T="EmployeeAnalyticsResponseDto"
+                                Dense="false" Hover="true" Breakpoint="Breakpoint.Sm" Striped="true" Elevation="0"
+                                Loading="_isLoading" LoadingProgressColor="Color.Primary"
+                                Class="professional-table"
+                                Style="height: 100%; display: flex; flex-direction: column;"
+                                FixedHeader="true"
+                                Height="100%">
+
+                                    <HeaderContent>
+                                        <MudTh Class="table-header-cell avatar-column"></MudTh>
+                                        <MudTh Class="table-header-cell">
+                                            <MudTableSortLabel SortLabel="name_sort" T="EmployeeAnalyticsResponseDto" Class="sort-label">
+                                                <div class="header-content">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Person" Class="header-icon" />
+                                                    <span>Employee Name</span>
+                                                </div>
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh Class="table-header-cell">
+                                            <MudTableSortLabel SortLabel="designation_sort" T="EmployeeAnalyticsResponseDto" Class="sort-label">
+                                                <div class="header-content">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Work" Class="header-icon" />
+                                                    <span>Designation</span>
+                                                </div>
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh Class="table-header-cell">
+                                            <MudTableSortLabel SortLabel="id_sort" T="EmployeeAnalyticsResponseDto" Class="sort-label">
+                                                <div class="header-content">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Badge" Class="header-icon" />
+                                                    <span>Employee ID</span>
+                                                </div>
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                    </HeaderContent>
+
+
+                                    <RowTemplate Context="employeeContext">
+                                        <MudTd Class="avatar-cell">
+                                            <MudAvatar Color="Color.Primary" Size="Size.Medium" Class="employee-avatar">
+                                                @GetInitials(employeeContext.EmployeeDetails.FirstName)
+                                            </MudAvatar>
+                                        </MudTd>
+                                        <MudTd DataLabel="Name" Class="name-cell">
+                                            <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" class="employee-link name-link">
+                                                <div class="employee-name">
+                                                    <span class="full-name">@employeeContext.EmployeeDetails.FirstName @employeeContext.EmployeeDetails.MiddleName @employeeContext.EmployeeDetails.LastName</span>
+                                                    <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Class="external-link-icon" />
+                                                </div>
+                                            </a>
+                                        </MudTd>
+                                        <MudTd DataLabel="Designation" Class="designation-cell">
+                                            <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" class="employee-link">
+                                                <div class="designation-info">
+                                                    <span class="designation-badge">@employeeContext.EmployeeDetails.Designation</span>
+                                                </div>
+                                            </a>
+                                        </MudTd>
+                                        <MudTd DataLabel="EmployeeID" Class="id-cell">
+                                            <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" class="employee-link">
+                                                <div class="employee-id">
+                                                    <span class="id-code">@employeeContext.EmployeeDetails.EmployeeID</span>
+
+                                                </div>
+                                            </a>
+                                        </MudTd>
+                                    </RowTemplate>
+
+                                    <NoRecordsContent>
+                                        <div class="no-records">
+                                            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Class="no-records-icon" />
+                                            <MudText Typo="Typo.h6" Class="no-records-title">No Employees Found</MudText>
+                                            <MudText Typo="Typo.body2" Class="no-records-subtitle">Try adjusting your search criteria or filters</MudText>
+                                        </div>
+                                    </NoRecordsContent>
+
+                                    <LoadingContent>
+                                        <div class="loading-content">
+                                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                                            <MudText Typo="Typo.body1" Class="loading-text">Loading employee data...</MudText>
+                                        </div>
+                                    </LoadingContent>
+
+                                    <PagerContent>
+                                        <div class="pager-container">
+                                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }"
+                                            InfoFormat="{first_item}-{last_item} of {all_items}"
+                                            RowsPerPageString="Rows per page:" />
+                                        </div>
+                                    </PagerContent>
+                                </MudTable>
+                            </div>
+
+
+
+
+                            <style>
+                                .table-header-cell {
+                                border-bottom: none;
+                                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                                }
+                            </style>
+                            @* Filter Styles *@
+                            <style>
+                                /* Banking Expansion Panel Styles */
+
+                                .pa - 4 {
+                                padding: 6px 0px 7px 2px !important;
+                                }
+
+                                .banking-expansion-panel {
+                                margin-bottom: 16px;
+                                border-radius: 12px;
+                                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                                border: 1px solid #e3f2fd;
+                                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                                overflow: hidden;
+                                }
+
+                                .banking-expansion-panel:hover {
+                                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+                                transform: translateY(-2px);
+                                border-color: #bbdefb;
+                                }
+
+                                /* Header Styling */
+                                .banking-expansion-panel .mud-expand-panel-header {
+                                background: linear-gradient(155deg, #4ba1f3 0%, #75cfd9);
+                                color: white;
+                                padding: 16px 20px;
+                                border-radius: 12px 12px 0 0;
+                                transition: all 0.3s ease;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header:hover {
+                                background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header .mud-expand-panel-text {
+                                font-weight: 600;
+                                font-size: 1.1rem;
+                                letter-spacing: 0.5px;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header .mud-icon-button {
+                                color: white;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header .mud-icon-button:hover {
+                                background-color: rgba(255, 255, 255, 0.1);
+                                }
+
+                                /* Content Area Styling */
+                                .banking-expansion-panel .mud-expand-panel-content {
+                                padding: 24px 20px;
+                                background-color: #ffffff;
+                                border-radius: 0 0 12px 12px;
+                                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                                }
+
+                                /* Animation for expand/collapse */
+                                .banking-expansion-panel .mud-expand-panel-content {
+                                animation: fadeInUp 0.4s ease-out;
+                                }
+
+                                @@keyframes fadeInUp {
+                                from
+
+                                {
+                                opacity: 0;
+                                transform: translateY(10px);
+                                }
+
+                                to {
+                                opacity: 1;
+                                transform: translateY(0);
+                                }
+
+                                }
+
+                                /* Icon Styling */
+                                .banking-expansion-panel .mud-expand-panel-header .mud-svg-icon {
+                                transition: transform 0.3s ease;
+                                }
+
+                                .banking-expansion-panel.mud-expand-panel-expanded .mud-expand-panel-header .mud-svg-icon {
+                                transform: rotate(180deg);
+                                }
+
+
+
+                                @@keyframes shimmer {
+                                0%, 100%
+
+                                {
+                                background-position: 200% 0;
+                                }
+
+                                50% {
+                                background-position: -200% 0;
+                                }
+
+                                }
+
+                                /* Focus States for Accessibility */
+                                .banking-expansion-panel .mud-expand-panel-header:focus {
+                                outline: 2px solid #1976d2;
+                                outline-offset: 2px;
+                                }
+
+                                /* Responsive Design */
+                                @@media (max-width: 768px) {
+                                .banking-expansion-panel
+
+                                {
+                                margin-bottom: 12px;
+                                border-radius: 8px;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header {
+                                padding: 12px 16px;
+                                border-radius: 8px 8px 0 0;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-content {
+                                padding: 16px;
+                                border-radius: 0 0 8px 8px;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-header .mud-expand-panel-text {
+                                font-size: 1rem;
+                                }
+
+                                }
+
+                                /* Dark Theme Support */
+                                @@media (prefers-color-scheme: dark) {
+                                .banking-expansion-panel
+
+                                {
+                                background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+                                border-color:#ffffff;
+                                }
+
+                                .banking-expansion-panel .mud-expand-panel-content {
+                                background-color:#ffffff;
+                                }
+
+                                }
+                            </style>
+                            <style>
+                                .table-container {
+                                background: #ffffff;
+                                border-radius: 16px;
+                                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                                border: 1px solid #e5e7eb;
+                                overflow: hidden;
+                                margin: 0.5rem 0;
+                                height: 100%;
+                                max-height: 100%;
+                                display: flex;
+                                flex-direction: column;
+                                }
+
+                                .professional-table {
+                                background: transparent !important;
+                                display: flex;
+                                flex-direction: column;
+                                height: 100%;
+                                overflow: hidden;
+                                }
+
+                                .professional-table .mud-table-container {
+                                flex: 1;
+                                overflow: auto;
+                                max-height: calc(100vh - 300px); /* Adjust based on your container height */
+                                }
+
+                                .professional-table .mud-table {
+                                height: 100%;
+                                }
+
+                                /* Header Styling - Fixed Header */
+                                .mud-table .mud-table-head {
+                                position: sticky;
+                                top: 0;
+                                z-index: 10;
+                                background-color:rgb(233 233 233);       
+                                }
+                                .mud-avatar-medium {
+                                width: 35px;
+                                height: 35px;
+                                font-size: 1.25rem;
+                                }
+
+                                .mud-table-sticky-header * .mud-table-root .mud-table-head * .mud-table-cell {
+                                    background-color: rgb(236 236 236);
+                                    position: sticky;
+                                    z-index: 2;
+                                    top: 0;
+                                }
+
+                                .table-header-cell {
+                                    background-color: rgb(233 233 233);
+                                    padding: 1rem 0.75rem !important;
+                                font-weight: 600 !important;
+                                color: #374151 !important;
+                                height: 60px;
+                                vertical-align: middle;
+                                position: sticky;
+                                top: 0;
+                                z-index: 11;
+                                }
+
+                                .avatar-column {
+                                width: 80px !important;
+                                text-align: center;
+                                }
+
+                                .header-content {
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                                font-size: 0.875rem;
+                                font-weight: 600;
+                                }
+
+                                .header-icon {
+                                font-size: 1.125rem !important;
+                                color: #6b7280;
+                                }
+
+                                /* Scrollable Table Body */
+                                .mud-table-container {
+                                flex: 1;
+                                overflow-y: auto;
+                                overflow-x: auto;
+                                min-height: 0;
+                                }
+
+                                .mud-table tbody {
+                                overflow-y: auto;
+                                }
+
+                                /* Custom Scrollbar for better UX */
+                                .mud-table-container::-webkit-scrollbar {
+                                width: 6px;
+                                height: 6px;
+                                }
+
+                                .mud-table-container::-webkit-scrollbar-track {
+                                background: #f1f5f9;
+                                border-radius: 3px;
+                                }
+
+                                .mud-table-container::-webkit-scrollbar-thumb {
+                                background: #cbd5e1;
+                                border-radius: 3px;
+                                }
+
+                                .mud-table-container::-webkit-scrollbar-thumb:hover {
+                                background: #94a3b8;
+                                }
+
+                                /* Row Styling */
+                                .mud-table tbody .mud-table-row {
+                                transition: all 0.2s ease;
+                                border-bottom: 1px solid #f3f4f6 !important;
+                                }
+
+                                .mud-table tbody .mud-table-row:hover {
+                                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+                                transform: translateX(2px);
+                                box-shadow: 4px 0 12px rgba(59, 130, 246, 0.1);
+                                border-left: 3px solid #3b82f6;
+                                }
+
+                                .mud-table tbody .mud-table-row:nth-child(even) {
+                                background: rgba(248, 250, 252, 0.5) !important;
+                                }
+
+                                /* Cell Styling */
+                                .mud-table-cell {
+                                padding: 0.5rem 0.75rem !important;
+                                vertical-align: middle !important;
+                                border-bottom: 1px solid #f3f4f6 !important;
+                                }
+
+                                .avatar-cell {
+                                text-align: center;
+                                width: 80px;
+                                }
+
+                                .employee-avatar {
+                                box-shadow: 0 3px 8px rgba(59, 130, 246, 0.2) !important;
+                                border: 2px solid #ffffff;
+                                transition: all 0.2s ease;
+                                }
+
+                                .employee-avatar:hover {
+                                transform: scale(1.1);
+                                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+                                }
+
+                                /* Link Styling */
+                                .employee-link {
+                                text-decoration: none !important;
+                                color: inherit !important;
+                                display: block;
+                                transition: all 0.2s ease;
+                                padding: 0.25rem;
+                                border-radius: 8px;
+                                }
+
+                                .employee-link:hover {
+                                background: rgba(59, 130, 246, 0.05);
+                                color: #3b82f6 !important;
+                                }
+
+                                /* Name Cell */
+                                .employee-name {
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                gap: 0.5rem;
+                                }
+
+                                .full-name {
+                                font-weight: 500;
+                                color: #111827;
+                                font-size: 0.95rem;
+                                }
+
+                                .external-link-icon {
+                                font-size: 0.875rem !important;
+                                color: #9ca3af;
+                                opacity: 0;
+                                transition: opacity 0.2s ease;
+                                }
+
+                                .employee-link:hover .external-link-icon {
+                                opacity: 1;
+                                color: #3b82f6;
+                                }
+
+                                /* Designation Cell */
+                                .designation-badge {
+                                background: linear-gradient(135deg, #ddd6fe 0%, #e0e7ff 100%);
+                                color: #5b21b6;
+                                padding: 0.375rem 0.75rem;
+                                border-radius: 20px;
+                                font-size: 0.8rem;
+                                font-weight: 500;
+                                border: 1px solid rgba(139, 92, 246, 0.2);
+                                display: inline-block;
+                                transition: all 0.2s ease;
+                                }
+
+                                .employee-link:hover .designation-badge {
+                                background: linear-gradient(135deg, #c4b5fd 0%, #ddd6fe 100%);
+                                transform: translateY(-1px);
+                                box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+                                }
+
+                                /* ID Cell */
+                                .employee-id {
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                gap: 0.5rem;
+                                }
+
+                                .id-code {
+                                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                                color: #92400e;
+                                padding: 0.25rem 0.5rem;
+                                border-radius: 6px;
+                                font-size: 0.8rem;
+                                font-weight: 600;
+                                border: 1px solid rgba(217, 119, 6, 0.2);
+                                }
+
+                                .copy-icon {
+                                font-size: 0.875rem !important;
+                                color: #9ca3af;
+                                opacity: 0;
+                                transition: opacity 0.2s ease;
+                                cursor: pointer;
+                                }
+
+                                .employee-link:hover .copy-icon {
+                                opacity: 1;
+                                color: #d97706;
+                                }
+
+                                .employee-link:hover .id-code {
+                                background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+                                transform: translateY(-1px);
+                                box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+                                }
+
+                                /* No Records Styling */
+                                .no-records {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                padding: 3rem 2rem;
+                                color: #6b7280;
+                                }
+
+                                .no-records-icon {
+                                font-size: 3rem !important;
+                                color: #d1d5db;
+                                margin-bottom: 1rem;
+                                }
+
+                                .no-records-title {
+                                color: #374151 !important;
+                                margin-bottom: 0.5rem !important;
+                                }
+
+                                .no-records-subtitle {
+                                color: #9ca3af !important;
+                                }
+
+                                /* Loading Styling */
+                                .loading-content {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                padding: 3rem 2rem;
+                                gap: 1rem;
+                                }
+
+                                .loading-text {
+                                color: #6b7280 !important;
+                                }
+
+                                /* Pager Styling - Fixed Footer */
+                                .pager-container {
+                                background-color: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                                border-top: 1px solid #e5e7eb;
+                                position: sticky;
+                                bottom: 0;
+                                z-index: 10;
+                                margin-top: auto;
+                                }
+
+                                .mud-table-pagination {
+                                color: #374151 !important;
+                                }
+
+                                .mud-table-pagination .mud-button {
+                                color: #6b7280 !important;
+                                }
+
+                                .mud-table-pagination .mud-button:hover {
+                                background: rgba(59, 130, 246, 0.1) !important;
+                                color: #3b82f6 !important;
+                                }
+
+                                .mud-table-pagination-toolbar {
+                                    height: 40px !important;
+                                        background-color: rgb(233 233 233)
+                                }
+                                /* Responsive Design */
+                                @@media (max-width: 960px) {
+                                .table-container
+
+                                {
+                                border-radius: 12px;
+                                margin: 0.5rem 0;
+                                }
+
+                                .header-content {
+                                font-size: 0.8rem;
+                                }
+
+                                .header-icon {
+                                display: none;
+                                }
+
+                                .mud-table-cell {
+                                padding: 0.75rem 0.5rem !important;
+                                }
+
+                                .full-name {
+                                font-size: 0.875rem;
+                                }
+
+                                .designation-badge {
+                                font-size: 0.75rem;
+                                padding: 0.25rem 0.5rem;
+                                }
+
+                                .id-code {
+                                font-size: 0.75rem;
+                                }
+
+                                }
+
+                                @@media (max-width: 600px) {
+                                .table-container
+
+                                {
+                                border-radius: 8px;
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+                                }
+
+                                .employee-name,
+                                .employee-id {
+                                flex-direction: column;
+                                align-items: flex-start;
+                                gap: 0.25rem;
+                                }
+
+                                .external-link-icon,
+                                .copy-icon {
+                                display: none;
+                                }
+
+                                .avatar-cell {
+                                width: 60px;
+                                }
+
+                                .employee-avatar {
+                                width: 32px !important;
+                                height: 32px !important;
+                                }
+
+                                }
+
+                                @@media (max-width: 480px) {
+                                .mud-table-cell
+
+                                {
+                                padding: 0.5rem 0.25rem !important;
+                                }
+
+                                .no-records,
+                                .loading-content {
+                                padding: 2rem 1rem;
+                                }
+
+                                .pager-container {
+                                padding: 0.75rem;
+                                }
+
+                                 
+                                }</style>
                         </div>
                     }
                 }
@@ -370,11 +1137,329 @@
         </MudItem>
     </MudGrid>
 </MudContainer>
+<style>
+    .mud-grid-spacing-xs-3 > .mud-grid-item {
+    padding-top:1px;
+    padding-left:1px;
+    padding-right:8px;
+    padding-bottom:8px;
+    }
+
+    .light-dashboard-grid {
+    margin: 0rem;
+    }
+
+    .light-card {
+    border-radius: 12px !important;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0;
+    height: 140px;
+    min-height: 140px;
+    }
+
+    .light-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .employees-light-card {
+    border-left: 4px solid #3b82f6;
+    }
+
+    .employees-light-card:hover {
+    border-left-color: #1d4ed8;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15) !important;
+    }
+
+    .roles-light-card {
+    border-left: 4px solid #8b5cf6;
+    }
+
+    .roles-light-card:hover {
+    border-left-color: #7c3aed;
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.15) !important;
+    }
+
+    .health-light-card {
+    border-left: 4px solid #ef4444;
+    }
+
+    .health-light-card:hover {
+    border-left-color: #dc2626;
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15) !important;
+    }
+
+    .light-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    }
+
+    .light-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.1rem;
+    }
+
+    .light-icon {
+    font-size: 1.5rem !important;
+    padding: 0.5rem;
+    border-radius: 8px;
+    height: 1.5em;
+    width: 1.5em;
+    }
+
+    .employees-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    height: 1.5em;
+    width: 1.5em;
+    }
+
+    .roles-icon {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+    height: 1.5em;
+    width: 1.5em;
+    }
+
+    .health-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    height: 1.5em;
+    width: 1.5em;
+    }
+
+    .simple-status {
+    display: flex;
+    align-items: center;
+    }
+
+    .status-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    }
+
+    .employees-badge {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+    }
+
+    .roles-badge {
+    background: rgba(251, 191, 36, 0.1);
+    color: #d97706;
+    }
+
+    .health-badge {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    }
+
+    .light-title {
+    margin-left:25% !important;
+    margin-bottom: 0.3rem !important;
+    margin-top:0.4rem;
+    color: #374151;
+    font-weight: 700 !important;
+    font-size: 1.2rem !important;
+    }
+
+    .light-metrics {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    align-items: center;
+    }
+
+    .primary-num {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1;
+    }
+
+    .divider-light {
+    font-size: 1.25rem;
+    color: #9ca3af;
+    font-weight: 500;
+    }
+
+    .secondary-num {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #6b7280;
+    }
+
+    /* Clean Media Queries */
+    @@media (max-width: 960px) {
+    .light-card {
+    padding: 1.25rem;
+    height: 130px;
+    min-height: 130px;
+    }
+
+    .primary-num {
+    font-size: 1.75rem;
+    }
+
+    .secondary-num {
+    font-size: 1.1rem;
+    }
+    }
+
+    @@media (max-width: 600px) {
+    .light-card {
+    padding: 1rem;
+    height: 120px;
+    min-height: 120px;
+    }
+
+    .primary-num {
+    font-size: 1.5rem;
+    }
+
+    .secondary-num {
+    font-size: 1rem;
+    }
+
+    .light-icon {
+    font-size: 1.25rem !important;
+    padding: 0.4rem;
+    }
+    }
+
+    @@media (max-width: 480px) {
+    .light-metrics {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    }
+
+    .divider-light {
+    display: none;
+    }
+
+    .light-header {
+    margin-bottom: 0.75rem;
+    }
+
+    .light-card {
+    height: 110px;
+    min-height: 110px;
+    }
+    }
+    .mud-chip-filled.mud-chip-color-primary {
+    color: var(--mud-palette-primary-text);
+    --mud-ripple-color: var(--mud-palette-primary-text) !important;
+    background-color: rgb(184 179 230);
+    }
+
+    ::deep .analytics-container {
+    padding: 16px;
+    margin: 0;
+    width: calc(100% - 60px);
+    transition: all 0.3s ease;
+    }
+
+    ::deep .mud-grid {
+    margin: 0;
+    width: 100%;
+    }
+
+    ::deep .mud-paper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    }
+
+    ::deep .mud-table-container {
+    flex: 1;
+    overflow: auto;
+    }
+
+    ::deep .mud-table {
+    height: 100%;
+    }
+
+    ::deep .mud-table-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--mud-palette-background);
+    }
+
+    /* Responsive styles */
+    @@media (min-width: 1280px) {
+    ::deep .analytics-container {
+    left: 240px;
+    width: calc(100% - 240px);
+    }
+    }
+
+    @@media (min-width: 600px) and (max-width: 1279px) {
+    ::deep .analytics-container {
+    left: 60px;
+    width: calc(100% - 60px);
+    }
+    }
+
+    @@media (max-width: 599px) {
+    ::deep .analytics-container {
+    left: 0;
+    width: 100%;
+    padding: 8px;
+    }
+
+    ::deep .mud-grid {
+    margin: 0;
+    }
+
+    ::deep .mud-item {
+    padding: 4px;
+    }
+
+    ::deep .mud-paper {
+    padding: 8px !important;
+    }
+
+    ::deep .mud-text {
+    font-size: 0.875rem;
+    }
+
+    ::deep .mud-table {
+    font-size: 0.875rem;
+    }
+    }
+
+    /* Additional responsive adjustments */
+    @@media (max-width: 960px) {
+    ::deep .mud-grid {
+    margin: 0;
+    }
+
+    ::deep .mud-item {
+    padding: 4px;
+    }
+
+    ::deep .mud-paper {
+    padding: 8px !important;
+    }
+    }
+</style>
 
 @code {
-    private MudTable<AnalyticsResultDto>? _table;
+
+    private MudTable<EmployeeAnalyticsResponseDto>? _table;
     private AnalyticsFilterDto _filterDto = new();
-    private List<AnalyticsResultDto> _filteredEmployees = new();
+    private List<EmployeeAnalyticsResponseDto> _filteredEmployees = new();
     private bool _isLoading = false;
     private bool _initialLoadComplete = false;
     private TableState _lastTableState = new();
@@ -410,7 +1495,7 @@
     private int _totalEmployees = 0;
     private int _uniqueDesignations = 0;
     private int _uniqueBloodGroups = 0;
-    
+
     // Total metrics (across all employees, regardless of filter)
     private int _systemTotalEmployees = 0;
     private int _systemTotalDesignations = 0;
@@ -465,127 +1550,358 @@
         _filterDto = new AnalyticsFilterDto();
         await ApplyFilters();
     }
-
-    private string BuildFilterQueryString(AnalyticsFilterDto dto)
-    {
-        var parameters = new Dictionary<string, string>();
-        void AddIfNotNullOrEmpty(string key, string? value) { if (!string.IsNullOrEmpty(value)) parameters.Add(key, System.Net.WebUtility.UrlEncode(value)); }
-        void AddIfNotNull<T>(string key, T? value) where T : struct { if (value.HasValue) parameters.Add(key, System.Net.WebUtility.UrlEncode(value.Value.ToString())); }
-        void AddIfDateNotNull(string key, DateTime? value) { if (value.HasValue) parameters.Add(key, System.Net.WebUtility.UrlEncode(value.Value.ToString("yyyy-MM-dd"))); }
-
-        AddIfNotNullOrEmpty(nameof(dto.BloodGroup), dto.BloodGroup);
-        AddIfNotNullOrEmpty(nameof(dto.BankName), dto.BankName);
-        AddIfNotNullOrEmpty(nameof(dto.Designation), dto.Designation);
-        AddIfNotNullOrEmpty(nameof(dto.JoiningLocation), dto.JoiningLocation);
-        AddIfNotNullOrEmpty(nameof(dto.Gender), dto.Gender);
-        AddIfNotNullOrEmpty(nameof(dto.MaritalStatus), dto.MaritalStatus);
-        AddIfNotNullOrEmpty(nameof(dto.Nationality), dto.Nationality);
-        AddIfNotNullOrEmpty(nameof(dto.TypeOfEmployment), dto.TypeOfEmployment);
-        AddIfNotNullOrEmpty(nameof(dto.Level), dto.Level);
-        AddIfNotNullOrEmpty(nameof(dto.CurrentCity), dto.CurrentCity);
-        AddIfNotNullOrEmpty(nameof(dto.CurrentState), dto.CurrentState);
-        AddIfNotNullOrEmpty(nameof(dto.PermanentCity), dto.PermanentCity);
-        AddIfNotNullOrEmpty(nameof(dto.PermanentState), dto.PermanentState);
-        AddIfDateNotNull(nameof(dto.DateOfJoiningStart), dto.DateOfJoiningStart);
-        AddIfDateNotNull(nameof(dto.DateOfJoiningEnd), dto.DateOfJoiningEnd);
-        AddIfDateNotNull(nameof(dto.DateOfBirthStart), dto.DateOfBirthStart);
-        AddIfDateNotNull(nameof(dto.DateOfBirthEnd), dto.DateOfBirthEnd);
-        AddIfNotNullOrEmpty(nameof(dto.PhysicallyChallenged), dto.PhysicallyChallenged);
-        AddIfNotNullOrEmpty(nameof(dto.BankBranch), dto.BankBranch);
-        AddIfNotNullOrEmpty(nameof(dto.BankState), dto.BankState);
-        AddIfNotNullOrEmpty(nameof(dto.AccountType), dto.AccountType);
-        AddIfNotNullOrEmpty(nameof(dto.PANNumber), dto.PANNumber);
-        AddIfNotNullOrEmpty(nameof(dto.AadhaarNumber), dto.AadhaarNumber);
-        AddIfNotNullOrEmpty("EducationUniversity", dto.College);
-        AddIfNotNullOrEmpty(nameof(dto.Qualification), dto.Qualification);
-        AddIfNotNull(nameof(dto.YearOfPassingStart), dto.YearOfPassingStart);
-        AddIfNotNull(nameof(dto.YearOfPassingEnd), dto.YearOfPassingEnd);
-        AddIfNotNull(nameof(dto.EducationPercentageMin), dto.EducationPercentageMin);
-        AddIfNotNull(nameof(dto.EducationPercentageMax), dto.EducationPercentageMax);
-        AddIfNotNullOrEmpty("WorkEmployer", dto.PreviousEmployer);
-        AddIfNotNullOrEmpty("WorkDesignation", dto.PreviousDesignation);
-        AddIfNotNullOrEmpty("WorkLocation", dto.PreviousLocation);
-        AddIfDateNotNull("WorkDateOfJoiningStart", dto.PreviousJobStartDateStart);
-        AddIfDateNotNull("WorkDateOfJoiningEnd", dto.PreviousJobStartDateEnd);
-        AddIfDateNotNull("WorkDateOfLeavingStart", dto.PreviousJobEndDateStart);
-        AddIfDateNotNull("WorkDateOfLeavingEnd", dto.PreviousJobEndDateEnd);
-        AddIfNotNullOrEmpty(nameof(dto.PassportNationality), dto.PassportNationality);
-        AddIfDateNotNull(nameof(dto.PassportIssueDateStart), dto.PassportIssueDateStart);
-        AddIfDateNotNull(nameof(dto.PassportIssueDateEnd), dto.PassportIssueDateEnd);
-        AddIfDateNotNull(nameof(dto.PassportExpiryDateStart), dto.PassportExpiryDateStart);
-        AddIfDateNotNull(nameof(dto.PassportExpiryDateEnd), dto.PassportExpiryDateEnd);
-        AddIfNotNullOrEmpty(nameof(dto.CurrentZip), dto.CurrentZip);
-        AddIfNotNullOrEmpty(nameof(dto.PermanentZip), dto.PermanentZip);
-        AddIfNotNull(nameof(dto.HasAllergies), dto.HasAllergies);
-        AddIfNotNull(nameof(dto.HasMedications), dto.HasMedications);
-        return parameters.Any() ? "?" + string.Join("&", parameters.Select(p => $"{p.Key}={p.Value}")) : string.Empty;
-    }
-
+    
     private async Task ApplyFilters()
     {
         _isLoading = true;
         _errorMessage = null;
-        _filteredEmployees.Clear();
+        _filteredEmployees = new List<EmployeeAnalyticsResponseDto>(); // Clear the list
         StateHasChanged();
         try
         {
-			var Token = await JSRuntime.InvokeAsync<string>("localStorage.getItem" , "authToken");
-
-            string queryString = BuildFilterQueryString(_filterDto);
-            
-            string apiUrl = $"/api/Analytics/filter{queryString}";
-            Console.WriteLine($"Applying filters with GET request to: {apiUrl}");
-			var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
-			request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
-          
-
-			
-            var response = await Http.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            // Get cached data
+            var allEmployees = await AnalyticsCache.GetOrSetAnalyticsDataAsync(async () =>
             {
-                _filteredEmployees = await response.Content.ReadFromJsonAsync<List<AnalyticsResultDto>>() ?? new List<AnalyticsResultDto>();
-                Console.WriteLine($"Analytics filter successful: Found {_filteredEmployees.Count} employees.");
-                bool isUnfiltered = string.IsNullOrEmpty(queryString);
-                if (isUnfiltered && !_initialLoadComplete)
+                var Token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var request = new HttpRequestMessage(HttpMethod.Get, "/api/Analytics/all");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+                var response = await Http.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    _systemTotalEmployees = _filteredEmployees.Count;
-                    _systemTotalDesignations = _filteredEmployees.Select(e => e.Designation).Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
-                    _systemTotalBloodGroups = _filteredEmployees.Select(e => e.BloodGroup).Where(b => !string.IsNullOrEmpty(b)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                    return await response.Content.ReadFromJsonAsync<List<EmployeeAnalyticsResponseDto>>() ?? new List<EmployeeAnalyticsResponseDto>();
                 }
-                CalculateStats();
-            }
-            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return new List<EmployeeAnalyticsResponseDto>();
+            });
+
+            // Apply filters to the cached data
+            var filteredResults = allEmployees.Where(emp =>
             {
-                _filteredEmployees.Clear();
-                _errorMessage = await response.Content.ReadAsStringAsync();
-                if (string.IsNullOrWhiteSpace(_errorMessage)) { _errorMessage = "No employees found matching the criteria."; }
-                Console.WriteLine($"Analytics filter returned 404: {_errorMessage}");
-                CalculateStats();
-            }
-            else
+                var details = emp.EmployeeDetails;
+                var banking = emp.BankingInformation;
+                var experience = emp.experience;
+
+                // EmployeeDetails null check
+                if (details == null) return false;
+
+                // --- Personal Filters ---
+                if (!string.IsNullOrEmpty(_filterDto.BloodGroup))
+                {
+                    if (details.BloodGroup == null || details.BloodGroup != _filterDto.BloodGroup) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.Gender))
+                {
+                    if (details.Gender == null || details.Gender != _filterDto.Gender) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.MaritalStatus))
+                {
+                    if (details.MaritalStatus == null || details.MaritalStatus != _filterDto.MaritalStatus) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.Nationality))
+                {
+                    if (details.Nationality == null || details.Nationality != _filterDto.Nationality) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.PhysicallyChallenged))
+                {
+                    if (details.PhysicallyChallenged == null || details.PhysicallyChallenged != _filterDto.PhysicallyChallenged) return false;
+                }
+                if (_filterDto.DateOfBirthStart.HasValue)
+                {
+                    if (!details.DateOfBirth.HasValue || details.DateOfBirth < _filterDto.DateOfBirthStart) return false;
+                }
+                if (_filterDto.DateOfBirthEnd.HasValue)
+                {
+                    if (!details.DateOfBirth.HasValue || details.DateOfBirth > _filterDto.DateOfBirthEnd) return false;
+                }
+
+                // --- Employment Filters ---
+                if (!string.IsNullOrEmpty(_filterDto.Designation))
+                {
+                    if (details.Designation == null || details.Designation != _filterDto.Designation) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.JoiningLocation))
+                {
+                    if (details.JoiningLocation == null || details.JoiningLocation != _filterDto.JoiningLocation) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.TypeOfEmployment))
+                {
+                    if (details.TypeOfEmployment == null || details.TypeOfEmployment != _filterDto.TypeOfEmployment) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.Level))
+                {
+                    if (details.Level == null || details.Level != _filterDto.Level) return false;
+                }
+                if (_filterDto.DateOfJoiningStart.HasValue)
+                {
+                    if (!details.DateOfJoining.HasValue || details.DateOfJoining < _filterDto.DateOfJoiningStart) return false;
+                }
+                if (_filterDto.DateOfJoiningEnd.HasValue)
+                {
+                    if (!details.DateOfJoining.HasValue || details.DateOfJoining > _filterDto.DateOfJoiningEnd) return false;
+                }
+
+                // --- Contact Filters ---
+                if (!string.IsNullOrEmpty(_filterDto.CurrentCity))
+                {
+                    if (details.CurrentCity == null || details.CurrentCity != _filterDto.CurrentCity) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.CurrentState))
+                {
+                    if (details.CurrentState == null || details.CurrentState != _filterDto.CurrentState) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.CurrentZip))
+                {
+                    if (details.CurrentZip == null || details.CurrentZip != _filterDto.CurrentZip) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.PermanentCity))
+                {
+                    if (details.PermanentCity == null || details.PermanentCity != _filterDto.PermanentCity) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.PermanentState))
+                {
+                    if (details.PermanentState == null || details.PermanentState != _filterDto.PermanentState) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.PermanentZip))
+                {
+                    if (details.PermanentZip == null || details.PermanentZip != _filterDto.PermanentZip) return false;
+                }
+
+                // --- Passport Filters ---
+                if (!string.IsNullOrEmpty(_filterDto.PassportNationality))
+                {
+                    if (details.PassportNationality == null || details.PassportNationality != _filterDto.PassportNationality) return false;
+                }
+                if (_filterDto.PassportIssueDateStart.HasValue)
+                {
+                    if (!details.PassportIssueDate.HasValue || details.PassportIssueDate < _filterDto.PassportIssueDateStart) return false;
+                }
+                if (_filterDto.PassportIssueDateEnd.HasValue)
+                {
+                    if (!details.PassportIssueDate.HasValue || details.PassportIssueDate > _filterDto.PassportIssueDateEnd) return false;
+                }
+                if (_filterDto.PassportExpiryDateStart.HasValue)
+                {
+                    if (!details.PassportExpiryDate.HasValue || details.PassportExpiryDate < _filterDto.PassportExpiryDateStart) return false;
+                }
+                if (_filterDto.PassportExpiryDateEnd.HasValue)
+                {
+                    if (!details.PassportExpiryDate.HasValue || details.PassportExpiryDate > _filterDto.PassportExpiryDateEnd) return false;
+                }
+
+                // --- Banking Filters ---
+                if (banking == null)
+                {
+                    if (!string.IsNullOrEmpty(_filterDto.BankName) ||
+                        !string.IsNullOrEmpty(_filterDto.BankBranch) ||
+                        !string.IsNullOrEmpty(_filterDto.BankState) ||
+                        !string.IsNullOrEmpty(_filterDto.AccountType) ||
+                        !string.IsNullOrEmpty(_filterDto.PANNumber) ||
+                        !string.IsNullOrEmpty(_filterDto.AadhaarNumber))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(_filterDto.BankName))
+                    {
+                        if (banking.BankName == null || banking.BankName != _filterDto.BankName) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.BankBranch))
+                    {
+                        if (banking.Branch == null || banking.Branch != _filterDto.BankBranch) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.BankState))
+                    {
+                        if (banking.State == null || banking.State != _filterDto.BankState) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.AccountType))
+                    {
+                        if (banking.AccountType == null || banking.AccountType != _filterDto.AccountType) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.PANNumber))
+                    {
+                        if (banking.PANNumber == null || banking.PANNumber != _filterDto.PANNumber) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.AadhaarNumber))
+                    {
+                        if (banking.AadhaarNumber == null || banking.AadhaarNumber != _filterDto.AadhaarNumber) return false;
+                    }
+                }
+
+                // --- Experience Filters ---
+                if (experience == null)
+                {
+                    if (!string.IsNullOrEmpty(_filterDto.College) ||
+                        !string.IsNullOrEmpty(_filterDto.Qualification) ||
+                        _filterDto.YearOfPassingStart.HasValue ||
+                        _filterDto.YearOfPassingEnd.HasValue ||
+                        _filterDto.EducationPercentageMin.HasValue ||
+                        _filterDto.EducationPercentageMax.HasValue ||
+                        !string.IsNullOrEmpty(_filterDto.PreviousEmployer) ||
+                        !string.IsNullOrEmpty(_filterDto.PreviousDesignation) ||
+                        !string.IsNullOrEmpty(_filterDto.PreviousLocation) ||
+                        _filterDto.PreviousJobStartDateStart.HasValue ||
+                        _filterDto.PreviousJobStartDateEnd.HasValue ||
+                        _filterDto.PreviousJobEndDateStart.HasValue ||
+                        _filterDto.PreviousJobEndDateEnd.HasValue)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Education filters
+                    if (!string.IsNullOrEmpty(_filterDto.College))
+                    {
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.University != null && eq.University == _filterDto.College))
+                        {
+                            return false;
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.Qualification))
+                    {
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.Qualification != null && eq.Qualification == _filterDto.Qualification))
+                        {
+                            return false;
+                        }
+                    }
+                    if (_filterDto.YearOfPassingStart.HasValue)
+                    {
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.YearOfPassing >= _filterDto.YearOfPassingStart))
+                        {
+                            return false;
+                        }
+                    }
+                    if (_filterDto.YearOfPassingEnd.HasValue)
+                    {
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.YearOfPassing <= _filterDto.YearOfPassingEnd))
+                        {
+                            return false;
+                        }
+                    }
+                    if (_filterDto.EducationPercentageMin.HasValue)
+                    {
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.Percentage >= _filterDto.EducationPercentageMin))
+                        {
+                            return false;
+                        }
+                    }
+                    if (_filterDto.EducationPercentageMax.HasValue)
+                    {
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.Percentage <= _filterDto.EducationPercentageMax))
+                        {
+                            return false;
+                        }
+                    }
+
+                    // Work experience filters
+                    if (!string.IsNullOrEmpty(_filterDto.PreviousEmployer))
+                    {
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.Employer != null && we.Employer == _filterDto.PreviousEmployer))
+                        {
+                            return false;
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.PreviousDesignation))
+                    {
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.Designation != null && we.Designation == _filterDto.PreviousDesignation))
+                        {
+                            return false;
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.PreviousLocation))
+                    {
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.Location != null && we.Location == _filterDto.PreviousLocation))
+                        {
+                            return false;
+                        }
+                    }
+                    if (_filterDto.PreviousJobStartDateStart.HasValue)
+                    {
+                        if (!experience.WorkExperiences.Any(we => we.DateOfJoining.HasValue && we.DateOfJoining >= _filterDto.PreviousJobStartDateStart))
+                            return false;
+                    }
+                    if (_filterDto.PreviousJobStartDateEnd.HasValue)
+                    {
+                        if (!experience.WorkExperiences.Any(we => we.DateOfJoining.HasValue && we.DateOfJoining <= _filterDto.PreviousJobStartDateEnd))
+                            return false;
+                    }
+                    if (_filterDto.PreviousJobEndDateStart.HasValue)
+                    {
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.DateOfLeaving.HasValue && we.DateOfLeaving >= _filterDto.PreviousJobEndDateStart))
+                        {
+                            return false;
+                        }
+                    }
+                    if (_filterDto.PreviousJobEndDateEnd.HasValue)
+                    {
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.DateOfLeaving.HasValue && we.DateOfLeaving <= _filterDto.PreviousJobEndDateEnd))
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                // --- Misc Filters ---
+                if (_filterDto.HasAllergies.HasValue)
+                {
+                    if (string.IsNullOrEmpty(details.Allergies) == _filterDto.HasAllergies) return false;
+                }
+                if (_filterDto.HasMedications.HasValue)
+                {
+                    if (string.IsNullOrEmpty(details.Medications) == _filterDto.HasMedications) return false;
+                }
+
+                return true;
+            }).ToList();
+
+            // Update the filtered employees list
+            _filteredEmployees = filteredResults;
+
+            // Update stats
+            _totalEmployees = _filteredEmployees.Count;
+            _uniqueDesignations = _filteredEmployees.Select(e => e.EmployeeDetails?.Designation).Distinct().Count();
+            _uniqueBloodGroups = _filteredEmployees.Select(e => e.EmployeeDetails?.BloodGroup).Distinct().Count();
+
+            // Update system totals (unfiltered)
+            _systemTotalEmployees = allEmployees.Count;
+            _systemTotalDesignations = allEmployees.Select(e => e.EmployeeDetails?.Designation).Distinct().Count();
+            _systemTotalBloodGroups = allEmployees.Select(e => e.EmployeeDetails?.BloodGroup).Distinct().Count();
+
+            _initialLoadComplete = true;
+            await InvokeAsync(StateHasChanged);
+
+            // Reload table to reflect filtered data
+            if (_table != null)
             {
-                _filteredEmployees.Clear();
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _errorMessage = $"Error fetching analytics data ({response.StatusCode}): {response.ReasonPhrase}. {errorContent}";
-                Console.WriteLine($"Analytics filter error: {response.StatusCode} - {_errorMessage}");
-                CalculateStats();
+                await _table.ReloadServerData();
             }
         }
         catch (Exception ex)
         {
-            _filteredEmployees.Clear();
-            _errorMessage = $"An unexpected error occurred: {ex.Message}";
-            Console.WriteLine($"Analytics filter exception: {ex}");
-            CalculateStats();
+            _errorMessage = $"Error applying filters: {ex.Message}";
+            _isLoading = false;
+            await InvokeAsync(StateHasChanged);
         }
         finally
         {
-            if (!_initialLoadComplete) _initialLoadComplete = true;
             _isLoading = false;
-            StateHasChanged();
-            await (_table?.ReloadServerData() ?? Task.CompletedTask);
+            await InvokeAsync(StateHasChanged);
         }
     }
+   
 
     private async Task HandleKeyDown(KeyboardEventArgs args)
     {
@@ -607,43 +1923,137 @@
         }
     }
 
-    private async Task<TableData<AnalyticsResultDto>> ServerReload(TableState state, CancellationToken token)
+    private async Task<TableData<EmployeeAnalyticsResponseDto>> ServerReload(TableState state, CancellationToken token)
     {
         await Task.Delay(1, token);
         _lastTableState = state;
 
-        IEnumerable<AnalyticsResultDto> data = _filteredEmployees;
+        IEnumerable<EmployeeAnalyticsResponseDto> data = _filteredEmployees;
         if (!string.IsNullOrWhiteSpace(SearchString))
         {
             string lowerSearch = SearchString.ToLowerInvariant();
             data = data.Where(e =>
-                (e.FirstName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.LastName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.MiddleName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.Designation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false)
-            );
+            {
+                var details = e.EmployeeDetails;
+                var banking = e.BankingInformation;
+                var experience = e.experience;
+
+                // Personal Information
+                if (details != null)
+                {
+                    if (details.FirstName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.LastName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.MiddleName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.FatherName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.MotherName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Gender?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.MaritalStatus?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.BloodGroup?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Nationality?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PhysicallyChallenged?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Professional Information
+                if (details != null)
+                {
+                    if (details.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Designation?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.TypeOfEmployment?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.Level?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.JoiningLocation?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Contact Information
+                if (details != null)
+                {
+                    if (details.CurrentMobile?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentEmail?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentAddress?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentCity?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentState?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.CurrentZip?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentAddress?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentCity?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentState?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PermanentZip?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Passport Information
+                if (details != null)
+                {
+                    if (details.PassportNo?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        details.PassportNationality?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Banking Information
+                if (banking != null)
+                {
+                    if (banking.BankName?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.Branch?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.State?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.AccountType?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.AccountNumber?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.IFSCode?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.PANNumber?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                        banking.AadhaarNumber?.ToLowerInvariant().Contains(lowerSearch) == true)
+                        return true;
+                }
+
+                // Education Information
+                if (experience?.EducationQualifications != null)
+                {
+                    foreach (var edu in experience.EducationQualifications)
+                    {
+                        if (edu.Qualification?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            edu.University?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            edu.YearOfPassing.ToString().Contains(lowerSearch) ||
+                            edu.Percentage.ToString().Contains(lowerSearch))
+                            return true;
+                    }
+                }
+
+                // Work Experience Information
+                if (experience?.WorkExperiences != null)
+                {
+                    foreach (var work in experience.WorkExperiences)
+                    {
+                        if (work.Employer?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            work.Location?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            work.Designation?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                            work.DateOfJoining.ToString().Contains(lowerSearch) ||
+                            work.DateOfLeaving.ToString().Contains(lowerSearch))
+                            return true;
+                    }
+                }
+
+                return false;
+            });
         }
 
         if (!string.IsNullOrEmpty(state.SortLabel))
         {
             switch (state.SortLabel)
             {
-                case "name_sort": data = data.OrderByDirection(state.SortDirection, e => $"{e.FirstName} {e.LastName}"); break;
-                case "designation_sort": data = data.OrderByDirection(state.SortDirection, e => e.Designation ?? ""); break;
-                case "id_sort": data = data.OrderByDirection(state.SortDirection, e => e.EmployeeID); break;
+                case "name_sort": data = data.OrderByDirection(state.SortDirection, e => $"{e.EmployeeDetails.FirstName ?? string.Empty} {e.EmployeeDetails.LastName ?? string.Empty}"); break;
+                case "designation_sort": data = data.OrderByDirection(state.SortDirection, e => e.EmployeeDetails.Designation ?? string.Empty); break;
+                case "id_sort": data = data.OrderByDirection(state.SortDirection, e => e.EmployeeDetails.EmployeeID ?? string.Empty); break;
             }
         }
 
         var totalItems = data.Count();
         var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
-        return new TableData<AnalyticsResultDto>() { TotalItems = totalItems, Items = pagedData };
+        return new TableData<EmployeeAnalyticsResponseDto>() { TotalItems = totalItems, Items = pagedData };
     }
 
     private async Task ClearFilters()
     {
         _filterDto = new AnalyticsFilterDto();
         SearchString = string.Empty;
+      // Clear cache when filters are cleared
         await ApplyFilters();
     }
 
@@ -663,8 +2073,8 @@
             return;
         }
         _totalEmployees = _filteredEmployees.Count;
-        _uniqueDesignations = _filteredEmployees.Select(e => e.Designation).Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
-        _uniqueBloodGroups = _filteredEmployees.Select(e => e.BloodGroup).Where(b => !string.IsNullOrEmpty(b)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        _uniqueDesignations = _filteredEmployees.Select(e => e.EmployeeDetails.Designation).Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        _uniqueBloodGroups = _filteredEmployees.Select(e => e.EmployeeDetails.BloodGroup).Where(b => !string.IsNullOrEmpty(b)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
     }
 
     private string GetInitials(string? name)
@@ -682,27 +2092,24 @@
         {
             try
             {
-                var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
-                var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/nationalities");
-                if (!string.IsNullOrEmpty(authToken))
+                _nationalitySuggestions = await AnalyticsCache.GetOrSetLookupDataAsync("nationalities", async () =>
                 {
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
-                }
+                    var authToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                    var request = new HttpRequestMessage(HttpMethod.Get, "api/Lookup/nationalities");
+                    if (!string.IsNullOrEmpty(authToken))
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+                    }
 
-                var response = await Http.SendAsync(request, token);
-                if (response.IsSuccessStatusCode)
-                {
-                    var r = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
-                    if (r != null)
-                        _nationalitySuggestions = r.OrderBy(s => s).ToList();
-                    _nationalityLoaded = true;
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken: token);
-                    Console.WriteLine($"Error loading nationalities ({response.StatusCode}): {errorContent}");
-                    _nationalitySuggestions = new List<string>();
-                }
+                    var response = await Http.SendAsync(request, token);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var data = await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken: token);
+                        return data?.OrderBy(s => s).ToList() ?? new List<string>();
+                    }
+                    return new List<string>();
+                });
+                _nationalityLoaded = true;
             }
             catch (Exception ex)
             {
@@ -1407,20 +2814,52 @@
             .Take(10);
     }
 
-    private List<AnalyticsResultDto> GetFilteredAndSortedEmployees()
+    private List<EmployeeAnalyticsResponseDto> GetFilteredAndSortedEmployees()
     {
-        IEnumerable<AnalyticsResultDto> data = _filteredEmployees;
+        IEnumerable<EmployeeAnalyticsResponseDto> data = _filteredEmployees;
 
         // Apply search filter
         if (!string.IsNullOrWhiteSpace(SearchString))
         {
             string lowerSearch = SearchString.ToLowerInvariant();
             data = data.Where(e =>
-                (e.FirstName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.LastName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.MiddleName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.Designation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false)
+                (e.EmployeeDetails.FirstName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.LastName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.MiddleName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.Designation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.EmployeeID?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.FatherName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.MotherName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.Level?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.CurrentMobile?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.PassportNo?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.TypeOfEmployment?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.JoiningLocation?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.Gender?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.MaritalStatus?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.BloodGroup?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.Nationality?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.CurrentCity?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.CurrentState?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.PermanentCity?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.PermanentState?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.EmployeeDetails.PassportNationality?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.BankingInformation?.BankName?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 (e.BankingInformation?.AadhaarNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 (e.BankingInformation?.PANNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 (e.BankingInformation?.AccountNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 (e.BankingInformation?.IFSCode?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                 
+                (e.BankingInformation?.Branch?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.BankingInformation?.State?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.BankingInformation?.AccountType?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
+                (e.experience?.EducationQualifications?.Any(edu => 
+                    edu.Qualification?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                    edu.University?.ToLowerInvariant().Contains(lowerSearch) == true) ?? false) ||
+                (e.experience?.WorkExperiences?.Any(work => 
+                    work.Employer?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                    work.Location?.ToLowerInvariant().Contains(lowerSearch) == true ||
+                    work.Designation?.ToLowerInvariant().Contains(lowerSearch) == true) ?? false)
             );
         }
 
@@ -1429,14 +2868,14 @@
         {
             switch (_lastTableState.SortLabel)
             {
-                case "name_sort": data = data.OrderByDirection(_lastTableState.SortDirection, e => $"{e.FirstName} {e.LastName}"); break;
-                case "designation_sort": data = data.OrderByDirection(_lastTableState.SortDirection, e => e.Designation ?? ""); break;
-                case "id_sort": data = data.OrderByDirection(_lastTableState.SortDirection, e => e.EmployeeID); break;
+                case "name_sort": data = data.OrderByDirection(_lastTableState.SortDirection, e => $"{e.EmployeeDetails.FirstName ?? string.Empty} {e.EmployeeDetails.LastName ?? string.Empty}"); break;
+                case "designation_sort": data = data.OrderByDirection(_lastTableState.SortDirection, e => e.EmployeeDetails.Designation ?? string.Empty); break;
+                case "id_sort": data = data.OrderByDirection(_lastTableState.SortDirection, e => e.EmployeeDetails.EmployeeID ?? string.Empty); break;
             }
         }
         else // Default sort if none applied
         {
-            data = data.OrderBy(e => e.FirstName).ThenBy(e => e.LastName);
+            data = data.OrderBy(e => e.EmployeeDetails.FirstName).ThenBy(e => e.EmployeeDetails.LastName);
         }
 
         return data.ToList();
@@ -1447,23 +2886,21 @@
         var employeesToDownload = GetFilteredAndSortedEmployees();
         if (!employeesToDownload.Any())
         {
-            // Optionally show a message to the user
             return;
         }
 
         try
         {
-            // Generate CSV content
             var csvContent = new System.Text.StringBuilder();
  
-            // === START: Helper Functions ===
+            // Helper Functions
             Func<string?, string> escape = (val) =>
             {
                 if (string.IsNullOrEmpty(val)) return "";
-                string escaped = val.Replace("\"", "\"\""); // Replace one quote with two quotes
+                string escaped = val.Replace("\"", "\"\"");
                 if (escaped.Contains(',') || escaped.Contains('\"') || escaped.Contains('\n') || escaped.Contains('\r'))
                 {
-                    return $"\"{escaped}\""; // Wrap in quotes
+                    return $"\"{escaped}\"";
                 }
                 return escaped;
             };
@@ -1471,206 +2908,369 @@
             Func<bool?, string> formatBool = (b) => b.HasValue ? b.Value.ToString() : "";
             Func<double?, string> formatDouble = (d) => d.HasValue ? d.Value.ToString("F2") : "";
             Func<int?, string> formatInt = (i) => i.HasValue ? i.Value.ToString() : "";
-            // === END: Helper Functions ===
- 
-            // Header Row - Dynamically create based on updated AnalyticsResultDto properties (excluding ProfilePicture)
-            var header = string.Join(",", typeof(AnalyticsResultDto).GetProperties()
-                                        .Where(p => p.Name != nameof(AnalyticsResultDto.ProfilePicture))
-                                        .Select(p => escape(p.Name))); // Escape header names too
-            csvContent.AppendLine(header);
+
+            // Create headers for professional information only
+            var headers = new List<string>
+            {
+                "EmployeeID",
+                "Designation",
+                "TypeOfEmployment",
+                "Level",
+                "JoiningLocation",
+                "DateOfJoining",
+                "Education_Qualification_1",
+                "Education_University_1",
+                "Education_YearOfPassing_1",
+                "Education_Percentage_1",
+                "Education_Qualification_2",
+                "Education_University_2",
+                "Education_YearOfPassing_2",
+                "Education_Percentage_2",
+                "Education_Qualification_3",
+                "Education_University_3",
+                "Education_YearOfPassing_3",
+                "Education_Percentage_3",
+                "Work_Employer_1",
+                "Work_Location_1",
+                "Work_Designation_1",
+                "Work_DateOfJoining_1",
+                "Work_DateOfLeaving_1",
+                "Work_Employer_2",
+                "Work_Location_2",
+                "Work_Designation_2",
+                "Work_DateOfJoining_2",
+                "Work_DateOfLeaving_2",
+                "Work_Employer_3",
+                "Work_Location_3",
+                "Work_Designation_3",
+                "Work_DateOfJoining_3",
+                "Work_DateOfLeaving_3"
+            };
+
+            csvContent.AppendLine(string.Join(",", headers.Select(h => escape(h))));
 
             // Data rows
             foreach (var emp in employeesToDownload)
             {
-                // Create CSV row using properties from the updated AnalyticsResultDto
-                var values = typeof(AnalyticsResultDto).GetProperties()
-                    .Where(p => p.Name != nameof(AnalyticsResultDto.ProfilePicture))
-                    .Select(p =>
+                var values = new List<string>();
+                
+                // Professional Information
+                values.Add(escape(emp.EmployeeDetails.EmployeeID));
+                values.Add(escape(emp.EmployeeDetails.Designation));
+                values.Add(escape(emp.EmployeeDetails.TypeOfEmployment));
+                values.Add(escape(emp.EmployeeDetails.Level));
+                values.Add(escape(emp.EmployeeDetails.JoiningLocation));
+                values.Add(formatDate(emp.EmployeeDetails.DateOfJoining));
+
+                // Education (up to 3 entries)
+                var educationEntries = emp.experience?.EducationQualifications?.Take(3).ToList() ?? new List<Education>();
+                for (int i = 0; i < 3; i++)
+                {
+                    if (i < educationEntries.Count)
                     {
-                        var value = p.GetValue(emp);
-                        return value switch
-                        {
-                            DateTime dt => formatDate(dt),
-                            DateTimeOffset dto => formatDate(dto.DateTime), // Handle DateTimeOffset if needed
-                            bool b => formatBool(b),
-                            int i => formatInt(i),
-                            double d => formatDouble(d),
-                            decimal dec => formatDouble((double?)dec), // Handle decimal if needed
-                            _ => escape(value?.ToString()),
-                        };
-                    });
+                        values.Add(escape(educationEntries[i].Qualification));
+                        values.Add(escape(educationEntries[i].University));
+                        values.Add(formatInt(educationEntries[i].YearOfPassing));
+                        values.Add(formatDouble(educationEntries[i].Percentage));
+                    }
+                    else
+                    {
+                        values.AddRange(new[] { "", "", "", "" });
+                    }
+                }
+
+                // Work Experience (up to 3 entries)
+                var workEntries = emp.experience?.WorkExperiences?.Take(3).ToList() ?? new List<WorkExperience>();
+                for (int i = 0; i < 3; i++)
+                {
+                    if (i < workEntries.Count)
+                    {
+                        values.Add(escape(workEntries[i].Employer));
+                        values.Add(escape(workEntries[i].Location));
+                        values.Add(escape(workEntries[i].Designation));
+                        values.Add(formatDate(workEntries[i].DateOfJoining));
+                        values.Add(formatDate(workEntries[i].DateOfLeaving));
+                    }
+                    else
+                    {
+                        values.AddRange(new[] { "", "", "", "", "" });
+                    }
+                }
+
                 csvContent.AppendLine(string.Join(",", values));
             }
 
             // Prepare for download
             var fileBytes = System.Text.Encoding.UTF8.GetBytes(csvContent.ToString());
             var base64Content = Convert.ToBase64String(fileBytes);
-            var fileName = $"FilteredEmployees_{DateTime.Now:yyyyMMddHHmmss}.csv";
+            var fileName = $"EmployeeAnalytics_{DateTime.Now:yyyyMMddHHmmss}.csv";
             var contentType = "text/csv";
 
-            // Trigger download using JavaScript interop
             await JSRuntime.InvokeVoidAsync("downloadFile", fileName, contentType, base64Content);
         }
         catch (Exception ex)
         {
             _errorMessage = $"Error generating or downloading file: {ex.Message}";
             Console.WriteLine($"Download error: {ex}");
-            StateHasChanged(); // Update UI to show error
+        }
+    }
+
+    private async Task SyncData()
+    {
+        if (_isLoading) return;
+
+        _isLoading = true;
+        _errorMessage = null;
+        
+        try
+        {
+            // Store current data as backup
+            var previousData = _filteredEmployees.ToList();
+            
+            // Get new data
+            var Token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+            var request = new HttpRequestMessage(HttpMethod.Get, "/api/Analytics/all");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+            var response = await Http.SendAsync(request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var newData = await response.Content.ReadFromJsonAsync<List<EmployeeAnalyticsResponseDto>>() ?? new List<EmployeeAnalyticsResponseDto>();
+                
+                // Apply current filters to new data
+                _filteredEmployees = newData.Where(emp =>
+                {
+                    var details = emp.EmployeeDetails;
+                    var banking = emp.BankingInformation;
+                    var experience = emp.experience;
+
+                    // Basic filters
+                    if (!string.IsNullOrEmpty(_filterDto.BloodGroup) && details.BloodGroup != _filterDto.BloodGroup) return false;
+                    if (!string.IsNullOrEmpty(_filterDto.Designation) && details.Designation != _filterDto.Designation) return false;
+                    if (!string.IsNullOrEmpty(_filterDto.JoiningLocation) && details.JoiningLocation != _filterDto.JoiningLocation) return false;
+                    if (!string.IsNullOrEmpty(_filterDto.Gender) && details.Gender != _filterDto.Gender) return false;
+                    if (!string.IsNullOrEmpty(_filterDto.MaritalStatus) && details.MaritalStatus != _filterDto.MaritalStatus) return false;
+                    if (!string.IsNullOrEmpty(_filterDto.Nationality) && details.Nationality != _filterDto.Nationality) return false;
+                    if (!string.IsNullOrEmpty(_filterDto.TypeOfEmployment) && details.TypeOfEmployment != _filterDto.TypeOfEmployment) return false;
+                    if (!string.IsNullOrEmpty(_filterDto.Level) && details.Level != _filterDto.Level) return false;
+
+                    // Date range filters
+                    if (_filterDto.DateOfJoiningStart.HasValue && details.DateOfJoining < _filterDto.DateOfJoiningStart) return false;
+                    if (_filterDto.DateOfJoiningEnd.HasValue && details.DateOfJoining > _filterDto.DateOfJoiningEnd) return false;
+                    if (_filterDto.DateOfBirthStart.HasValue && details.DateOfBirth < _filterDto.DateOfBirthStart) return false;
+                    if (_filterDto.DateOfBirthEnd.HasValue && details.DateOfBirth > _filterDto.DateOfBirthEnd) return false;
+
+                    // Banking filters
+                    if (banking != null)
+                    {
+                        if (!string.IsNullOrEmpty(_filterDto.BankName) && banking.BankName != _filterDto.BankName) return false;
+                        if (!string.IsNullOrEmpty(_filterDto.BankBranch) && banking.Branch != _filterDto.BankBranch) return false;
+                        if (!string.IsNullOrEmpty(_filterDto.BankState) && banking.State != _filterDto.BankState) return false;
+                        if (!string.IsNullOrEmpty(_filterDto.AccountType) && banking.AccountType != _filterDto.AccountType) return false;
+                    }
+
+                    // Experience filters
+                    if (experience != null)
+                    {
+                        // Education filters
+                        if (!string.IsNullOrEmpty(_filterDto.College))
+                        {
+                            if (!experience.EducationQualifications.Any(e => e.University != null && e.University == _filterDto.College)) return false;
+                        }
+                        if (!string.IsNullOrEmpty(_filterDto.Qualification))
+                        {
+                            if (!experience.EducationQualifications.Any(e => e.Qualification != null && e.Qualification == _filterDto.Qualification)) return false;
+                        }
+                        if (_filterDto.YearOfPassingStart.HasValue)
+                        {
+                            if (!experience.EducationQualifications.Any(e => e.YearOfPassing >= _filterDto.YearOfPassingStart)) return false;
+                        }
+                        if (_filterDto.YearOfPassingEnd.HasValue)
+                        {
+                            if (!experience.EducationQualifications.Any(e => e.YearOfPassing <= _filterDto.YearOfPassingEnd)) return false;
+                        }
+                        if (_filterDto.EducationPercentageMin.HasValue)
+                        {
+                            if (!experience.EducationQualifications.Any(e => e.Percentage >= _filterDto.EducationPercentageMin)) return false;
+                        }
+                        if (_filterDto.EducationPercentageMax.HasValue)
+                        {
+                            if (!experience.EducationQualifications.Any(e => e.Percentage <= _filterDto.EducationPercentageMax)) return false;
+                        }
+
+                        // Work experience filters
+                        if (!string.IsNullOrEmpty(_filterDto.PreviousEmployer))
+                        {
+                            if (!experience.WorkExperiences.Any(w => w.Employer == _filterDto.PreviousEmployer)) return false;
+                        }
+                        if (!string.IsNullOrEmpty(_filterDto.PreviousDesignation))
+                        {
+                            if (!experience.WorkExperiences.Any(w => w.Designation == _filterDto.PreviousDesignation)) return false;
+                        }
+                        if (!string.IsNullOrEmpty(_filterDto.PreviousLocation))
+                        {
+                            if (!experience.WorkExperiences.Any(w => w.Location == _filterDto.PreviousLocation)) return false;
+                        }
+                        if (_filterDto.PreviousJobStartDateStart.HasValue)
+                        {
+                            if (!experience.WorkExperiences.Any(we => we.DateOfJoining.HasValue && we.DateOfJoining >= _filterDto.PreviousJobStartDateStart))
+                                return false;
+                        }
+                        if (_filterDto.PreviousJobStartDateEnd.HasValue)
+                        {
+                            if (!experience.WorkExperiences.Any(we => we.DateOfJoining.HasValue && we.DateOfJoining <= _filterDto.PreviousJobStartDateEnd))
+                                return false;
+                        }
+                        if (_filterDto.PreviousJobEndDateStart.HasValue)
+                        {
+                            if (experience.WorkExperiences == null ||
+                                !experience.WorkExperiences.Any(we => we.DateOfLeaving.HasValue && we.DateOfLeaving >= _filterDto.PreviousJobEndDateStart))
+                            {
+                                return false;
+                            }
+                        }
+                        if (_filterDto.PreviousJobEndDateEnd.HasValue)
+                        {
+                            if (experience.WorkExperiences == null ||
+                                !experience.WorkExperiences.Any(we => we.DateOfLeaving.HasValue && we.DateOfLeaving <= _filterDto.PreviousJobEndDateEnd))
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return true;
+                }).ToList();
+
+                // Update system totals if no filters are applied
+                bool isUnfiltered = !_filterDto.GetType().GetProperties()
+                    .Any(p => p.GetValue(_filterDto) != null && !string.IsNullOrEmpty(p.GetValue(_filterDto)?.ToString()));
+
+                if (isUnfiltered)
+                {
+                    _systemTotalEmployees = newData.Count;
+                    _systemTotalDesignations = newData.Select(e => e.EmployeeDetails.Designation).Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                    _systemTotalBloodGroups = newData.Select(e => e.EmployeeDetails.BloodGroup).Where(b => !string.IsNullOrEmpty(b)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                }
+            }
+            else
+            {
+                // If request fails, keep previous data
+                _filteredEmployees = previousData;
+                _errorMessage = "Failed to sync data. Keeping previous data.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error syncing data: {ex.Message}";
+            Console.WriteLine($"Sync error: {ex}");
+        }
+        finally
+        {
+            _isLoading = false;
+            CalculateStats();
+            StateHasChanged();
+            await (_table?.ReloadServerData() ?? Task.CompletedTask);
+        }
+    }
+
+    private bool HasActiveFilters()
+    {
+        return _filterDto.GetType().GetProperties()
+            .Any(p => p.GetValue(_filterDto) != null && !string.IsNullOrEmpty(p.GetValue(_filterDto)?.ToString()));
+    }
+
+    private Dictionary<string, string> GetActiveFilters()
+    {
+        var activeFilters = new Dictionary<string, string>();
+        var properties = _filterDto.GetType().GetProperties();
+
+        foreach (var prop in properties)
+        {
+            var value = prop.GetValue(_filterDto);
+            if (value != null && !string.IsNullOrEmpty(value.ToString()))
+            {
+                string displayName = prop.Name switch
+                {
+                    "BloodGroup" => "Blood Group",
+                    "MaritalStatus" => "Marital Status",
+                    "TypeOfEmployment" => "Type of Employment",
+                    "DateOfBirthStart" => "DOB From",
+                    "DateOfBirthEnd" => "DOB To",
+                    "DateOfJoiningStart" => "Joined From",
+                    "DateOfJoiningEnd" => "Joined To",
+                    "YearOfPassingStart" => "Passed From Year",
+                    "YearOfPassingEnd" => "Passed To Year",
+                    "EducationPercentageMin" => "Min Education %",
+                    "EducationPercentageMax" => "Max Education %",
+                    "PreviousJobStartDateStart" => "Prev. Job Start From",
+                    "PreviousJobStartDateEnd" => "Prev. Job Start To",
+                    "PreviousJobEndDateStart" => "Prev. Job End From",
+                    "PreviousJobEndDateEnd" => "Prev. Job End To",
+                    "PassportIssueDateStart" => "Passport Issued From",
+                    "PassportIssueDateEnd" => "Passport Issued To",
+                    "PassportExpiryDateStart" => "Passport Expires From",
+                    "PassportExpiryDateEnd" => "Passport Expires To",
+                    "CurrentZip" => "Current Zip Code",
+                    "PermanentZip" => "Permanent Zip Code",
+                    "PANNumber" => "PAN Number",
+                    "AadhaarNumber" => "Aadhaar Number",
+                    "HasAllergies" => "Has Allergies",
+                    "HasMedications" => "Has Medications",
+                    _ => prop.Name
+                };
+
+                string displayValue = value switch
+                {
+                    DateTime dt => dt.ToString("yyyy-MM-dd"),
+                    bool b => b ? "Yes" : "No",
+                    _ => value.ToString()
+                };
+
+                activeFilters[displayName] = displayValue;
+            }
+        }
+
+        return activeFilters;
+    }
+
+    private async Task ClearFilter(string filterName)
+    {
+        var propertyName = filterName switch
+        {
+            "Blood Group" => "BloodGroup",
+            "Marital Status" => "MaritalStatus",
+            "Type of Employment" => "TypeOfEmployment",
+            "DOB From" => "DateOfBirthStart",
+            "DOB To" => "DateOfBirthEnd",
+            "Joined From" => "DateOfJoiningStart",
+            "Joined To" => "DateOfJoiningEnd",
+            "Passed From Year" => "YearOfPassingStart",
+            "Passed To Year" => "YearOfPassingEnd",
+            "Min Education %" => "EducationPercentageMin",
+            "Max Education %" => "EducationPercentageMax",
+            "Prev. Job Start From" => "PreviousJobStartDateStart",
+            "Prev. Job Start To" => "PreviousJobStartDateEnd",
+            "Prev. Job End From" => "PreviousJobEndDateStart",
+            "Prev. Job End To" => "PreviousJobEndDateEnd",
+            "Passport Issued From" => "PassportIssueDateStart",
+            "Passport Issued To" => "PassportIssueDateEnd",
+            "Passport Expires From" => "PassportExpiryDateStart",
+            "Passport Expires To" => "PassportExpiryDateEnd",
+            "Current Zip Code" => "CurrentZip",
+            "Permanent Zip Code" => "PermanentZip",
+            "PAN Number" => "PANNumber",
+            "Aadhaar Number" => "AadhaarNumber",
+            "Has Allergies" => "HasAllergies",
+            "Has Medications" => "HasMedications",
+            _ => filterName
+        };
+
+        var property = _filterDto.GetType().GetProperty(propertyName);
+        if (property != null)
+        {
+            property.SetValue(_filterDto, null);
+            await ApplyFilters();
         }
     }
 }
-
-<style>
-    .hover-lift:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08) !important;
-    }
-    .hover-scale:hover {
-        transform: scale(1.03);
-    }
-
-    .mud-table-toolbar {
-        background: linear-gradient(90deg, #f8f9ff 0%, #eef2ff 100%);
-        border-bottom: 1px solid #e0e6ff;
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
-    }
-
-    .mud-table-head .mud-table-cell {
-        background-color: #f3f5f9;
-        color: #333;
-        font-weight: 500;
-    }
-
-    .mud-table-row:hover {
-        background-color: rgba(142, 84, 233, 0.05) !important;
-    }
-
-    .mud-table-row.mud-table-row-striped {
-        background-color: #fafbff;
-    }
-
-    .filter-container {
-        position: relative;
-        z-index: 10;
-        margin-bottom: 15px; /* Reduced space after filter section */
-    }
-
-    .filter-bar {
-        display: flex;
-        gap: 8px;
-        height: 45px; /* Fixed height for filter bar */
-        position: relative;
-        background-color: white;
-    }
-
-    .filter-panel {
-        flex: 1;
-        min-width: 0;
-        position: relative;
-    }
-
-    .mud-expansion-panel {
-        background-color: white;
-        border: 1px solid #e8edff;
-        border-radius: 8px;
-        margin-bottom: 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        transition: all 0.2s ease-in-out;
-        height: 100%;
-    }
-
-    .mud-expansion-panel:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    }
-
-    .mud-expansion-panel .mud-expansion-panel-header {
-        background-color: white;
-        border-radius: 8px;
-        padding: 4px 12px;
-        min-height: 36px;
-        height: 100%;
-        display: flex;
-        align-items: center;
-    }
-
-    .mud-expansion-panel.mud-panel-expanded .mud-expansion-panel-header {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-    }
-
-    .mud-expansion-panel-content {
-        background-color: white;
-        border-bottom-left-radius: 8px;
-        border-bottom-right-radius: 8px;
-        padding: 8px 12px;
-        position: absolute;
-        width: 100%;
-        z-index: 1000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        max-height: 400px;
-        overflow-y: auto;
-        top: 100%;
-        left: 0;
-        border: 1px solid #e8edff;
-        border-top: none;
-    }
-
-    .mud-expansion-panel-header-text {
-        font-weight: 500;
-        color: #2c3e50;
-        font-size: 0.875rem;
-    }
-
-    .mud-expansion-panel-header:hover {
-        background-color: #f8fafd !important;
-    }
-
-    .mud-expansion-panel-header:active {
-        background-color: #f0f4f8 !important;
-    }
-
-    .mud-select, .mud-text-field, .mud-autocomplete {
-        margin-bottom: 4px !important;
-    }
-
-    .mud-input-control {
-        margin-top: 0 !important;
-    }
-
-    .mud-input-label {
-        font-size: 0.75rem !important;
-    }
-
-    .mud-input {
-        font-size: 0.75rem !important;
-        min-height: 32px !important;
-    }
-
-    .mud-expansion-panel-content::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .mud-expansion-panel-content::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    .mud-expansion-panel-content::-webkit-scrollbar-thumb {
-        background: #c1c1c1;
-        border-radius: 3px;
-    }
-
-    .mud-expansion-panel-content::-webkit-scrollbar-thumb:hover {
-        background: #a8a8a8;
-    }
-
-    .mud-menu {
-        z-index: 1001;
-    }
-
-    .mud-container {
-        padding: var(--container-padding);
-        margin-top: 4px;
-    }
-</style>
