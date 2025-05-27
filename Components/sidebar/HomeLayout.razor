@@ -36,7 +36,6 @@
                                  ShowProgressIndicator="true"
                                  ValueChanged="OnEmployeeSelected"
                                  @bind-Text="_searchText"
-                                 @onkeyup="HandleSearchInputKeyUp"
                                  ItemTemplate="@ResultTemplate"
                                  MaxItems="15"
                                  ToStringFunc="@(e => null)" />
@@ -95,7 +94,7 @@
     </MudAppBar>
 
     <!-- Sidebar -->
-     <div class="sidebar-container" @onmouseleave="HandleMouseLeave">
+     <div class="sidebar-container">
         <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
     </div>
     <!-- Main Content -->
@@ -108,8 +107,6 @@
   
     <!-- Popover Support -->
     <MudPopoverProvider />
-
-
 
 <style>
     .mud-divider {
