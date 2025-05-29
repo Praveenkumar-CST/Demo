@@ -1,0 +1,667 @@
+@using MudBlazor
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Text.Json
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components
+@using WiseHR_Frontend.Services
+@inject IChatService ChatService
+
+<div class="wisechat-widget-container">
+    @* Notification Badge *@
+    @if (unreadCount > 0 && !isOpen)
+    {
+        <div class="wisechat-notification-badge">@unreadCount</div>
+    }
+
+    @* Toggle Button with Animation *@
+    <MudFab Icon="@(isOpen ? Icons.Material.Filled.Close : Icons.Material.Filled.Chat)" 
+           Color="Color.Primary" 
+           OnClick="ToggleChat"
+           Class="@($"wisechat-fab {(isOpen ? "open" : "")}")"/>
+
+    @* Chat Window *@
+    <div class="@($"wisechat-window {(isOpen ? "open" : "")}")">
+        @* Header *@
+        <div class="wisechat-header">
+            <div class="wisechat-header-content">
+                <MudAvatar Color="Color.Primary" Size="Size.Small">
+                    <MudIcon Icon="Icons.Material.Filled.SupportAgent"/>
+                </MudAvatar>
+                <div class="wisechat-header-text">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">WiseHR Assistant</MudText>
+                    <div class="wisechat-status">
+                        <div class="wisechat-status-dot @(isConnected ? "online" : "offline")"></div>
+                        <MudText Typo="Typo.caption">@(isConnected ? "Online" : "Connecting...")</MudText>
+                    </div>
+                </div>
+            </div>
+            <MudIconButton Icon="Icons.Material.Filled.Minimize" 
+                          Size="Size.Small" 
+                          OnClick="MinimizeChat"/>
+        </div>
+
+        @* Messages Area *@
+        <div class="wisechat-messages" @ref="messagesContainer">
+            @if (messages.Count == 0)
+            {
+                <div class="wisechat-welcome">
+                    <MudIcon Icon="Icons.Material.Filled.Waving" Color="Color.Primary" Style="font-size: 3rem;"/>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">Welcome to WiseHR!</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        How can I help you today?
+                    </MudText>
+                </div>
+            }
+
+            @foreach (var message in messages)
+            {
+                <div class="@($"wisechat-message {(message.IsFromUser ? "user" : "agent")}")">
+                    @if (!message.IsFromUser)
+                    {
+                        <MudAvatar Color="Color.Primary" Size="Size.Small" Class="wisechat-avatar">
+                            <MudIcon Icon="Icons.Material.Filled.SupportAgent"/>
+                        </MudAvatar>
+                    }
+                    
+                    <div class="wisechat-message-content">
+                        <div class="wisechat-message-bubble">
+                            <MudText Typo="Typo.body2">@message.Content</MudText>
+                        </div>
+                        <MudText Typo="Typo.caption" Class="wisechat-timestamp">
+                            @message.Timestamp.ToString("HH:mm")
+                        </MudText>
+                    </div>
+
+                    @if (message.IsFromUser)
+                    {
+                        <div class="wisechat-message-status">
+                            @if (message.Status == MessageStatus.Sending)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+                            }
+                            else if (message.Status == MessageStatus.Sent)
+                            {
+                                <MudIcon Icon="Icons.Material.Filled.Check" Size="Size.Small"/>
+                            }
+                            else if (message.Status == MessageStatus.Read)
+                            {
+                                <MudIcon Icon="Icons.Material.Filled.DoneAll" Size="Size.Small" Color="Color.Primary"/>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @* Status Message *@
+            @if (!string.IsNullOrEmpty(statusMessage))
+            {
+                <div class="wisechat-status-message">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@statusMessage</MudText>
+                </div>
+            }
+
+            @* Typing Indicator *@
+            @if (isTyping)
+            {
+                <div class="wisechat-message agent">
+                    <MudAvatar Color="Color.Primary" Size="Size.Small" Class="wisechat-avatar">
+                        <MudIcon Icon="Icons.Material.Filled.SupportAgent"/>
+                    </MudAvatar>
+                    <div class="wisechat-typing-indicator">
+                        <div class="wisechat-typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Input Area *@
+        <div class="wisechat-input-area">
+            <div class="wisechat-input">
+                <div class="wisechat-input-wrapper">
+                    <input type="text"
+                           @bind="currentMessage"
+                           @bind:event="oninput"
+                           @onkeypress="OnKeyPress"
+                           placeholder="Ask me anything about WiseHR..."
+                           disabled="@(!isConnected || isSending)"
+                           class="wisechat-input-field" />
+
+                    <MudIconButton Icon="Icons.Material.Filled.Send" 
+                                  Color="Color.Primary" 
+                                  OnClick="SendMessage"
+                                  Disabled="string.IsNullOrWhiteSpace(currentMessage) || !isConnected || isSending"
+                                  Class="wisechat-send-button"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Styles *@
+<style>
+    .wisechat-widget-container {
+        position: relative;
+        z-index: 9999;
+    }
+
+    .wisechat-notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #f44336;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 10000;
+        animation: pulse 2s infinite;
+    }
+
+    .wisechat-fab {
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        position: relative;
+        z-index: 9999;
+    }
+
+    .wisechat-fab:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .wisechat-fab.open {
+        transform: rotate(180deg);
+    }
+
+    .wisechat-window {
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        width: 380px;
+        height: 580px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transform: scale(0.8) translateY(20px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        pointer-events: none;
+        z-index: 9998;
+    }
+
+    .wisechat-window.open {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .wisechat-header {
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        color: white;
+        padding: 16px;
+        position: relative;
+    }
+
+    .wisechat-header-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .wisechat-header-text {
+        flex: 1;
+    }
+
+    .wisechat-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+    }
+
+    .wisechat-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4caf50;
+    }
+
+    .wisechat-status-dot.offline {
+        background: #ff9800;
+    }
+
+    .wisechat-messages {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+        background: #fafafa;
+        scroll-behavior: smooth;
+    }
+
+    .wisechat-messages::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .wisechat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .wisechat-messages::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 2px;
+    }
+
+    .wisechat-welcome {
+        text-align: center;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .wisechat-message {
+        display: flex;
+        margin-bottom: 16px;
+        align-items: flex-end;
+        gap: 8px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .wisechat-message.user {
+        flex-direction: row-reverse;
+    }
+
+    .wisechat-avatar {
+        flex-shrink: 0;
+    }
+
+    .wisechat-message-content {
+        max-width: 280px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wisechat-message.user .wisechat-message-content {
+        align-items: flex-end;
+    }
+
+    .wisechat-message-bubble {
+        background: white;
+        padding: 12px 16px;
+        border-radius: 18px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+
+    .wisechat-message.user .wisechat-message-bubble {
+        background: var(--mud-palette-primary);
+        color: white;
+    }
+
+    .wisechat-message.agent .wisechat-message-bubble::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: -8px;
+        width: 0;
+        height: 0;
+        border: 8px solid transparent;
+        border-right-color: white;
+        border-bottom: 0;
+        transform: translateY(50%);
+    }
+
+    .wisechat-message.user .wisechat-message-bubble::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: -8px;
+        width: 0;
+        height: 0;
+        border: 8px solid transparent;
+        border-left-color: var(--mud-palette-primary);
+        border-bottom: 0;
+        transform: translateY(50%);
+    }
+
+    .wisechat-timestamp {
+        margin-top: 4px;
+        opacity: 0.7;
+    }
+
+    .wisechat-message-status {
+        display: flex;
+        align-items: flex-end;
+        opacity: 0.7;
+        margin-bottom: 4px;
+    }
+
+    .wisechat-typing-indicator {
+        background: white;
+        padding: 12px 16px;
+        border-radius: 18px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .wisechat-typing-dots {
+        display: flex;
+        gap: 4px;
+    }
+
+    .wisechat-typing-dots span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ccc;
+        animation: typing 1.4s infinite;
+    }
+
+    .wisechat-typing-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .wisechat-typing-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    .wisechat-quick-actions {
+        padding: 12px 16px;
+        border-top: 1px solid #eee;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .wisechat-input-area {
+        border-top: 1px solid #eee;
+        background: white;
+    }
+
+    .wisechat-input {
+        display: flex;
+        align-items: flex-end;
+        padding: 12px 16px;
+        gap: 8px;
+    }
+
+    .wisechat-input-controls {
+        display: flex;
+        align-items: center;
+    }
+
+    .wisechat-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .wisechat-input-field {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 4px;
+        font-size: 14px;
+        transition: border-color 0.2s ease;
+        background: white;
+    }
+
+    .wisechat-input-field:focus {
+        outline: none;
+        border-color: var(--mud-palette-primary);
+    }
+
+    .wisechat-input-field:disabled {
+        background: var(--mud-palette-background-grey);
+        cursor: not-allowed;
+    }
+
+    .wisechat-send-button {
+        flex-shrink: 0;
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    @@keyframes typing {
+        0%, 60%, 100% { transform: scale(1); opacity: 0.5; }
+        30% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* Mobile Responsive */
+    @@media (max-width: 480px) {
+        .wisechat-window {
+            width: calc(100vw - 32px);
+            height: calc(100vh - 120px);
+            right: 16px;
+            left: 16px;
+            bottom: 80px;
+        }
+
+        .wisechat-widget-container {
+            right: 16px;
+            bottom: 16px;
+        }
+    }
+
+    .wisechat-status-message {
+        text-align: center;
+        padding: 8px;
+        margin: 8px 0;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+    }
+</style>
+
+@code {
+    // Connection and State
+    private bool isOpen = false;
+    private bool isConnected = false;
+    private bool isTyping = false;
+    private bool isSending = false;
+    private int unreadCount = 0;
+    private string statusMessage = string.Empty;
+
+    // Messages
+    private List<ChatMessage> messages = new();
+    private string currentMessage = string.Empty;
+
+    // UI References
+    private ElementReference messagesContainer;
+
+    // Data Models
+    [Parameter] public string? EmployeeId { get; set; }
+
+    public class ChatMessage
+    {
+        public string Content { get; set; } = string.Empty;
+        public bool IsFromUser { get; set; }
+        public DateTime Timestamp { get; set; }
+        public MessageStatus Status { get; set; } = MessageStatus.Sent;
+    }
+
+    public enum MessageStatus
+    {
+        Sending,
+        Sent,
+        Read,
+        Failed
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ChatService.OnChunkReceived += HandleChunkReceived;
+        ChatService.OnStatusReceived += HandleStatusReceived;
+        ChatService.OnConnectionStateChanged += HandleConnectionStateChanged;
+        
+        await ChatService.InitializeAsync();
+    }
+
+    private async void HandleChunkReceived(string chunk)
+    {
+        if (messages.Count > 0 && !messages.Last().IsFromUser)
+        {
+            messages.Last().Content += chunk;
+        }
+        else
+        {
+            messages.Add(new ChatMessage
+            {
+                Content = chunk,
+                IsFromUser = false,
+                Timestamp = DateTime.Now,
+                Status = MessageStatus.Read
+            });
+        }
+        await InvokeAsync(StateHasChanged);
+        await ScrollToBottom();
+    }
+
+    private async void HandleStatusReceived(string status)
+    {
+        statusMessage = status;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void HandleConnectionStateChanged()
+    {
+        isConnected = ChatService.IsConnected;
+        statusMessage = isConnected ? string.Empty : "Connecting...";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleChat()
+    {
+        isOpen = !isOpen;
+        
+        if (isOpen)
+        {
+            unreadCount = 0;
+            await Task.Delay(100);
+            await ScrollToBottom();
+        }
+    }
+
+    private void MinimizeChat()
+    {
+        isOpen = false;
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(currentMessage) || !ChatService.IsConnected || isSending)
+            return;
+
+        isSending = true;
+        var messageContent = currentMessage.Trim();
+        currentMessage = string.Empty;
+
+        var chatMessage = new ChatMessage
+        {
+            Content = messageContent,
+            IsFromUser = true,
+            Timestamp = DateTime.Now,
+            Status = MessageStatus.Sending
+        };
+        
+        messages.Add(chatMessage);
+        await InvokeAsync(StateHasChanged);
+        await ScrollToBottom();
+
+        try
+        {
+            await ChatService.SendQueryAsync("User", messageContent, EmployeeId);
+            chatMessage.Status = MessageStatus.Sent;
+        }
+        catch (Exception ex)
+        {
+            chatMessage.Status = MessageStatus.Failed;
+            statusMessage = "Failed to send message. Please try again.";
+            Console.WriteLine($"Failed to send message: {ex.Message}");
+        }
+        finally
+        {
+            isSending = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await InvokeAsync(async () => await SendMessage());
+        }
+    }
+
+    private async Task OnInputFocus()
+    {
+        await Task.Delay(100);
+        await ScrollToBottom();
+    }
+
+    private async Task OnInputBlur()
+    {
+        // No typing indicator needed for now
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try
+        {
+            await Task.Delay(50);
+            await InvokeAsync(async () => 
+            {
+                await JSRuntime.InvokeVoidAsync("scrollToBottom", messagesContainer);
+            });
+        }
+        catch
+        {
+            // Ignore JS interop errors
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        ChatService.OnChunkReceived -= HandleChunkReceived;
+        ChatService.OnStatusReceived -= HandleStatusReceived;
+        ChatService.OnConnectionStateChanged -= HandleConnectionStateChanged;
+        await ChatService.DisposeAsync();
+    }
+}
+
+<script>
+    window.scrollToBottom = (element) => {
+        if (element) {
+            element.scrollTop = element.scrollHeight;
+        }
+    };
+</script>

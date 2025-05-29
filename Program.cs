@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using WiseHR;
 using WiseHR.Services;
+using WiseHR_Frontend.Services;
 using MudBlazor.Services;
 using MudBlazor;
 using Blazored.SessionStorage;
@@ -55,6 +56,10 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<SearchService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
+
+// Register ChatService
+builder.Services.AddScoped<IChatService, ChatService>();
+
 //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net") });
 await builder.Build().RunAsync();
