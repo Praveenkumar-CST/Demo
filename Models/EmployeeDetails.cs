@@ -90,8 +90,8 @@ namespace WiseHR.Models
         [Required(ErrorMessage = "State is required")]
         public string CurrentState { get; set; }
 
-        [Required(ErrorMessage = "Zip / Pin Code is required")]
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Zip / Pin Code must be exactly 6 digits")]
+        [Required(ErrorMessage = "PIN Code is required")]
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "PIN Code must be exactly 6 digits")]
 
         public string CurrentZip { get; set; }
 
@@ -113,8 +113,8 @@ namespace WiseHR.Models
         [Required(ErrorMessage = "State is required")]
         public string PermanentState { get; set; }
 
-        [Required(ErrorMessage = "Zip / Pin Code is required")]
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Zip / Pin Code must be exactly 6 digits")]
+        [Required(ErrorMessage = "PIN Code is required")]
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "PIN Code must be exactly 6 digits")]
 
         public string PermanentZip { get; set; }
 
@@ -155,8 +155,8 @@ namespace WiseHR.Models
         [Required(ErrorMessage = "Emergency Contact 1 State is required")]
         public string EmergencyContact1State { get; set; }
 
-        [Required(ErrorMessage = "Emergency Contact 1 Zip/Pin Code is required")]
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Zip / Pin Code must be exactly 6 digits")]
+        [Required(ErrorMessage = "Emergency Contact 1 PIN Code is required")]
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "PIN Code must be exactly 6 digits")]
 
         public string EmergencyContact1ZipCode { get; set; }
 
@@ -177,8 +177,10 @@ namespace WiseHR.Models
         public string? EmergencyContact2City { get; set; } = string.Empty;
 
         public string? EmergencyContact2State { get; set; } = string.Empty;
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "PIN Code must be exactly 6 digits")]
 
         public string? EmergencyContact2ZipCode { get; set; } = string.Empty;
+        [RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter a valid 10-digit mobile number starting with 6-9")]
 
         public string? EmergencyContact2Mobile { get; set; } = string.Empty;
 

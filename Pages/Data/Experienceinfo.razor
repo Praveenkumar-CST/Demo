@@ -11,31 +11,36 @@
     <div>
         <h4>Education</h4>
         @if (experience.EducationQualifications?.Any() == true)
-        {
-            <MudTable Items="experience.EducationQualifications" Bordered="true" Hover="true">
+        {   
+           
+            <MudTable Items="experience.EducationQualifications" Bordered="true" Hover="false" Dense="true" >
                 <HeaderContent>
                     <MudTh>Qualification</MudTh>
                     <MudTh>University</MudTh>
+                    <MudTh>College</MudTh>
                     <MudTh>Year of Passing</MudTh>
                     <MudTh>Percentage</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd Style="text-transform: capitalize;">@context.Qualification</MudTd>
                     <MudTd Style="text-transform: capitalize;">@context.University</MudTd>
+                    <MudTd Style="text-transform: capitalize;">@context.College</MudTd>
                     <MudTd Style="text-transform: capitalize;">@context.YearOfPassing</MudTd>
                     <MudTd Style="text-transform: capitalize;">@context.Percentage</MudTd>
                 </RowTemplate>
             </MudTable>
+           
         }
         else
         {
             <MudText>No education details available.</MudText>
         }
         <br/>
-        <h4>Work Experience</h4>
+
+        <h4>Experience</h4>
         @if (experience.WorkExperiences?.Any() == true)
         {
-            <MudTable Items="experience.WorkExperiences" Bordered="true" Hover="true">
+                <MudTable Items="experience.WorkExperiences" Bordered="true" Hover="false" Dense="true">
                 <HeaderContent>
                     <MudTh>Employer</MudTh>
                     <MudTh>Location</MudTh>
@@ -51,6 +56,7 @@
                     <MudTd Style="text-transform: capitalize;">@(context.DateOfLeaving?.ToString("d") ?? "Present")</MudTd>
                 </RowTemplate>
             </MudTable>
+           
         }
         else
         {
@@ -65,7 +71,6 @@ else
         <MudText Align="Align.Center">Loading...</MudText>
     </div>
 }
-
 @code {
     [Parameter] public string EmployeeId { get; set; }
 

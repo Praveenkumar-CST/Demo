@@ -49,7 +49,8 @@ builder.Services.AddHttpClient<MentorAssignmentService>();
 builder.Services.AddScoped<MentorAssignmentService>();
 
 builder.Services.AddScoped<CountryService>();
-
+builder.Services.AddScoped<BankIFSCService>();
+builder.Services.AddHttpClient<UniversityServices>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<SearchService>();

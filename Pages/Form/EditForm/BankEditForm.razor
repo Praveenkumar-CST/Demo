@@ -6,172 +6,200 @@
 @inject IDialogService DialogService
 @layout HomeLayout
 @inject ISnackbar Snackbar
+@using System.ComponentModel.DataAnnotations;
+@inject BankIFSCService bankIFSCService
 
 @if (bankingInfo != null)
 {
-<EditForm Model="@bankingInfo" OnValidSubmit="HandleUpdateBank">
-    <DataAnnotationsValidator />
-    @* <ValidationSummary /> *@
+    <EditForm Model="@bankingInfo" OnValidSubmit="HandleUpdateBank">
+        <DataAnnotationsValidator />
 
-    <MudGrid Gutter="3">
-        <!-- Bank Name -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="bankingInfo.BankName"
-            Label="Bank Name"
-            Variant="Variant.Outlined"
-            Required="true"
-            Margin="Margin.Dense" />
+        <MudGrid Gutter="3">
+            <!-- Account Holder Name -->
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="bankingInfo.Name"
+                Label="Account Holder Name"
+                Variant="Variant.Outlined"
+                Required="true"
+                style="text-transform:capitalize"
+                Margin="Margin.Dense"
+                @onblur="@(() => ValidateField(nameof(bankingInfo.Name)))"
+                Error="@HasValidationError(nameof(bankingInfo.Name))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.Name))" />
+            </MudItem>
 
-            <ValidationMessage For="@(() => bankingInfo.BankName)" />
-        </MudItem>
-        <!-- Branch -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="bankingInfo.Branch"
-            Label="Branch"
-            Variant="Variant.Outlined"
-            Required="true"
-            style="text-transform:capitalize"
-            Margin="Margin.Dense" />
-            <ValidationMessage For="@(() => bankingInfo.Branch)" />
-        </MudItem>
+            <!-- Account Number -->
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="bankingInfo.AccountNumber"
+                Label="Account Number"
+                Variant="Variant.Outlined"
+                Required="true"
+                Margin="Margin.Dense"
+                @onblur="@(() => ValidateField(nameof(bankingInfo.AccountNumber)))"
+                Error="@HasValidationError(nameof(bankingInfo.AccountNumber))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.AccountNumber))" />
+            </MudItem>
 
-        <!-- Account Holder Name -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="bankingInfo.Name"
-            Label="Account Holder Name"
-            Variant="Variant.Outlined"
-            Required="true"
-            style="text-transform:capitalize"
-            Margin="Margin.Dense" />
-            <ValidationMessage For="@(() => bankingInfo.Name)" />
-        </MudItem>
+            <!-- IFSC -->
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="bankingInfo.IFSCode"
+                Label="IFSCode"
+                Variant="Variant.Outlined"
+                Required="true"
+                Margin="Margin.Dense"
+                @onblur="FetchBankDetails" Error="@HasValidationError(nameof(bankingInfo.IFSCode))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.IFSCode))" />
+            </MudItem>
+            <!-- Bank Name -->
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="bankingInfo.BankName"
+                Label="Bank Name"
+                Variant="Variant.Outlined"
+                Required="true"
+                Margin="Margin.Dense"
+                Disabled="true"
+                @onblur="@(() => ValidateField(nameof(bankingInfo.BankName)))"
+                Error="@HasValidationError(nameof(bankingInfo.BankName))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.BankName))" />
+            </MudItem>
 
-        <!-- Account Number -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="bankingInfo.AccountNumber"
-            Label="Account Number"
-            Variant="Variant.Outlined"
-            Required="true"
-            Margin="Margin.Dense" />
-            <ValidationMessage For="@(() => bankingInfo.AccountNumber)" />
-        </MudItem>
+            <!-- Branch -->
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="bankingInfo.Branch"
+                Label="Branch"
+                Variant="Variant.Outlined"
+                Required="true"
+                style="text-transform:capitalize"
+                Margin="Margin.Dense"
+                Disabled="true"
+                @onblur="@(() => ValidateField(nameof(bankingInfo.Branch)))"
+                Error="@HasValidationError(nameof(bankingInfo.Branch))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.Branch))" />
+            </MudItem>
+            <!-- Branch State -->
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="bankingInfo.State"
+                Label="Branch State"
+                Variant="Variant.Outlined"
+                style="text-transform:capitalize"
+                Required="true"
+                Disabled="true"
+                Margin="Margin.Dense"
+                @onblur="@(() => ValidateField(nameof(bankingInfo.State)))"
+                Error="@HasValidationError(nameof(bankingInfo.State))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.State))" />
+            </MudItem>
+            <!-- Mobile Number -->
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="bankingInfo.Phone"
+                Label="Mobile Number"
+                Variant="Variant.Outlined"
+                Required="true"
+                Margin="Margin.Dense"
+                @onblur="@(() => ValidateField(nameof(bankingInfo.Phone)))"
+                Error="@HasValidationError(nameof(bankingInfo.Phone))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.Phone))" />
+            </MudItem>
+            <!-- Account Type -->
+            <MudItem xs="12" sm="6">
+                <MudSelect @bind-Value="bankingInfo.AccountType"
+                Label="Account Type"
+                Required="true"
+                Variant="Variant.Outlined"
+                Margin="Margin.Dense"
+                Error="@HasValidationError(nameof(bankingInfo.AccountType))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.AccountType))"
+                @onblur="@(() => ValidateField(nameof(bankingInfo.AccountType)))">
+                    <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
+                    <MudSelectItem Value="@("Current")">Current</MudSelectItem>
+                </MudSelect>
+                <ValidationMessage For="@(() => bankingInfo.AccountType)" />
 
-        <!-- IFSC Code -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="bankingInfo.IFSCode"
-            Label="IFSCode"
-            Variant="Variant.Outlined"
-            Required="true"
-            Margin="Margin.Dense" />
-            <ValidationMessage For="@(() => bankingInfo.IFSCode)" />
-        </MudItem>
+            </MudItem>
+            <!-- PAN Number -->
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="bankingInfo.PANNumber"
+                Label="PAN Number"
+                Variant="Variant.Outlined"
+                Required="true"
+                Margin="Margin.Dense"
+                @onblur="@(() => ValidateField(nameof(bankingInfo.PANNumber)))"
+                Error="@HasValidationError(nameof(bankingInfo.PANNumber))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.PANNumber))" />
+            </MudItem>
 
-        <!-- Mobile Number -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="bankingInfo.Phone"
-            Label="Mobile Number"
-            Variant="Variant.Outlined"
-            Required="true"
-            Margin="Margin.Dense" />
-            <ValidationMessage For="@(() => bankingInfo.Phone)" />
-        </MudItem>
+            <!-- Aadhaar Number -->
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="bankingInfo.AadhaarNumber"
+                Label="Aadhaar Number"
+                Variant="Variant.Outlined"
+                Required="true"
+                Margin="Margin.Dense"
+                @onblur="@(() => ValidateField(nameof(bankingInfo.AadhaarNumber)))"
+                Error="@HasValidationError(nameof(bankingInfo.AadhaarNumber))"
+                ErrorText="@GetValidationError(nameof(bankingInfo.AadhaarNumber))" />
+            </MudItem>
 
-        <!-- PAN Number -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="bankingInfo.PANNumber"
-            Label="PAN Number"
-            Variant="Variant.Outlined"
-            Required="true"
-            Margin="Margin.Dense" />
-            <ValidationMessage For="@(() => bankingInfo.PANNumber)" />
-        </MudItem>
+            <!-- Aadhaar File Upload -->
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.body1">Aadhaar Document*</MudText>
+                <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" />
+                <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
+                <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : $"File selected: {bankingInfo.AadhaarFileName}")</MudText>
+                @if (!string.IsNullOrEmpty(AadhaarUploadError))
+                {
+                    <MudText Color="Color.Error">@AadhaarUploadError</MudText>
+                }
+                @if (HasValidationError(nameof(bankingInfo.AadhaarBase64Content)))
+                {
+                    <MudText Color="Color.Error">@GetValidationError(nameof(bankingInfo.AadhaarBase64Content))</MudText>
+                }
+                <ValidationMessage For="@(() => bankingInfo.AadhaarBase64Content)" />
 
-        <!-- Aadhaar Number -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="bankingInfo.AadhaarNumber"
-            Label="Aadhaar Number"
-            Variant="Variant.Outlined"
-            Required="true"
-            Margin="Margin.Dense" />
+            </MudItem>
 
-            <ValidationMessage For="@(() => bankingInfo.AadhaarNumber)" />
-        </MudItem>
+            <!-- PAN File Upload -->
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.body1">PAN Document*</MudText>
+                <InputFile OnChange="HandlePanFileChange" accept=".pdf,.jpg,.jpeg,.png" />
+                <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
+                <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PanBase64Content) ? "No file selected" : $"File selected: {bankingInfo.PanFileName}")</MudText>
+                @if (!string.IsNullOrEmpty(PanUploadError))
+                {
+                    <MudText Color="Color.Error">@PanUploadError</MudText>
+                }
+                @if (HasValidationError(nameof(bankingInfo.PanBase64Content)))
+                {
+                    <MudText Color="Color.Error">@GetValidationError(nameof(bankingInfo.PanBase64Content))</MudText>
+                }
+                <ValidationMessage For="@(() => bankingInfo.PanBase64Content)" />
 
-        <!-- Branch State -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="bankingInfo.State"
-            Label="Branch State"
-            Variant="Variant.Outlined"
-            style="text-transform:capitalize"
-            Required="true"
-            Margin="Margin.Dense" />
-            <ValidationMessage For="@(() => bankingInfo.State)" />
-        </MudItem>
+            </MudItem>
 
-        <!-- Account Type -->
-        <MudItem xs="12" sm="6">
-            <MudSelect @bind-Value="bankingInfo.AccountType"
-            Label="Account Type"
-            Required="true"
-            Variant="Variant.Outlined"
-            Margin="Margin.Dense">
-                <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
-                <MudSelectItem Value="@("Current")">Current</MudSelectItem>
-            </MudSelect>
-            <ValidationMessage For="@(() => bankingInfo.AccountType)" />
-        </MudItem>
-        <!-- Aadhaar File Upload -->
-        <MudItem xs="12" sm="6">
-            <MudText Typo="Typo.body1">Aadhaar Document*</MudText>
-            <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" />
-            <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
+            <!-- Passbook File Upload -->
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.body1">Passbook Document</MudText>
+                <InputFile OnChange="OnPassbookFileChanged" accept=".pdf,.jpg,.jpeg,.png" />
+                <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
+                <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) ? "No file selected" : $"File selected: {bankingInfo.PassbookFileName}")</MudText>
+                @if (!string.IsNullOrEmpty(PassbookUploadError))
+                {
+                    <MudText Color="Color.Error">@PassbookUploadError</MudText>
+                }
+                @if (HasValidationError(nameof(bankingInfo.PassbookBase64Content)))
+                {
+                    <MudText Color="Color.Error">@GetValidationError(nameof(bankingInfo.PassbookBase64Content))</MudText>
+                }
+                <ValidationMessage For="@(() => bankingInfo.PassbookBase64Content)" />
 
-            <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : "File selected")</MudText>
-            @if (!string.IsNullOrEmpty(AadhaarUploadError))
-            {
-                <MudText Color="Color.Error">@AadhaarUploadError</MudText>
-            }
-            <ValidationMessage For="@(() => bankingInfo.AadhaarBase64Content)" />
-        </MudItem>
+            </MudItem>
 
-        <!-- PAN File Upload -->
-        <MudItem xs="12" sm="6">
-            <MudText Typo="Typo.body1">PAN Document*</MudText>
-            <InputFile OnChange="HandlePanFileChange" accept=".pdf,.jpg,.jpeg,.png" />
-            <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
-
-            <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PanBase64Content) ? "No file selected" : "File selected")</MudText>
-            @if (!string.IsNullOrEmpty(PanUploadError))
-            {
-                <MudText Color="Color.Error">@PanUploadError</MudText>
-            }
-            <ValidationMessage For="@(() => bankingInfo.PanBase64Content)" />
-        </MudItem>
-
-        <!-- Passbook File Upload -->
-        <MudItem xs="12" sm="6">
-            <MudText Typo="Typo.body1">Passbook Document</MudText>
-            <InputFile OnChange="OnPassbookFileChanged" accept=".pdf,.jpg,.jpeg,.png" />
-            <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
-
-            <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) ? "No file selected" : "File selected")</MudText>
-            @if (!string.IsNullOrEmpty(PassbookUploadError))
-            {
-                <MudText Color="Color.Error">@PassbookUploadError</MudText>
-            }
-            <ValidationMessage For="@(() => bankingInfo.PassbookBase64Content)" />
-        </MudItem>
-        @if (!string.IsNullOrEmpty(SuccessMessage))
-        {
-            <MudAlert Severity="Severity.Success">@SuccessMessage</MudAlert>
-        }
-
-        <!-- Action Buttons -->
+            <!-- Action Buttons -->
             <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
                 <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           OnClick="HandleUpdateBank"
-                           Disabled="@isSubmitting">
+                Color="Color.Primary"
+                OnClick="HandleUpdateBank"
+                Disabled="@isSubmitting">
                     @if (isSubmitting)
                     {
                         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Inherit" />
@@ -189,14 +217,14 @@
             </MudItem>
 
 
-    </MudGrid>
-</EditForm>
+        </MudGrid>
+    </EditForm>
 }
 else
-    {
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-        <p>Loading bank details...</p>
-    }
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    <p>Loading bank details...</p>
+}
 
 @code {
     [Parameter] public string EmployeeId { get; set; }
@@ -204,12 +232,84 @@ else
     private BankingInformation bankingInfo;
 
     private string? SuccessMessage;
-    
+
     private bool isSubmitting = false;
 
     [Parameter]
     public EventCallback<EmployeeDetails> OnSubmit { get; set; }
+    private Dictionary<string, List<string>> validationErrors = new Dictionary<string, List<string>>();
+    private async Task FetchBankDetails()
+    {
+        var result = await bankIFSCService.GetBankDetailsByIFSCAsync(bankingInfo.IFSCode);
 
+        if (result != null)
+        {
+            bankingInfo.BankName = result.BANK;
+            bankingInfo.Branch = result.BRANCH;
+            bankingInfo.State = result.STATE;
+        }
+        else
+        {
+            Snackbar.Add("Invalid IFSC code or unable to fetch bank details.", Severity.Error);
+        }
+    }
+    private void ValidateAllFields()
+    {
+        validationErrors.Clear();
+        var validationContext = new ValidationContext(bankingInfo);
+        var validationResults = new List<ValidationResult>();
+
+        Validator.TryValidateObject(bankingInfo, validationContext, validationResults, true);
+
+        foreach (var result in validationResults)
+        {
+            foreach (var memberName in result.MemberNames)
+            {
+                if (!validationErrors.ContainsKey(memberName))
+                {
+                    validationErrors[memberName] = new List<string>();
+                }
+                validationErrors[memberName].Add(result.ErrorMessage);
+            }
+        }
+
+        StateHasChanged();
+    }
+    // Validate individual field on blur
+    private void ValidateField(string propertyName)
+    {
+        var validationContext = new ValidationContext(bankingInfo) { MemberName = propertyName };
+        var validationResults = new List<ValidationResult>();
+        var property = bankingInfo.GetType().GetProperty(propertyName);
+        var value = property?.GetValue(bankingInfo);
+
+        // Clear previous errors for this field
+        validationErrors.Remove(propertyName);
+
+        // Validate the specific property
+        var isValid = Validator.TryValidateProperty(value, validationContext, validationResults);
+
+        if (!isValid)
+        {
+            validationErrors[propertyName] = validationResults.Select(r => r.ErrorMessage).ToList();
+        }
+
+        StateHasChanged();
+    }
+
+    private bool HasValidationError(string propertyName)
+    {
+        return validationErrors.ContainsKey(propertyName) && validationErrors[propertyName].Any();
+    }
+
+    private string GetValidationError(string propertyName)
+    {
+        if (validationErrors.ContainsKey(propertyName) && validationErrors[propertyName].Any())
+        {
+            return validationErrors[propertyName].First();
+        }
+        return string.Empty;
+    }
 
     private async Task OnPassbookFileChanged(InputFileChangeEventArgs e)
     {
@@ -289,26 +389,26 @@ else
             return;
         }
     }
-        private string AadhaarUploadError;
-        private string PanUploadError;
-        private string PassbookUploadError;
+    private string AadhaarUploadError;
+    private string PanUploadError;
+    private string PassbookUploadError;
 
-        private void SetUploadError(string fileType, string message)
+    private void SetUploadError(string fileType, string message)
+    {
+        switch (fileType.ToLower())
         {
-            switch (fileType.ToLower())
-            {
-                case "aadhar":
-                    AadhaarUploadError = message;
-                    break;
-                case "pan":
-                    PanUploadError = message;
-                    break;
-                case "passbook":
-                    PassbookUploadError = message;
-                    break;
-            }
+            case "aadhar":
+                AadhaarUploadError = message;
+                break;
+            case "pan":
+                PanUploadError = message;
+                break;
+            case "passbook":
+                PassbookUploadError = message;
+                break;
         }
- 
+    }
+
     private void CloseForm()
     {
         if (!string.IsNullOrEmpty(EmployeeId))
@@ -325,6 +425,16 @@ else
     {
         isSubmitting = true;         
         StateHasChanged();
+        ValidateAllFields();
+        if (!validationErrors.Any())
+        {
+            Console.WriteLine("Form is valid, Updating..");      
+        }
+        else
+        {
+            Console.WriteLine("Form has validation errors");
+            Snackbar.Add("Please fix all validation errors before proceeding", Severity.Error);
+        }
         bool result = await BankingService.UpdateBankingInfo(bankingInfo);
         isSubmitting = false;        
         StateHasChanged();
