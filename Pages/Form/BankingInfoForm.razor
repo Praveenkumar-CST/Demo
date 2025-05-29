@@ -6,6 +6,7 @@
 @layout HomeLayout
 @inject ISnackbar Snackbar
 @using System.ComponentModel.DataAnnotations;
+@inject BankIFSCService bankIFSCService
 
 @using static WiseHR.Models.BankingInformation
 @inject NavigationManager NavigationManager
@@ -23,31 +24,6 @@
                 <DataAnnotationsValidator />
 
                 <MudGrid Gutter="3">
-                    <!-- Bank Name -->
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="bankingInfo.BankName"
-                                      Label="Bank Name"
-                                      Variant="Variant.Outlined"
-                                      Required="true"
-                                      Margin="Margin.Dense"
-                                      @onblur="@(() => ValidateField(nameof(bankingInfo.BankName)))"
-                                      Error="@HasValidationError(nameof(bankingInfo.BankName))"
-                                      ErrorText="@GetValidationError(nameof(bankingInfo.BankName))" />
-                    </MudItem>
-
-                    <!-- Branch -->
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="bankingInfo.Branch"
-                                      Label="Branch"
-                                      Variant="Variant.Outlined"
-                                      Required="true"
-                                      style="text-transform:capitalize"
-                                      Margin="Margin.Dense"
-                                      @onblur="@(() => ValidateField(nameof(bankingInfo.Branch)))"
-                                      Error="@HasValidationError(nameof(bankingInfo.Branch))"
-                                      ErrorText="@GetValidationError(nameof(bankingInfo.Branch))" />
-                    </MudItem>
-
                     <!-- Account Holder Name -->
                     <MudItem xs="12" sm="6">
                         <MudTextField @bind-Value="bankingInfo.Name"
@@ -73,30 +49,82 @@
                                       ErrorText="@GetValidationError(nameof(bankingInfo.AccountNumber))" />
                     </MudItem>
 
-                    <!-- IFSC Code -->
+                    <!-- IFSC -->
                     <MudItem xs="12" sm="6">
                         <MudTextField @bind-Value="bankingInfo.IFSCode"
                                       Label="IFSCode"
                                       Variant="Variant.Outlined"
                                       Required="true"
                                       Margin="Margin.Dense"
-                                      @onblur="@(() => ValidateField(nameof(bankingInfo.IFSCode)))"
-                                      Error="@HasValidationError(nameof(bankingInfo.IFSCode))"
+                                      @onblur="FetchBankDetails"                                      Error="@HasValidationError(nameof(bankingInfo.IFSCode))"
                                       ErrorText="@GetValidationError(nameof(bankingInfo.IFSCode))" />
                     </MudItem>
-
-                    <!-- Mobile Number -->
+                            <!-- Bank Name -->
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="bankingInfo.Phone"
-                                      Label="Mobile Number"
+                        <MudTextField @bind-Value="bankingInfo.BankName"
+                                      Label="Bank Name"
                                       Variant="Variant.Outlined"
                                       Required="true"
                                       Margin="Margin.Dense"
-                                      @onblur="@(() => ValidateField(nameof(bankingInfo.Phone)))"
-                                      Error="@HasValidationError(nameof(bankingInfo.Phone))"
-                                      ErrorText="@GetValidationError(nameof(bankingInfo.Phone))" />
+                                      Disabled="true"
+                                      @onblur="@(() => ValidateField(nameof(bankingInfo.BankName)))"
+                                      Error="@HasValidationError(nameof(bankingInfo.BankName))"
+                                      ErrorText="@GetValidationError(nameof(bankingInfo.BankName))" />
                     </MudItem>
 
+                    <!-- Branch -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.Branch"
+                                      Label="Branch"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      style="text-transform:capitalize"
+                                      Margin="Margin.Dense"
+                                      Disabled="true"
+                                      @onblur="@(() => ValidateField(nameof(bankingInfo.Branch)))"
+                                      Error="@HasValidationError(nameof(bankingInfo.Branch))"
+                                      ErrorText="@GetValidationError(nameof(bankingInfo.Branch))" />
+                    </MudItem>
+                       <!-- Branch State -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="bankingInfo.State"
+                                      Label="Branch State"
+                                      Variant="Variant.Outlined"
+                                      style="text-transform:capitalize"
+                                      Required="true"
+                                      Disabled="true"
+                                      Margin="Margin.Dense"
+                                      @onblur="@(() => ValidateField(nameof(bankingInfo.State)))"
+                                      Error="@HasValidationError(nameof(bankingInfo.State))"
+                                      ErrorText="@GetValidationError(nameof(bankingInfo.State))" />
+                    </MudItem>
+                  <!-- Mobile Number -->
+                  <MudItem xs="12" sm="6">
+                      <MudTextField @bind-Value="bankingInfo.Phone"
+                                    Label="Mobile Number"
+                                    Variant="Variant.Outlined"
+                                    Required="true"
+                                    Margin="Margin.Dense"
+                                    @onblur="@(() => ValidateField(nameof(bankingInfo.Phone)))"
+                                    Error="@HasValidationError(nameof(bankingInfo.Phone))"
+                                    ErrorText="@GetValidationError(nameof(bankingInfo.Phone))" />
+                  </MudItem>
+                    <!-- Account Type -->
+                    <MudItem xs="12" sm="6">
+                        <MudSelect @bind-Value="bankingInfo.AccountType"
+                                   Label="Account Type"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Error="@HasValidationError(nameof(bankingInfo.AccountType))"
+                                   ErrorText="@GetValidationError(nameof(bankingInfo.AccountType))"
+                                   @onblur="@(() => ValidateField(nameof(bankingInfo.AccountType)))">
+                            <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
+                            <MudSelectItem Value="@("Current")">Current</MudSelectItem>
+                        </MudSelect>
+                        <ValidationMessage For="@(() => bankingInfo.AccountType)" />
+
+                    </MudItem>
                     <!-- PAN Number -->
                     <MudItem xs="12" sm="6">
                         <MudTextField @bind-Value="bankingInfo.PANNumber"
@@ -119,36 +147,6 @@
                                       @onblur="@(() => ValidateField(nameof(bankingInfo.AadhaarNumber)))"
                                       Error="@HasValidationError(nameof(bankingInfo.AadhaarNumber))"
                                       ErrorText="@GetValidationError(nameof(bankingInfo.AadhaarNumber))" />
-                    </MudItem>
-
-                    <!-- Branch State -->
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="bankingInfo.State"
-                                      Label="Branch State"
-                                      Variant="Variant.Outlined"
-                                      style="text-transform:capitalize"
-                                      Required="true"
-                                      Margin="Margin.Dense"
-                                      @onblur="@(() => ValidateField(nameof(bankingInfo.State)))"
-                                      Error="@HasValidationError(nameof(bankingInfo.State))"
-                                      ErrorText="@GetValidationError(nameof(bankingInfo.State))" />
-                    </MudItem>
-
-                    <!-- Account Type -->
-                    <MudItem xs="12" sm="6">
-                        <MudSelect @bind-Value="bankingInfo.AccountType"
-                                   Label="Account Type"
-                                   Required="true"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Error="@HasValidationError(nameof(bankingInfo.AccountType))"
-                                   ErrorText="@GetValidationError(nameof(bankingInfo.AccountType))"
-                                   @onblur="@(() => ValidateField(nameof(bankingInfo.AccountType)))">
-                            <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
-                            <MudSelectItem Value="@("Current")">Current</MudSelectItem>
-                        </MudSelect>
-                        <ValidationMessage For="@(() => bankingInfo.AccountType)" />
-
                     </MudItem>
 
                     <!-- Aadhaar File Upload -->
@@ -255,6 +253,21 @@
         if (InitialData != null)
         {
             bankingInfo = InitialData;
+        }
+    }
+    private async Task FetchBankDetails()
+    {
+        var result = await bankIFSCService.GetBankDetailsByIFSCAsync(bankingInfo.IFSCode);
+
+        if (result != null)
+        {
+            bankingInfo.BankName = result.BANK;
+            bankingInfo.Branch = result.BRANCH;
+            bankingInfo.State = result.STATE;
+        }
+        else
+        {
+            Snackbar.Add("Invalid IFSC code or unable to fetch bank details.", Severity.Error);
         }
     }
 
