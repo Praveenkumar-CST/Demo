@@ -50,7 +50,8 @@
 
     @if (isLoading)
     {
-        <div class="loader"></div>
+        <div style="display: flex; justify-content: center;"><div class="loader"></div></div>
+
     }
     else if (!filteredRequests.Any())
     {
@@ -279,6 +280,7 @@
 
     .no-data {
         text-align: center;
+        margin: 24px auto;
         color: #4b5563;
         font-size: 16px;
         padding: 24px;

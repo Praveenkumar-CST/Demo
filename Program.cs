@@ -48,7 +48,6 @@ builder.Services.AddHttpClient<MentorAssignmentService>();
 builder.Services.AddScoped<MentorAssignmentService>();
 
 builder.Services.AddScoped<CountryService>();
-
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<SearchService>();
