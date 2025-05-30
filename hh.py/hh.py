@@ -119,7 +119,4 @@ def run_once():
         cursor.fast_executemany = True
 
         device_conn = zk.connect()
-        device_conn.disable_device()
-
-        users = device_conn.get_users()
-        user_map = {user.user_id: user.name for user in user
+i made chnange
