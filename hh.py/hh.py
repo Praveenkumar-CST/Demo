@@ -122,34 +122,4 @@ def run_once():
         device_conn.disable_device()
 
         users = device_conn.get_users()
-        user_map = {user.user_id: user.name for user in users}
-
-        send_all_logs(device_conn, cursor, user_map)
-
-    except Exception as e:
-        print(f"❌ Error occurred: {e}")
-        raise e  # Let outer loop handle the retry
-
-    finally:
-        try:
-            if cursor:
-                cursor.close()
-            if db_conn:
-                db_conn.close()
-            if device_conn:
-                device_conn.enable_device()
-                device_conn.disconnect()
-        except Exception as e:
-            print(f"❌ Cleanup error: {e}")
-
-def main():
-    print("🚀 Starting Attendance Sync Service (24/7 mode)")
-    while True:
-        try:
-            run_once()
-        except Exception:
-            print("⏳ Waiting 5 seconds before retry...")
-            time.sleep(5)
-
-if __name__ == "__main__":
-    main()
+        user_map = {user.user_id: user.name for user in user
