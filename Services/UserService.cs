@@ -1,0 +1,65 @@
+﻿using Microsoft.Extensions.Caching.Memory;
+using System.Net.Http.Json;
+using WiseHR.Models;
+
+namespace WiseHR.Services
+{
+    public class UserService : IUserService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IMemoryCache _cache;
+
+        public UserService(HttpClient httpClient, IMemoryCache cache)
+        {
+            _httpClient = httpClient;
+            _cache = cache;
+        }
+
+        public async Task<List<User>> GetUsersAsync()
+        {
+            return await _cache.GetOrCreateAsync("AllUsers", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await _httpClient.GetFromJsonAsync<List<User>>("api/users") ?? new();
+            });
+        }
+
+        public async Task<List<User>> GetUsersByRoleAsync(string role)
+        {
+            return await _cache.GetOrCreateAsync($"UsersByRole_{role}", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                var response = await _httpClient.GetAsync($"api/users/by-role/{role}");
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<List<User>>() ?? new();
+            });
+        }
+
+        public async Task UpdateUserRoleAsync(string id, string role)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/users/{id}/role", role);
+            response.EnsureSuccessStatusCode();
+
+            _cache.Remove("AllUsers");
+            _cache.Remove($"UsersByRole_{role}");
+        }
+
+        public async Task DeleteUserAsync(string id)
+        {
+            var response = await _httpClient.DeleteAsync($"api/users/{id}");
+            response.EnsureSuccessStatusCode();
+
+            _cache.Remove("AllUsers");
+        }
+
+        public async Task<User> CreateUserAsync(string email, string password)
+        {
+            var request = new CreateUserRequest { Email = email, Password = password };
+            var response = await _httpClient.PostAsJsonAsync("api/Users", request);
+            response.EnsureSuccessStatusCode();
+
+            _cache.Remove("AllUsers");
+            return await response.Content.ReadFromJsonAsync<User>() ?? throw new Exception("Failed to deserialize created user.");
+        }
+    }
+}

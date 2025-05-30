@@ -1,0 +1,1144 @@
+﻿@page "/calendar"
+@namespace WiseHR.Pages.Calendar
+@using System.Text.Json
+@using HolidayApp.Models
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@layout HomeLayout
+
+<div class="page-container">
+    <div class="calendar-container">
+        @if (_isLoading)
+        {
+            <div class="loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
+        }
+        <div class="location-selection">
+            <label for="location"><b>Select Location:</b></label>
+            <select id="location" @onchange="OnLocationChanged" class="location-dropdown">
+                @foreach (var location in _locations)
+                {
+                    <option value="@location" selected="@(location == _selectedLocation)">@location</option>
+                }
+            </select>
+        </div>
+        <div class="calendar-header-container">
+            <button class="nav-button" @onclick="NavigateToPreviousMonth">Previous</button>
+            <h3 class="calendar-title">@_currentDate.ToString("MMMM yyyy")</h3>
+            <button class="nav-button" @onclick="NavigateToNextMonth">Next</button>
+        </div>
+        <div class="calendar">
+            <div class="calendar-header">
+                @foreach (var day in _daysOfWeek)
+                {
+                    <div class="day-header">@day</div>
+                }
+            </div>
+            <div class="calendar-body">
+                @foreach (var week in _calendarWeeks)
+                {
+                    <div class="week">
+                        @foreach (var day in week)
+                        {
+                            <div class="day @(day.IsCurrentMonth ? "" : "other-month") @(day.IsToday ? "today" : "") @(HasEvent(day.Date) ? "has-event" : "")"
+                                 @onclick="() => SelectDate(day.Date)">
+                                <div class="day-content">
+                                    <div class="day-number">@day.Date.Day</div>
+                                    @if (HasEvent(day.Date) && _events.TryGetValue((day.Date, _selectedLocation), out var evt))
+                                    {
+                                        <div class="event-name">
+                                            @(TruncateEventName(evt.Description ?? "Unnamed Event", 15))
+                                        </div>
+                                    }
+                                    @if (IsHoliday(day.Date))
+                                    {
+                                        <div class="holiday-indicator @(GetHolidayType(day.Date) == "Permanent" ? "holiday-indicator-permanent" : "holiday-indicator-optional")"></div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="holidays-box" @onclick="NavigateToHolidaysPage"><span>Holidays</span></div>
+    </div>
+    <div class="event-and-holidays-container">
+        @if (_isEventInputVisible)
+        {
+            <div class="event-panel">
+                <div class="event-panel-header">
+                    <h4>Events for @_selectedDate.ToString("dd-MM-yyyy")</h4>
+                    <button class="close-button" @onclick="CloseEventPanel">×</button>
+                </div>
+                <div class="event-panel-content">
+                    @if (_hasExistingEvent && _events.TryGetValue((_selectedDate, _selectedLocation), out var existingEvent))
+                    {
+                        <div class="existing-event">
+                            <strong>Event:</strong> @(existingEvent.Description ?? "No description available")
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(_successMessage))
+                    {
+                        <div class="success-message">@_successMessage</div>
+                    }
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <div class="error-message">@_errorMessage</div>
+                    }
+                    <textarea @bind="_eventDescription" placeholder="Enter new event details..." class="event-textarea"></textarea>
+                    <div class="holiday-type-selection">
+                        <label>Holiday Type (required):</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox"
+                                       @bind="_isPermanentHoliday"
+                                       @onclick="() => SetHolidayType(true)" />
+                                <span>Permanent Holiday</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox"
+                                       @bind="_isOptionalHoliday"
+                                       @onclick="() => SetHolidayType(false)" />
+                                <span>Optional Holiday</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="event-buttons">
+                        @if (_hasExistingEvent)
+                        {
+                            <button class="action-button save" @onclick="UpdateEvent">Update</button>
+                        }
+                        else
+                        {
+                            <button class="action-button save" @onclick="SaveEvent">Save</button>
+                        }
+                        <button class="action-button cancel" @onclick="CloseEventPanel">Cancel</button>
+                        @if (_hasExistingEvent)
+                        {
+                            <button class="action-button delete" @onclick="DeleteEvent">Delete</button>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="holidays-month-box">
+                <h3>Holidays for @_currentDate.ToString("MMMM yyyy")</h3>
+                <div class="holidays-list-container">
+                    @if (GetHolidaysForMonth().Any())
+                    {
+                        <ul>
+                            @foreach (var holiday in GetHolidaysForMonth())
+                            {
+                                <li class="@(holiday.Value.HolidayType == "Permanent" ? "permanent-holiday" : "optional-holiday")"
+                                    @onclick="() => SelectDate(holiday.Key.Date)">
+                                    <span class="holiday-date">@holiday.Key.Date.ToString("dd-MM-yyyy") (@holiday.Key.Date.ToString("ddd"))</span>
+                                    <span class="holiday-name">- @(holiday.Value.Description ?? "Unnamed Event")</span>
+                                    <span class="holiday-type">- @(holiday.Value.HolidayType ?? "N/A")</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="no-holidays">No holidays for this month.</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    html {
+        background-color: #ffffff;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+    }
+    body {
+        background-color: #ffffff;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+    }
+
+    .page-container {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 20px;
+        gap: 20px;
+        background-color: #ffffff;
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+
+    .calendar-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        width: 800px;
+    }
+
+    .location-selection {
+        justify-content: center;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .location-selection label {
+        color: #2c3e50;
+        font-family: 'Segoe UI', sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+    }
+
+    .location-dropdown {
+        padding: 8px 16px;
+        border: 1px solid #3498db;
+        border-radius: 6px;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 14px;
+        background-color: #e8f4f8;
+        color: #2c3e50;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .location-dropdown:hover {
+        background-color: #3498db;
+        color: white;
+        border-color: #2980b9;
+    }
+
+    .location-dropdown:focus {
+        border-color: #2980b9;
+        outline: none;
+        background-color: #3498db;
+        color: white;
+    }
+
+    .calendar-header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .nav-button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: 'Segoe UI', sans-serif;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+    }
+
+    .nav-button:hover {
+        background-color: #2980b9;
+    }
+
+    .calendar-title {
+        color: #1a1a1a;
+        text-align: center;
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+    }
+
+    .calendar {
+        width: 100%;
+        background-color: #2c3e50;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .calendar-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        background-color: #34495e;
+        color: white;
+        padding: 12px 0;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .day-header {
+        padding: 10px;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .calendar-body {
+        display: grid;
+        gap: 1px;
+        background-color: #34495e;
+    }
+
+    .week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+    }
+
+    .day {
+        text-align: center;
+        padding: 10px;
+        background-color: #ffffff;
+        color: #2c3e50;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: 'Segoe UI', sans-serif;
+        position: relative;
+        height: 76px;
+        display: flex;
+        align-items: stretch;
+        overflow: hidden;
+    }
+
+    .day-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .day:hover {
+        background-color: #3498db;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .day:hover .event-name {
+        color: white;
+    }
+
+    .other-month {
+        background-color: #ecf0f1;
+        color: #7f8c8d;
+    }
+
+    .other-month:hover {
+        background-color: #bdc3c7;
+        color: #2c3e50;
+    }
+
+    .today {
+        background-color: #3498db;
+        color: white;
+        font-weight: bold;
+        border: 2px solid #2980b9;
+    }
+
+    .today:hover {
+        background-color: #2980b9;
+    }
+
+    .day-number {
+        font-size: 16px;
+        margin-top: 5px;
+    }
+
+    .event-name {
+        font-size: 12px;
+        margin-bottom: 5px;
+        color: #34495e;
+        padding: 2px 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-height: 18px;
+        line-height: 1.2;
+    }
+
+    .holiday-indicator {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid #fff;
+    }
+
+    .holiday-indicator-permanent {
+        background-color: #28a745;
+    }
+
+    .holiday-indicator-optional {
+        background-color: #e74c3c;
+    }
+
+    .holidays-box {
+        margin-top: 20px;
+        background-color: #3498db;
+        border-radius: 5px;
+        padding: 15px;
+        text-align: center;
+        color: white;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .holidays-box:hover {
+        background-color: #2980b9;
+    }
+
+    .holidays-box span {
+        font-weight: 500;
+    }
+
+    .event-and-holidays-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .event-panel {
+        width: 350px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 25px;
+        top: 20px;
+        height: fit-content;
+    }
+
+    .event-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .event-panel-header h4 {
+        margin: 0;
+        color: #2c3e50;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .close-button {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #7f8c8d;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close-button:hover {
+        color: #e74c3c;
+    }
+
+    .event-panel-content {
+        display: flex;
+        overflow: hidden;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .existing-event {
+        padding: 10px;
+        background-color: #e8f4f8;
+        border-radius: 6px;
+        color: #2c3e50;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 14px;
+    }
+
+    .success-message {
+        padding: 10px;
+        background-color: #d4edda;
+        color: #155724;
+        border-radius: 6px;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .error-message {
+        padding: 10px;
+        background-color: #f8d7da;
+        color: #721c24;
+        border-radius: 6px;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .event-textarea {
+        width: 100%;
+        height: 120px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-family: 'Segoe UI', sans-serif;
+        resize: none;
+        transition: border-color 0.3s ease;
+    }
+
+    .event-textarea:focus {
+        border-color: #3498db;
+        outline: none;
+    }
+
+    .holiday-type-selection {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .holiday-type-selection label {
+        color: #2c3e50;
+        font-family: 'Segoe UI', sans-serif;
+        font-weight: 500;
+    }
+
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #2c3e50;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: #4a90e2;
+    }
+
+    .checkbox-label span {
+        font-size: 14px;
+    }
+
+    .event-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .action-button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-family: 'Segoe UI', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .action-button.save {
+        background-color: #3498db;
+        color: white;
+    }
+
+    .action-button.save:hover {
+        background-color: #2980b9;
+    }
+
+    .action-button.cancel {
+        background-color: #95a5a6;
+        color: white;
+    }
+
+    .action-button.cancel:hover {
+        background-color: #7f8c8d;
+    }
+
+    .action-button.delete {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    .action-button.delete:hover {
+        background-color: #c0392b;
+    }
+
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #3498db;
+        border-top: 4px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .holidays-month-box {
+        width: 350px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        padding: 25px;
+        max-height: 400px;
+    }
+
+    .holidays-month-box h3 {
+        margin: 0 0 15px 0;
+        font-size: 20px;
+        color: #2c3e50;
+        font-family: 'Segoe UI', sans-serif;
+        font-weight: 600;
+    }
+
+    .holidays-list-container {
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    .holidays-month-box ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .holidays-month-box li {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        overflow: hidden;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 14px;
+        transition: background-color 0.2s ease;
+        cursor: pointer;
+    }
+
+    .holidays-month-box li:hover {
+        background-color: #f2f5f5db;
+        transform: scale(1.02);
+    }
+
+    .holidays-month-box li.permanent-holiday {
+        background-color: #d3d3d3;
+    }
+
+    .holidays-month-box li.optional-holiday {
+        background-color: #d3d3d3;
+    }
+
+    .holiday-date {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-right: 8px;
+    }
+
+    .holiday-name {
+        flex: 1;
+        font-weight: 700;
+        color: #34495e;
+        margin-right: 8px;
+        white-space: nowrap;
+        overflow: visible;
+        max-width: none;
+    }
+
+    .holiday-type {
+        font-style: italic;
+        color: #7f8c8d;
+    }
+
+    .no-holidays {
+        color: #95a5a6;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 14px;
+        text-align: center;
+        padding: 20px 0;
+    }
+
+    .holidays-list-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .holidays-list-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .holidays-list-container::-webkit-scrollbar-thumb {
+        background: #88b3e3;
+        border-radius: 4px;
+    }
+
+    .holidays-list-container::-webkit-scrollbar-thumb:hover {
+        background: #357abd;
+    }
+
+    .holiday-indicator-permanent {
+    background-color: #28a745; /* Green for Permanent */
+    }
+
+    .holiday-indicator-optional {
+    background-color: #e74c3c; /* Red for Optional */
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+@code {
+    private static readonly string[] _daysOfWeek = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    private DateTime _currentDate = DateTime.Today;
+    private List<List<CalendarDay>> _calendarWeeks = new();
+    private Dictionary<(DateTime Date, string Location), Event> _events = new();
+    private bool _isEventInputVisible;
+    private DateTime _selectedDate;
+    private string _eventDescription = "";
+    private bool _hasExistingEvent;
+    private bool _isPermanentHoliday;
+    private bool _isOptionalHoliday;
+    private string? _successMessage;
+    private string? _errorMessage;
+    private bool _isLoading = true;
+    private string _selectedLocation = "";
+    private List<string> _locations = new();
+
+    public class CalendarDay
+    {
+        public DateTime Date { get; set; }
+        public bool IsCurrentMonth { get; set; }
+        public bool IsToday { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLocationsAsync();
+        if (_locations.Any())
+        {
+            _selectedLocation = _locations[0];
+        }
+        else
+        {
+            _selectedLocation = "Bangalore,India";
+            _errorMessage = "No locations available. Using default location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+        await LoadEventsAsync();
+        GenerateCalendar();
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadLocationsAsync()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<string>>("/EmployeeDetails/GetAllJoiningLocations");
+            if (response != null && response.Any())
+            {
+                _locations = response;
+            }
+            else
+            {
+                _locations = new List<string> { "Bangalore,India" };
+                _errorMessage = "No locations found. Using default location.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _locations = new List<string> { "Bangalore,India" };
+            _errorMessage = $"Failed to load locations: {ex.Message}. Using default location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
+    private async Task LoadEventsAsync()
+    {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "No location selected. Please select a location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        try
+        {
+            _events.Clear();
+            string url = $"/api/Events?location={Uri.EscapeDataString(_selectedLocation)}";
+            var response = await Http.GetFromJsonAsync<List<Event>>(url);
+            if (response != null)
+            {
+                _events = response
+                    .Where(e => DateTime.TryParse(e.Date, out var parsedDate) && e.Location == _selectedLocation)
+                    .ToDictionary(
+                        e => (Date: DateTime.Parse(e.Date).Date, Location: e.Location!),
+                        e => e
+                    );
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Failed to load events for {_selectedLocation}: {ex.Message}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+        GenerateCalendar();
+        StateHasChanged();
+    }
+
+    private void GenerateCalendar()
+    {
+        _calendarWeeks.Clear();
+        var firstOfMonth = new DateTime(_currentDate.Year, _currentDate.Month, 1);
+        var firstDayOfWeek = (int)firstOfMonth.DayOfWeek;
+        var currentDay = firstOfMonth.AddDays(-firstDayOfWeek);
+
+        for (int week = 0; week < 6; week++)
+        {
+            _calendarWeeks.Add(Enumerable.Range(0, 7).Select(d => new CalendarDay
+            {
+                Date = currentDay.AddDays(d),
+                IsCurrentMonth = currentDay.AddDays(d).Month == _currentDate.Month,
+                IsToday = currentDay.AddDays(d).Date == DateTime.Today.Date
+            }).ToList());
+            currentDay = currentDay.AddDays(7);
+        }
+    }
+
+    private void SelectDate(DateTime date)
+    {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "Please select a location before selecting a date.";
+            StateHasChanged();
+            Task.Delay(3000).ContinueWith(_ => { _errorMessage = null; StateHasChanged(); });
+            return;
+        }
+
+        _selectedDate = date.Date;
+        _hasExistingEvent = _events.ContainsKey((date.Date, _selectedLocation));
+
+        if (_hasExistingEvent)
+        {
+            _eventDescription = _events[(date.Date, _selectedLocation)]?.Description ?? "";
+            _isPermanentHoliday = _events[(date.Date, _selectedLocation)]?.HolidayType == "Permanent";
+            _isOptionalHoliday = _events[(date.Date, _selectedLocation)]?.HolidayType == "Optional";
+        }
+        else
+        {
+            _eventDescription = "";
+            _isPermanentHoliday = false;
+            _isOptionalHoliday = false;
+        }
+
+        _isEventInputVisible = true;
+        _successMessage = null;
+        _errorMessage = null;
+        StateHasChanged();
+    }
+
+    private async Task SaveEvent()
+    {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "No location selected. Please select a location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_eventDescription))
+        {
+            _errorMessage = "Please enter event details.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        if (!_isPermanentHoliday && !_isOptionalHoliday)
+        {
+            _errorMessage = "Please select a holiday type (Permanent or Optional).";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        try
+        {
+            var eventToSave = new Event
+            {
+                Date = _selectedDate.ToString("yyyy-MM-dd"),
+                Description = _eventDescription,
+                HolidayType = _isPermanentHoliday ? "Permanent" : "Optional",
+                Location = _selectedLocation,
+                Day = _selectedDate.ToString("ddd")
+            };
+
+            HttpResponseMessage response = await Http.PostAsJsonAsync("/api/Events", eventToSave);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _events[(_selectedDate, _selectedLocation)] = eventToSave;
+                _hasExistingEvent = true;
+                _successMessage = $"Event saved successfully for {_selectedLocation}.";
+                GenerateCalendar();
+                StateHasChanged();
+                await Task.Delay(3000);
+                _successMessage = null;
+            }
+            else
+            {
+                _errorMessage = $"Failed to save event for {_selectedLocation}: {await response.Content.ReadAsStringAsync()}.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Error saving event for {_selectedLocation}: {ex.Message}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
+    private async Task UpdateEvent()
+    {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "No location selected. Please select a location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_eventDescription))
+        {
+            _errorMessage = "Please enter event details.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        if (!_isPermanentHoliday && !_isOptionalHoliday)
+        {
+            _errorMessage = "Please select a holiday type (Permanent or Optional).";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        try
+        {
+            var eventToUpdate = new Event
+            {
+                Date = _selectedDate.ToString("yyyy-MM-dd"),
+                Description = _eventDescription,
+                HolidayType = _isPermanentHoliday ? "Permanent" : "Optional",
+                Location = _selectedLocation,
+                Day = _selectedDate.ToString("ddd")
+            };
+
+            string url = $"/api/Events/{_selectedDate:yyyy-MM-dd}?location={Uri.EscapeDataString(_selectedLocation)}";
+            HttpResponseMessage response = await Http.PutAsJsonAsync(url, eventToUpdate);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _events[(_selectedDate, _selectedLocation)] = eventToUpdate;
+                _successMessage = $"Event updated successfully for {_selectedLocation}.";
+                GenerateCalendar();
+                StateHasChanged();
+                await Task.Delay(3000);
+                _successMessage = null;
+            }
+            else
+            {
+                _errorMessage = $"Failed to update event for {_selectedLocation}: {await response.Content.ReadAsStringAsync()}.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Error updating event for {_selectedLocation}: {ex.Message}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
+    private async Task DeleteEvent()
+    {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "No location selected. Please select a location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        try
+        {
+            string url = $"/api/Events/{_selectedDate:yyyy-MM-dd}?location={Uri.EscapeDataString(_selectedLocation)}";
+            HttpResponseMessage response = await Http.DeleteAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _events.Remove((_selectedDate, _selectedLocation));
+                _hasExistingEvent = false;
+                _successMessage = $"Event deleted successfully for {_selectedLocation}.";
+                GenerateCalendar();
+                StateHasChanged();
+                await Task.Delay(3000);
+                _successMessage = null;
+            }
+            else
+            {
+                _errorMessage = $"Failed to delete event for {_selectedLocation}: {await response.Content.ReadAsStringAsync()}.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _errorMessage = $"Error deleting event for {_selectedLocation}: {ex.Message}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
+    private void SetHolidayType(bool isPermanent)
+    {
+        _isPermanentHoliday = isPermanent;
+        _isOptionalHoliday = !isPermanent;
+        StateHasChanged();
+    }
+
+    private bool HasEvent(DateTime date)
+    {
+        return _events.ContainsKey((date.Date, _selectedLocation));
+    }
+
+    private bool IsHoliday(DateTime date)
+    {
+        return _events.ContainsKey((date.Date, _selectedLocation));
+    }
+
+    private string GetHolidayType(DateTime date)
+    {
+        return _events.TryGetValue((date.Date, _selectedLocation), out var evt) ? evt.HolidayType ?? "" : "";
+    }
+
+    private IEnumerable<KeyValuePair<(DateTime Date, string Location), Event>> GetHolidaysForMonth()
+    {
+        return _events
+            .Where(e => e.Key.Location == _selectedLocation &&
+                        e.Key.Date.Year == _currentDate.Year &&
+                        e.Key.Date.Month == _currentDate.Month)
+            .OrderBy(e => e.Key.Date);
+    }
+
+    private void CloseEventPanel()
+    {
+        _isEventInputVisible = false;
+        _eventDescription = "";
+        _isPermanentHoliday = false;
+        _isOptionalHoliday = false;
+        _successMessage = null;
+        _errorMessage = null;
+        _hasExistingEvent = false;
+        StateHasChanged();
+    }
+
+    private void NavigateToNextMonth()
+    {
+        _currentDate = _currentDate.AddMonths(1);
+        GenerateCalendar();
+        StateHasChanged();
+    }
+
+    private void NavigateToPreviousMonth()
+    {
+        _currentDate = _currentDate.AddMonths(-1);
+        GenerateCalendar();
+        StateHasChanged();
+    }
+
+    private void NavigateToHolidaysPage()
+    {
+        NavigationManager.NavigateTo("/Calendar/holiday");
+    }
+
+    private async Task OnLocationChanged(ChangeEventArgs e)
+    {
+        _selectedLocation = e.Value?.ToString() ?? _locations.FirstOrDefault() ?? "Bangalore,India";
+        if (!_locations.Contains(_selectedLocation))
+        {
+            _selectedLocation = _locations.FirstOrDefault() ?? "Bangalore,India";
+            _errorMessage = $"Invalid location selected. Reverted to {_selectedLocation}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            
+        }
+        _isLoading = true;
+        CloseEventPanel();
+        await LoadEventsAsync();
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private string TruncateEventName(string name, int maxLength)
+    {
+        if (string.IsNullOrEmpty(name) || name.Length <= maxLength)
+            return name;
+        return name.Substring(0, maxLength) + "...";
+    }
+}
