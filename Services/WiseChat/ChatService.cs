@@ -31,6 +31,7 @@ namespace WiseHR_Frontend.Services
         public event Action<string>? OnChunkReceived;
         public event Action<string>? OnStatusReceived;
         public event Action? OnConnectionStateChanged;
+        public event Action<string, string>? OnMessageReceived;
 
         public ChatService(NavigationManager navigationManager)
         {
@@ -68,6 +69,8 @@ namespace WiseHR_Frontend.Services
                 
                 _hubConnection.On<string>("ReceiveStatus", status => 
                     InvokeOnUIThread(() => OnStatusReceived?.Invoke(status)));
+                _hubConnection.On<string, string>("ReceiveMessage", (displayName, message) =>
+          InvokeOnUIThread(() => OnMessageReceived?.Invoke(displayName, message)));
 
                 _hubConnection.Reconnecting += _ =>
                 {
