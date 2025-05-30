@@ -34,3 +34,7 @@ print(f"Response: {response.text}")
 i added some chnages 
 
 op
+
+
+
+macbook 0p tecno 
