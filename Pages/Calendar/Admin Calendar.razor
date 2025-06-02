@@ -16,10 +16,11 @@
         }
         <div class="location-selection">
             <label for="location"><b>Select Location:</b></label>
-            <select id="location" @bind-value="_selectedLocation" @bind-value:event="oninput" @onchange="OnLocationChanged" class="location-dropdown">
-                <option value="Bangalore,India">Bangalore,India</option>
-                <option value="Delaware,USA">Delaware,USA</option>
-                <option value="Riyadh,KSA">Riyadh,KSA</option>
+            <select id="location" @onchange="OnLocationChanged" class="location-dropdown">
+                @foreach (var location in _locations)
+                {
+                    <option value="@location" selected="@(location == _selectedLocation)">@location</option>
+                }
             </select>
         </div>
         <div class="calendar-header-container">
@@ -44,15 +45,15 @@
                                  @onclick="() => SelectDate(day.Date)">
                                 <div class="day-content">
                                     <div class="day-number">@day.Date.Day</div>
-                                    @if (HasEvent(day.Date) && _events.TryGetValue(day.Date, out var evt) && evt.Location == _selectedLocation)
+                                    @if (HasEvent(day.Date) && _events.TryGetValue((day.Date, _selectedLocation), out var evt))
                                     {
                                         <div class="event-name">
-                                            @(evt.Description ?? "Unnamed Event")
+                                            @(TruncateEventName(evt.Description ?? "Unnamed Event", 15))
                                         </div>
                                     }
                                     @if (IsHoliday(day.Date))
                                     {
-                                        <div class="holiday-indicator @(GetHolidayType(day.Date) == "Permanent" ? "permanent" : "optional")"></div>
+                                        <div class="holiday-indicator @(GetHolidayType(day.Date) == "Permanent" ? "holiday-indicator-permanent" : "holiday-indicator-optional")"></div>
                                     }
                                 </div>
                             </div>
@@ -69,10 +70,10 @@
             <div class="event-panel">
                 <div class="event-panel-header">
                     <h4>Events for @_selectedDate.ToString("dd-MM-yyyy")</h4>
-                    <button class="close-button" @onclick="HideEventInput">×</button>
+                    <button class="close-button" @onclick="CloseEventPanel">×</button>
                 </div>
                 <div class="event-panel-content">
-                    @if (_hasExistingEvent && _events.TryGetValue(_selectedDate, out var existingEvent) && existingEvent.Location == _selectedLocation)
+                    @if (_hasExistingEvent && _events.TryGetValue((_selectedDate, _selectedLocation), out var existingEvent))
                     {
                         <div class="existing-event">
                             <strong>Event:</strong> @(existingEvent.Description ?? "No description available")
@@ -113,7 +114,7 @@
                         {
                             <button class="action-button save" @onclick="SaveEvent">Save</button>
                         }
-                        <button class="action-button cancel" @onclick="HideEventInput">Cancel</button>
+                        <button class="action-button cancel" @onclick="CloseEventPanel">Cancel</button>
                         @if (_hasExistingEvent)
                         {
                             <button class="action-button delete" @onclick="DeleteEvent">Delete</button>
@@ -130,8 +131,8 @@
                             @foreach (var holiday in GetHolidaysForMonth())
                             {
                                 <li class="@(holiday.Value.HolidayType == "Permanent" ? "permanent-holiday" : "optional-holiday")"
-                                    @onclick="() => SelectDate(holiday.Key)">
-                                    <span class="holiday-date">@holiday.Key.ToString("dd-MM-yyyy") (@holiday.Key.ToString("ddd"))</span>
+                                    @onclick="() => SelectDate(holiday.Key.Date)">
+                                    <span class="holiday-date">@holiday.Key.Date.ToString("dd-MM-yyyy") (@holiday.Key.Date.ToString("ddd"))</span>
                                     <span class="holiday-name">- @(holiday.Value.Description ?? "Unnamed Event")</span>
                                     <span class="holiday-type">- @(holiday.Value.HolidayType ?? "N/A")</span>
                                 </li>
@@ -354,10 +355,10 @@
         margin-bottom: 5px;
         color: #34495e;
         padding: 2px 5px;
-        word-wrap: break-word;
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-height: 36px;
+        max-height: 18px;
         line-height: 1.2;
     }
 
@@ -371,11 +372,11 @@
         border: 1px solid #fff;
     }
 
-    .holiday-indicator.permanent {
+    .holiday-indicator-permanent {
         background-color: #28a745;
     }
 
-    .holiday-indicator.optional {
+    .holiday-indicator-optional {
         background-color: #e74c3c;
     }
 
@@ -696,13 +697,26 @@
     .holidays-list-container::-webkit-scrollbar-thumb:hover {
         background: #357abd;
     }
+
+    .holiday-indicator-permanent {
+    background-color: #28a745; /* Green for Permanent */
+    }
+
+    .holiday-indicator-optional {
+    background-color: #e74c3c; /* Red for Optional */
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 
 @code {
     private static readonly string[] _daysOfWeek = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
     private DateTime _currentDate = DateTime.Today;
     private List<List<CalendarDay>> _calendarWeeks = new();
-    private Dictionary<DateTime, Event> _events = new();
+    private Dictionary<(DateTime Date, string Location), Event> _events = new();
     private bool _isEventInputVisible;
     private DateTime _selectedDate;
     private string _eventDescription = "";
@@ -712,35 +726,94 @@
     private string? _successMessage;
     private string? _errorMessage;
     private bool _isLoading = true;
-    private string _selectedLocation = "Bangalore,India";
+    private string _selectedLocation = "";
+    private List<string> _locations = new();
+
+    public class CalendarDay
+    {
+        public DateTime Date { get; set; }
+        public bool IsCurrentMonth { get; set; }
+        public bool IsToday { get; set; }
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadLocationsAsync();
+        if (_locations.Any())
+        {
+            _selectedLocation = _locations[0];
+        }
+        else
+        {
+            _selectedLocation = "Bangalore,India";
+            _errorMessage = "No locations available. Using default location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
         await LoadEventsAsync();
         GenerateCalendar();
         _isLoading = false;
         StateHasChanged();
     }
 
-    private async Task LoadEventsAsync()
+    private async Task LoadLocationsAsync()
     {
         try
         {
-            string url = $"/api/Events?location={_selectedLocation}";
+            var response = await Http.GetFromJsonAsync<List<string>>("/EmployeeDetails/GetAllJoiningLocations");
+            if (response != null && response.Any())
+            {
+                _locations = response;
+            }
+            else
+            {
+                _locations = new List<string> { "Bangalore,India" };
+                _errorMessage = "No locations found. Using default location.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _locations = new List<string> { "Bangalore,India" };
+            _errorMessage = $"Failed to load locations: {ex.Message}. Using default location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
+    private async Task LoadEventsAsync()
+    {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "No location selected. Please select a location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
+        try
+        {
+            _events.Clear();
+            string url = $"/api/Events?location={Uri.EscapeDataString(_selectedLocation)}";
             var response = await Http.GetFromJsonAsync<List<Event>>(url);
             if (response != null)
             {
                 _events = response
-                    .Where(e => DateTime.TryParse(e.Date, out _) && e.Location == _selectedLocation)
+                    .Where(e => DateTime.TryParse(e.Date, out var parsedDate) && e.Location == _selectedLocation)
                     .ToDictionary(
-                        e => DateTime.Parse(e.Date!).Date,
+                        e => (Date: DateTime.Parse(e.Date).Date, Location: e.Location!),
                         e => e
                     );
             }
         }
         catch (HttpRequestException ex)
         {
-            _errorMessage = $"Failed to load events: {ex.Message}.";
+            _errorMessage = $"Failed to load events for {_selectedLocation}: {ex.Message}.";
             StateHasChanged();
             await Task.Delay(3000);
             _errorMessage = null;
@@ -770,14 +843,22 @@
 
     private void SelectDate(DateTime date)
     {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "Please select a location before selecting a date.";
+            StateHasChanged();
+            Task.Delay(3000).ContinueWith(_ => { _errorMessage = null; StateHasChanged(); });
+            return;
+        }
+
         _selectedDate = date.Date;
-        _hasExistingEvent = _events.ContainsKey(date.Date) && _events[date.Date]?.Location == _selectedLocation;
+        _hasExistingEvent = _events.ContainsKey((date.Date, _selectedLocation));
 
         if (_hasExistingEvent)
         {
-            _eventDescription = _events[date.Date]?.Description ?? "";
-            _isPermanentHoliday = _events[date.Date]?.HolidayType == "Permanent";
-            _isOptionalHoliday = _events[date.Date]?.HolidayType == "Optional";
+            _eventDescription = _events[(date.Date, _selectedLocation)]?.Description ?? "";
+            _isPermanentHoliday = _events[(date.Date, _selectedLocation)]?.HolidayType == "Permanent";
+            _isOptionalHoliday = _events[(date.Date, _selectedLocation)]?.HolidayType == "Optional";
         }
         else
         {
@@ -794,6 +875,15 @@
 
     private async Task SaveEvent()
     {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "No location selected. Please select a location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(_eventDescription))
         {
             _errorMessage = "Please enter event details.";
@@ -827,16 +917,17 @@
 
             if (response.IsSuccessStatusCode)
             {
-                await LoadEventsAsync();
-                _successMessage = "Event saved successfully.";
+                _events[(_selectedDate, _selectedLocation)] = eventToSave;
                 _hasExistingEvent = true;
+                _successMessage = $"Event saved successfully for {_selectedLocation}.";
+                GenerateCalendar();
                 StateHasChanged();
                 await Task.Delay(3000);
                 _successMessage = null;
             }
             else
             {
-                _errorMessage = $"Failed to save event: {await response.Content.ReadAsStringAsync()}.";
+                _errorMessage = $"Failed to save event for {_selectedLocation}: {await response.Content.ReadAsStringAsync()}.";
                 StateHasChanged();
                 await Task.Delay(3000);
                 _errorMessage = null;
@@ -844,7 +935,7 @@
         }
         catch (HttpRequestException ex)
         {
-            _errorMessage = $"Error saving event: {ex.Message}.";
+            _errorMessage = $"Error saving event for {_selectedLocation}: {ex.Message}.";
             StateHasChanged();
             await Task.Delay(3000);
             _errorMessage = null;
@@ -853,6 +944,15 @@
 
     private async Task UpdateEvent()
     {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "No location selected. Please select a location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(_eventDescription))
         {
             _errorMessage = "Please enter event details.";
@@ -873,7 +973,7 @@
 
         try
         {
-            var eventToSave = new Event
+            var eventToUpdate = new Event
             {
                 Date = _selectedDate.ToString("yyyy-MM-dd"),
                 Description = _eventDescription,
@@ -882,19 +982,21 @@
                 Day = _selectedDate.ToString("ddd")
             };
 
-            HttpResponseMessage response = await Http.PutAsJsonAsync($"/api/Events/{_selectedDate:yyyy-MM-dd}?location={_selectedLocation}", eventToSave);
+            string url = $"/api/Events/{_selectedDate:yyyy-MM-dd}?location={Uri.EscapeDataString(_selectedLocation)}";
+            HttpResponseMessage response = await Http.PutAsJsonAsync(url, eventToUpdate);
 
             if (response.IsSuccessStatusCode)
             {
-                await LoadEventsAsync();
-                _successMessage = "Event updated successfully.";
+                _events[(_selectedDate, _selectedLocation)] = eventToUpdate;
+                _successMessage = $"Event updated successfully for {_selectedLocation}.";
+                GenerateCalendar();
                 StateHasChanged();
                 await Task.Delay(3000);
                 _successMessage = null;
             }
             else
             {
-                _errorMessage = $"Failed to update event: {await response.Content.ReadAsStringAsync()}.";
+                _errorMessage = $"Failed to update event for {_selectedLocation}: {await response.Content.ReadAsStringAsync()}.";
                 StateHasChanged();
                 await Task.Delay(3000);
                 _errorMessage = null;
@@ -902,7 +1004,7 @@
         }
         catch (HttpRequestException ex)
         {
-            _errorMessage = $"Error updating event: {ex.Message}.";
+            _errorMessage = $"Error updating event for {_selectedLocation}: {ex.Message}.";
             StateHasChanged();
             await Task.Delay(3000);
             _errorMessage = null;
@@ -911,27 +1013,33 @@
 
     private async Task DeleteEvent()
     {
+        if (string.IsNullOrEmpty(_selectedLocation))
+        {
+            _errorMessage = "No location selected. Please select a location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            return;
+        }
+
         try
         {
-            var response = await Http.DeleteAsync($"/api/Events/{_selectedDate:yyyy-MM-dd}?location={_selectedLocation}");
+            string url = $"/api/Events/{_selectedDate:yyyy-MM-dd}?location={Uri.EscapeDataString(_selectedLocation)}";
+            HttpResponseMessage response = await Http.DeleteAsync(url);
 
             if (response.IsSuccessStatusCode)
             {
-                _events.Remove(_selectedDate);
+                _events.Remove((_selectedDate, _selectedLocation));
                 _hasExistingEvent = false;
-                _eventDescription = "";
-                _isPermanentHoliday = false;
-                _isOptionalHoliday = false;
-                _successMessage = "Event deleted successfully.";
+                _successMessage = $"Event deleted successfully for {_selectedLocation}.";
+                GenerateCalendar();
                 StateHasChanged();
-                await LoadEventsAsync();
                 await Task.Delay(3000);
                 _successMessage = null;
-                StateHasChanged();
             }
             else
             {
-                _errorMessage = $"Failed to delete event: {await response.Content.ReadAsStringAsync()}.";
+                _errorMessage = $"Failed to delete event for {_selectedLocation}: {await response.Content.ReadAsStringAsync()}.";
                 StateHasChanged();
                 await Task.Delay(3000);
                 _errorMessage = null;
@@ -939,7 +1047,7 @@
         }
         catch (HttpRequestException ex)
         {
-            _errorMessage = $"Error deleting event: {ex.Message}.";
+            _errorMessage = $"Error deleting event for {_selectedLocation}: {ex.Message}.";
             StateHasChanged();
             await Task.Delay(3000);
             _errorMessage = null;
@@ -948,44 +1056,36 @@
 
     private void SetHolidayType(bool isPermanent)
     {
-        if (isPermanent)
-        {
-            _isPermanentHoliday = true;
-            _isOptionalHoliday = false;
-        }
-        else
-        {
-            _isPermanentHoliday = false;
-            _isOptionalHoliday = true;
-        }
+        _isPermanentHoliday = isPermanent;
+        _isOptionalHoliday = !isPermanent;
         StateHasChanged();
     }
 
     private bool HasEvent(DateTime date)
     {
-        return _events.ContainsKey(date.Date) && _events[date.Date]?.Location == _selectedLocation;
+        return _events.ContainsKey((date.Date, _selectedLocation));
     }
 
     private bool IsHoliday(DateTime date)
     {
-        return _events.ContainsKey(date.Date) && _events[date.Date]?.Location == _selectedLocation;
+        return _events.ContainsKey((date.Date, _selectedLocation));
     }
 
     private string GetHolidayType(DateTime date)
     {
-        return _events.TryGetValue(date.Date, out var evt) && evt?.Location == _selectedLocation ? evt.HolidayType ?? "" : "";
+        return _events.TryGetValue((date.Date, _selectedLocation), out var evt) ? evt.HolidayType ?? "" : "";
     }
 
-    private IEnumerable<KeyValuePair<DateTime, Event>> GetHolidaysForMonth()
+    private IEnumerable<KeyValuePair<(DateTime Date, string Location), Event>> GetHolidaysForMonth()
     {
         return _events
-            .Where(e => e.Value.Location == _selectedLocation &&
-                        e.Key.Year == _currentDate.Year &&
-                        e.Key.Month == _currentDate.Month)
-            .OrderBy(e => e.Key);
+            .Where(e => e.Key.Location == _selectedLocation &&
+                        e.Key.Date.Year == _currentDate.Year &&
+                        e.Key.Date.Month == _currentDate.Month)
+            .OrderBy(e => e.Key.Date);
     }
 
-    private void HideEventInput()
+    private void CloseEventPanel()
     {
         _isEventInputVisible = false;
         _eventDescription = "";
@@ -1018,11 +1118,27 @@
 
     private async Task OnLocationChanged(ChangeEventArgs e)
     {
-        _selectedLocation = e.Value?.ToString() ?? "Bangalore,India";
-        _isEventInputVisible = false;
+        _selectedLocation = e.Value?.ToString() ?? _locations.FirstOrDefault() ?? "Bangalore,India";
+        if (!_locations.Contains(_selectedLocation))
+        {
+            _selectedLocation = _locations.FirstOrDefault() ?? "Bangalore,India";
+            _errorMessage = $"Invalid location selected. Reverted to {_selectedLocation}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+            
+        }
         _isLoading = true;
+        CloseEventPanel();
         await LoadEventsAsync();
         _isLoading = false;
         StateHasChanged();
+    }
+
+    private string TruncateEventName(string name, int maxLength)
+    {
+        if (string.IsNullOrEmpty(name) || name.Length <= maxLength)
+            return name;
+        return name.Substring(0, maxLength) + "...";
     }
 }
