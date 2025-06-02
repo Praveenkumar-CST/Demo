@@ -14,76 +14,67 @@
 @inject AnalyticsCacheService AnalyticsCache
 @layout WiseHR.Components.sidebar.HomeLayout
 
-@attribute [Authorize(Roles = "Admin")]
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4 analytics-container" Style="height: calc(100vh - 64px); display: flex; flex-direction: column; position: fixed; top: 64px; left: 60px; right: 5px; bottom:5px; overflow: hidden;">
-    <div class="analytics-header">
-        <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="header-icon" />
-        <MudText Typo="Typo.h4" Class="header-title">Employee Analytics</MudText>
-    </div>
+<style>
+    .analytics-container {
+        background: #ffffff;
+        padding: 0.5rem;
+    }
 
-    <style>
+    .analytics-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 0;
+        border-bottom: 0px solid #f1f5f9;
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        border-radius: 8px;
+        padding-left: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-icon {
+        color: #3b82f6 !important;
+        font-size: 2rem !important;
+        height: 2em;
+        width: 2em;
+        margin-right: 0.75rem;
+        background: rgba(59, 130, 246, 0.1);
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .header-icon:hover {
+            background: rgba(59, 130, 246, 0.15);
+            transform: scale(1.05);
+        }
+
+    .header-title {
+        color: #1e293b !important;
+        font-weight: 700 !important;
+        font-size: 1.75rem !important;
+        margin: 0 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Alternative clean version */
+    .analytics-header.clean {
+        background: transparent;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: none;
+        padding-left: 0;
+    }
+
+    /* Alternative with accent */
+    .analytics-header.accent {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 197, 253, 0.02) 100%);
+        border-left: 4px solid #3b82f6;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 960px) {
         .analytics-container {
-            background: #ffffff;
-            padding: 0.5rem;
-        }
-
-        .analytics-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem 0;
-            border-bottom: 0px solid #f1f5f9;
-            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-            border-radius: 8px;
-            padding-left: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
-        .header-icon {
-            color: #3b82f6 !important;
-            font-size: 2rem !important;
-            height:2em;
-            width:2em;
-            margin-right: 0.75rem;
-            background: rgba(59, 130, 246, 0.1);
-            padding: 0.5rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-            .header-icon:hover {
-                background: rgba(59, 130, 246, 0.15);
-                transform: scale(1.05);
-            }
-
-        .header-title {
-            color: #1e293b !important;
-            font-weight: 700 !important;
-            font-size: 1.75rem !important;
-            margin: 0 !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Alternative clean version */
-        .analytics-header.clean {
-            background: transparent;
-            border-bottom: 1px solid #e2e8f0;
-            box-shadow: none;
-            padding-left: 0;
-        }
-
-        /* Alternative with accent */
-        .analytics-header.accent {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 197, 253, 0.02) 100%);
-            border-left: 4px solid #3b82f6;
-        }
-
-        /* Responsive adjustments */
-       @@media (max-width: 960px) {
-            .analytics-container
-
-        {
             padding: 1rem;
         }
 
@@ -100,13 +91,10 @@
         .header-title {
             font-size: 1.5rem !important;
         }
+    }
 
-        }
-
-        @@media (max-width: 600px) {
-            .analytics-container
-
-        {
+    @@media (max-width: 600px) {
+        .analytics-container {
             padding: 0.75rem;
         }
 
@@ -125,15 +113,17 @@
         .header-title {
             font-size: 1.25rem !important;
         }
+    }</style>
 
-        }</style>
+@attribute [Authorize(Roles = "Admin")]
 
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4 analytics-container" Style="height: calc(100vh - 64px); display: flex; flex-direction: column; position: fixed; top: 64px; left: 60px; right: 5px; bottom:5px; overflow: hidden;">
     <MudGrid Spacing="2" Style="flex: 1; min-height: 0; overflow: hidden;">
         @* Filter Section *@
         <MudItem xs="12" md="3" Style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
-            <MudPaper Class="pa-4" Elevation="4" Style="height: 100%; display: flex; flex-direction: column; overflow-y: auto; border-radius: 8px;">
+            <MudPaper Class="pa-4" Elevation="4" Style="height: 100%; display: flex; flex-direction: column; overflow-y: auto; border-radius: 25px;">
                 <div class="d-flex align-center mb-3">
-                    <MudIcon Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Class="mr-2"/>
+                    <MudIcon Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Class="mr-2" />
                     <MudText Typo="Typo.h6" Color="Color.Primary">Filters</MudText>
                 </div>
 
@@ -152,7 +142,7 @@
                             }
                         </MudSelect>
                         <MudSelect T="string" @bind-Value="_filterDto.MaritalStatus" Label="Marital Status" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
-                             @foreach (var status in _maritalStatuses)
+                            @foreach (var status in _maritalStatuses)
                             {
                                 <MudSelectItem Value="@status">@status</MudSelectItem>
                             }
@@ -172,26 +162,26 @@
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Employment" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
-                         <MudAutocomplete T="string" @bind-Value="_filterDto.Designation" Label="Designation"
-                                          SearchFunc="SearchDesignations"
-                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                         <MudAutocomplete T="string" @bind-Value="_filterDto.JoiningLocation" Label="Joining Location"
-                                          SearchFunc="SearchJoiningLocations"
-                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                         <MudSelect T="string" @bind-Value="_filterDto.TypeOfEmployment" Label="Type of Employment" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.Designation" Label="Designation"
+                                         SearchFunc="SearchDesignations"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.JoiningLocation" Label="Joining Location"
+                                         SearchFunc="SearchJoiningLocations"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudSelect T="string" @bind-Value="_filterDto.TypeOfEmployment" Label="Type of Employment" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
                             @foreach (var type in _employmentTypes)
                             {
                                 <MudSelectItem Value="@type">@type</MudSelectItem>
                             }
-                         </MudSelect>
-                         <MudAutocomplete T="string" @bind-Value="_filterDto.Level" Label="Level"
-                                          SearchFunc="SearchLevels"
-                                          Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                                          ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-                         <MudDatePicker @bind-Date="_filterDto.DateOfJoiningStart" Label="Joined From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-                         <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
+                        </MudSelect>
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.Level" Label="Level"
+                                         SearchFunc="SearchLevels"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudDatePicker @bind-Date="_filterDto.DateOfJoiningStart" Label="Joined From" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudDatePicker @bind-Date="_filterDto.DateOfJoiningEnd" Label="Joined To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.DateOfJoiningStart" />
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Contact" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
@@ -257,28 +247,28 @@
                         <MudDatePicker @bind-Date="_filterDto.PassportExpiryDateEnd" Label="Passport Expires To" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" MinDate="_filterDto.PassportExpiryDateStart" />
                     </MudExpansionPanel>
 
-                   <MudExpansionPanel Text="Banking" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
-    <MudAutocomplete T="string" @bind-Value="_filterDto.BankName" Label="Bank Name"
-                     SearchFunc="SearchBankNames"
-                     Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-    <MudAutocomplete T="string" @bind-Value="_filterDto.BankBranch" Label="Bank Branch"
-                     SearchFunc="SearchBankBranches"
-                     Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-    <MudAutocomplete T="string" @bind-Value="_filterDto.BankState" Label="Bank State"
-                     SearchFunc="SearchBankStates"
-                     Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
-                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
-    <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
-         @foreach (var type in _accountTypes)
-        {
-            <MudSelectItem Value="@type">@type</MudSelectItem>
-        }
-    </MudSelect>
-    <MudTextField @bind-Value="_filterDto.PANNumber" Label="PAN Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-    <MudTextField @bind-Value="_filterDto.AadhaarNumber" Label="Aadhaar Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
-</MudExpansionPanel>
+                    <MudExpansionPanel Text="Banking" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankName" Label="Bank Name"
+                                         SearchFunc="SearchBankNames"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankBranch" Label="Bank Branch"
+                                         SearchFunc="SearchBankBranches"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudAutocomplete T="string" @bind-Value="_filterDto.BankState" Label="Bank State"
+                                         SearchFunc="SearchBankStates"
+                                         Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true" />
+                        <MudSelect T="string" @bind-Value="_filterDto.AccountType" Label="Account Type" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
+                            @foreach (var type in _accountTypes)
+                            {
+                                <MudSelectItem Value="@type">@type</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudTextField @bind-Value="_filterDto.PANNumber" Label="PAN Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                        <MudTextField @bind-Value="_filterDto.AadhaarNumber" Label="Aadhaar Number" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2" />
+                    </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Misc" Icon="@Icons.Material.Filled.MoreHoriz" Class="banking-expansion-panel">
                         <MudSelect T="bool?" @bind-Value="_filterDto.HasAllergies" Label="Has Allergies?" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mb-2">
@@ -295,7 +285,7 @@
                 </MudExpansionPanels>
 
                 <div class="mt-auto pt-4 d-flex">
-                    <MudButton Variant="Variant.Filled"onclick ="ApplyFilters" Disabled="_isLoading" Class="mr-2" Style="flex: 1;background-color:linear-gradient(90deg, #34adb8 0%, #8E54E9 100%);">
+                    <MudButton Variant="Variant.Filled" onclick="ApplyFilters" Disabled="_isLoading" Class="mr-2" Style="flex: 1;background-color:linear-gradient(90deg, #34adb8 0%, #8E54E9 100%);">
                         @if (_isLoading)
                         {
                             <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
@@ -303,12 +293,12 @@
                         }
                         else
                         {
-                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1" Style="padding-bottom:4px"/>
+                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Class="mr-1" Style="padding-bottom:4px" />
                             <span>Apply</span>
                         }
                     </MudButton>
                     <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Disabled="_isLoading" Style="flex: 1;padding-bottom:4px">
-                        <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1"/>
+                        <MudIcon Icon="@Icons.Material.Filled.Clear" Class="mr-1" />
                         <span>Clear</span>
                     </MudButton>
                 </div>
@@ -317,10 +307,12 @@
 
         @* Results Section *@
         <MudItem xs="12" md="9" Style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
-            <MudPaper Class="pa-4" Elevation="4" Style="height: 100%; display: flex; flex-direction: column; border-radius: 8px; overflow: hidden;">
+            <MudPaper Class="pa-4" Elevation="5" Style="height: 100%; display: flex; flex-direction: column;border-radius: 25px; overflow: hidden;">
                 <div class="d-flex align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Assessment" Color="Color.Primary" Class="mr-2"/>
-                    <MudText Typo="Typo.h6" Color="Color.Primary">Results</MudText>
+                    <div class="analytics-header">
+                        <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="header-icon" />
+                        <MudText Typo="Typo.h4" Class="header-title">Employee Analytics</MudText>
+                    </div>
                     <MudSpacer />
                     <MudTooltip Text="Download Results (CSV)">
                         <MudIconButton Icon="@Icons.Material.Filled.Download"
@@ -331,21 +323,21 @@
                                        Class="ml-2" Style="margin-top: 4px !important;"></MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Sync Data">
-                        <MudIconButton Icon="@Icons.Material.Filled.Sync" 
-                                     Color="Color.Primary" 
-                                     OnClick="SyncData" 
-                                     Disabled="_isLoading"
-                                     Class="ml-2" />    
+                        <MudIconButton Icon="@Icons.Material.Filled.Sync"
+                                       Color="Color.Primary"
+                                       OnClick="SyncData"
+                                       Disabled="_isLoading"
+                                       Class="ml-2" />
                     </MudTooltip>
                 </div>
-                    
+
                 @if (_isLoading && !_initialLoadComplete)
                 {
                     <div class="d-flex justify-center align-center" style="flex: 1;">
-                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large"/>
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
                     </div>
                 }
-                else    
+                else
                 {
                     @if (!string.IsNullOrEmpty(_errorMessage))
                     {
@@ -424,25 +416,25 @@
                                 </MudPaper>
                             </MudItem>
                         </MudGrid>
-                
+
 
                         @* Active Filters Display *@
                         @if (HasActiveFilters())
                         {
                             <MudPaper Class="pa-4 mb-4" Elevation="1" Style="border-radius: 12px; background: linear-gradient(135deg, var(--mud-palette-background-grey) 0%, var(--mud-palette-background) 100%); border: 1px solid var(--mud-palette-lines-default);">
                                 <div class="d-flex align-center mb-3">
-                                    <MudIcon Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Class="mr-2"/>
+                                    <MudIcon Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Class="mr-2" />
                                     <MudText Typo="Typo.subtitle1" Color="Color.Primary" Style="font-weight: 500;">Active Filters</MudText>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2">
                                     @foreach (var filter in GetActiveFilters())
                                     {
-                                        <MudChip T="object" 
-                                                Color="Color.Primary" 
-                                                Variant="Variant.Filled" 
-                                                Size="Size.Small"
-                                                OnClose="() => ClearFilter(filter.Key)"
-                                                Style="border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                        <MudChip T="object"
+                                                 Color="Color.Primary"
+                                                 Variant="Variant.Filled"
+                                                 Size="Size.Small"
+                                                 OnClose="() => ClearFilter(filter.Key)"
+                                                 Style="border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                             <MudText Class="mr-2" Style="font-size: 0.8rem; font-weight: 500;">@filter.Key:</MudText>
                                             <MudText Style="font-size: 0.8rem;">@filter.Value</MudText>
                                         </MudChip>
@@ -470,12 +462,12 @@
                                     @if (!string.IsNullOrWhiteSpace(SearchString))
                                     {
                                         <MudIconButton Icon="@Icons.Material.Filled.Clear"
-                                                      Color="Color.Default"
-                                                      OnClick="ClearSearchText"
-                                                      Size="Size.Small"
-                                                      Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
-                                    }   
-                                  
+                                                       Color="Color.Default"
+                                                       OnClick="ClearSearchText"
+                                                       Size="Size.Small"
+                                                       Class="ml-1 mt-0" Style="margin-top: 9px !important;"></MudIconButton>
+                                    }
+
                                 </div>
                             </div>
 
@@ -488,7 +480,7 @@
                                           Style="height: 100%; display: flex; flex-direction: column;"
                                           FixedHeader="true"
                                           Height="100%">
-                                            
+
                                     <HeaderContent>
                                         <MudTh Class="table-header-cell avatar-column"></MudTh>
                                         <MudTh Class="table-header-cell">
@@ -543,7 +535,7 @@
                                             <a href="/employee/@employeeContext.EmployeeDetails.EmployeeID" target="_blank" class="employee-link">
                                                 <div class="employee-id">
                                                     <span class="id-code">@employeeContext.EmployeeDetails.EmployeeID</span>
-                                                    
+
                                                 </div>
                                             </a>
                                         </MudTd>
@@ -586,11 +578,11 @@
                             @* Filter Styles *@
                             <style>
                                 /* Banking Expansion Panel Styles */
-                                
+
                                 .pa - 4 {
                                     padding: 6px 0px 7px 2px !important;
                                 }
-                           
+
                                 .banking-expansion-panel {
                                     margin-bottom: 16px;
                                     border-radius: 12px;
@@ -648,18 +640,15 @@
                                     }
 
                                 @@keyframes fadeInUp {
-                                    from
+                                    from {
+                                        opacity: 0;
+                                        transform: translateY(10px);
+                                    }
 
-                                {
-                                    opacity: 0;
-                                    transform: translateY(10px);
-                                }
-
-                                to {
-                                    opacity: 1;
-                                    transform: translateY(0);
-                                }
-
+                                    to {
+                                        opacity: 1;
+                                        transform: translateY(0);
+                                    }
                                 }
 
                                 /* Icon Styling */
@@ -671,19 +660,16 @@
                                     transform: rotate(180deg);
                                 }
 
-                               
+
 
                                 @@keyframes shimmer {
-                                    0%, 100%
+                                    0%, 100% {
+                                        background-position: 200% 0;
+                                    }
 
-                                {
-                                    background-position: 200% 0;
-                                }
-
-                                50% {
-                                    background-position: -200% 0;
-                                }
-
+                                    50% {
+                                        background-position: -200% 0;
+                                    }
                                 }
 
                                 /* Focus States for Accessibility */
@@ -694,42 +680,36 @@
 
                                 /* Responsive Design */
                                 @@media (max-width: 768px) {
-                                    .banking-expansion-panel
+                                    .banking-expansion-panel {
+                                        margin-bottom: 12px;
+                                        border-radius: 8px;
+                                    }
 
-                                {
-                                    margin-bottom: 12px;
-                                    border-radius: 8px;
-                                }
+                                        .banking-expansion-panel .mud-expand-panel-header {
+                                            padding: 12px 16px;
+                                            border-radius: 8px 8px 0 0;
+                                        }
 
-                                .banking-expansion-panel .mud-expand-panel-header {
-                                    padding: 12px 16px;
-                                    border-radius: 8px 8px 0 0;
-                                }
+                                        .banking-expansion-panel .mud-expand-panel-content {
+                                            padding: 16px;
+                                            border-radius: 0 0 8px 8px;
+                                        }
 
-                                .banking-expansion-panel .mud-expand-panel-content {
-                                    padding: 16px;
-                                    border-radius: 0 0 8px 8px;
-                                }
-
-                                .banking-expansion-panel .mud-expand-panel-header .mud-expand-panel-text {
-                                    font-size: 1rem;
-                                }
-
+                                        .banking-expansion-panel .mud-expand-panel-header .mud-expand-panel-text {
+                                            font-size: 1rem;
+                                        }
                                 }
 
                                 /* Dark Theme Support */
                                 @@media (prefers-color-scheme: dark) {
-                                    .banking-expansion-panel
-
-                                {
+                                    .banking-expansion-panel {
                                         background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
-                                    border-color:#ffffff;
-                                }
+                                        border-color: #ffffff;
+                                    }
 
-                                .banking-expansion-panel .mud-expand-panel-content {
-                                    background-color:#ffffff;
-                                }
-
+                                        .banking-expansion-panel .mud-expand-panel-content {
+                                            background-color: #ffffff;
+                                        }
                                 }
                             </style>
                             <style>
@@ -769,19 +749,24 @@
                                     position: sticky;
                                     top: 0;
                                     z-index: 10;
-                                    background: #ffffff;
+                                    background-color: rgb(233 233 233);
                                 }
 
-                                .mud-avatar.mud-avatar-medium {
+                                .mud-avatar-medium {
                                     width: 35px;
                                     height: 35px;
                                     font-size: 1.25rem;
                                 }
 
+                                .mud-table-sticky-header * .mud-table-root .mud-table-head * .mud-table-cell {
+                                    background-color: rgb(236 236 236);
+                                    position: sticky;
+                                    z-index: 2;
+                                    top: 0;
+                                }
 
                                 .table-header-cell {
-                                    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
-                                    border-bottom: 2px solid #e2e8f0 !important;
+                                    background-color: rgb(233 233 233);
                                     padding: 1rem 0.75rem !important;
                                     font-weight: 600 !important;
                                     color: #374151 !important;
@@ -863,7 +848,7 @@
                                 .mud-table-cell {
                                     padding: 0.5rem 0.75rem !important;
                                     vertical-align: middle !important;
-                                    border-bottom: 0.5px solid #f3f4f6 !important;
+                                    border-bottom: 1px solid #f3f4f6 !important;
                                 }
 
                                 .avatar-cell {
@@ -892,7 +877,7 @@
                                     border-radius: 8px;
                                 }
 
-                                 .employee-link:hover {
+                                    .employee-link:hover {
                                         background: rgba(59, 130, 246, 0.05);
                                         color: #3b82f6 !important;
                                     }
@@ -1019,7 +1004,7 @@
 
                                 /* Pager Styling - Fixed Footer */
                                 .pager-container {
-                                    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                                    background-color: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
                                     border-top: 1px solid #e5e7eb;
                                     position: sticky;
                                     bottom: 0;
@@ -1040,89 +1025,84 @@
                                             color: #3b82f6 !important;
                                         }
 
+                                .mud-table-pagination-toolbar {
+                                    height: 40px !important;
+                                    background-color: rgb(233 233 233)
+                                }
                                 /* Responsive Design */
                                 @@media (max-width: 960px) {
-                                    .table-container
+                                    .table-container {
+                                        border-radius: 12px;
+                                        margin: 0.5rem 0;
+                                    }
 
-                                {
-                                    border-radius: 12px;
-                                    margin: 0.5rem 0;
-                                }
+                                    .header-content {
+                                        font-size: 0.8rem;
+                                    }
 
-                                .header-content {
-                                    font-size: 0.8rem;
-                                }
+                                    .header-icon {
+                                        display: none;
+                                    }
 
-                                .header-icon {
-                                    display: none;
-                                }
+                                    .mud-table-cell {
+                                        padding: 0.75rem 0.5rem !important;
+                                    }
 
-                                .mud-table-cell {
-                                    padding: 0.75rem 0.5rem !important;
-                                }
+                                    .full-name {
+                                        font-size: 0.875rem;
+                                    }
 
-                                .full-name {
-                                    font-size: 0.875rem;
-                                }
+                                    .designation-badge {
+                                        font-size: 0.75rem;
+                                        padding: 0.25rem 0.5rem;
+                                    }
 
-                                .designation-badge {
-                                    font-size: 0.75rem;
-                                    padding: 0.25rem 0.5rem;
-                                }
-
-                                .id-code {
-                                    font-size: 0.75rem;
-                                }
-
+                                    .id-code {
+                                        font-size: 0.75rem;
+                                    }
                                 }
 
                                 @@media (max-width: 600px) {
-                                    .table-container
+                                    .table-container {
+                                        border-radius: 8px;
+                                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+                                    }
 
-                                {
-                                    border-radius: 8px;
-                                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-                                }
+                                    .employee-name,
+                                    .employee-id {
+                                        flex-direction: column;
+                                        align-items: flex-start;
+                                        gap: 0.25rem;
+                                    }
 
-                                .employee-name,
-                                .employee-id {
-                                    flex-direction: column;
-                                    align-items: flex-start;
-                                    gap: 0.25rem;
-                                }
+                                    .external-link-icon,
+                                    .copy-icon {
+                                        display: none;
+                                    }
 
-                                .external-link-icon,
-                                .copy-icon {
-                                    display: none;
-                                }
+                                    .avatar-cell {
+                                        width: 60px;
+                                    }
 
-                                .avatar-cell {
-                                    width: 60px;
-                                }
-
-                                .employee-avatar {
-                                    width: 32px !important;
-                                    height: 32px !important;
-                                }
-
+                                    .employee-avatar {
+                                        width: 32px !important;
+                                        height: 32px !important;
+                                    }
                                 }
 
                                 @@media (max-width: 480px) {
-                                    .mud-table-cell
+                                    .mud-table-cell {
+                                        padding: 0.5rem 0.25rem !important;
+                                    }
 
-                                {
-                                    padding: 0.5rem 0.25rem !important;
-                                }
+                                    .no-records,
+                                    .loading-content {
+                                        padding: 2rem 1rem;
+                                    }
 
-                                .no-records,
-                                .loading-content {
-                                    padding: 2rem 1rem;
-                                }
-
-                                .pager-container {
-                                    padding: 0.75rem;
-                                }
-
+                                    .pager-container {
+                                        padding: 0.75rem;
+                                    }
                                 }</style>
                         </div>
                     }
@@ -1133,14 +1113,14 @@
 </MudContainer>
 <style>
     .mud-grid-spacing-xs-3 > .mud-grid-item {
-        padding-top:1px;
-        padding-left:1px;
-        padding-right:8px;
-        padding-bottom:8px;
+        padding-top: 1px;
+        padding-left: 1px;
+        padding-right: 8px;
+        padding-bottom: 8px;
     }
 
     .light-dashboard-grid {
-        margin: 0.5rem;
+        margin: 0rem;
     }
 
     .light-card {
@@ -1257,10 +1237,12 @@
     }
 
     .light-title {
+        margin-left: 25% !important;
         margin-bottom: 0.3rem !important;
+        margin-top: 0.4rem;
         color: #374151;
-        font-weight: 600 !important;
-        font-size: 1rem !important;
+        font-weight: 700 !important;
+        font-size: 1.2rem !important;
     }
 
     .light-metrics {
@@ -1347,10 +1329,8 @@
             height: 110px;
             min-height: 110px;
         }
-    }</style>
+    }
 
-
-<style>
     .mud-chip-filled.mud-chip-color-primary {
         color: var(--mud-palette-primary-text);
         --mud-ripple-color: var(--mud-palette-primary-text) !important;
@@ -1451,6 +1431,7 @@
 </style>
 
 @code {
+
     private MudTable<EmployeeAnalyticsResponseDto>? _table;
     private AnalyticsFilterDto _filterDto = new();
     private List<EmployeeAnalyticsResponseDto> _filteredEmployees = new();
@@ -1481,7 +1462,7 @@
     private int _totalEmployees = 0;
     private int _uniqueDesignations = 0;
     private int _uniqueBloodGroups = 0;
-    
+
     // Total metrics (across all employees, regardless of filter)
     private int _systemTotalEmployees = 0;
     private int _systemTotalDesignations = 0;
@@ -1541,18 +1522,18 @@
     {
         _isLoading = true;
         _errorMessage = null;
-        _filteredEmployees.Clear();
+        _filteredEmployees = new List<EmployeeAnalyticsResponseDto>(); // Clear the list
         StateHasChanged();
         try
         {
             // Get cached data
-            _filteredEmployees = await AnalyticsCache.GetOrSetAnalyticsDataAsync(async () =>
+            var allEmployees = await AnalyticsCache.GetOrSetAnalyticsDataAsync(async () =>
             {
                 var Token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
                 var request = new HttpRequestMessage(HttpMethod.Get, "/api/Analytics/all");
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
                 var response = await Http.SendAsync(request);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadFromJsonAsync<List<EmployeeAnalyticsResponseDto>>() ?? new List<EmployeeAnalyticsResponseDto>();
@@ -1561,126 +1542,333 @@
             });
 
             // Apply filters to the cached data
-            _filteredEmployees = _filteredEmployees.Where(emp =>
+            var filteredResults = allEmployees.Where(emp =>
             {
                 var details = emp.EmployeeDetails;
                 var banking = emp.BankingInformation;
                 var experience = emp.experience;
 
-                // Basic filters
-                if (!string.IsNullOrEmpty(_filterDto.BloodGroup) && details.BloodGroup != _filterDto.BloodGroup) return false;
-                if (!string.IsNullOrEmpty(_filterDto.Designation) && details.Designation != _filterDto.Designation) return false;
-                if (!string.IsNullOrEmpty(_filterDto.JoiningLocation) && details.JoiningLocation != _filterDto.JoiningLocation) return false;
-                if (!string.IsNullOrEmpty(_filterDto.Gender) && details.Gender != _filterDto.Gender) return false;
-                if (!string.IsNullOrEmpty(_filterDto.MaritalStatus) && details.MaritalStatus != _filterDto.MaritalStatus) return false;
-                if (!string.IsNullOrEmpty(_filterDto.Nationality) && details.Nationality != _filterDto.Nationality) return false;
-                if (!string.IsNullOrEmpty(_filterDto.TypeOfEmployment) && details.TypeOfEmployment != _filterDto.TypeOfEmployment) return false;
-                if (!string.IsNullOrEmpty(_filterDto.Level) && details.Level != _filterDto.Level) return false;
+                // EmployeeDetails null check
+                if (details == null) return false;
 
-                // Date range filters
-                if (_filterDto.DateOfJoiningStart.HasValue && details.DateOfJoining < _filterDto.DateOfJoiningStart) return false;
-                if (_filterDto.DateOfJoiningEnd.HasValue && details.DateOfJoining > _filterDto.DateOfJoiningEnd) return false;
-                if (_filterDto.DateOfBirthStart.HasValue && details.DateOfBirth < _filterDto.DateOfBirthStart) return false;
-                if (_filterDto.DateOfBirthEnd.HasValue && details.DateOfBirth > _filterDto.DateOfBirthEnd) return false;
-
-                // Banking filters
-                if (banking != null)
+                // --- Personal Filters ---
+                if (!string.IsNullOrEmpty(_filterDto.BloodGroup))
                 {
-                    if (!string.IsNullOrEmpty(_filterDto.BankName) && banking.BankName != _filterDto.BankName) return false;
-                    if (!string.IsNullOrEmpty(_filterDto.BankBranch) && banking.Branch != _filterDto.BankBranch) return false;
-                    if (!string.IsNullOrEmpty(_filterDto.BankState) && banking.State != _filterDto.BankState) return false;
-                    if (!string.IsNullOrEmpty(_filterDto.AccountType) && banking.AccountType != _filterDto.AccountType) return false;
+                    if (details.BloodGroup == null || details.BloodGroup != _filterDto.BloodGroup) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.Gender))
+                {
+                    if (details.Gender == null || details.Gender != _filterDto.Gender) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.MaritalStatus))
+                {
+                    if (details.MaritalStatus == null || details.MaritalStatus != _filterDto.MaritalStatus) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.Nationality))
+                {
+                    if (details.Nationality == null || details.Nationality != _filterDto.Nationality) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.PhysicallyChallenged))
+                {
+                    if (details.PhysicallyChallenged == null || details.PhysicallyChallenged != _filterDto.PhysicallyChallenged) return false;
+                }
+                if (_filterDto.DateOfBirthStart.HasValue)
+                {
+                    if (!details.DateOfBirth.HasValue || details.DateOfBirth < _filterDto.DateOfBirthStart) return false;
+                }
+                if (_filterDto.DateOfBirthEnd.HasValue)
+                {
+                    if (!details.DateOfBirth.HasValue || details.DateOfBirth > _filterDto.DateOfBirthEnd) return false;
                 }
 
-                // Experience filters
-                if (experience != null)
+                // --- Employment Filters ---
+                if (!string.IsNullOrEmpty(_filterDto.Designation))
+                {
+                    if (details.Designation == null || details.Designation != _filterDto.Designation) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.JoiningLocation))
+                {
+                    if (details.JoiningLocation == null || details.JoiningLocation != _filterDto.JoiningLocation) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.TypeOfEmployment))
+                {
+                    if (details.TypeOfEmployment == null || details.TypeOfEmployment != _filterDto.TypeOfEmployment) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.Level))
+                {
+                    if (details.Level == null || details.Level != _filterDto.Level) return false;
+                }
+                if (_filterDto.DateOfJoiningStart.HasValue)
+                {
+                    if (!details.DateOfJoining.HasValue || details.DateOfJoining < _filterDto.DateOfJoiningStart) return false;
+                }
+                if (_filterDto.DateOfJoiningEnd.HasValue)
+                {
+                    if (!details.DateOfJoining.HasValue || details.DateOfJoining > _filterDto.DateOfJoiningEnd) return false;
+                }
+
+                // --- Contact Filters ---
+                if (!string.IsNullOrEmpty(_filterDto.CurrentCity))
+                {
+                    if (details.CurrentCity == null || details.CurrentCity != _filterDto.CurrentCity) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.CurrentState))
+                {
+                    if (details.CurrentState == null || details.CurrentState != _filterDto.CurrentState) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.CurrentZip))
+                {
+                    if (details.CurrentZip == null || details.CurrentZip != _filterDto.CurrentZip) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.PermanentCity))
+                {
+                    if (details.PermanentCity == null || details.PermanentCity != _filterDto.PermanentCity) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.PermanentState))
+                {
+                    if (details.PermanentState == null || details.PermanentState != _filterDto.PermanentState) return false;
+                }
+                if (!string.IsNullOrEmpty(_filterDto.PermanentZip))
+                {
+                    if (details.PermanentZip == null || details.PermanentZip != _filterDto.PermanentZip) return false;
+                }
+
+                // --- Passport Filters ---
+                if (!string.IsNullOrEmpty(_filterDto.PassportNationality))
+                {
+                    if (details.PassportNationality == null || details.PassportNationality != _filterDto.PassportNationality) return false;
+                }
+                if (_filterDto.PassportIssueDateStart.HasValue)
+                {
+                    if (!details.PassportIssueDate.HasValue || details.PassportIssueDate < _filterDto.PassportIssueDateStart) return false;
+                }
+                if (_filterDto.PassportIssueDateEnd.HasValue)
+                {
+                    if (!details.PassportIssueDate.HasValue || details.PassportIssueDate > _filterDto.PassportIssueDateEnd) return false;
+                }
+                if (_filterDto.PassportExpiryDateStart.HasValue)
+                {
+                    if (!details.PassportExpiryDate.HasValue || details.PassportExpiryDate < _filterDto.PassportExpiryDateStart) return false;
+                }
+                if (_filterDto.PassportExpiryDateEnd.HasValue)
+                {
+                    if (!details.PassportExpiryDate.HasValue || details.PassportExpiryDate > _filterDto.PassportExpiryDateEnd) return false;
+                }
+
+                // --- Banking Filters ---
+                if (banking == null)
+                {
+                    if (!string.IsNullOrEmpty(_filterDto.BankName) ||
+                        !string.IsNullOrEmpty(_filterDto.BankBranch) ||
+                        !string.IsNullOrEmpty(_filterDto.BankState) ||
+                        !string.IsNullOrEmpty(_filterDto.AccountType) ||
+                        !string.IsNullOrEmpty(_filterDto.PANNumber) ||
+                        !string.IsNullOrEmpty(_filterDto.AadhaarNumber))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(_filterDto.BankName))
+                    {
+                        if (banking.BankName == null || banking.BankName != _filterDto.BankName) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.BankBranch))
+                    {
+                        if (banking.Branch == null || banking.Branch != _filterDto.BankBranch) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.BankState))
+                    {
+                        if (banking.State == null || banking.State != _filterDto.BankState) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.AccountType))
+                    {
+                        if (banking.AccountType == null || banking.AccountType != _filterDto.AccountType) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.PANNumber))
+                    {
+                        if (banking.PANNumber == null || banking.PANNumber != _filterDto.PANNumber) return false;
+                    }
+                    if (!string.IsNullOrEmpty(_filterDto.AadhaarNumber))
+                    {
+                        if (banking.AadhaarNumber == null || banking.AadhaarNumber != _filterDto.AadhaarNumber) return false;
+                    }
+                }
+
+                // --- Experience Filters ---
+                if (experience == null)
+                {
+                    if (!string.IsNullOrEmpty(_filterDto.College) ||
+                        !string.IsNullOrEmpty(_filterDto.Qualification) ||
+                        _filterDto.YearOfPassingStart.HasValue ||
+                        _filterDto.YearOfPassingEnd.HasValue ||
+                        _filterDto.EducationPercentageMin.HasValue ||
+                        _filterDto.EducationPercentageMax.HasValue ||
+                        !string.IsNullOrEmpty(_filterDto.PreviousEmployer) ||
+                        !string.IsNullOrEmpty(_filterDto.PreviousDesignation) ||
+                        !string.IsNullOrEmpty(_filterDto.PreviousLocation) ||
+                        _filterDto.PreviousJobStartDateStart.HasValue ||
+                        _filterDto.PreviousJobStartDateEnd.HasValue ||
+                        _filterDto.PreviousJobEndDateStart.HasValue ||
+                        _filterDto.PreviousJobEndDateEnd.HasValue)
+                    {
+                        return false;
+                    }
+                }
+                else
                 {
                     // Education filters
                     if (!string.IsNullOrEmpty(_filterDto.College))
                     {
-                        if (!experience.EducationQualifications.Any(e => e.University == _filterDto.College)) return false;
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.University != null && eq.University == _filterDto.College))
+                        {
+                            return false;
+                        }
                     }
                     if (!string.IsNullOrEmpty(_filterDto.Qualification))
                     {
-                        if (!experience.EducationQualifications.Any(e => e.Qualification == _filterDto.Qualification)) return false;
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.Qualification != null && eq.Qualification == _filterDto.Qualification))
+                        {
+                            return false;
+                        }
                     }
                     if (_filterDto.YearOfPassingStart.HasValue)
                     {
-                        if (!experience.EducationQualifications.Any(e => e.YearOfPassing >= _filterDto.YearOfPassingStart)) return false;
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.YearOfPassing >= _filterDto.YearOfPassingStart))
+                        {
+                            return false;
+                        }
                     }
                     if (_filterDto.YearOfPassingEnd.HasValue)
                     {
-                        if (!experience.EducationQualifications.Any(e => e.YearOfPassing <= _filterDto.YearOfPassingEnd)) return false;
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.YearOfPassing <= _filterDto.YearOfPassingEnd))
+                        {
+                            return false;
+                        }
                     }
                     if (_filterDto.EducationPercentageMin.HasValue)
                     {
-                        if (!experience.EducationQualifications.Any(e => e.Percentage >= _filterDto.EducationPercentageMin)) return false;
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.Percentage >= _filterDto.EducationPercentageMin))
+                        {
+                            return false;
+                        }
                     }
                     if (_filterDto.EducationPercentageMax.HasValue)
                     {
-                        if (!experience.EducationQualifications.Any(e => e.Percentage <= _filterDto.EducationPercentageMax)) return false;
+                        if (experience.EducationQualifications == null ||
+                            !experience.EducationQualifications.Any(eq => eq.Percentage <= _filterDto.EducationPercentageMax))
+                        {
+                            return false;
+                        }
                     }
 
                     // Work experience filters
                     if (!string.IsNullOrEmpty(_filterDto.PreviousEmployer))
                     {
-                        if (!experience.WorkExperiences.Any(w => w.Employer == _filterDto.PreviousEmployer)) return false;
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.Employer != null && we.Employer == _filterDto.PreviousEmployer))
+                        {
+                            return false;
+                        }
                     }
                     if (!string.IsNullOrEmpty(_filterDto.PreviousDesignation))
                     {
-                        if (!experience.WorkExperiences.Any(w => w.Designation == _filterDto.PreviousDesignation)) return false;
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.Designation != null && we.Designation == _filterDto.PreviousDesignation))
+                        {
+                            return false;
+                        }
                     }
                     if (!string.IsNullOrEmpty(_filterDto.PreviousLocation))
                     {
-                        if (!experience.WorkExperiences.Any(w => w.Location == _filterDto.PreviousLocation)) return false;
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.Location != null && we.Location == _filterDto.PreviousLocation))
+                        {
+                            return false;
+                        }
                     }
                     if (_filterDto.PreviousJobStartDateStart.HasValue)
                     {
-                        if (!experience.WorkExperiences.Any(w => w.DateOfJoining >= _filterDto.PreviousJobStartDateStart)) return false;
+                        if (!experience.WorkExperiences.Any(we => we.DateOfJoining.HasValue && we.DateOfJoining >= _filterDto.PreviousJobStartDateStart))
+                            return false;
                     }
                     if (_filterDto.PreviousJobStartDateEnd.HasValue)
                     {
-                        if (!experience.WorkExperiences.Any(w => w.DateOfJoining <= _filterDto.PreviousJobStartDateEnd)) return false;
+                        if (!experience.WorkExperiences.Any(we => we.DateOfJoining.HasValue && we.DateOfJoining <= _filterDto.PreviousJobStartDateEnd))
+                            return false;
                     }
                     if (_filterDto.PreviousJobEndDateStart.HasValue)
                     {
-                        if (!experience.WorkExperiences.Any(w => w.DateOfLeaving >= _filterDto.PreviousJobEndDateStart)) return false;
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.DateOfLeaving.HasValue && we.DateOfLeaving >= _filterDto.PreviousJobEndDateStart))
+                        {
+                            return false;
+                        }
                     }
                     if (_filterDto.PreviousJobEndDateEnd.HasValue)
                     {
-                        if (!experience.WorkExperiences.Any(w => w.DateOfLeaving <= _filterDto.PreviousJobEndDateEnd)) return false;
+                        if (experience.WorkExperiences == null ||
+                            !experience.WorkExperiences.Any(we => we.DateOfLeaving.HasValue && we.DateOfLeaving <= _filterDto.PreviousJobEndDateEnd))
+                        {
+                            return false;
+                        }
                     }
+                }
+
+                // --- Misc Filters ---
+                if (_filterDto.HasAllergies.HasValue)
+                {
+                    if (string.IsNullOrEmpty(details.Allergies) == _filterDto.HasAllergies) return false;
+                }
+                if (_filterDto.HasMedications.HasValue)
+                {
+                    if (string.IsNullOrEmpty(details.Medications) == _filterDto.HasMedications) return false;
                 }
 
                 return true;
             }).ToList();
 
-            bool isUnfiltered = !_filterDto.GetType().GetProperties()
-                .Any(p => p.GetValue(_filterDto) != null && !string.IsNullOrEmpty(p.GetValue(_filterDto)?.ToString()));
+            // Update the filtered employees list
+            _filteredEmployees = filteredResults;
 
-            if (isUnfiltered && !_initialLoadComplete)
+            // Update stats
+            _totalEmployees = _filteredEmployees.Count;
+            _uniqueDesignations = _filteredEmployees.Select(e => e.EmployeeDetails?.Designation).Distinct().Count();
+            _uniqueBloodGroups = _filteredEmployees.Select(e => e.EmployeeDetails?.BloodGroup).Distinct().Count();
+
+            // Update system totals (unfiltered)
+            _systemTotalEmployees = allEmployees.Count;
+            _systemTotalDesignations = allEmployees.Select(e => e.EmployeeDetails?.Designation).Distinct().Count();
+            _systemTotalBloodGroups = allEmployees.Select(e => e.EmployeeDetails?.BloodGroup).Distinct().Count();
+
+            _initialLoadComplete = true;
+            await InvokeAsync(StateHasChanged);
+
+            // Reload table to reflect filtered data
+            if (_table != null)
             {
-                _systemTotalEmployees = _filteredEmployees.Count;
-                _systemTotalDesignations = _filteredEmployees.Select(e => e.EmployeeDetails.Designation).Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
-                _systemTotalBloodGroups = _filteredEmployees.Select(e => e.EmployeeDetails.BloodGroup).Where(b => !string.IsNullOrEmpty(b)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                await _table.ReloadServerData();
             }
-            CalculateStats();
         }
         catch (Exception ex)
         {
-            _filteredEmployees.Clear();
-            _errorMessage = $"An unexpected error occurred: {ex.Message}";
-            Console.WriteLine($"Analytics filter exception: {ex}");
-            CalculateStats();
+            _errorMessage = $"Error applying filters: {ex.Message}";
+            _isLoading = false;
+            await InvokeAsync(StateHasChanged);
         }
         finally
         {
-            if (!_initialLoadComplete) _initialLoadComplete = true;
             _isLoading = false;
-            StateHasChanged();
-            await (_table?.ReloadServerData() ?? Task.CompletedTask);
+            await InvokeAsync(StateHasChanged);
         }
     }
+
 
     private async Task HandleKeyDown(KeyboardEventArgs args)
     {
@@ -1832,7 +2020,7 @@
     {
         _filterDto = new AnalyticsFilterDto();
         SearchString = string.Empty;
-      // Clear cache when filters are cleared
+        // Clear cache when filters are cleared
         await ApplyFilters();
     }
 
@@ -2628,14 +2816,14 @@
                  (e.BankingInformation?.PANNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
                  (e.BankingInformation?.AccountNumber?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
                  (e.BankingInformation?.IFSCode?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                 
+
                 (e.BankingInformation?.Branch?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
                 (e.BankingInformation?.State?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
                 (e.BankingInformation?.AccountType?.ToLowerInvariant().Contains(lowerSearch) ?? false) ||
-                (e.experience?.EducationQualifications?.Any(edu => 
+                (e.experience?.EducationQualifications?.Any(edu =>
                     edu.Qualification?.ToLowerInvariant().Contains(lowerSearch) == true ||
                     edu.University?.ToLowerInvariant().Contains(lowerSearch) == true) ?? false) ||
-                (e.experience?.WorkExperiences?.Any(work => 
+                (e.experience?.WorkExperiences?.Any(work =>
                     work.Employer?.ToLowerInvariant().Contains(lowerSearch) == true ||
                     work.Location?.ToLowerInvariant().Contains(lowerSearch) == true ||
                     work.Designation?.ToLowerInvariant().Contains(lowerSearch) == true) ?? false)
@@ -2671,7 +2859,7 @@
         try
         {
             var csvContent = new System.Text.StringBuilder();
- 
+
             // Helper Functions
             Func<string?, string> escape = (val) =>
             {
@@ -2732,7 +2920,7 @@
             foreach (var emp in employeesToDownload)
             {
                 var values = new List<string>();
-                
+
                 // Professional Information
                 values.Add(escape(emp.EmployeeDetails.EmployeeID));
                 values.Add(escape(emp.EmployeeDetails.Designation));
@@ -2800,22 +2988,22 @@
 
         _isLoading = true;
         _errorMessage = null;
-        
+
         try
         {
             // Store current data as backup
             var previousData = _filteredEmployees.ToList();
-            
+
             // Get new data
             var Token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
             var request = new HttpRequestMessage(HttpMethod.Get, "/api/Analytics/all");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
             var response = await Http.SendAsync(request);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var newData = await response.Content.ReadFromJsonAsync<List<EmployeeAnalyticsResponseDto>>() ?? new List<EmployeeAnalyticsResponseDto>();
-                
+
                 // Apply current filters to new data
                 _filteredEmployees = newData.Where(emp =>
                 {
@@ -2854,11 +3042,11 @@
                         // Education filters
                         if (!string.IsNullOrEmpty(_filterDto.College))
                         {
-                            if (!experience.EducationQualifications.Any(e => e.University == _filterDto.College)) return false;
+                            if (!experience.EducationQualifications.Any(e => e.University != null && e.University == _filterDto.College)) return false;
                         }
                         if (!string.IsNullOrEmpty(_filterDto.Qualification))
                         {
-                            if (!experience.EducationQualifications.Any(e => e.Qualification == _filterDto.Qualification)) return false;
+                            if (!experience.EducationQualifications.Any(e => e.Qualification != null && e.Qualification == _filterDto.Qualification)) return false;
                         }
                         if (_filterDto.YearOfPassingStart.HasValue)
                         {
@@ -2892,19 +3080,29 @@
                         }
                         if (_filterDto.PreviousJobStartDateStart.HasValue)
                         {
-                            if (!experience.WorkExperiences.Any(w => w.DateOfJoining >= _filterDto.PreviousJobStartDateStart)) return false;
+                            if (!experience.WorkExperiences.Any(we => we.DateOfJoining.HasValue && we.DateOfJoining >= _filterDto.PreviousJobStartDateStart))
+                                return false;
                         }
                         if (_filterDto.PreviousJobStartDateEnd.HasValue)
                         {
-                            if (!experience.WorkExperiences.Any(w => w.DateOfJoining <= _filterDto.PreviousJobStartDateEnd)) return false;
+                            if (!experience.WorkExperiences.Any(we => we.DateOfJoining.HasValue && we.DateOfJoining <= _filterDto.PreviousJobStartDateEnd))
+                                return false;
                         }
                         if (_filterDto.PreviousJobEndDateStart.HasValue)
                         {
-                            if (!experience.WorkExperiences.Any(w => w.DateOfLeaving >= _filterDto.PreviousJobEndDateStart)) return false;
+                            if (experience.WorkExperiences == null ||
+                                !experience.WorkExperiences.Any(we => we.DateOfLeaving.HasValue && we.DateOfLeaving >= _filterDto.PreviousJobEndDateStart))
+                            {
+                                return false;
+                            }
                         }
                         if (_filterDto.PreviousJobEndDateEnd.HasValue)
                         {
-                            if (!experience.WorkExperiences.Any(w => w.DateOfLeaving <= _filterDto.PreviousJobEndDateEnd)) return false;
+                            if (experience.WorkExperiences == null ||
+                                !experience.WorkExperiences.Any(we => we.DateOfLeaving.HasValue && we.DateOfLeaving <= _filterDto.PreviousJobEndDateEnd))
+                            {
+                                return false;
+                            }
                         }
                     }
 

@@ -7,6 +7,7 @@
 @using System.Net.Http.Headers
 @using WiseHR.Dtos
 @using WiseHRServer.Models
+@using WiseHR.Components.Chat
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
 @using System.Text.RegularExpressions
@@ -45,7 +46,6 @@
                                  ShowProgressIndicator="true"
                                  ValueChanged="OnSearchItemSelected"
                                  @bind-Text="_searchText"
-                                 @onkeyup="HandleSearchInputKeyUp"
                                  ItemTemplate="@ResultTemplate"
                                  MaxItems="15"
                                  ToStringFunc="@(e => null)" />
@@ -105,7 +105,7 @@
 </MudAppBar>
 
 <!-- Sidebar -->
-<div class="sidebar-container" @onmouseleave="HandleMouseLeave">
+<div class="sidebar-container">
     <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
 </div>
 
@@ -117,8 +117,10 @@
 </MudMainContent>
 <MudPopoverProvider />
 
-<!-- Popover Support -->
-
+<!-- Chat Widget -->
+<div class="chat-widget-container">
+    <WiseChatWidget />
+</div>
 
 <style>
     .logo-hover:hover {
@@ -414,6 +416,13 @@
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
         background-size: 200px 100%;
         animation: shimmer 1.5s infinite;
+    }
+
+    .chat-widget-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
     }
 </style>
 
