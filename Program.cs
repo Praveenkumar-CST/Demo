@@ -56,6 +56,6 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<SearchService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
-//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net") });
+//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net") });
 await builder.Build().RunAsync();
