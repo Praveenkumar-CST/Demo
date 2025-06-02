@@ -2,15 +2,10 @@
 @using WiseHR.Models
 @using System.Threading.Tasks
 @using Components.sidebar
-@using MudBlazor
 @layout HomeLayout
 @inject IUserService UserService
-@inject EmployeeService EmployeeService
-@inject BankingService BankingService
-@inject ExperienceService ExperienceService
+@inject IJSRuntime JS
 @inject NavigationManager NavigationManager
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-2">
     <MudGrid Spacing="2" Class="mb-4">
@@ -24,6 +19,7 @@
                 Add New Employee
             </MudButton>
         </MudItem>
+
     </MudGrid>
 
     @if (users == null)
@@ -65,7 +61,7 @@
                                Color="Color.Error"
                                Size="Size.Small"
                                StartIcon="@Icons.Material.Filled.Delete"
-                               OnClick="() => ShowDeleteConfirmation(context.Id, context.Email)">
+                               OnClick="() => DeleteUser(context.Id)">
                         Delete
                     </MudButton>
                 </MudTd>
@@ -91,7 +87,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading users: {ex.Message}", Severity.Error);
+            await JS.InvokeVoidAsync("alert", $"Error loading users: {ex.Message}");
         }
     }
 
@@ -106,9 +102,10 @@
         }
     }
 
-    private async Task HandleSearchQuery(string query)
+    private async void HandleSearchQuery(string query)
     {
         Console.WriteLine($"Search Query Updated: {query}");
+        await JS.InvokeVoidAsync("console.log", $"Search Query Updated: {query}");
         searchQuery = query;
         StateHasChanged();
     }
@@ -122,101 +119,32 @@
         try
         {
             await UserService.UpdateUserRoleAsync(user.Id, user.Role);
-            Snackbar.Add($"Role updated for {user.Email} from {oldRole} to {newRole}", Severity.Success);
+            await JS.InvokeVoidAsync("alert", $"Role updated for {user.Email} from {oldRole} to {newRole}");
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error updating role: {ex.Message}", Severity.Error);
+            await JS.InvokeVoidAsync("alert", $"Error updating role: {ex.Message}");
         }
     }
 
-    private async Task ShowDeleteConfirmation(string? id, string email)
+    private async Task DeleteUser(string? id)
     {
-        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(email))
-            return;
-
-        bool? confirmed = await DialogService.ShowMessageBox(
-            title: "Confirm Delete",
-            message: $"Are you sure you want to delete user {email}? This action will also delete associated employee data (if any) and cannot be undone.",
-            yesText: "Delete",
-            cancelText: "Cancel",
-            options: new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }
-        );
-
-        if (confirmed == true)
-        {
-            await DeleteUser(id, email);
-        }
-    }
-
-    private async Task DeleteUser(string? id, string email)
-    {
-        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(email))
-            return;
+        if (string.IsNullOrEmpty(id)) return;
 
         try
         {
-            bool allSuccessful = true;
-
-            // Check if the user has an associated employee record
-            var employee = await EmployeeService.GetEmployeeDetailsByEmail(email);
-
-            if (employee != null && !string.IsNullOrEmpty(employee.EmployeeID))
+            await UserService.DeleteUserAsync(id);
+            if (users != null)
             {
-                // Employee exists, delete all associated data
-                var deleteBankingTask = BankingService.DeleteBankingInfo(employee.EmployeeID);
-                var deleteEmployeeTask = EmployeeService.DeleteEmployee(employee.EmployeeID);
-                var deleteExperienceTask = ExperienceService.DeleteExperienceAsync(employee.EmployeeID);
-
-                var results = await Task.WhenAll(deleteBankingTask, deleteEmployeeTask, deleteExperienceTask);
-                allSuccessful = results.All(r => r);
-
-                if (allSuccessful)
-                {
-                    Console.WriteLine($"Successfully deleted employee data (banking, employee, experience) for EmployeeID: {employee.EmployeeID}");
-                }
-                else
-                {
-                    Console.WriteLine($"Partial failure deleting employee data for EmployeeID: {employee.EmployeeID}");
-                    allSuccessful = false;
-                }
+                users.RemoveAll(u => u.Id == id);
+                StateHasChanged();
             }
-
-            // Delete user credentials from Supabase
-            try
-            {
-                await UserService.DeleteUserAsync(id);
-                Console.WriteLine($"Successfully deleted user credentials for ID: {id}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to delete user credentials for ID: {id}: {ex.Message}");
-                allSuccessful = false;
-            }
-
-            if (allSuccessful)
-            {
-                // Remove from local users list
-                if (users != null)
-                {
-                    users.RemoveAll(u => u.Id == id);
-                }
-                Console.WriteLine($"Successfully deleted user {email} (ID: {id}) and associated data");
-                Snackbar.Add($"User {email} and associated data deleted successfully", Severity.Success);
-            }
-            else
-            {
-                Console.WriteLine($"Partial failure deleting user {email} (ID: {id})");
-                Snackbar.Add($"Failed to delete some data for user {email}", Severity.Error);
-            }
+            await JS.InvokeVoidAsync("alert", "User deleted");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error deleting user {email} (ID: {id}): {ex.Message}");
-            Snackbar.Add($"Error deleting user {email}: {ex.Message}", Severity.Error);
+            await JS.InvokeVoidAsync("alert", $"Error deleting user: {ex.Message}");
         }
-
-        StateHasChanged();
     }
 }

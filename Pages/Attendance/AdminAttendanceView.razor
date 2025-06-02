@@ -5,6 +5,7 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
+@using FingerFrontend.AdminAttendanceViewModel
 @inject HttpClient Http
 @inject NavigationManager Nav
 @layout HomeLayout
@@ -49,6 +50,37 @@
     </div>
 }
 
+<!-- Date Range Modal for Download -->
+@if (showDateRangeModal)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                Select Date Range for Download
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px;">
+                    <label for="startDate" style="color: #1e293b; font-weight: 500; display: block; margin-bottom: 6px;">Start Date</label>
+                    <input type="date" id="startDate" @bind="startDate" class="search-input" />
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label for="endDate" style="color: #1e293b; font-weight: 500; display: block; margin-bottom: 6px;">End Date</label>
+                    <input type="date" id="endDate" @bind="endDate" class="search-input" />
+                </div>
+                <div>
+                    <label style="color: #1e293b; font-weight: 500;">
+                        <input type="checkbox" @bind="downloadAllDates" /> Download all dates
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button @onclick="CancelDateRange" class="action-button secondary-button">Cancel</button>
+                <button @onclick="ConfirmDateRange" class="action-button primary-button" disabled="@(!downloadAllDates && (startDate == null || endDate == null || startDate > endDate))">Download</button>
+            </div>
+        </div>
+    </div>
+}
+
 <!-- Search bar and Download buttons -->
 <div class="search-container">
     <div style="flex: 1;">
@@ -62,14 +94,14 @@
     <button @onclick="FetchLogs" class="action-button primary-button">
         <i class="fas fa-search"></i> Search
     </button>
-    <button @onclick="() => DownloadExcel(false)" class="action-button download-button" disabled="@(isDownloading || (string.IsNullOrEmpty(userIdInput) && string.IsNullOrEmpty(nameInput)))">
+    <button @onclick="() => OpenDateRangeModal(false)" class="action-button download-button" disabled="@(isDownloading || (string.IsNullOrEmpty(userIdInput) && string.IsNullOrEmpty(nameInput)))">
         <i class="fas fa-download"></i> Download for User
     </button>
-    <button @onclick="() => DownloadExcel(true)" class="action-button download-button" disabled="@isDownloading">
+    <button @onclick="() => OpenDateRangeModal(true)" class="action-button download-button" disabled="@isDownloading">
         <i class="fas fa-download"></i> Download All
     </button>
     <button @onclick="NavigateToReasons" class="action-button reasons-button">
-        <i class="fas fa-file-alt"></i> Absence Reasons
+        <i class="fas fa-file-alt"></i> Absence Requests
     </button>
     @if (isSearching)
     {
@@ -85,7 +117,7 @@
     <div class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                Absence Reason (@absencePeriod.StartTime.ToString("dd MMM yyyy hh:mm:ss tt") - @absencePeriod.EndTime.ToString("hh:mm:ss tt"))
+                Absence Reasons (@absencePeriod.StartTime.ToString("dd MMM yyyy hh:mm:ss tt") - @absencePeriod.EndTime.ToString("hh:mm:ss tt"))
             </div>
             <div class="modal-body">
                 @if (!string.IsNullOrEmpty(absencePeriod.Reason))
@@ -167,7 +199,7 @@ else
                         @(day.Sessions.Any() ? day.Sessions.First().ClockIn.ToString("hh:mm:ss tt") : (day.IsWeeklyOff ? "Weekly Off" : "—"))
                     </div>
 
-                    <!-- Timeline -->
+                    <!-- Timeline (Updated to match UserAttendanceView) -->
                     <div style="position: relative; height: 24px;">
                         <!-- Background line -->
                         <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background-color: #e2e8f0; transform: translateY(-50%);"></div>
@@ -191,56 +223,77 @@ else
                         }
                         else
                         {
+                            <!-- Calculate positions for all dots to avoid overlap -->
+                            const int startHour = 8;
+                            const int totalHours = 12;
+                            const double minGap = 2.0;
+                            var dotPositions = new List<(double Position, string Type, DateTime Time, string Tooltip)>();
+
+                            <!-- Collect all dot positions -->
                             @foreach (var session in day.Sessions)
                             {
-                                <!-- Calculate position for clock-in and clock-out -->
-                                const int startHour = 8;
-                                const int totalHours = 12;
                                 var clockInHour = session.ClockIn.Hour + (session.ClockIn.Minute / 60.0) + (session.ClockIn.Second / 3600.0);
                                 var clockInPosition = ((clockInHour - startHour) / totalHours) * 100;
                                 clockInPosition = Math.Max(10, Math.Min(90, clockInPosition));
+                                dotPositions.Add((clockInPosition, "clock-in", session.ClockIn, $"Clock In: {session.ClockIn:hh:mm:ss tt}"));
 
-                                <!-- Green line and dot for clock-in to clock-out -->
-                                @if (session.ClockOut.HasValue)
+                                if (session.ClockOut.HasValue)
                                 {
-                                    var clockOutHour = session.ClockOut!.Value.Hour + (session.ClockOut.Value.Minute / 60.0) + (session.ClockOut.Value.Second / 3600.0);
+                                    var clockOutHour = session.ClockOut.Value.Hour + (session.ClockOut.Value.Minute / 60.0) + (session.ClockOut.Value.Second / 3600.0);
                                     var clockOutPosition = ((clockOutHour - startHour) / totalHours) * 100;
                                     clockOutPosition = Math.Max(10, Math.Min(90, clockOutPosition));
+                                    dotPositions.Add((clockOutPosition, "clock-out", session.ClockOut.Value, $"Clock Out: {session.ClockOut.Value:hh:mm:ss tt}"));
+                                }
+                            }
 
-                                    <div style="position: absolute; top: 50%; left: @clockInPosition%; right: calc(100% - @clockOutPosition%); height: 2px; background-color: #22c55e; transform: translateY(-50%);"></div>
-                                    <div class="timeline-dot clock-in"
-                                         data-tooltip="Clock In: @session.ClockIn.ToString("hh:mm:ss tt")"
-                                         style="position: absolute; top: 50%; left: @clockInPosition%; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1;">
-                                    </div>
-                                    <div class="timeline-dot clock-out"
-                                         data-tooltip="Clock Out: @session.ClockOut.Value.ToString("hh:mm:ss tt")"
-                                         style="position: absolute; top: 50%; left: @clockOutPosition%; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1;">
-                                    </div>
-                                }
-                                else
+                            <!-- Sort dots by position and adjust to prevent overlap -->
+                            dotPositions = dotPositions.OrderBy(p => p.Position).ToList();
+                            for (int i = 1; i < dotPositions.Count; i++)
+                            {
+                                if (dotPositions[i].Position - dotPositions[i - 1].Position < minGap)
                                 {
-                                    <!-- Incomplete session: green dot only -->
-                                    <div class="timeline-dot clock-in"
-                                         data-tooltip="Clock In: @session.ClockIn.ToString("hh:mm:ss tt")"
-                                         style="position: absolute; top: 50%; left: @clockInPosition%; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1;">
-                                    </div>
+                                    dotPositions[i] = (dotPositions[i - 1].Position + minGap, dotPositions[i].Type, dotPositions[i].Time, dotPositions[i].Tooltip);
                                 }
+                            }
+
+                            <!-- Render green lines first (behind dots) -->
+                            @foreach (var session in day.Sessions)
+                            {
+                                if (session.ClockOut.HasValue)
+                                {
+                                    var clockInPos = dotPositions.First(p => p.Time == session.ClockIn).Position;
+                                    var clockOutPos = dotPositions.First(p => p.Time == session.ClockOut.Value).Position;
+                                    <div style="position: absolute; top: 50%; left: @(clockInPos)%; right: calc(100% - @(clockOutPos)%); height: 2px; background-color: #22c55e; transform: translateY(-50%); z-index: 0;"></div>
+                                }
+                            }
+
+                            <!-- Render dots -->
+                            @foreach (var (position, type, time, tooltip) in dotPositions)
+                            {
+                                <div class="timeline-dot @(type)"
+                                     data-tooltip="@tooltip"
+                                     style="left: @(position)%; z-index: 1;">
+                                </div>
                             }
 
                             <!-- Red lines for absence periods between sessions -->
                             @foreach (var absence in day.AbsencePeriods)
                             {
-                                var startHour = absence.StartTime.Hour + (absence.StartTime.Minute / 60.0) + (absence.StartTime.Second / 3600.0);
-                                var endHour = absence.EndTime.Hour + (absence.EndTime.Minute / 60.0) + (absence.EndTime.Second / 3600.0);
-                                var startPosition = ((startHour - 8) / 12) * 100;
-                                var endPosition = ((endHour - 8) / 12) * 100;
-                                startPosition = Math.Max(10, Math.Min(90, startPosition));
-                                endPosition = Math.Max(10, Math.Min(90, endPosition));
+                                var absStartHour = absence.StartTime.Hour + (absence.StartTime.Minute / 60.0) + (absence.StartTime.Second / 3600.0);
+                                var absStartPosition = ((absStartHour - startHour) / totalHours) * 100;
+                                absStartPosition = Math.Max(10, Math.Min(90, absStartPosition));
+
+                                var nextSessionDot = dotPositions
+                                    .Where(p => p.Time > absence.StartTime)
+                                    .OrderBy(p => p.Time)
+                                    .FirstOrDefault();
+
+                                var absEndPosition = nextSessionDot != default ? nextSessionDot.Position : 90.0;
 
                                 <div class="absence-line"
                                      data-tooltip=@($"Absent: {absence.StartTime:hh:mm:ss tt} - {absence.EndTime:hh:mm:ss tt}{(string.IsNullOrEmpty(absence.Reason) ? "" : $"\nReason: {absence.Reason}")}")
                                      @onclick="() => OpenModal(day, absence)"
-                                     style="position: absolute; top: 50%; left: @startPosition%; right: calc(100% - @endPosition%); height: 2px; background-color: #ef4444; transform: translateY(-50%); z-index: 0;">
+                                     style="position: absolute; top: 50%; left: @(absStartPosition)%; right: calc(100% - @(absEndPosition)%); height: 2px; background-color: #ef4444; transform: translateY(-50%); z-index: 0;">
                                 </div>
                             }
                         }
@@ -310,33 +363,69 @@ else
     }
 
     .timeline-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
         transition: transform 0.2s, box-shadow 0.2s;
         cursor: pointer;
+        z-index: 1;
     }
 
     .timeline-dot:hover {
-        transform: translate(-50%, -50%) scale(1.2);
-        box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
-        z-index: 2;
+        transform: translateY(-50%) scale(1.4);
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+        z-index: 3;
     }
 
     .timeline-dot.clock-in {
         background-color: #22c55e;
-        border: 2px solid #16a34a;
     }
 
     .timeline-dot.clock-out {
         background-color: #ef4444;
-        border: 2px solid #dc2626;
+    }
+
+    .timeline-dot:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #1e293b;
+        color: #ffffff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 4;
     }
 
     .absence-line {
         cursor: pointer;
         transition: opacity 0.2s;
+        min-width: 2px;
     }
 
     .absence-line:hover {
-        opacity: 0.9;
+        opacity: 0.85;
+    }
+
+    .absence-line:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #1e293b;
+        color: #ffffff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 3;
     }
 
     .day-row {
@@ -584,23 +673,6 @@ else
         font-weight: 500;
     }
 
-    .timeline-dot:hover::after,
-    .absence-line:hover::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #1e293b;
-        color: #ffffff;
-        padding: 6px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        white-space: nowrap;
-        z-index: 3;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-
     .reason-display {
         font-size: 14px;
         color: #475569;
@@ -636,12 +708,8 @@ else
     }
 
     .reasons-button {
-        background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+        background: linear-gradient(#1d4ed8 100%);
         color: #ffffff;
-    }
-
-    .reasons-button:hover {
-        background: linear-gradient(90deg, #1d4ed8 0%, #1e40af 100%);
     }
 
     .table-header {
@@ -675,7 +743,7 @@ else
     private string userIdInput = "";
     private string nameInput = "";
     private bool isSearching = false;
-    private readonly List<AttendanceDto> logs = new();
+    private readonly List<Attendancedata> logs = new();
     private bool isLoading = false;
     private bool isDownloading = false;
     private double downloadProgress = 0;
@@ -690,54 +758,11 @@ else
     private DateTime currentMonth = DateTime.Now;
     private const int PageSize = 200;
     private const int TotalRecordsExpected = 10022;
-
-    public class AttendanceDto
-    {
-        public string? UserId { get; set; }
-        public string? Name { get; set; }
-        public DateTime Timestamp { get; set; }
-        public string? Status { get; set; }
-    }
-
-    public class AbsenceReasonDto
-    {
-        public string? UserId { get; set; }
-        public DateTime Date { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public string? Reason { get; set; }
-    }
-
-    public class AttendanceSession
-    {
-        public DateTime ClockIn { get; set; }
-        public DateTime? ClockOut { get; set; }
-    }
-
-    public class AbsencePeriod
-    {
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public string? Reason { get; set; }
-    }
-
-    public class AttendanceDay
-    {
-        public DateTime Date { get; set; }
-        public bool IsWeeklyOff { get; set; }
-        public string? Name { get; set; }
-        public string? UserId { get; set; }
-        public List<AttendanceSession> Sessions { get; set; } = new();
-        public List<AbsencePeriod> AbsencePeriods { get; set; } = new();
-        public double TotalHours => Sessions.Where(s => s.ClockOut.HasValue)
-            .Sum(s => (s.ClockOut!.Value - s.ClockIn).TotalHours);
-    }
-
-    public class AttendanceMonth
-    {
-        public DateTime Month { get; set; }
-        public List<AttendanceDay> Days { get; set; } = new();
-    }
+    private bool showDateRangeModal;
+    private DateTime? startDate;
+    private DateTime? endDate;
+    private bool downloadAllDates;
+    private bool isDownloadAll;
 
     protected override async Task OnInitializedAsync()
     {
@@ -770,7 +795,7 @@ else
             var response = await Http.GetAsync(endpoint).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
-                var logs = await response.Content.ReadFromJsonAsync<List<AttendanceDto>>();
+                var logs = await response.Content.ReadFromJsonAsync<List<Attendancedata>>();
                 if (logs != null && logs.Any())
                 {
                     nameInput = logs.First().Name ?? "";
@@ -815,7 +840,7 @@ else
             var response = await Http.GetAsync(endpoint).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
-                var logs = await response.Content.ReadFromJsonAsync<List<AttendanceDto>>();
+                var logs = await response.Content.ReadFromJsonAsync<List<Attendancedata>>();
                 if (logs != null && logs.Any())
                 {
                     userIdInput = logs.First().UserId ?? "";
@@ -903,7 +928,7 @@ else
                 return;
             }
 
-            var rawLogs = await logsResponse.Content.ReadFromJsonAsync<List<AttendanceDto>>() ?? new();
+            var rawLogs = await logsResponse.Content.ReadFromJsonAsync<List<Attendancedata>>() ?? new();
             logs.AddRange(DeduplicateLogs(rawLogs));
 
             if (logs.Any())
@@ -915,8 +940,8 @@ else
             var reasonsEndpoint = $"/api/AbsenceReason/{Uri.EscapeDataString(userIdInput ?? logs.FirstOrDefault()?.UserId ?? "")}";
             var reasonsResponse = await Http.GetAsync(reasonsEndpoint).ConfigureAwait(false);
             var absenceReasons = reasonsResponse.IsSuccessStatusCode
-                ? await reasonsResponse.Content.ReadFromJsonAsync<List<AbsenceReasonDto>>() ?? new()
-                : new List<AbsenceReasonDto>();
+                ? await reasonsResponse.Content.ReadFromJsonAsync<List<AbsenceReasonData>>() ?? new()
+                : new List<AbsenceReasonData>();
 
             GenerateAttendanceTable(absenceReasons);
         }
@@ -935,7 +960,7 @@ else
         }
     }
 
-    private List<AttendanceDto> DeduplicateLogs(List<AttendanceDto> rawLogs)
+    private List<Attendancedata> DeduplicateLogs(List<Attendancedata> rawLogs)
     {
         return rawLogs
             .GroupBy(l => (l.UserId, l.Timestamp, l.Status))
@@ -944,11 +969,11 @@ else
             .ToList();
     }
 
-    private async Task<List<AttendanceDto>> FetchAllLogs()
+    private async Task<List<Attendancedata>> FetchAllLogs()
     {
         try
         {
-            var allLogs = new List<AttendanceDto>();
+            var allLogs = new List<Attendancedata>();
             int page = 1;
             bool hasMoreData = true;
 
@@ -963,7 +988,7 @@ else
                     return allLogs;
                 }
 
-                var pageLogs = await response.Content.ReadFromJsonAsync<List<AttendanceDto>>();
+                var pageLogs = await response.Content.ReadFromJsonAsync<List<Attendancedata>>();
                 if (pageLogs == null || pageLogs.Count == 0)
                 {
                     hasMoreData = false;
@@ -988,11 +1013,11 @@ else
         catch (Exception ex)
         {
             errorMessage = $"Failed to fetch all logs: {ex.Message}";
-            return new List<AttendanceDto>();
+            return new List<Attendancedata>();
         }
     }
 
-    private void GenerateAttendanceTable(List<AbsenceReasonDto> absenceReasons)
+    private void GenerateAttendanceTable(List<AbsenceReasonData> absenceReasons)
     {
         attendanceMonths.Clear();
 
@@ -1046,6 +1071,8 @@ else
                             }
                         }
                     }
+
+                    attendanceDay.TotalHours = attendanceDay.Sessions.Sum(s => s.Hours);
 
                     if (!attendanceDay.Sessions.Any() && !attendanceDay.IsWeeklyOff)
                     {
@@ -1135,6 +1162,29 @@ else
         }
     }
 
+    private void OpenDateRangeModal(bool downloadAll)
+    {
+        isDownloadAll = downloadAll;
+        showDateRangeModal = true;
+        startDate = null;
+        endDate = null;
+        downloadAllDates = false;
+    }
+
+    private void CancelDateRange()
+    {
+        showDateRangeModal = false;
+        startDate = null;
+        endDate = null;
+        downloadAllDates = false;
+    }
+
+    private async Task ConfirmDateRange()
+    {
+        showDateRangeModal = false;
+        await DownloadExcel(isDownloadAll);
+    }
+
     private async Task DownloadExcel(bool downloadAll)
     {
         isDownloading = true;
@@ -1151,6 +1201,7 @@ else
             {
                 daysToExport = attendanceMonths
                     .SelectMany(m => m.Days)
+                    .Where(d => downloadAllDates || (startDate.HasValue && endDate.HasValue && d.Date.Date >= startDate.Value.Date && d.Date.Date <= endDate.Value.Date))
                     .OrderBy(d => d.Date.Year)
                     .ThenBy(d => d.Date.Month)
                     .ThenBy(d => d.Date.Day)
@@ -1191,6 +1242,9 @@ else
 
                     foreach (var date in allDates)
                     {
+                        if (!downloadAllDates && startDate.HasValue && endDate.HasValue && (date < startDate.Value.Date || date > endDate.Value.Date))
+                            continue;
+
                         var day = new AttendanceDay
                         {
                             Date = date,
@@ -1220,6 +1274,7 @@ else
                                     }
                                 }
                             }
+                            day.TotalHours = day.Sessions.Sum(s => s.Hours);
                         }
 
                         userDays.Add(day);
@@ -1311,7 +1366,9 @@ else
                 {
                     workbook.SaveAs(stream);
                     var content = stream.ToArray();
-                    var fileName = downloadAll ? "All_Users_Attendance.xlsx" : $"{(string.IsNullOrEmpty(userIdInput) ? nameInput : userIdInput)}_Attendance.xlsx";
+                    var fileName = downloadAll ? 
+                        $"All_Users_Attendance_{(downloadAllDates ? "All_Dates" : $"{startDate?.ToString("yyyyMMdd")}_to_{endDate?.ToString("yyyyMMdd")}")}.xlsx" : 
+                        $"{(string.IsNullOrEmpty(userIdInput) ? nameInput : userIdInput)}_Attendance_{(downloadAllDates ? "All_Dates" : $"{startDate?.ToString("yyyyMMdd")}_to_{endDate?.ToString("yyyyMMdd")}")}.xlsx";
                     var base64 = Convert.ToBase64String(content);
                     var dataUrl = $"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{base64}";
                     Nav.NavigateTo(dataUrl, forceLoad: true);
@@ -1337,6 +1394,9 @@ else
         {
             isDownloading = false;
             downloadProgress = 0;
+            startDate = null;
+            endDate = null;
+            downloadAllDates = false;
             await InvokeAsync(StateHasChanged);
             GC.Collect();
         }
