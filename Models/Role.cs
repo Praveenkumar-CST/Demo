@@ -10,7 +10,8 @@ namespace WiseHR.Models
 
         [JsonPropertyName("role")]
         public string? RoleName { get; set; }
-        
-    
+
+        [JsonPropertyName("empid")]
+        public string? EmpId { get; set; }
     }
 }

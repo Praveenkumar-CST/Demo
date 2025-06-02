@@ -926,13 +926,13 @@
     private async Task LoadFromLocalStorage()
     {
         // Load EmpId and Email from localStorage (set during signup/login)
-        var empId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
+        var empId = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "EmpId");
         var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
 
         if (!string.IsNullOrEmpty(empId))
         {
             employeeDetails.EmployeeID = empId;
-            Console.WriteLine($"Loaded EmployeeID from localStorage: {empId}");
+            Console.WriteLine($"Loaded EmployeeID from sessionStorage: {empId}");
         }
         if (!string.IsNullOrEmpty(email))
         {
@@ -952,8 +952,8 @@
             {
                 // Merge stored data, but keep EmployeeID and CurrentEmail from localStorage
                 employeeDetails = storedDetails;
-                var empId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
-                var email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+                var empId = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "EmpId");
+                var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
                 if (!string.IsNullOrEmpty(empId)) employeeDetails.EmployeeID = empId;
                 if (!string.IsNullOrEmpty(email)) employeeDetails.CurrentEmail = email;
             }

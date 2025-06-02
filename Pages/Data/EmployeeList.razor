@@ -145,6 +145,15 @@ else
     private List<EmployeeDetails> filteredEmployees = new();
     private Dictionary<string, string> employeePhotos = new();
     private HashSet<string> loadingPhotos = new();
+    private string GetEmployeePhoto(EmployeeDetails emp)
+{
+    if (!string.IsNullOrEmpty(emp.PhotoBase64Content) && !string.IsNullOrEmpty(emp.PhotoContentType))
+    {
+        return $"data:{emp.PhotoContentType};base64,{emp.PhotoBase64Content}";
+    }
+
+    return "/images/default-avatar.jpg";
+}
 
     private async Task LoadPhotoAsync(EmployeeDetails emp)
     {
