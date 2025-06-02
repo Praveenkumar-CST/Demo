@@ -81,7 +81,7 @@ namespace WiseHR_Frontend.Services
                     });
                     return Task.CompletedTask;
                 };
-
+                    
                 _hubConnection.Reconnected += _ =>
                 {
                     InvokeOnUIThread(() =>
@@ -91,7 +91,7 @@ namespace WiseHR_Frontend.Services
                     });
                     return Task.CompletedTask;
                 };
-
+                    
                 _hubConnection.Closed += _ =>
                 {
                     InvokeOnUIThread(() =>
