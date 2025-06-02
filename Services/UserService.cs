@@ -61,5 +61,19 @@ namespace WiseHR.Services
             _cache.Remove("AllUsers");
             return await response.Content.ReadFromJsonAsync<User>() ?? throw new Exception("Failed to deserialize created user.");
         }
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            return await _cache.GetOrCreateAsync($"UserByEmail_{email}", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                var response = await _httpClient.GetAsync($"api/users/by-email/{email}");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<User>();
+                }
+                return null;
+            });
+        }
+
     }
 }

@@ -5,7 +5,7 @@
 @implements IDisposable
 @layout HomeLayout
 
-<h3 class="holiday-title">Holiday List</h3>
+<h3 class="holiday-title">Holiday List @(_selectedYear)</h3>
 
 <div class="back-container">
     <button class="back-button" @onclick="NavigateToCalendar">Back</button>
@@ -15,16 +15,26 @@
     <div class="location-selection">
         <label for="location"><b>Select Location:</b></label>
         <select id="location" @bind-value="_selectedLocation" @bind-value:event="oninput" @onchange="OnLocationChanged" class="location-dropdown">
-            <option value="Bangalore,India">Bangalore,India</option>
-            <option value="Delaware,USA">Delaware,USA</option>
-            <option value="Riyadh,KSA">Riyadh KSA</option>
+            @foreach (var location in _locations)
+            {
+                <option value="@location" selected="@(location == _selectedLocation)">@location</option>
+            }
+        </select>
+    </div>
+    <div class="year-selection">
+        <label for="year"><b>Select Year:</b></label>
+        <select id="year" @bind-value="_selectedYear" @bind-value:event="oninput" @onchange="OnYearChanged" class="year-dropdown">
+            @foreach (var year in _years)
+            {
+                <option value="@year" selected="@(year == _selectedYear)">@year</option>
+            }
         </select>
     </div>
 </div>
 
 <div class="holiday-boxes">
     <div class="permanent-holidays">
-        <h4>Permanent Holidays</h4>
+        <h4>Fixed Holidays</h4>
         <table class="holiday-table">
             <thead>
                 <tr>
@@ -78,20 +88,7 @@
 {
     <div class="loading-container">
         <div class="spinner"></div>
-        <p>Loading holidays...</p>
     </div>
-}
-else if (_errorMessage != null)
-{
-    <p class="error-message">@_errorMessage</p>
-    <p>Raw API Response:</p>
-    <pre>@_rawResponse</pre>
-}
-else if (_holidays.Length == 0)
-{
-    <p>No holidays found for @_selectedLocation in 2025.</p>
-    <p>Raw API Response:</p>
-    <pre>@_rawResponse</pre>
 }
 
 <style>
@@ -182,21 +179,13 @@ else if (_holidays.Length == 0)
     }
 
     .loading-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    .spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid #1e90ff;
+        border: 4px solid #3b82f6;
         border-top: 4px solid transparent;
         border-radius: 50%;
+        width: 40px;
+        height: 40px;
         animation: spin 1s linear infinite;
+        margin: 20px auto;
     }
 
     @@keyframes spin {
@@ -224,20 +213,20 @@ else if (_holidays.Length == 0)
         background-color: #4682b4;
     }
 
-    .location-selection {
+    .location-selection, .year-selection {
         display: flex;
         align-items: center;
         gap: 10px;
     }
 
-    .location-selection label {
+    .location-selection label, .year-selection label {
         color: #2c3e50;
         font-family: 'Segoe UI', sans-serif;
         font-weight: 500;
         font-size: 16px;
     }
 
-    .location-dropdown {
+    .location-dropdown, .year-dropdown {
         padding: 8px 16px;
         border: 1px solid #3498db;
         border-radius: 6px;
@@ -249,7 +238,7 @@ else if (_holidays.Length == 0)
         transition: all 0.3s ease;
     }
 
-    .location-dropdown:focus {
+    .location-dropdown:focus, .year-dropdown:focus {
         border-color: #3498db;
         outline: none;
     }
@@ -266,11 +255,27 @@ else if (_holidays.Length == 0)
     private string? _errorMessage;
     private bool _isLoading = true;
     private string _rawResponse = "No response yet.";
-    private string _selectedLocation = "Bangalore,India";
+    private string _selectedLocation = "";
+    private List<string> _locations = new();
+    private int _selectedYear = DateTime.Now.Year;
+    private List<int> _years = Enumerable.Range(2024, 2030 - 2019 + 1).ToList();
     private System.Timers.Timer? _refreshTimer;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadLocationsAsync();
+        if (_locations.Any())
+        {
+            _selectedLocation = _locations[0];
+        }
+        else
+        {
+            _selectedLocation = "Bangalore,India";
+            _errorMessage = "No locations available. Using default location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
         await FetchHolidaysAsync();
         using var timer = new System.Timers.Timer(5000);
         _refreshTimer = timer;
@@ -279,12 +284,40 @@ else if (_holidays.Length == 0)
         _refreshTimer.Start();
     }
 
+    private async Task LoadLocationsAsync()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<string>>("/EmployeeDetails/GetAllJoiningLocations");
+            if (response != null && response.Any())
+            {
+                _locations = response;
+            }
+            else
+            {
+                _locations = new List<string> { "Bangalore,India" };
+                _errorMessage = "No locations found. Using default location.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _locations = new List<string> { "Bangalore,India" };
+            _errorMessage = $"Failed to load locations: {ex.Message}. Using default location.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+    }
+
     private async Task FetchHolidaysAsync()
     {
         try
         {
             _isLoading = true;
-            string apiUrl = $"/api/Events?location={_selectedLocation}";
+            string apiUrl = $"/api/Events?location={Uri.EscapeDataString(_selectedLocation)}&year={_selectedYear}";
 
             var httpResponse = await Http.GetAsync(apiUrl);
             _rawResponse = await httpResponse.Content.ReadAsStringAsync();
@@ -294,12 +327,12 @@ else if (_holidays.Length == 0)
                 var holidays = await httpResponse.Content.ReadFromJsonAsync<Events[]>();
                 _holidays = holidays ?? Array.Empty<Events>();
                 _permanentHolidays = _holidays
-                    .Where(h => h.HolidayType == "Permanent" && h.Location == _selectedLocation)
+                    .Where(h => h.HolidayType == "Permanent" && h.Location == _selectedLocation && DateTime.Parse(h.Date).Year == _selectedYear)
                     .ToArray();
                 _optionalHolidays = _holidays
-                    .Where(h => h.HolidayType == "Optional" && h.Location == _selectedLocation)
+                    .Where(h => h.HolidayType == "Optional" && h.Location == _selectedLocation && DateTime.Parse(h.Date).Year == _selectedYear)
                     .ToArray();
-                Console.WriteLine($"Fetched {_holidays.Length} holidays for {_selectedLocation}. Permanent: {_permanentHolidays.Length}, Optional: {_optionalHolidays.Length}");
+                Console.WriteLine($"Fetched {_holidays.Length} holidays for {_selectedLocation} in {_selectedYear}. Permanent: {_permanentHolidays.Length}, Optional: {_optionalHolidays.Length}");
             }
             else
             {
@@ -329,7 +362,43 @@ else if (_holidays.Length == 0)
 
     private async Task OnLocationChanged(ChangeEventArgs e)
     {
-        _selectedLocation = e.Value?.ToString() ?? "Bangalore,India";
+        _selectedLocation = e.Value?.ToString() ?? _locations.FirstOrDefault() ?? "Bangalore,India";
+        if (!_locations.Contains(_selectedLocation))
+        {
+            _selectedLocation = _locations.FirstOrDefault() ?? "Bangalore,India";
+            _errorMessage = $"Invalid location selected. Reverted to {_selectedLocation}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
+        _isLoading = true;
+        await FetchHolidaysAsync();
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task OnYearChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int selectedYear))
+        {
+            _selectedYear = selectedYear;
+            if (!_years.Contains(_selectedYear))
+            {
+                _selectedYear = DateTime.Now.Year;
+                _errorMessage = $"Invalid year selected. Reverted to {_selectedYear}.";
+                StateHasChanged();
+                await Task.Delay(3000);
+                _errorMessage = null;
+            }
+        }
+        else
+        {
+            _selectedYear = DateTime.Now.Year;
+            _errorMessage = $"Invalid year selected. Reverted to {_selectedYear}.";
+            StateHasChanged();
+            await Task.Delay(3000);
+            _errorMessage = null;
+        }
         _isLoading = true;
         await FetchHolidaysAsync();
         _isLoading = false;

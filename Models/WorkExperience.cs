@@ -25,9 +25,6 @@ namespace WiseHRServer.Models
         [Required(ErrorMessage = "university is required")]
         public string University { get; set; }
 
-        [Required(ErrorMessage = "College is required")]
-        public string College { get; set; }
-
         [Required(ErrorMessage = "year of passing is required")]
         [Range(1900, 2100, ErrorMessage = "Enter a valid year")]
 

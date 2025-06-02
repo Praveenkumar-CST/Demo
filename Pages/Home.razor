@@ -5,6 +5,7 @@
 @inject IJSRuntime JSRuntime
 @inject EmployeeService EmployeeService
 @inject HttpClient HttpClient
+@inject IUserService UserService
 @using MudBlazor
 @using System.Text.Json
 
@@ -333,6 +334,16 @@
             Console.WriteLine($"Email to store: {Email}");
             if (!string.IsNullOrEmpty(token))
             {
+                var userDetails = await UserService.GetUserByEmailAsync(Email);
+                if (userDetails != null)
+                {
+                    // 🔹 Store EmpId in localStorage
+                    await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
+                    Console.WriteLine($"EmpId stored in localStorage: {userDetails.EmpId}");
+                }else{
+                    Console.WriteLine($"Error in storing the EmpId sessionStorage: {userDetails.EmpId}");
+
+                }
                 // Fetch employee details based on email
                 var employeeDetails = await EmployeeService.GetEmployeeDetailsByEmail(Email);
                 if (employeeDetails != null)
@@ -341,7 +352,7 @@
                     var (role, verifyError) = await AuthService.VerifyToken();
                     if (!string.IsNullOrEmpty(role))
                     {
-                        //await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
+                        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
 
                         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
                         // Navigate based on role
@@ -413,9 +424,9 @@
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", SignupEmail);
 
                 // Generate and store empId
-                var empId = await GenerateEmpId();
-                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "empId", empId.ToString());
-                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "empId", empId.ToString());
+                // var empId = await GenerateEmpId();
+                // await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "empId", empId.ToString());
+                // await JSRuntime.InvokeVoidAsync("localStorage.setItem", "empId", empId.ToString());
 
                 SignupMessage = "Signup successful! Please login.";
                 SignupErrorMessage = "";
@@ -439,36 +450,36 @@
         StateHasChanged();
     }
 
-    private async Task<int> GenerateEmpId()
-    {
-        try
-        {
-            // Fetch the total count of employees from MongoDB via API, passing SignupEmail
-            var response = await HttpClient.GetAsync($"EmployeeDetails/count?email={Uri.EscapeDataString(SignupEmail)}");
-            if (response.IsSuccessStatusCode)
-            {
-                var totalCount = await response.Content.ReadFromJsonAsync<int>();
-                var newEmpId = totalCount + 1;
+    // private async Task<int> GenerateEmpId()
+    // {
+    //     try
+    //     {
+    //         Fetch the total count of employees from MongoDB via API, passing SignupEmail
+    //         var response = await HttpClient.GetAsync($"EmployeeDetails/count?email={Uri.EscapeDataString(SignupEmail)}");
+    //         if (response.IsSuccessStatusCode)
+    //         {
+    //             var totalCount = await response.Content.ReadFromJsonAsync<int>();
+    //             var newEmpId = totalCount + 1;
 
-                // Log the total available number and new EmployeeID
-                Console.WriteLine($"Total available employees in MongoDB: {totalCount}");
-                Console.WriteLine($"New EmployeeID assigned: {newEmpId}");
+    //             Log the total available number and new EmployeeID
+    //             Console.WriteLine($"Total available employees in MongoDB: {totalCount}");
+    //             Console.WriteLine($"New EmployeeID assigned: {newEmpId}");
 
-                return newEmpId;
-            }
-            else
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Failed to fetch employee count: {errorContent}");
-                return 1000; // Fallback if API call fails
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error generating EmpId: {ex.Message}");
-            return 1000; // Fallback if an error occurs
-        }
-    }
+    //             return newEmpId;
+    //         }
+    //         else
+    //         {
+    //             var errorContent = await response.Content.ReadAsStringAsync();
+    //             Console.WriteLine($"Failed to fetch employee count: {errorContent}");
+    //             return 1000; Fallback if API call fails
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"Error generating EmpId: {ex.Message}");
+    //         return 1000; Fallback if an error occurs
+    //     }
+    // }
 
     private async Task HandleForgotPassword()
     {

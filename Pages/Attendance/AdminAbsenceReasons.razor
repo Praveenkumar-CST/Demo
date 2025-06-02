@@ -1,9 +1,9 @@
 @page "/AdminAbsenceReasons"
 @using System.Net.Http.Json
+@using FingerFrontend.AdminAttendanceViewModel
 @inject HttpClient Http
 @inject NavigationManager Nav
 @layout HomeLayout
-@using FingerFrontend.AdminAttendanceViewModel
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,7 +17,6 @@
     </div>
 }
 
-<!-- Success Message -->
 @if (!string.IsNullOrEmpty(successMessage))
 {
     <div class="success-message">
@@ -37,7 +36,7 @@
 
 <div class="admin-container">
     <div class="table-header">
-        <h1>Absence Reason Requests</h1>
+        <h1>Absence Requests</h1>
     </div>
 
     <!-- Search Section -->
@@ -51,7 +50,8 @@
 
     @if (isLoading)
     {
-        <div class="loader"></div>
+        <div style="display: flex; justify-content: center;"><div class="loader"></div></div>
+
     }
     else if (!filteredRequests.Any())
     {
@@ -114,10 +114,10 @@
         align-items: center;
     }
 
-        .table-header h1 {
-            margin: 0;
-            font-size: 20px;
-        }
+    .table-header h1 {
+        margin: 0;
+        font-size: 20px;
+    }
 
     .search-container {
         display: flex;
@@ -138,10 +138,10 @@
         transition: all 0.2s ease;
     }
 
-        .search-input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
+    .search-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
 
     .clear-button {
         background-color: #6b7280;
@@ -158,10 +158,10 @@
         transition: all 0.2s ease;
     }
 
-        .clear-button:hover {
-            background-color: #4b5563;
-            transform: translateY(-1px);
-        }
+    .clear-button:hover {
+        background-color: #4b5563;
+        transform: translateY(-1px);
+    }
 
     .request-row {
         padding: 16px 24px;
@@ -173,10 +173,10 @@
         transition: all 0.3s ease;
     }
 
-        .request-row:hover {
-            background-color: #f9fafb;
-            transform: translateY(-2px);
-        }
+    .request-row:hover {
+        background-color: #f9fafb;
+        transform: translateY(-2px);
+    }
 
     .action-button {
         border: none;
@@ -196,26 +196,26 @@
         color: #ffffff;
     }
 
-        .primary-button:hover {
-            background-color: #22c55e;
-            transform: translateY(-1px);
-        }
+    .primary-button:hover {
+        background-color: #16a34a;
+        transform: translateY(-1px);
+    }
 
-        .primary-button:disabled {
-            background-color: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-        }
+    .primary-button:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
 
     .secondary-button {
         background-color: #6b7280;
         color: #ffffff;
     }
 
-        .secondary-button:hover {
-            background-color: #4b5563;
-            transform: translateY(-1px);
-        }
+    .secondary-button:hover {
+        background-color: #4b5563;
+        transform: translateY(-1px);
+    }
 
     .error-message {
         color: #991b1b;
@@ -257,15 +257,15 @@
         animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-out 2.7s;
     }
 
-        .success-popup i {
-            font-size: 20px;
-        }
+    .success-popup i {
+        font-size: 20px;
+    }
 
-        .success-popup p {
-            margin: 0;
-            font-size: 15px;
-            font-weight: 500;
-        }
+    .success-popup p {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 500;
+    }
 
     .reason-display {
         font-size: 14px;
@@ -280,6 +280,7 @@
 
     .no-data {
         text-align: center;
+        margin: 24px auto;
         color: #4b5563;
         font-size: 16px;
         padding: 24px;
@@ -340,26 +341,6 @@
     private string userIdSearch = "";
     private string nameSearch = "";
 
-    public class AbsenceReasonRequest
-    {
-        public int Id { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public DateTime Date { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public string Reason { get; set; } = string.Empty;
-        public bool IsApproved { get; set; }
-    }
-
-    public class LowHoursReasonDto
-    {
-        public string UserId { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public DateTime Date { get; set; }
-        public string Reason { get; set; } = string.Empty;
-    }
-
     protected override async Task OnInitializedAsync()
     {
         await FetchAllReasons();
@@ -390,11 +371,11 @@
 
             // Fetch names from Zkteco endpoint
             var zktecoResponse = await Http.GetAsync("/api/Zkteco/get-all-logs").ConfigureAwait(false);
-            List<LowHoursReasonDto> zktecoData = new();
+            List<LowHoursReason> zktecoData = new();
 
             if (zktecoResponse.IsSuccessStatusCode)
             {
-                zktecoData = await zktecoResponse.Content.ReadFromJsonAsync<List<LowHoursReasonDto>>() ?? new();
+                zktecoData = await zktecoResponse.Content.ReadFromJsonAsync<List<LowHoursReason>>() ?? new();
             }
             else
             {

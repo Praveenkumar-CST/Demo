@@ -61,27 +61,27 @@ else if (pagedEmployees.Any())
                 {
                     <tr @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
                         <td>@emp.EmployeeID</td>
-                       
-                     <td>
-                    <span>
-                        @if (!string.IsNullOrEmpty(emp.PhotoBase64Content) && !string.IsNullOrEmpty(emp.PhotoContentType))
-                        {
-                            <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content"
-                                 class="rounded-circle"
-                                 alt="Employee Photo"
-                                 style="width: 30px; height: 30px; object-fit: cover;" />
-                        }
-                        else
-                        {
-                            <img src="/images/default-avatar.jpg"
-                                 class="rounded-circle"
-                                 alt="Loading..."
-                                 style="width: 30px; height: 30px; object-fit: cover;"
-                                 @onload="() => LoadPhotoAsync(emp)" />
-                        }
-                    </span>
-                    @($" {emp.FirstName} {emp.LastName}")
-                </td>
+
+                        <td>
+                            <span>
+                                @if (!string.IsNullOrEmpty(emp.PhotoBase64Content) && !string.IsNullOrEmpty(emp.PhotoContentType))
+                                {
+                                    <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content"
+                                         class="rounded-circle"
+                                         alt="Employee Photo"
+                                         style="width: 30px; height: 30px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <img src="/images/default-avatar.jpg"
+                                         class="rounded-circle"
+                                         alt="Loading..."
+                                         style="width: 30px; height: 30px; object-fit: cover;"
+                                         @onload="() => LoadPhotoAsync(emp)" />
+                                }
+                            </span>
+                            @($" {emp.FirstName} {emp.LastName}")
+                        </td>
 
                         <td>@emp.CurrentEmail</td>
                         <td>@emp.Designation</td>
@@ -95,8 +95,8 @@ else if (pagedEmployees.Any())
                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                            Color="Color.Error"
                                            Size="Size.Small"
-                                           @onclick="() => ShowDeleteConfirmation(emp.EmployeeID)"/>
-                              
+                                           @onclick="() => ShowDeleteConfirmation(emp.EmployeeID)" />
+
                         </td>
                     </tr>
                 }
@@ -377,7 +377,7 @@ else
         }
     }
 
- 
+
 
     public void Dispose()
     {

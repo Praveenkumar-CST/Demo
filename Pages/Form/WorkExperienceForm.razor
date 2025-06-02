@@ -2,16 +2,14 @@
 @using WiseHRServer.Models
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
-@inject ExperienceService ExperienceService
-@using System.Text.Json
+@using System.Text.Json;
 @using Components.sidebar
 @layout HomeLayout
-@using System.ComponentModel.DataAnnotations
 
 <MudContainer MaxWidth="MaxWidth.Medium">
     <MudCard Elevation="2" Class="p-2">
         <MudCardHeader>
-            <MudText Typo="Typo.h5" Color="Color.Primary" class="font-weight-bold">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
                 EXPERIENCE DETAILS
             </MudText>
         </MudCardHeader>
@@ -25,11 +23,13 @@
                 <h4 class="text-secondary mt-2">
                     Education Qualifications <span class="text-danger">*</span>
                 </h4>
+
                 <small class="text-danger mb-2 d-block">At least one education qualification is mandatory.</small>
 
                 @foreach (var edu in educationList)
                 {
                     var isFirst = (edu == educationList.First());
+
                     <div class="border p-2 mb-1 bg-light rounded">
                         <div class="row g-1">
                             <div class="col-md-3">
@@ -41,11 +41,6 @@
                                 <label>University</label>
                                 <InputText class="form-control" @bind-Value="edu.University" />
                                 <ValidationMessage For="@(() => edu.University)" />
-                            </div>
-                            <div class="col-md-3">
-                                <label>College</label>
-                                <InputText class="form-control" @bind-Value="edu.College" />
-                                <ValidationMessage For="@(() => edu.College)" />
                             </div>
                             <div class="col-md-2">
                                 <label>Year</label>
@@ -67,7 +62,7 @@
                             {
                                 <div class="col-1 d-flex align-items-end">
                                     <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveEducation(edu)">
-                                        ×
+                                        &times;
                                     </span>
                                 </div>
                             }
@@ -81,50 +76,39 @@
                 <h4 class="text-secondary mt-1">Work Experience</h4>
                 @if (workList.Any())
                 {
-                    @for (int i = 0; i < workList.Count; i++)
+                    @foreach (var work in workList)
                     {
-                        var work = workList[i];
-                        var workIndex = i;
                         <div class="border p-2 mb-2 bg-light rounded">
                             <div class="row g-1">
                                 <div class="col-md-3">
                                     <label>Employer</label>
-                                    <InputText class="form-control" @bind-Value="work.Employer"
-                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.Employer)))" />
-                                    <ValidationMessage For="@(() => workList[workIndex].Employer)" />
+                                    <InputText class="form-control" @bind-Value="work.Employer" />
                                 </div>
                                 <div class="col-md-3">
                                     <label>Location</label>
-                                    <InputText class="form-control" @bind-Value="work.Location"
-                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.Location)))" />
-                                    <ValidationMessage For="@(() => workList[workIndex].Location)" />
+                                    <InputText class="form-control" @bind-Value="work.Location" />
                                 </div>
                                 <div class="col-md-2">
                                     <label>Join Date</label>
-                                    <InputDate class="form-control" @bind-Value="work.DateOfJoining"
-                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.DateOfJoining)))" />
-                                    <ValidationMessage For="@(() => workList[workIndex].DateOfJoining)" />
+                                    <InputDate class="form-control" @bind-Value="work.DateOfJoining" />
                                 </div>
                                 <div class="col-md-2">
                                     <label>Leave Date</label>
-                                    <InputDate class="form-control" @bind-Value="work.DateOfLeaving"
-                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.DateOfLeaving)))" />
-                                    <ValidationMessage For="@(() => workList[workIndex].DateOfLeaving)" />
+                                    <InputDate class="form-control" @bind-Value="work.DateOfLeaving" />
                                 </div>
                                 <div class="col-md-3">
                                     <label>Designation</label>
-                                    <InputText class="form-control" @bind-Value="work.Designation"
-                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.Designation)))" />
-                                    <ValidationMessage For="@(() => workList[workIndex].Designation)" />
+                                    <InputText class="form-control" @bind-Value="work.Designation" />
                                 </div>
                                 <div class="col-1 d-flex align-items-end">
                                     <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
-                                        ×
+                                        &times;
                                     </span>
                                 </div>
                             </div>
                         </div>
                     }
+
                 }
                 <button type="button" class="btn btn-outline-primary mb-1 mt-1" @onclick="AddWork">+ Add Work Experience</button>
 
@@ -144,8 +128,8 @@
     private List<WorkExperience> workList = new();
     private EditContext editContext;
     private List<int> YearList = new();
-    private Dictionary<string, List<string>> validationErrors = new Dictionary<string, List<string>>();
 
+    [Inject] private ExperienceService ExperienceService { get; set; }
     [Parameter] public EventCallback<Experience> OnSubmit { get; set; }
     [Parameter] public EventCallback OnBack { get; set; }
     [Parameter] public Experience InitialData { get; set; }
@@ -159,102 +143,7 @@
         }
     }
 
-    private void ValidateWorkField(int workIndex, string propertyName)
-    {
-        if (workIndex < 0 || workIndex >= workList.Count) return;
-
-        var work = workList[workIndex];
-        var validationContext = new ValidationContext(work) { MemberName = propertyName };
-        var validationResults = new List<ValidationResult>();
-        var property = work.GetType().GetProperty(propertyName);
-        var value = property?.GetValue(work);
-
-        // Use a unique key for each work experience field
-        var errorKey = $"Work_{workIndex}_{propertyName}";
-        validationErrors.Remove(errorKey);
-
-        var isValid = Validator.TryValidateProperty(value, validationContext, validationResults);
-
-        if (!isValid)
-        {
-            validationErrors[errorKey] = validationResults.Select(r => r.ErrorMessage).ToList();
-        }
-
-        StateHasChanged();
-    }
-
-    private bool HasValidationError(string key)
-    {
-        return validationErrors.ContainsKey(key) && validationErrors[key].Any();
-    }
-
-    private string GetValidationError(string key)
-    {
-        return validationErrors.ContainsKey(key) && validationErrors[key].Any()
-            ? validationErrors[key].First()
-            : string.Empty;
-    }
-
-    private void ValidateAllFields()
-    {
-        validationErrors.Clear();
-
-        // Validate Experience object
-        var experienceContext = new ValidationContext(experience);
-        var experienceResults = new List<ValidationResult>();
-        Validator.TryValidateObject(experience, experienceContext, experienceResults, true);
-
-        foreach (var result in experienceResults)
-        {
-            foreach (var memberName in result.MemberNames)
-            {
-                validationErrors[memberName] = validationErrors.GetValueOrDefault(memberName, new List<string>());
-                validationErrors[memberName].Add(result.ErrorMessage);
-            }
-        }
-
-        // Validate each Education
-        for (int i = 0; i < educationList.Count; i++)
-        {
-            var edu = educationList[i];
-            var eduContext = new ValidationContext(edu);
-            var eduResults = new List<ValidationResult>();
-            Validator.TryValidateObject(edu, eduContext, eduResults, true);
-
-            foreach (var result in eduResults)
-            {
-                foreach (var memberName in result.MemberNames)
-                {
-                    var errorKey = $"Education_{i}_{memberName}";
-                    validationErrors[errorKey] = validationErrors.GetValueOrDefault(errorKey, new List<string>());
-                    validationErrors[errorKey].Add(result.ErrorMessage);
-                }
-            }
-        }
-
-        // Validate each WorkExperience
-        for (int i = 0; i < workList.Count; i++)
-        {
-            var work = workList[i];
-            var workContext = new ValidationContext(work);
-            var workResults = new List<ValidationResult>();
-            Validator.TryValidateObject(work, workContext, workResults, true);
-
-            foreach (var result in workResults)
-            {
-                foreach (var memberName in result.MemberNames)
-                {
-                    var errorKey = $"Work_{i}_{memberName}";
-                    validationErrors[errorKey] = validationErrors.GetValueOrDefault(errorKey, new List<string>());
-                    validationErrors[errorKey].Add(result.ErrorMessage);
-                }
-            }
-        }
-
-        StateHasChanged();
-    }
-
-    protected override async Task OnInitializedAsync()
+    protected async override Task OnInitializedAsync()
     {
         var employeeDetailsJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "employeeDetails");
 
@@ -269,7 +158,6 @@
 
         if (InitialData != null)
             experience = InitialData;
-
         editContext = new EditContext(experience);
     }
 
@@ -280,20 +168,16 @@
             await JSRuntime.InvokeVoidAsync("alert", "Please add at least one education qualification before submitting the form.");
             return;
         }
-
-        ValidateAllFields();
-
         var validWorkList = workList
-            .Where(w => !string.IsNullOrWhiteSpace(w.Employer)
-                     || !string.IsNullOrWhiteSpace(w.Designation)
-                     || !string.IsNullOrWhiteSpace(w.Location)
-                     || w.DateOfJoining != null
-                     || w.DateOfLeaving != null)
-            .ToList();
+        .Where(w => !string.IsNullOrWhiteSpace(w.Employer)
+                 || !string.IsNullOrWhiteSpace(w.Designation)
+                 || !string.IsNullOrWhiteSpace(w.Location)
+                 || w.DateOfJoining != null
+                 || w.DateOfLeaving != null)
+        .ToList();
 
         experience.EducationQualifications = educationList;
         experience.WorkExperiences = validWorkList;
-
         if (workList.Count != validWorkList.Count)
         {
             await JSRuntime.InvokeVoidAsync("alert", "Some work experience entries were incomplete and have been skipped. Please make sure all fields are filled if you want them to be submitted.");
@@ -337,11 +221,9 @@
             workList = experience.WorkExperiences ?? new List<WorkExperience>();
         }
 
-        if (!educationList.Any())
-            AddEducation();
-
-        if (workList == null)
-            workList = new List<WorkExperience>();
+        if (!educationList.Any()) AddEducation();
+        if (workList == null || workList.Count == 0)
+            workList = new List<WorkExperience>(); // ✅ don't add default row
 
         StateHasChanged();
     }
