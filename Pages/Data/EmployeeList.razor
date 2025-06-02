@@ -2,7 +2,11 @@
 @using WiseHRServer.Models
 @layout HomeLayout
 @inject EmployeeService EmployeeService
+@inject BankingService BankingService
+@inject ExperienceService ExperienceService
 @inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 @if (isLoading)
 {
@@ -57,27 +61,27 @@ else if (pagedEmployees.Any())
                 {
                     <tr @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
                         <td>@emp.EmployeeID</td>
-                       
-                     <td>
-                    <span>
-                        @if (!string.IsNullOrEmpty(emp.PhotoBase64Content) && !string.IsNullOrEmpty(emp.PhotoContentType))
-                        {
-                            <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content"
-                                 class="rounded-circle"
-                                 alt="Employee Photo"
-                                 style="width: 30px; height: 30px; object-fit: cover;" />
-                        }
-                        else
-                        {
-                            <img src="/images/default-avatar.jpg"
-                                 class="rounded-circle"
-                                 alt="Loading..."
-                                 style="width: 30px; height: 30px; object-fit: cover;"
-                                 @onload="() => LoadPhotoAsync(emp)" />
-                        }
-                    </span>
-                    @($" {emp.FirstName} {emp.LastName}")
-                </td>
+
+                        <td>
+                            <span>
+                                @if (!string.IsNullOrEmpty(emp.PhotoBase64Content) && !string.IsNullOrEmpty(emp.PhotoContentType))
+                                {
+                                    <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content"
+                                         class="rounded-circle"
+                                         alt="Employee Photo"
+                                         style="width: 30px; height: 30px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <img src="/images/default-avatar.jpg"
+                                         class="rounded-circle"
+                                         alt="Loading..."
+                                         style="width: 30px; height: 30px; object-fit: cover;"
+                                         @onload="() => LoadPhotoAsync(emp)" />
+                                }
+                            </span>
+                            @($" {emp.FirstName} {emp.LastName}")
+                        </td>
 
                         <td>@emp.CurrentEmail</td>
                         <td>@emp.Designation</td>
@@ -88,6 +92,11 @@ else if (pagedEmployees.Any())
                                     @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
                                 View
                             </button>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           @onclick="() => ShowDeleteConfirmation(emp.EmployeeID)" />
+
                         </td>
                     </tr>
                 }
@@ -136,15 +145,6 @@ else
     private List<EmployeeDetails> filteredEmployees = new();
     private Dictionary<string, string> employeePhotos = new();
     private HashSet<string> loadingPhotos = new();
-    private string GetEmployeePhoto(EmployeeDetails emp)
-{
-    if (!string.IsNullOrEmpty(emp.PhotoBase64Content) && !string.IsNullOrEmpty(emp.PhotoContentType))
-    {
-        return $"data:{emp.PhotoContentType};base64,{emp.PhotoBase64Content}";
-    }
-
-    return "/images/default-avatar.jpg";
-}
 
     private async Task LoadPhotoAsync(EmployeeDetails emp)
     {
@@ -309,6 +309,75 @@ else
             }
         }
     }
+    private async Task ShowDeleteConfirmation(string employeeId)
+    {
+        if (string.IsNullOrEmpty(employeeId))
+            return;
+
+        var employee = employees.FirstOrDefault(e => e.EmployeeID == employeeId);
+        var employeeName = employee != null ? $"{employee.FirstName} {employee.LastName}" : employeeId;
+
+        bool? confirmed = await DialogService.ShowMessageBox(
+            title: "Confirm Delete",
+            message: $"Are you sure you want to delete employee {employeeName} (ID: {employeeId})? This action cannot be undone.",
+            yesText: "Delete",
+            cancelText: "Cancel",
+            options: new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }
+        );
+
+        if (confirmed == true)
+        {
+            await DeleteEmployeeAsync(employeeId);
+        }
+    }
+
+    private async Task DeleteEmployeeAsync(string employeeId)
+    {
+        if (string.IsNullOrEmpty(employeeId))
+            return;
+
+        try
+        {
+            // Execute all delete operations
+            var deleteBankingTask = BankingService.DeleteBankingInfo(employeeId);
+            var deleteEmployeeTask = EmployeeService.DeleteEmployee(employeeId);
+            var deleteExperienceTask = ExperienceService.DeleteExperienceAsync(employeeId);
+
+            var results = await Task.WhenAll(deleteBankingTask, deleteEmployeeTask, deleteExperienceTask);
+
+            bool allSuccessful = results.All(r => r);
+
+            if (allSuccessful)
+            {
+                // Log success to console
+                Console.WriteLine($"Successfully deleted all data for EmployeeID: {employeeId}");
+
+                // Show success snackbar
+                var employee = employees.FirstOrDefault(e => e.EmployeeID == employeeId);
+                var employeeName = employee != null ? $"{employee.FirstName} {employee.LastName}" : employeeId;
+                Snackbar.Add($"Employee {employeeName} (ID: {employeeId}) and associated data deleted successfully", Severity.Success);
+
+                // Remove from local lists
+                employees.RemoveAll(e => e.EmployeeID == employeeId);
+                filteredEmployees.RemoveAll(e => e.EmployeeID == employeeId);
+                UpdatePagedEmployees();
+                StateHasChanged();
+            }
+            else
+            {
+                // Log partial failure to console
+                Console.WriteLine($"Partial failure deleting data for EmployeeID: {employeeId}");
+                Snackbar.Add($"Failed to delete some data for Employee {employeeId}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting employee data for {employeeId}: {ex.Message}");
+            Snackbar.Add($"Error deleting employee {employeeId}: {ex.Message}", Severity.Error);
+        }
+    }
+
+
 
     public void Dispose()
     {
