@@ -7,6 +7,7 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
+@using WiseHR.Services
 
 <div class="dashboard-container">
     <div class="dashboard-header">
@@ -15,18 +16,18 @@
     </div>
 
     @if (loading)
-    {
+        {
         <div class="loading-container">
             <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
             <span>Loading asset history...</span>
         </div>
-    }
+        }
     else if (assetInstance == null)
-    {
+        {
         <div class="error-message">Asset instance not found. @errorMessage</div>
-    }
+        }
     else
-    {
+        {
         <div class="asset-details-container">
             <div class="asset-header">
                 <h2>Issue History for Asset Tag: @assetInstance.AssetTag</h2>
@@ -51,29 +52,29 @@
             </div>
 
             @if (assetInstance.Specifications.Any())
-            {
+                {
                 <MudExpansionPanel Text="Specifications" Style="margin: 10px 0;">
                     <div class="specifications-content">
                         @foreach (var spec in assetInstance.Specifications)
-                        {
+                            {
                             <div class="spec-item">
                                 <strong>@spec.Key:</strong> @spec.Value
                             </div>
-                        }
+                            }
                     </div>
                 </MudExpansionPanel>
-            }
+                }
             else
-            {
+                {
                 <div class="specifications-content">
                     <p>No specifications available.</p>
                 </div>
-            }
+                }
 
             <div class="issue-records">
                 <h3>Issue Records</h3>
                 @if (assetIssueRecords.Any())
-                {
+                    {
                     <div class="table-container">
                         <MudTable Items="@assetIssueRecords" Hover="true" Striped="true" Dense="true" Elevation="0">
                             <HeaderContent>
@@ -86,19 +87,48 @@
                             </HeaderContent>
                             <RowTemplate>
                                 <MudTd DataLabel="ISSUED TO">@context.IssuedTo</MudTd>
-                                <MudTd DataLabel="ISSUED ON">@context.IssuedOn.ToString("dd/MM/yyyy hh:mm tt")</MudTd>
+                                <MudTd DataLabel="ISSUED ON">@context.IssuedOn.Date.ToString("dd/MM/yyyy")</MudTd>
                                 <MudTd DataLabel="ISSUED BY">@context.IssuedBy</MudTd>
                                 <MudTd DataLabel="APPROVED BY">@context.ApprovedBy</MudTd>
-                                <MudTd DataLabel="RETURNED ON">@(context.ReturnedOn == DateTime.MinValue ? "-" : context.ReturnedOn.ToString("dd/MM/yyyy hh:mm tt"))</MudTd>
+                                <MudTd DataLabel="RETURNED ON">@(context.ReturnedOn != default ? context.ReturnedOn.Date.ToString("dd/MM/yyyy") : "-")</MudTd>
                                 <MudTd DataLabel="REMARKS">@(string.IsNullOrEmpty(context.Remarks) ? "-" : context.Remarks)</MudTd>
                             </RowTemplate>
                         </MudTable>
                     </div>
-                }
+                    }
                 else
-                {
+                    {
                     <p>No issue records found for this asset.</p>
-                }
+                    }
+            </div>
+
+            <div class="decommission-records">
+                <h3>Decommission Records</h3>
+                @if (decommissionRecord != null)
+                    {
+                    <div class="table-container">
+                        <MudTable Items="@(new[] { decommissionRecord })" Hover="true" Striped="true" Dense="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>ASSET TAG</MudTh>
+                                <MudTh>DECOMMISSIONED BY</MudTh>
+                                <MudTh>APPROVED BY</MudTh>
+                                <MudTh>DECOMMISSION DATE</MudTh>
+                                <MudTh>REMARK</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="ASSET TAG">@context.AssetTag</MudTd>
+                                <MudTd DataLabel="DECOMMISSIONED BY">@context.DecommissionedBy</MudTd>
+                                <MudTd DataLabel="APPROVED BY">@context.ApprovedBy</MudTd>
+                                <MudTd DataLabel="DECOMMISSION DATE">@context.DecommissionDate.ToLocalTime().Date.ToString("dd/MM/yyyy")</MudTd>
+                                <MudTd DataLabel="REMARK">@(string.IsNullOrEmpty(context.Remark) ? "-" : context.Remark)</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </div>
+                    }
+                else
+                    {
+                    <p>No decommission record found for this asset.</p>
+                    }
             </div>
 
             <div class="action-buttons">
@@ -110,11 +140,11 @@
                 </button>
             </div>
         </div>
-    }
+        }
 
     <!-- Assign Asset Dialog -->
     @if (showAssignDialog)
-    {
+        {
         <div class="dialog-overlay">
             <div class="dialog-container">
                 <h3>Assign Asset</h3>
@@ -140,10 +170,15 @@
                         <InputText id="approvedBy" class="form-control" @bind-Value="@assignModel.ApprovedBy" />
                         <ValidationMessage For="@(() => assignModel.ApprovedBy)" />
                     </div>
+                    <div class="form-group">
+                        <label for="returnedOn">Return On</label>
+                        <InputDate id="returnedOn" class="form-control" @bind-Value="@assignModel.ReturnedOn" />
+                        <ValidationMessage For="@(() => assignModel.ReturnedOn)" />
+                    </div>
                     @if (!string.IsNullOrEmpty(assignErrorMessage))
-                    {
+                        {
                         <div class="alert alert-danger">@assignErrorMessage</div>
-                    }
+                        }
                     <div class="dialog-actions">
                         <button type="button" class="btn btn-secondary" @onclick="@(() => CancelAssign())">Cancel</button>
                         <button type="submit" class="btn btn-primary" disabled="@isAssigning">
@@ -153,40 +188,70 @@
                 </EditForm>
             </div>
         </div>
-    }
+        }
 
     <!-- Unassign Asset Dialog -->
     @if (showUnassignDialog)
-    {
+        {
         <div class="dialog-overlay">
             <div class="dialog-container">
                 <h3>Unassign Asset</h3>
-                <EditForm Model="@unassignModel" OnValidSubmit="@SubmitUnassign">
-                    <DataAnnotationsValidator />
-                    <div class="form-group">
-                        <label for="remarks">Remarks (Required)</label>
-                        <InputText id="remarks" class="form-control" @bind-Value="@unassignModel.Remarks" />
-                        <ValidationMessage For="@(() => unassignModel.Remarks)" />
-                    </div>
-                    @if (!string.IsNullOrEmpty(unassignErrorMessage))
+                @if (activeIssueRecord != null)
                     {
-                        <div class="alert alert-danger">@unassignErrorMessage</div>
+                    <EditForm Model="@unassignModel" OnValidSubmit="@SubmitUnassign">
+                        <DataAnnotationsValidator />
+                        <div class="form-group">
+                            <label>Issued To</label>
+                            <MudText>@activeIssueRecord.IssuedTo</MudText>
+                        </div>
+                        <div class="form-group">
+                            <label>Issued On</label>
+                            <MudText>@activeIssueRecord.IssuedOn.Date.ToString("dd/MM/yyyy")</MudText>
+                        </div>
+                        <div class="form-group">
+                            <label>Issued By</label>
+                            <MudText>@activeIssueRecord.IssuedBy</MudText>
+                        </div>
+                        <div class="form-group">
+                            <label>Approved By</label>
+                            <MudText>@activeIssueRecord.ApprovedBy</MudText>
+                        </div>
+                        <div class="form-group">
+                            <label>Return On</label>
+                            <MudText>@(activeIssueRecord.ReturnedOn != default ? activeIssueRecord.ReturnedOn.Date.ToString("dd/MM/yyyy") : "-")</MudText>
+                        </div>
+                        <div class="form-group">
+                            <label for="remarks">Remarks (Required)</label>
+                            <InputText id="remarks" class="form-control" @bind-Value="@unassignModel.Remarks" />
+                            <ValidationMessage For="@(() => unassignModel.Remarks)" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(unassignErrorMessage))
+                            {
+                            <div class="alert alert-danger">@unassignErrorMessage</div>
+                            }
+                        <div class="dialog-actions">
+                            <button type="button" class="btn btn-secondary" @onclick="@(() => CancelUnassign())">Cancel</button>
+                            <button type="submit" class="btn btn-primary" disabled="@isUnassigning">
+                                @(isUnassigning ? "Submitting..." : "Submit")
+                            </button>
+                        </div>
+                    </EditForm>
                     }
+                else
+                    {
+                    <div class="alert alert-danger">No active issue record found.</div>
                     <div class="dialog-actions">
-                        <button type="button" class="btn btn-secondary" @onclick="@(() => CancelUnassign())">Cancel</button>
-                        <button type="submit" class="btn btn-primary" disabled="@isUnassigning">
-                            @(isUnassigning ? "Submitting..." : "Submit")
-                        </button>
+                        <button type="button" class="btn btn-secondary" @onclick="@(() => CancelUnassign())">Close</button>
                     </div>
-                </EditForm>
+                    }
             </div>
         </div>
-    }
+        }
 
     @if (!string.IsNullOrEmpty(errorMessage) && assetInstance != null)
-    {
+        {
         <div class="alert alert-danger mt-3" role="alert">@errorMessage</div>
-    }
+        }
 </div>
 
 <style>
@@ -324,11 +389,11 @@
         color: var(--text-primary);
     }
 
-    .issue-records {
+    .issue-records, .decommission-records {
         margin-bottom: 25px;
     }
 
-        .issue-records h3 {
+        .issue-records h3, .decommission-records h3 {
             margin: 0 0 15px;
             font-size: 20px;
             color: var(--text-primary);
@@ -489,13 +554,15 @@
 
     private AssetInstance? assetInstance;
     private List<AssetIssueRecord> assetIssueRecords = new();
+    private DecommissionRecord? decommissionRecord;
+    private AssetIssueRecord? activeIssueRecord;
     private bool loading = true;
     private string errorMessage = string.Empty;
     private bool hasActiveIssue = false;
     private bool showAssignDialog = false;
     private bool showUnassignDialog = false;
     private AssetIssueRecord assignModel = new();
-    private UnassignRequest unassignModel = new();
+    private AssetIssueRecord.UnassignRequest unassignModel = new();
     private bool isAssigning = false;
     private bool isUnassigning = false;
     private string assignErrorMessage = string.Empty;
@@ -503,199 +570,188 @@
     private int currentUnassignInstanceId;
 
     protected override async Task OnInitializedAsync()
-    {
-        // Configure Snackbar to appear on the right
-        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
-        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
-        Snackbar.Configuration.ShowCloseIcon = true;
-
-        await LoadAssetIssueRecords();
+        {
+        await LoadAssetData();
         if (OpenDialog)
-        {
+            {
             ShowAssignDialog();
-        }
+            }
         if (OpenUnassignDialog)
-        {
+            {
             ShowUnassignDialog();
+            }
         }
-    }
 
-    private async Task LoadAssetIssueRecords()
-    {
-        try
+    private async Task LoadAssetData()
         {
+        try
+            {
             loading = true;
             StateHasChanged();
             assetInstance = await AssetsService.GetAssetInstanceAsync(InstanceId);
             if (assetInstance == null)
-            {
+                {
                 errorMessage = $"Asset instance with ID {InstanceId} not found.";
                 Snackbar.Add(errorMessage, Severity.Error);
                 return;
-            }
+                }
 
+            // Fetch issue records
             assetIssueRecords = await AssetsService.GetAssetIssueRecordsAsync(InstanceId);
             if (assetIssueRecords == null)
-            {
+                {
                 assetIssueRecords = new List<AssetIssueRecord>();
-            }
+                }
 
-            // Debug: Log the issue records
-            Console.WriteLine($"AssetId: {AssetId}, InstanceId: {InstanceId}, IssueRecords: {assetIssueRecords.Count}");
-            foreach (var record in assetIssueRecords)
-            {
-                Console.WriteLine($"Record: IssuedTo={record.IssuedTo}, ReturnedOn={record.ReturnedOn}");
-            }
+            // Fetch decommission record
+            try
+                {
+                decommissionRecord = await AssetsService.GetDecommissionRecordAsync(assetInstance.AssetTag);
+                }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                decommissionRecord = null; // No decommission record found
+                }
 
-            // Check for active issue (ReturnedOn is DateTime.MinValue)
-            hasActiveIssue = assetIssueRecords.Any(r => r.ReturnedOn == DateTime.MinValue);
-            Console.WriteLine($"hasActiveIssue: {hasActiveIssue}, Status: {assetInstance.Status}");
+            // Select the most recent issue record based on sno
+            activeIssueRecord = assetIssueRecords
+                .OrderByDescending(r => r.Sno)
+                .FirstOrDefault();
 
-            // Ensure status consistency
-            if (hasActiveIssue && assetInstance.Status != "Unavailable")
-            {
-                assetInstance.Status = "Unavailable";
+            // Determine if there is an active issue based on asset status
+            hasActiveIssue = activeIssueRecord != null && assetInstance.Status == "Unavailable";
             }
-            else if (!hasActiveIssue && assetInstance.Status != "Available" && assetInstance.Status != "Decommissioned")
-            {
-                assetInstance.Status = "Available";
-            }
-            Console.WriteLine($"Updated Status: {assetInstance.Status}");
-        }
         catch (Exception ex)
-        {
-            errorMessage = $"Error loading asset issue records: {ex.Message}";
+            {
+            errorMessage = $"Error loading asset data: {ex.Message}";
             Snackbar.Add(errorMessage, Severity.Error);
             assetInstance = null;
-        }
+            }
         finally
-        {
+            {
             loading = false;
             StateHasChanged();
+            }
         }
-    }
 
     private void NavigateBack()
-    {
-        Navigation.NavigateTo($"/assets/{AssetId}?refresh=true");
-    }
+        {
+        Navigation.NavigateTo($"/assets/{AssetId}");
+        }
 
     private void ShowAssignDialog()
-    {
-        if (hasActiveIssue || assetInstance?.Status == "Decommissioned")
         {
+        if (hasActiveIssue || assetInstance?.Status == "Decommissioned")
+            {
             errorMessage = "Cannot assign an asset that is already issued or decommissioned.";
             Snackbar.Add(errorMessage, Severity.Error);
             StateHasChanged();
             return;
-        }
+            }
 
         showAssignDialog = true;
         assignModel = new AssetIssueRecord
-            {
+                {
                 AssetInstanceId = InstanceId,
-                IssuedOn = DateTime.UtcNow
-            };
+                IssuedOn = DateTime.Now,
+                ReturnedOn = DateTime.Now
+                };
         assignErrorMessage = string.Empty;
         StateHasChanged();
-    }
+        }
 
     private void ShowUnassignDialog()
-    {
-        if (!hasActiveIssue)
         {
+        if (!hasActiveIssue || activeIssueRecord == null)
+            {
             unassignErrorMessage = "No active issue record found for this asset. Cannot unassign.";
             Snackbar.Add(unassignErrorMessage, Severity.Error);
             StateHasChanged();
             return;
-        }
+            }
 
         showUnassignDialog = true;
         currentUnassignInstanceId = InstanceId;
-        unassignModel = new UnassignRequest
-            {
+        unassignModel = new AssetIssueRecord.UnassignRequest
+                {
                 AssetInstanceId = InstanceId
-            };
+                };
         unassignErrorMessage = string.Empty;
         StateHasChanged();
-    }
+        }
 
     private async Task SubmitAssign()
-    {
-        try
         {
+        try
+            {
             isAssigning = true;
             assignErrorMessage = string.Empty;
             StateHasChanged();
 
             if (assetInstance == null)
-            {
+                {
                 assignErrorMessage = "Asset instance not loaded. Please refresh and try again.";
                 Snackbar.Add(assignErrorMessage, Severity.Error);
                 showAssignDialog = false;
                 StateHasChanged();
                 return;
-            }
+                }
 
             assignModel.AssetInstanceId = InstanceId;
-            assignModel.ReturnedOn = DateTime.MinValue; // Use MinValue for active issue
             await AssetsService.CreateAssetIssueRecordAsync(assignModel);
 
             assetInstance.Status = "Unavailable";
             assetInstance.AssignedTo = assignModel.IssuedTo;
 
-            await LoadAssetIssueRecords();
+            await LoadAssetData();
             showAssignDialog = false;
             Snackbar.Add("Asset assigned successfully.", Severity.Success);
             StateHasChanged();
-        }
+            }
         catch (HttpRequestException ex)
-        {
+            {
             assignErrorMessage = $"Error assigning asset: {ex.Message}";
             Snackbar.Add(assignErrorMessage, Severity.Error);
             StateHasChanged();
-        }
+            }
         catch (Exception ex)
-        {
+            {
             assignErrorMessage = $"Error assigning asset: {ex.Message}";
             Snackbar.Add(assignErrorMessage, Severity.Error);
             StateHasChanged();
-        }
+            }
         finally
-        {
+            {
             isAssigning = false;
             StateHasChanged();
+            }
         }
-    }
 
     private async Task SubmitUnassign()
-    {
-        try
         {
+        try
+            {
             isUnassigning = true;
             unassignErrorMessage = string.Empty;
             StateHasChanged();
 
-            assetInstance = await AssetsService.GetAssetInstanceAsync(currentUnassignInstanceId);
             if (assetInstance == null)
-            {
+                {
                 unassignErrorMessage = $"Asset instance with ID {currentUnassignInstanceId} not found.";
                 Snackbar.Add(unassignErrorMessage, Severity.Error);
                 showUnassignDialog = false;
                 StateHasChanged();
                 return;
-            }
+                }
 
-            // Check for active issue (ReturnedOn is DateTime.MinValue)
-            var activeIssueRecord = assetIssueRecords.FirstOrDefault(r => r.ReturnedOn == DateTime.MinValue);
-            if (activeIssueRecord == null)
-            {
-                unassignErrorMessage = "No active issue record found. Cannot unassign.";
+            if (!hasActiveIssue || activeIssueRecord == null)
+                {
+                unassignErrorMessage = "No active issue record found for this asset. Cannot unassign.";
                 Snackbar.Add(unassignErrorMessage, Severity.Error);
                 showUnassignDialog = false;
                 StateHasChanged();
                 return;
-            }
+                }
 
             unassignModel.Remarks = string.IsNullOrEmpty(activeIssueRecord.Remarks)
                 ? unassignModel.Remarks
@@ -703,56 +759,54 @@
 
             bool success = await AssetsService.UnAssignAssetIssueRecordAsync(unassignModel);
             if (!success)
-            {
+                {
                 unassignErrorMessage = "Failed to unassign asset. No active issue record found or server error.";
                 Snackbar.Add(unassignErrorMessage, Severity.Error);
                 showUnassignDialog = false;
                 StateHasChanged();
                 return;
-            }
+                }
 
-            // Update asset instance status
             assetInstance.Status = "Available";
             assetInstance.AssignedTo = null;
 
-            // Refresh data
-            await LoadAssetIssueRecords();
+            await LoadAssetData();
             showUnassignDialog = false;
             Snackbar.Add("Asset unassigned successfully.", Severity.Success);
             StateHasChanged();
-        }
+            }
         catch (HttpRequestException ex)
-        {
+            {
             unassignErrorMessage = $"Error unassigning asset: {ex.Message}";
             Snackbar.Add(unassignErrorMessage, Severity.Error);
             StateHasChanged();
-        }
+            }
         catch (Exception ex)
-        {
+            {
             unassignErrorMessage = $"Error unassigning asset: {ex.Message}";
             Snackbar.Add(unassignErrorMessage, Severity.Error);
             StateHasChanged();
-        }
+            }
         finally
-        {
+            {
             isUnassigning = false;
             StateHasChanged();
+            }
         }
-    }
 
     private void CancelAssign()
-    {
+        {
         showAssignDialog = false;
         assignModel = new AssetIssueRecord();
         isAssigning = false;
         StateHasChanged();
-    }
+        }
 
     private void CancelUnassign()
-    {
+        {
         showUnassignDialog = false;
-        unassignModel = new UnassignRequest();
+        unassignModel = new AssetIssueRecord.UnassignRequest();
         isUnassigning = false;
         StateHasChanged();
-    }
+        }
 }
