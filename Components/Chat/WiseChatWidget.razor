@@ -26,14 +26,16 @@
         @* Header *@
         <div class="wisechat-header">
             <div class="wisechat-header-content">
-                <MudAvatar Color="Color.Primary" Size="Size.Small">
-                    <MudIcon Icon="Icons.Material.Filled.SupportAgent"/>
-                </MudAvatar>
+              
+                <MudFab IconSize="Size.Large" EndIcon="@(isOpen ? Icons.Material.Filled.SupportAgent : Icons.Material.Filled.SupportAgent)"
+                        Color="Color.Primary"
+                        OnClick="ToggleChat"
+                        Class="@($"wisechat-fab {(isOpen ? "open" : "")}")" />
                 <div class="wisechat-header-text">
                     <MudText Typo="Typo.subtitle1" Class="font-weight-bold">WiseONE Assistant</MudText>
                     <div class="wisechat-status">
                         <div class="wisechat-status-dot @(isConnected ? "online" : "offline")"></div>
-                        <MudText Typo="Typo.caption">@(isConnected ? "Online" : "Connecting...")</MudText>
+                        <MudText Typo="Typo.subtitle2">@(isConnected ? "Online" : "Connecting...")</MudText>
                     </div>
                 </div>
             </div>
@@ -189,9 +191,10 @@
         position: relative;
         z-index: 9999;
         background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
-        border: none;
+        border: 2px solid white;
         width: 64px;
         height: 64px;
+
     }
 
         .wisechat-fab::before {
