@@ -1,31 +1,40 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-
-namespace WiseHR.Models
-{
-    public class AssetIssueRecord
+﻿namespace WiseHR.Models
     {
+    using System.ComponentModel.DataAnnotations;
+
+    public class AssetIssueRecord
+        {
         [Key]
         public int Sno { get; set; }
-        public int AssetInstanceId { get; set; }
-        [Required(ErrorMessage = "Issued To is required")]
-        public string IssuedTo { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Issued On is required")]
-        public DateTime IssuedOn { get; set; }
-        [Required(ErrorMessage = "Issued By is required")]
-        public string IssuedBy { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Approved By is required")]
-        public string ApprovedBy { get; set; } = string.Empty;
-        public DateTime ReturnedOn { get; set; }
-        public string? Remarks { get; set; }
-        // Navigation property, nullable to avoid serialization issues
-        public AssetInstance? AssetInstance { get; set; }
-    }
 
-    public class UnassignRequest
-    {
+        [Required]
         public int AssetInstanceId { get; set; }
-        [Required(ErrorMessage = "Remarks is required")]
-        public string Remarks { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
+        public string IssuedTo { get; set; }
+
+        public DateTime IssuedOn { get; set; }
+
+        [Required, MaxLength(100)]
+        public string IssuedBy { get; set; }
+
+        [Required, MaxLength(100)]
+        public string ApprovedBy { get; set; }
+
+        public DateTime ReturnedOn { get; set; } // Expected return date during assignment
+
+        [MaxLength(500)]
+        public string? Remarks { get; set; }
+
+        public AssetInstance? AssetInstance { get; set; }
+
+        public class UnassignRequest
+            {
+            [Required]
+            public int AssetInstanceId { get; set; }
+
+            [Required, MaxLength(500)]
+            public string Remarks { get; set; }
+            }
+        }
     }
-}

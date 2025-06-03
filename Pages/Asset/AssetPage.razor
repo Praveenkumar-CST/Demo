@@ -7,7 +7,6 @@
 @using WiseHR.Models
 @using System.Text.Json
 
-
 <div class="dashboard-container">
     <div class="dashboard-header">
         <h1>Asset Dashboard</h1>
@@ -15,11 +14,11 @@
     </div>
 
     <div class="statistics-bar">
-        <div class="company-logo">
-            <div class="logo-placeholder">
-                <img src="images/logo1.png" alt="company" />
+        <div class>
+            <div>
             </div>
         </div>
+
 
         <div class="stats-wrapper">
             <div class="stat-item">
@@ -27,12 +26,12 @@
                 <span class="stat-label">Total Assets</span>
             </div>
             <div class="stat-item">
-                <span class="stat-value">@InStock</span>
-                <span class="stat-label">In Stock</span>
+                <span class="stat-value">@Available</span>
+                <span class="stat-label">Available</span>
             </div>
             <div class="stat-item">
-                <span class="stat-value">@OutOfStock</span>
-                <span class="stat-label">Out of Stock</span>
+                <span class="stat-value">@Unavailable</span>
+                <span class="stat-label">Unavailable</span>
             </div>
         </div>
     </div>
@@ -54,17 +53,17 @@
                     </thead>
                     <tbody>
                         @if (ElectronicsItems == null)
-                        {
-                            <tr><td colspan="4">Loading...</td></tr>
-                        }
-                        else if (!ElectronicsItems.Any())
-                        {
-                            <tr><td colspan="4">No Electronics Assets</td></tr>
-                        }
-                        else
-                        {
-                            @foreach (var item in ElectronicsItems)
                             {
+                            <tr><td colspan="4">Loading...</td></tr>
+                            }
+                        else if (!ElectronicsItems.Any())
+                            {
+                            <tr><td colspan="4">No Electronics Assets</td></tr>
+                            }
+                        else
+                            {
+                            @foreach (var item in ElectronicsItems)
+                                {
                                 <tr>
                                     <td>@item.Name</td>
                                     <td>@item.AssetTagPrefix</td>
@@ -73,8 +72,8 @@
                                         <a href="/assets/@item.Id" class="view-link">View Details</a>
                                     </td>
                                 </tr>
+                                }
                             }
-                        }
                     </tbody>
                 </table>
             </div>
@@ -96,17 +95,17 @@
                     </thead>
                     <tbody>
                         @if (NonElectronicsItems == null)
-                        {
-                            <tr><td colspan="4">Loading...</td></tr>
-                        }
-                        else if (!NonElectronicsItems.Any())
-                        {
-                            <tr><td colspan="4">No Non-Electronics Assets</td></tr>
-                        }
-                        else
-                        {
-                            @foreach (var item in NonElectronicsItems)
                             {
+                            <tr><td colspan="4">Loading...</td></tr>
+                            }
+                        else if (!NonElectronicsItems.Any())
+                            {
+                            <tr><td colspan="4">No Non-Electronics Assets</td></tr>
+                            }
+                        else
+                            {
+                            @foreach (var item in NonElectronicsItems)
+                                {
                                 <tr>
                                     <td>@item.Name</td>
                                     <td>@item.AssetTagPrefix</td>
@@ -115,8 +114,8 @@
                                         <a href="/assets/@item.Id" class="view-link">View Details</a>
                                     </td>
                                 </tr>
+                                }
                             }
-                        }
                     </tbody>
                 </table>
             </div>
@@ -124,9 +123,9 @@
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
-    {
+        {
         <div class="alert alert-danger mt-3">@errorMessage</div>
-    }
+        }
 </div>
 
 <style>
@@ -311,31 +310,57 @@
 
     .table-container {
         overflow-x: auto;
+        min-width: 350px;
     }
 
     .table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: fixed;
     }
 
         .table th {
             background-color: var(--fb-blue-lighter);
-            padding: 14px 18px;
+            padding: 12px 12px;
             text-align: left;
             color: var(--fb-blue-dark);
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             border-bottom: 1px solid var(--fb-border);
         }
 
+            .table th:nth-child(1) {
+                width: 40%;
+            }
+
+            .table th:nth-child(2) {
+                width: 25%;
+            }
+
+            .table th:nth-child(3) {
+                width: 15%;
+            }
+
+            .table th:nth-child(4) {
+                width: 20%;
+            }
+
         .table td {
-            padding: 14px 18px;
+            padding: 12px 12px;
             text-align: left;
             border-bottom: 1px solid var(--fb-border);
             color: var(--fb-text-dark);
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+
+            .table td:first-child {
+                white-space: normal;
+                word-break: break-word;
+            }
 
         .table tr:last-child td {
             border-bottom: none;
@@ -349,11 +374,14 @@
         text-decoration: none;
         color: var(--fb-blue);
         font-weight: 500;
-        font-size: 14px;
+        font-size: 11px;
         transition: all 0.2s ease;
-        padding: 6px 12px;
+        padding: 4px 8px;
         border-radius: 4px;
         background-color: transparent;
+        white-space: nowrap;
+        display: inline-block;
+        min-width: 0;
     }
 
         .view-link:hover {
@@ -411,82 +439,94 @@
             width: 100%;
         }
     }
+
+    @@media (max-width: 600px) {
+        .table th, .table td {
+            font-size: 11px;
+            padding: 8px 6px;
+        }
+
+        .view-link {
+            font-size: 10px;
+            padding: 3px 6px;
+        }
+    }
 </style>
 
 @code {
     private int TotalAssets = 0;
-    private int OutOfStock = 0;
-    private int InStock => TotalAssets - OutOfStock;
-    private string logoPath = "logo1.png";
+    private int Unavailable = 0;
+    private int Available => TotalAssets - Unavailable;
+    //private string logoPath = "images/logo1.png";
     private List<AssetItem> ElectronicsItems = new();
     private List<AssetItem> NonElectronicsItems = new();
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
-    {
+        {
         await LoadDashboardData();
-    }
+        }
 
     private async Task LoadDashboardData()
-    {
-        try
         {
+        try
+            {
             var assets = await AssetService.GetAssetsAsync();
 
             if (assets.Any())
-            {
+                {
                 ElectronicsItems = assets
                     .Where(a => a.Category.Equals("Electronics", StringComparison.OrdinalIgnoreCase))
                     .Select(a => new AssetItem
-                        {
+                            {
                             Id = a.Id,
                             Name = a.Name,
                             AssetTagPrefix = a.AssetTagPrefix,
                             Count = a.Instances?.Count ?? 0
-                        })
+                            })
                     .OrderBy(a => a.Name)
                     .ToList();
 
                 NonElectronicsItems = assets
                     .Where(a => a.Category.Equals("Non-Electronics", StringComparison.OrdinalIgnoreCase))
                     .Select(a => new AssetItem
-                        {
+                            {
                             Id = a.Id,
                             Name = a.Name,
                             AssetTagPrefix = a.AssetTagPrefix,
                             Count = a.Instances?.Count ?? 0
-                        })
+                            })
                     .OrderBy(a => a.Name)
                     .ToList();
 
                 TotalAssets = assets.Sum(a => a.Instances?.Count ?? 0);
-                OutOfStock = assets.Sum(a => a.Instances?.Count(i => i.Status != "Available") ?? 0);
-            }
+                Unavailable = assets.Sum(a => a.Instances?.Count(i => i.Status != "Available") ?? 0);
+                }
             else
-            {
+                {
                 errorMessage = "No assets found.";
                 ElectronicsItems = new();
                 NonElectronicsItems = new();
+                }
             }
-        }
         catch (Exception ex)
-        {
+            {
             errorMessage = $"Error loading assets: {ex.Message}";
             ElectronicsItems = new();
             NonElectronicsItems = new();
+            }
         }
-    }
 
     private void NavigateToAddAsset()
-    {
+        {
         Navigation.NavigateTo("/add-asset");
-    }
+        }
 
     public class AssetItem
-    {
+        {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string AssetTagPrefix { get; set; } = string.Empty;
         public int Count { get; set; }
-    }
+        }
 }
