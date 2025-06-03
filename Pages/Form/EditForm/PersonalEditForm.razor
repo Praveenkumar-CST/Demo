@@ -45,6 +45,10 @@ else
                             <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeID"
                                           Required="true" Margin="Margin.Dense" Disabled="true" />
                         </MudItem>
+                           <MudItem xs="12" sm="4" md="3">
+                            <MudTextField Label="Employee Code" Variant="Variant.Outlined" @bind-Value="employeeDetails.EmployeeCode"
+                                          Required="true" Margin="Margin.Dense" />
+                        </MudItem>
 
                         <MudItem xs="12" sm="4" md="3">
                             <MudTextField Label="First Name" Variant="Variant.Outlined" @bind-Value="employeeDetails.FirstName" Required="true" Margin="Margin.Dense"
