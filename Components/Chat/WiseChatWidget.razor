@@ -1,6 +1,7 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Text.Json
+@using System.Text.RegularExpressions
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -50,7 +51,7 @@
             {
                 <div class="wisechat-welcome">
                     <MudIcon Icon="Icons.Material.Filled.Waving" Color="Color.Primary" Style="font-size: 3rem;"/>
-                    <MudText Typo="Typo.h6" Color="Color.Primary">Welcome to WiseHR!</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">Welcome to WiseONE!</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
                         How can I help you today?
                     </MudText>
@@ -69,7 +70,9 @@
                     
                     <div class="wisechat-message-content">
                         <div class="wisechat-message-bubble">
-                            <MudText Typo="Typo.subtitle2">@message.Content</MudText>
+                            <div class="wisechat-formatted-content">
+                                @((MarkupString)FormatMessageContent(message.Content))
+                            </div>
                         </div>
                         <MudText Typo="Typo.caption" Class="wisechat-timestamp">
                             @message.Timestamp.ToString("HH:mm")
@@ -259,7 +262,7 @@
 
     /* Stunning header with animated gradient */
     .wisechat-header {
-        background: linear-gradient(135deg, #161e40 0%, #8d3fdd 100%);
+        background: linear-gradient(135deg, #1ab579 0%, #8030d2 100%);
         background-size: 200% 200%;
         animation: gradientShift 6s ease infinite;
         color: white;
@@ -803,7 +806,79 @@
         border: 2px solid #000;
     }
 
-    }</style>
+    }
+
+    .wisechat-formatted-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        line-height: 1.5;
+    }
+
+    .wisechat-bullet-list {
+        margin: 0.5rem 0;
+        padding-left: 0.5rem;
+    }
+
+    .wisechat-bullet,
+    .wisechat-nested-bullet {
+        display: flex;
+        align-items: flex-start;
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .wisechat-nested-bullet {
+        padding-left: 2.5rem;
+    }
+
+    .wisechat-bullet .bullet,
+    .wisechat-nested-bullet .bullet {
+        position: absolute;
+        left: 0.5rem;
+        color: var(--mud-palette-primary);
+        font-size: 1.2rem;
+    }
+
+    .wisechat-bullet .bullet-content,
+    .wisechat-nested-bullet .bullet-content {
+        flex: 1;
+        padding-left: 0.5rem;
+    }
+
+    .wisechat-numbered-point {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .wisechat-text-line {
+        margin: 0.5rem 0;
+    }
+
+    .wisechat-spacing {
+        height: 0.8rem;
+    }
+
+    .wisechat-formatted-content strong {
+        font-weight: 600;
+        color: var(--mud-palette-primary);
+        display: block;
+        margin: 1rem 0 0.5rem 0;
+    }
+
+    /* Dark mode support */
+    @@media (prefers-color-scheme: dark) {
+        .wisechat-formatted-content strong {
+            color: var(--mud-palette-primary-lighten);
+        }
+
+        .wisechat-bullet .bullet,
+        .wisechat-nested-bullet .bullet {
+            color: var(--mud-palette-primary-lighten);
+        }
+    }
+</style>
 
 @code {
     // Connection and State
@@ -971,6 +1046,78 @@
         {
             // Ignore JS interop errors
         }
+    }
+
+    private string FormatMessageContent(string content)
+    {
+        if (string.IsNullOrEmpty(content))
+            return content;
+
+        // First, normalize line endings and remove any extra spaces
+        content = content.Replace("\r\n", "\n").Trim();
+
+        // Handle bold text (text between **)
+        var boldPattern = @"\*\*(.*?)\*\*";
+        var formattedContent = Regex.Replace(content, boldPattern, "<strong>$1</strong>");
+
+        // Split into lines and process
+        var lines = formattedContent.Split('\n');
+        var formattedLines = new List<string>();
+        var inBulletList = false;
+
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                formattedLines.Add("<div class='wisechat-spacing'></div>");
+                inBulletList = false;
+                continue;
+            }
+
+            // Handle bullet points (lines starting with - or *)
+            if (line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+            {
+                if (!inBulletList)
+                {
+                    formattedLines.Add("<div class='wisechat-bullet-list'>");
+                    inBulletList = true;
+                }
+
+                var bulletContent = line.TrimStart().Substring(1).TrimStart();
+                var isNested = line.StartsWith("    ");
+                var bulletClass = isNested ? "wisechat-nested-bullet" : "wisechat-bullet";
+                formattedLines.Add($"<div class='{bulletClass}'><span class='bullet'>•</span><span class='bullet-content'>{bulletContent}</span></div>");
+            }
+            // Handle numbered lists
+            else if (Regex.IsMatch(line.TrimStart(), @"^\d+\."))
+            {
+                if (inBulletList)
+                {
+                    formattedLines.Add("</div>");
+                    inBulletList = false;
+                }
+                var numberedContent = line.TrimStart();
+                formattedLines.Add($"<div class='wisechat-numbered-point'>{numberedContent}</div>");
+            }
+            // Regular text
+            else
+            {
+                if (inBulletList)
+                {
+                    formattedLines.Add("</div>");
+                    inBulletList = false;
+                }
+                formattedLines.Add($"<div class='wisechat-text-line'>{line}</div>");
+            }
+        }
+
+        // Close any open bullet list
+        if (inBulletList)
+        {
+            formattedLines.Add("</div>");
+        }
+
+        return string.Join("", formattedLines);
     }
 
     public async ValueTask DisposeAsync()
