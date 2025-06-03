@@ -1,58 +1,183 @@
 ﻿@page "/home/employees"
-@using WiseHR.Models
+@using WiseHRServer.Models
 @using System.Threading.Tasks
 @using Components.sidebar
 @layout HomeLayout
 @inject IUserService UserService
+@inject EmployeeService EmployeeService
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
 
-<div class="form-container">
-    <div class="form-group">
-        <label for="email">Email:</label>
-        <input type="email" class="form-control" id="email" @bind="newUserEmail" placeholder="Enter employee's email" />
-    </div>
-    <div class="form-group">
-        <label for="password">Password:</label>
-        <div class="input-group">
-            <input type="text" class="form-control" id="password" @bind="newUserPassword" placeholder="Enter or generate password" />
-            <button class="btn btn-outline-secondary" @onclick="GeneratePassword">Generate Password</button>
-        </div>
-    </div>
-    <div class="form-actions">
-        <button class="btn btn-success" @onclick="AddUser">Add Employee</button>
-        <button class="btn btn-primary" @onclick="Cancel">Cancel</button>
-    </div>
-</div>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    <MudCard Elevation="2" Class="pa-4">
+        @if (!showBasicDetailsForm)
+        {
+            <MudCardHeader>
+                <MudText Typo="Typo.h5" Color="Color.Primary">Add New Employee</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudForm @ref="addUserForm">
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Email" Variant="Variant.Outlined" @bind-Value="newUserEmail"
+                                          Placeholder="Enter employee's email" Required="true" Margin="Margin.Dense"
+                                          Validation="@(new Func<string, string>(ValidateEmail))" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Password" Variant="Variant.Outlined" @bind-Value="newUserPassword"
+                                          Placeholder="Enter or generate password" Required="true" Margin="Margin.Dense"
+                                          Validation="@(new Func<string, string>(ValidatePassword))" />
+                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GeneratePassword" Class="mt-2">
+                                Generate Password
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddUser">Add Employee</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudCardContent>
+        }
+        else
+        {
+            <MudCardHeader>
+                <MudText Typo="Typo.h5" Color="Color.Primary">Employee Basic Details</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <EditForm Model="@employeeBasicDetails" OnValidSubmit="SaveBasicDetails">
+                    <DataAnnotationsValidator />
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Employee ID" Variant="Variant.Outlined" @bind-Value="employeeBasicDetails.EmployeeID"
+                                          Required="true" Margin="Margin.Dense" Disabled="true" />
+                            <ValidationMessage For="@(() => employeeBasicDetails.EmployeeID)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Email" Variant="Variant.Outlined" @bind-Value="employeeBasicDetails.CurrentEmail"
+                                          Required="true" Margin="Margin.Dense" Disabled="true" />
+                            <ValidationMessage For="@(() => employeeBasicDetails.CurrentEmail)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Mobile No" Variant="Variant.Outlined" @bind-Value="employeeBasicDetails.CurrentMobile"
+                                          Required="true" Margin="Margin.Dense" />
+                            <ValidationMessage For="@(() => employeeBasicDetails.CurrentMobile)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" Label="Type of Employment" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                       @bind-Value="employeeBasicDetails.TypeOfEmployment" Required="true">
+                                <MudSelectItem Value="@("Full-Time")">Full-Time</MudSelectItem>
+                                <MudSelectItem Value="@("Part-Time")">Part-Time</MudSelectItem>
+                                <MudSelectItem Value="@("Contract")">Contract</MudSelectItem>
+                                <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
+                            </MudSelect>
+                            <ValidationMessage For="@(() => employeeBasicDetails.TypeOfEmployment)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" Label="Designation" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                       @bind-Value="employeeBasicDetails.Designation" Required="true">
+                                <MudSelectItem Value="@("Software Engineer Intern")">Software Engineer Intern</MudSelectItem>
+                                <MudSelectItem Value="@("Software Engineer Trainee")">Software Engineer Trainee</MudSelectItem>
+                                <MudSelectItem Value="@("Associate Software Engineer")">Associate Software Engineer</MudSelectItem>
+                                <MudSelectItem Value="@("Software Engineer Product Manager")">Software Engineer Product Manager</MudSelectItem>
+                                <MudSelectItem Value="@("Senior Software Engineer")">Senior Software Engineer</MudSelectItem>
+                                <MudSelectItem Value="@("Vice President")">Vice President</MudSelectItem>
+                                <MudSelectItem Value="@("President")">President</MudSelectItem>
+                                <MudSelectItem Value="@("People Senior Analyst")">People Senior Analyst</MudSelectItem>
+                                <MudSelectItem Value="@("People Analyst Lead")">People Analyst Lead</MudSelectItem>
+                                <MudSelectItem Value="@("Executive Assistant")">Executive Assistant</MudSelectItem>
+                                <MudSelectItem Value="@("Business Development Lead")">Business Development Lead</MudSelectItem>
+                                <MudSelectItem Value="@("Business Development Intern")">Business Development Intern</MudSelectItem>
+                                <MudSelectItem Value="@("Content Writing Intern")">Content Writing Intern</MudSelectItem>
+                                <MudSelectItem Value="@("Social Media Intern")">Social Media Intern</MudSelectItem>
+                                <MudSelectItem Value="@("Video Creation Intern")">Video Creation Intern</MudSelectItem>
+                                <MudSelectItem Value="@("AI Content Creator")">AI Content Creator</MudSelectItem>
+                                <MudSelectItem Value="@("Content Creator Lead")">Content Creator Lead</MudSelectItem>
+                                <MudSelectItem Value="@("Software Tester")">Software Tester</MudSelectItem>
+                            </MudSelect>
+                            <ValidationMessage For="@(() => employeeBasicDetails.Designation)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" Label="Joining Location" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                       @bind-Value="employeeBasicDetails.JoiningLocation" Required="true">
+                                <MudSelectItem Value="@("Bangalore, India")">Bangalore, India</MudSelectItem>
+                                <MudSelectItem Value="@("Riyadh, Saudi Arabia")">Riyadh, Saudi Arabia</MudSelectItem>
+                                <MudSelectItem Value="@("Delaware, USA")">Delaware, USA</MudSelectItem>
+                            </MudSelect>
+                            <ValidationMessage For="@(() => employeeBasicDetails.JoiningLocation)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker Label="Date of Joining" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                           Date="@employeeBasicDetails.DateOfJoining"
+                                           DateChanged="@(date => employeeBasicDetails.DateOfJoining = date ?? DateTime.Now)"
+                                           Required="true" MaxDate="DateTime.Now" />
+                            <ValidationMessage For="@(() => employeeBasicDetails.DateOfJoining)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Level" Variant="Variant.Outlined" @bind-Value="employeeBasicDetails.Level"
+                                          Required="true" Margin="Margin.Dense" Placeholder="Enter level" />
+                            <ValidationMessage For="@(() => employeeBasicDetails.Level)" />
+                        </MudItem>
+                        <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ResetBasicDetails">Reset</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">Save Details</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </EditForm>
+            </MudCardContent>
+        }
+    </MudCard>
+</MudContainer>
 
 @code {
     private string newUserEmail = "";
     private string newUserPassword = "";
+    private bool showBasicDetailsForm = false;
+    private EmployeeBasicDetails employeeBasicDetails = new EmployeeBasicDetails();
+    private MudForm addUserForm;
+    private string savedUserEmail = "";
+    private string savedUserPassword = "";
+
+    private string ValidateEmail(string email)
+    {
+        if (string.IsNullOrEmpty(email)) return "Email is required.";
+        if (!System.Text.RegularExpressions.Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            return "Enter a valid email address.";
+        return null;
+    }
+
+    private string ValidatePassword(string password)
+    {
+        if (string.IsNullOrEmpty(password)) return "Password is required.";
+        if (password.Length < 8) return "Password must be at least 8 characters long.";
+        return null;
+    }
 
     private async Task GeneratePassword()
     {
         if (string.IsNullOrEmpty(newUserEmail) || !newUserEmail.Contains("@"))
         {
-            await JS.InvokeVoidAsync("alert", "Please enter a valid email address.");
+            Snackbar.Add("Please enter a valid email address.", Severity.Error);
             return;
         }
 
-        // Extract username from email (part before '@')
         var username = newUserEmail.Split('@')[0];
-        // Take only the first 3 characters of the username
         var shortUsername = username.Length >= 3 ? username.Substring(0, 3) : username;
-        // Generate password in the format EMP_<shortUsername>@123
         newUserPassword = $"EMP_{shortUsername}@123";
-        await JS.InvokeVoidAsync("alert", "Password generated successfully!");
+        Snackbar.Add("Password generated successfully!", Severity.Success);
+        await JS.InvokeVoidAsync("console.log", $"Generated password: {newUserPassword}");
     }
+
     private async Task AddUser()
     {
         await JS.InvokeVoidAsync("console.log", $"AddUser called with Email: {newUserEmail}, Password: {newUserPassword}");
 
-        if (string.IsNullOrEmpty(newUserEmail) || string.IsNullOrEmpty(newUserPassword))
+        await addUserForm.Validate();
+        if (!addUserForm.IsValid)
         {
-            await JS.InvokeVoidAsync("console.error", $"Validation failed: Email or password is empty. Email: {newUserEmail}, Password: {newUserPassword}");
-            await JS.InvokeVoidAsync("alert", "Email and password are required.");
+            await JS.InvokeVoidAsync("console.error", $"Validation failed: Email: {newUserEmail}");
+            Snackbar.Add("Please fix form errors.", Severity.Error);
             return;
         }
 
@@ -60,21 +185,81 @@
         {
             await JS.InvokeVoidAsync("console.log", "Calling UserService.CreateUserAsync...");
             var newUser = await UserService.CreateUserAsync(newUserEmail, newUserPassword);
-            await JS.InvokeVoidAsync("console.log", $"User created successfully: {newUserEmail}, Response: {System.Text.Json.JsonSerializer.Serialize(newUser)}");
+            await JS.InvokeVoidAsync("console.log", $"User created successfully: {newUserEmail}");
+
+            var user = await UserService.GetUserByEmailAsync(newUserEmail);
+            if (user == null || string.IsNullOrEmpty(user.EmpId))
+            {
+                await JS.InvokeVoidAsync("console.error", "Failed to retrieve Employee ID from Supabase.");
+                Snackbar.Add("Failed to retrieve Employee ID from Supabase.", Severity.Error);
+                return;
+            }
+
+            savedUserEmail = newUserEmail;
+            savedUserPassword = newUserPassword;
+
+            employeeBasicDetails = new EmployeeBasicDetails
+                {
+                    EmployeeID = user.EmpId,
+                    CurrentEmail = newUserEmail,
+                    DateOfJoining = DateTime.Now
+                };
+            showBasicDetailsForm = true;
             newUserEmail = "";
             newUserPassword = "";
-            await JS.InvokeVoidAsync("console.log", "User fields cleared, showing success alert...");
-            await JS.InvokeVoidAsync("alert", "Employee added successfully with default role 'Employee'.");
-            await JS.InvokeVoidAsync("console.log", "Navigating to /home/rolemanagement...");
-            NavigationManager.NavigateTo("/home/rolemanagement");
+            await JS.InvokeVoidAsync("console.log", "User fields cleared, showing basic details form...");
+            Snackbar.Add("Employee added successfully. Please enter basic details.", Severity.Success);
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("console.error", $"Error adding employee: {ex.Message}, StackTrace: {ex.StackTrace}");
-            await JS.InvokeVoidAsync("alert", $"Error adding employee: {ex.Message}");
+            await JS.InvokeVoidAsync("console.error", $"Error adding employee: {ex.Message}");
+            Snackbar.Add($"Error adding employee: {ex.Message}", Severity.Error);
         }
     }
 
+    private async Task SaveBasicDetails()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("console.log", $"Saving EmployeeBasicDetails: {System.Text.Json.JsonSerializer.Serialize(employeeBasicDetails)}");
+            var success = await EmployeeService.CreateEmployeeBasicDetails(employeeBasicDetails, savedUserEmail, savedUserPassword);
+            if (success)
+            {
+                await JS.InvokeVoidAsync("console.log", "Employee basic details saved successfully, email sent, navigating to /home/rolemanagement...");
+                Snackbar.Add("Employee basic details saved and credentials emailed successfully.", Severity.Success);
+                NavigationManager.NavigateTo("/home/rolemanagement");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("console.error", "Failed to save employee basic details or send email.");
+                Snackbar.Add("Failed to save employee details or send email. Please try again.", Severity.Error);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            await JS.InvokeVoidAsync("console.error", $"HTTP error saving employee basic details: {ex.Message}");
+            Snackbar.Add($"Error saving employee details: {ex.Message}", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("console.error", $"Error saving employee basic details: {ex.Message}");
+            Snackbar.Add($"Error saving employee details: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ResetBasicDetails()
+    {
+        var empId = employeeBasicDetails.EmployeeID;
+        var email = employeeBasicDetails.CurrentEmail;
+        employeeBasicDetails = new EmployeeBasicDetails
+            {
+                EmployeeID = empId,
+                CurrentEmail = email,
+                DateOfJoining = DateTime.Now
+            };
+        await JS.InvokeVoidAsync("console.log", "Basic details form reset, preserving EmployeeID and CurrentEmail.");
+        Snackbar.Add("Form reset, preserving Employee ID and Email.", Severity.Info);
+    }
 
     private void Cancel()
     {
