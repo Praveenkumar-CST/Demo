@@ -35,7 +35,8 @@ namespace WiseHR.Models
                     ("Asset","/asset"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
-                    ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
+                    ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history"),
+                    ("Create Employee","/home/employees")
 
                 }
             },
