@@ -17,9 +17,9 @@
         @* Commented out Add New Employee button *@
         <MudItem xs="12" sm="6" md="4">
             <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.PersonAdd"
-                       OnClick='() => NavigationManager.NavigateTo("/home/employees")'>
+            Color="Color.Primary"
+            StartIcon="@Icons.Material.Filled.PersonAdd"
+            OnClick='() => NavigationManager.NavigateTo("/home/employees")'>
                 Add New Employee
             </MudButton>
         </MudItem>
@@ -32,12 +32,12 @@
     else
     {
         <MudTable Items="@FilteredUsers"
-                  Dense="true"
-                  Hover="true"
-                  Bordered="true"
-                  Striped="true"
-                  Elevation="2"
-                  Class="mud-elevation-1">
+        Dense="true"
+        Hover="true"
+        Bordered="true"
+        Striped="true"
+        Elevation="2"
+        Class="mud-elevation-1">
             <HeaderContent>
                 <MudTh>Email</MudTh>
                 <MudTh>Current Role</MudTh>
@@ -49,10 +49,10 @@
                 <MudTd DataLabel="Current Role">@context.Role</MudTd>
                 <MudTd DataLabel="New Role">
                     <MudSelect T="string"
-                               Value="@context.Role"
-                               ValueChanged="@(newRole => UpdateRole(context, newRole))"
-                               Variant="Variant.Outlined"
-                               Dense="true">
+                    Value="@context.Role"
+                    ValueChanged="@(newRole => UpdateRole(context, newRole))"
+                    Variant="Variant.Outlined"
+                    Dense="true">
                         <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
                         <MudSelectItem Value="@("Manager")">Manager</MudSelectItem>
                         <MudSelectItem Value="@("HR")">HR</MudSelectItem>
@@ -61,10 +61,10 @@
                 </MudTd>
                 <MudTd DataLabel="Actions">
                     <MudButton Variant="Variant.Filled"
-                               Color="Color.Error"
-                               Size="Size.Small"
-                               StartIcon="@Icons.Material.Filled.Delete"
-                               OnClick="() => ShowDeleteConfirmation(context.Id, context.Email)">
+                    Color="Color.Error"
+                    Size="Size.Small"
+                    StartIcon="@Icons.Material.Filled.Delete"
+                    OnClick="() => ShowDeleteConfirmation(context.Id, context.Email)">
                         Delete
                     </MudButton>
                 </MudTd>
@@ -167,8 +167,9 @@
                 var deleteBankingTask = BankingService.DeleteBankingInfo(employee.EmployeeID);
                 var deleteEmployeeTask = EmployeeService.DeleteEmployee(employee.EmployeeID);
                 var deleteExperienceTask = ExperienceService.DeleteExperienceAsync(employee.EmployeeID);
+                var deleteBasicEmployeeDetailsTask = EmployeeService.DeleteEmployeeBasicDetails(employee.EmployeeID);
 
-                var results = await Task.WhenAll(deleteBankingTask, deleteEmployeeTask, deleteExperienceTask);
+                var results = await Task.WhenAll(deleteBankingTask, deleteEmployeeTask, deleteExperienceTask, deleteBasicEmployeeDetailsTask);
                 allSuccessful = results.All(r => r);
 
                 if (allSuccessful)

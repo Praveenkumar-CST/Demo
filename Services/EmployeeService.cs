@@ -11,7 +11,6 @@
     using Polly.Extensions.Http;
     using System.Text.Json;
     using MudBlazor;
-
     public class EmployeeService
     {
         private readonly HttpClient _httpClient;

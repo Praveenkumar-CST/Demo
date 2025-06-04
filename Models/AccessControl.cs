@@ -12,6 +12,7 @@ namespace WiseHR.Models
                     ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
                     ("Role Management", "/home/rolemanagement"),
+                    ("Create Employee","/home/employees"),
                     ("Organizational Hierarchy", "/home/hierarchy"),
                     
                     //("Add Employees", "/home/employees"),
@@ -35,8 +36,7 @@ namespace WiseHR.Models
                     ("Asset","/asset"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
-                    ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history"),
-                    ("Create Employee","/home/employees")
+                    ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
 
                 }
             },
