@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using WiseHR;
@@ -6,7 +7,6 @@ using WiseHR_Frontend.Services;
 using MudBlazor.Services;
 using MudBlazor;
 using Blazored.SessionStorage;
-using FingerFrontend.Models;
 using FingerFrontend.AdminAttendanceViewModel;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -50,7 +50,6 @@ builder.Services.AddHttpClient<MentorAssignmentService>();
 builder.Services.AddScoped<MentorAssignmentService>();
 
 builder.Services.AddScoped<CountryService>();
-
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<SearchService>();

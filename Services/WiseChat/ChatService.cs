@@ -23,7 +23,7 @@ namespace WiseHR_Frontend.Services
         private readonly NavigationManager _navigationManager;
         private HubConnection? _hubConnection;
         private bool _isConnected;
-        private const string BACKEND_URL = "https://localhost:7021";
+        private const string BACKEND_URL = "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net";
         private readonly SynchronizationContext? _synchronizationContext;
 
         public bool IsConnected => _isConnected;
@@ -81,7 +81,7 @@ namespace WiseHR_Frontend.Services
                     });
                     return Task.CompletedTask;
                 };
-
+                    
                 _hubConnection.Reconnected += _ =>
                 {
                     InvokeOnUIThread(() =>
@@ -91,7 +91,7 @@ namespace WiseHR_Frontend.Services
                     });
                     return Task.CompletedTask;
                 };
-
+                    
                 _hubConnection.Closed += _ =>
                 {
                     InvokeOnUIThread(() =>

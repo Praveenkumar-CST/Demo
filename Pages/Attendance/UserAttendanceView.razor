@@ -1,11 +1,13 @@
 @page "/UserAttendanceView"
 @using System.Net.Http.Json
+@using System.Text.Json
+@using System.Text.Json.Serialization
 @inject HttpClient Http
 @inject NavigationManager Nav
 @inject WiseHR.Services.AuthService AuthService
 @inject IJSRuntime JSRuntime
 @layout HomeLayout
-@using FingerFrontend.Models
+@using FingerFrontend.AdminAttendanceViewModel
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
@@ -91,7 +93,7 @@ else
             </button>
         </div>
         <div>
-            <a href="/UserAbsenceReasons" class="request"> Reasons </a>
+            <a href="/UserAbsenceReasons" class="request"> Requests </a>
         </div>
     </div>
 
@@ -197,26 +199,25 @@ else
 
                             <!-- Red lines for absence periods between sessions -->
                             @foreach (var absence in day.AbsencePeriods)
-                            {
-                                var absStartHour = absence.StartTime.Hour + (absence.StartTime.Minute / 60.0) + (absence.StartTime.Second / 3600.0);
-                                var absEndHour = absence.EndTime.Hour + (absence.EndTime.Minute / 60.0) + (absence.EndTime.Second / 3600.0);
-                                var startPosition = ((absStartHour - startHour) / totalHours) * 100;
-                                var endPosition = ((absEndHour - startHour) / totalHours) * 100;
-                                startPosition = Math.Max(10, Math.Min(90, startPosition));
-                                endPosition = Math.Max(10, Math.Min(90, endPosition));
+{
+    var absStartHour = absence.StartTime.Hour + (absence.StartTime.Minute / 60.0) + (absence.StartTime.Second / 3600.0);
+    var absStartPosition = ((absStartHour - startHour) / totalHours) * 100;
+    absStartPosition = Math.Max(10, Math.Min(90, absStartPosition));
 
-                                <!-- Ensure short periods are visible -->
-                                @if (endPosition <= startPosition)
-                                {
-                                    endPosition = startPosition + 0.5;
-                                }
+    var nextSessionDot = dotPositions
+        .Where(p => p.Time > absence.StartTime)
+        .OrderBy(p => p.Time)
+        .FirstOrDefault();
 
-                                <div class="absence-line"
-                                     data-tooltip=@($"Absent: {absence.StartTime:hh:mm:ss tt} - {absence.EndTime:hh:mm:ss tt}{(string.IsNullOrEmpty(absence.Reason) ? "" : $"\nReason: {absence.Reason}")}")
-                                     @onclick="() => OpenModal(day, absence)"
-                                     style="position: absolute; top: 50%; left: @(startPosition)%; right: calc(100% - @(endPosition)%); height: 2px; background-color: #ef4444; transform: translateY(-50%); z-index: 0;">
-                                </div>
-                            }
+    var absEndPosition = nextSessionDot != default ? nextSessionDot.Position : 90.0;
+
+    <div class="absence-line"
+         data-tooltip=@($"Absent: {absence.StartTime:hh:mm:ss tt} - {absence.EndTime:hh:mm:ss tt}{(string.IsNullOrEmpty(absence.Reason) ? "" : $"\nReason: {absence.Reason}")}")
+         @onclick="() => OpenModal(day, absence)"
+         style="position: absolute; top: 50%; left: @(absStartPosition)%; right: calc(100% - @(absEndPosition)%); height: 2px; background-color: #ef4444; transform: translateY(-50%); z-index: 0;">
+    </div>
+}
+
                         }
                     </div>
 
@@ -591,7 +592,7 @@ else
 
 @code {
     private string userId = "";
-    private readonly List<AttendanceDto> logs = new();
+    private readonly List<Attendancedata> logs = new();
     private bool isLoading = false;
     private string? errorMessage;
     private string? successMessage;
@@ -693,6 +694,8 @@ else
                 return null;
             }
 
+            var responseContent = await userResponse.Content.ReadAsStringAsync();
+            Console.WriteLine($"Supabase user response: {responseContent}");
             var userData = await userResponse.Content.ReadFromJsonAsync<UserResponse>();
             var email = userData?.Email;
             if (string.IsNullOrEmpty(email))
@@ -777,14 +780,14 @@ else
                 return;
             }
 
-            var rawLogs = await logsResponse.Content.ReadFromJsonAsync<List<AttendanceDto>>() ?? new();
+            var rawLogs = await logsResponse.Content.ReadFromJsonAsync<List<Attendancedata>>() ?? new();
             logs.AddRange(DeduplicateLogs(rawLogs));
 
             var reasonsEndpoint = $"/api/AbsenceReason/{Uri.EscapeDataString(userId)}";
             var reasonsResponse = await Http.GetAsync(reasonsEndpoint).ConfigureAwait(false);
             var absenceReasons = reasonsResponse.IsSuccessStatusCode
-                ? await reasonsResponse.Content.ReadFromJsonAsync<List<AbsenceReasonDto>>() ?? new()
-                : new List<AbsenceReasonDto>();
+                ? await reasonsResponse.Content.ReadFromJsonAsync<List<AbsenceReasonData>>() ?? new()
+                : new List<AbsenceReasonData>();
 
             Console.WriteLine($"Fetched {absenceReasons.Count} absence reasons for UserId: {userId}");
             foreach (var reason in absenceReasons)
@@ -809,7 +812,7 @@ else
         }
     }
 
-    private List<AttendanceDto> DeduplicateLogs(List<AttendanceDto> rawLogs)
+    private List<Attendancedata> DeduplicateLogs(List<Attendancedata> rawLogs)
     {
         return rawLogs
             .GroupBy(l => (l.UserId, l.Timestamp, l.Status))
@@ -818,7 +821,7 @@ else
             .ToList();
     }
 
-    private void GenerateAttendanceTable(List<AbsenceReasonDto> absenceReasons)
+    private void GenerateAttendanceTable(List<AbsenceReasonData> absenceReasons)
     {
         Console.WriteLine($"Processing {absenceReasons.Count} absence reasons");
         attendanceMonths.Clear();
@@ -876,7 +879,7 @@ else
 
                     attendanceDay.TotalHours = attendanceDay.Sessions
                         .Where(s => s.ClockOut.HasValue)
-                        .Sum(s => (s.ClockOut.Value - s.ClockIn).TotalHours);
+                        .Sum(s => (s.ClockOut!.Value - s.ClockIn).TotalHours);
 
                     // Handle absence periods between sessions
                     for (int i = 0; i < attendanceDay.Sessions.Count - 1; i++)
@@ -989,11 +992,11 @@ else
                 return;
             }
 
-            var reasonDto = new AbsenceReasonDto
+            var reasonDto = new AbsenceReasonData
             {
                 Id = 0,
                 UserId = userId,
-                Name = reasonInput,
+                Name = userLog.Name,
                 Date = absencePeriod.StartTime.Date,
                 StartTime = absencePeriod.StartTime,
                 EndTime = absencePeriod.EndTime,
@@ -1058,16 +1061,5 @@ else
     private void ClearSuccess()
     {
         successMessage = null;
-    }
-
-    private class EmployeeCodeResponse
-    {
-        public string EmployeeCode { get; set; } = string.Empty;
-    }
-
-    private class UserResponse
-    {
-        public string? Id { get; set; }
-        public string? Email { get; set; }
     }
 }

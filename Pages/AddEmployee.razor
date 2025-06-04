@@ -14,7 +14,10 @@
     </div>
     <div class="form-group">
         <label for="password">Password:</label>
-        <input type="password" class="form-control" id="password" @bind="newUserPassword" placeholder="Enter password" />
+        <div class="input-group">
+            <input type="text" class="form-control" id="password" @bind="newUserPassword" placeholder="Enter or generate password" />
+            <button class="btn btn-outline-secondary" @onclick="GeneratePassword">Generate Password</button>
+        </div>
     </div>
     <div class="form-actions">
         <button class="btn btn-success" @onclick="AddUser">Add Employee</button>
@@ -22,35 +25,59 @@
     </div>
 </div>
 
-
 @code {
     private string newUserEmail = "";
     private string newUserPassword = "";
 
+    private async Task GeneratePassword()
+    {
+        if (string.IsNullOrEmpty(newUserEmail) || !newUserEmail.Contains("@"))
+        {
+            await JS.InvokeVoidAsync("alert", "Please enter a valid email address.");
+            return;
+        }
+
+        // Extract username from email (part before '@')
+        var username = newUserEmail.Split('@')[0];
+        // Take only the first 3 characters of the username
+        var shortUsername = username.Length >= 3 ? username.Substring(0, 3) : username;
+        // Generate password in the format EMP_<shortUsername>@123
+        newUserPassword = $"EMP_{shortUsername}@123";
+        await JS.InvokeVoidAsync("alert", "Password generated successfully!");
+    }
     private async Task AddUser()
     {
+        await JS.InvokeVoidAsync("console.log", $"AddUser called with Email: {newUserEmail}, Password: {newUserPassword}");
+
         if (string.IsNullOrEmpty(newUserEmail) || string.IsNullOrEmpty(newUserPassword))
         {
+            await JS.InvokeVoidAsync("console.error", $"Validation failed: Email or password is empty. Email: {newUserEmail}, Password: {newUserPassword}");
             await JS.InvokeVoidAsync("alert", "Email and password are required.");
             return;
         }
 
         try
         {
+            await JS.InvokeVoidAsync("console.log", "Calling UserService.CreateUserAsync...");
             var newUser = await UserService.CreateUserAsync(newUserEmail, newUserPassword);
+            await JS.InvokeVoidAsync("console.log", $"User created successfully: {newUserEmail}, Response: {System.Text.Json.JsonSerializer.Serialize(newUser)}");
             newUserEmail = "";
             newUserPassword = "";
+            await JS.InvokeVoidAsync("console.log", "User fields cleared, showing success alert...");
             await JS.InvokeVoidAsync("alert", "Employee added successfully with default role 'Employee'.");
-            NavigationManager.NavigateTo("/home/rolemanagement"); // Redirect to RoleManagement page
+            await JS.InvokeVoidAsync("console.log", "Navigating to /home/rolemanagement...");
+            NavigationManager.NavigateTo("/home/rolemanagement");
         }
         catch (Exception ex)
         {
+            await JS.InvokeVoidAsync("console.error", $"Error adding employee: {ex.Message}, StackTrace: {ex.StackTrace}");
             await JS.InvokeVoidAsync("alert", $"Error adding employee: {ex.Message}");
         }
     }
 
+
     private void Cancel()
     {
-        NavigationManager.NavigateTo("/home/rolemanagement"); // Redirect back without saving
+        NavigationManager.NavigateTo("/home/rolemanagement");
     }
 }

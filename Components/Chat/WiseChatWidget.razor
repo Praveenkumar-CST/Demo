@@ -1,6 +1,7 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Text.Json
+@using System.Text.RegularExpressions
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -16,7 +17,7 @@
     }
 
     @* Toggle Button with Animation *@
-    <MudFab Icon="@(isOpen ? Icons.Material.Filled.Close : Icons.Material.Filled.Chat)" 
+    <MudFab EndIcon="@(isOpen ? Icons.Material.Filled.Close : Icons.Material.Filled.Chat)" 
            Color="Color.Primary" 
            OnClick="ToggleChat"
            Class="@($"wisechat-fab {(isOpen ? "open" : "")}")"/>
@@ -26,14 +27,16 @@
         @* Header *@
         <div class="wisechat-header">
             <div class="wisechat-header-content">
-                <MudAvatar Color="Color.Primary" Size="Size.Small">
-                    <MudIcon Icon="Icons.Material.Filled.SupportAgent"/>
-                </MudAvatar>
+              
+                <MudFab IconSize="Size.Large" EndIcon="@(isOpen ? Icons.Material.Filled.SupportAgent : Icons.Material.Filled.SupportAgent)"
+                        Color="Color.Primary"
+                        OnClick="ToggleChat"
+                        Class="@($"wisechat-fab {(isOpen ? "open" : "")}")" />
                 <div class="wisechat-header-text">
-                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">WiseHR Assistant</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">WiseONE Assistant</MudText>
                     <div class="wisechat-status">
                         <div class="wisechat-status-dot @(isConnected ? "online" : "offline")"></div>
-                        <MudText Typo="Typo.caption">@(isConnected ? "Online" : "Connecting...")</MudText>
+                        <MudText Typo="Typo.subtitle2">@(isConnected ? "Online" : "Connecting...")</MudText>
                     </div>
                 </div>
             </div>
@@ -48,7 +51,7 @@
             {
                 <div class="wisechat-welcome">
                     <MudIcon Icon="Icons.Material.Filled.Waving" Color="Color.Primary" Style="font-size: 3rem;"/>
-                    <MudText Typo="Typo.h6" Color="Color.Primary">Welcome to WiseHR!</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">Welcome to WiseONE!</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
                         How can I help you today?
                     </MudText>
@@ -67,7 +70,9 @@
                     
                     <div class="wisechat-message-content">
                         <div class="wisechat-message-bubble">
-                            <MudText Typo="Typo.body2">@message.Content</MudText>
+                            <div class="wisechat-formatted-content">
+                                @((MarkupString)FormatMessageContent(message.Content))
+                            </div>
                         </div>
                         <MudText Typo="Typo.caption" Class="wisechat-timestamp">
                             @message.Timestamp.ToString("HH:mm")
@@ -133,7 +138,7 @@
                            class="wisechat-input-field" />
 
                     <MudIconButton Icon="Icons.Material.Filled.Send" 
-                                  Color="Color.Primary" 
+                                  Color="Color.Secondary" 
                                   OnClick="SendMessage"
                                   Disabled="string.IsNullOrWhiteSpace(currentMessage) || !isConnected || isSending"
                                   Class="wisechat-send-button"/>
@@ -145,339 +150,733 @@
 
 @* Styles *@
 <style>
+    /* Chat Widget Container - Fixed positioning with enhanced shadow */
+    .chat-widget-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.15));
+    }
+
+    /* Enhanced Widget Container with premium effects */
     .wisechat-widget-container {
         position: relative;
         z-index: 9999;
+        filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.12));
     }
 
+    /* Premium notification badge with glow effect */
     .wisechat-notification-badge {
         position: absolute;
-        top: -8px;
-        right: -8px;
-        background: #f44336;
+        top: -10px;
+        right: -10px;
+        background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
         color: white;
         border-radius: 50%;
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
-        font-weight: bold;
+        font-size: 13px;
+        font-weight: 700;
         z-index: 10000;
-        animation: pulse 2s infinite;
+        animation: pulseGlow 2s infinite;
+        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+        border: 2px solid white;
     }
 
+    /* Enhanced FAB button with premium styling */
     .wisechat-fab {
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 8px 30px rgba(var(--mud-palette-primary-rgb), 0.3);
         position: relative;
         z-index: 9999;
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        border: 2px solid white;
+        width: 64px;
+        height: 64px;
+
     }
 
-    .wisechat-fab:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    }
+        .wisechat-fab::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            padding: 2px;
+            background: linear-gradient(135deg, var(--mud-palette-primary-lighten), var(--mud-palette-primary-darken));
+            border-radius: inherit;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: xor;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
 
-    .wisechat-fab.open {
-        transform: rotate(180deg);
-    }
+        .wisechat-fab:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(var(--mud-palette-primary-rgb), 0.4);
+        }
 
+            .wisechat-fab:hover::before {
+                opacity: 1;
+            }
+
+        .wisechat-fab.open {
+            transform: rotate(180deg) scale(1.1);
+            background: linear-gradient(135deg, #6c5ce7 0%, #5a4fcf 100%);
+        }
+
+        .wisechat-fab:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+
+    /* Premium chat window with glassmorphism effect */
     .wisechat-window {
         position: absolute;
         bottom: 80px;
         right: 0;
-        width: 380px;
-        height: 580px;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        width: 400px;
+        height: 600px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        box-shadow: 0 32px 64px rgba(0, 0, 0, 0.15), 0 16px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        transform: scale(0.8) translateY(20px);
+        transform: scale(0.7) translateY(30px);
         opacity: 0;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         pointer-events: none;
         z-index: 9998;
     }
 
-    .wisechat-window.open {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-        pointer-events: all;
+        .wisechat-window.open {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+    /* Stunning header with animated gradient */
+    .wisechat-header {
+        background: linear-gradient(135deg, #1ab579 0%, #8030d2 100%);
+        background-size: 200% 200%;
+        animation: gradientShift 6s ease infinite;
+        color: white;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
     }
 
-    .wisechat-header {
-        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
-        color: white;
-        padding: 16px;
-        position: relative;
-    }
+        .wisechat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+            animation: shimmer 3s infinite;
+        }
 
     .wisechat-header-content {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
+        position: relative;
+        z-index: 1;
     }
 
     .wisechat-header-text {
         flex: 1;
     }
 
+    /* Enhanced status indicator */
     .wisechat-status {
         display: flex;
         align-items: center;
-        gap: 6px;
-        margin-top: 4px;
+        gap: 8px;
+        margin-top: 6px;
     }
 
     .wisechat-status-dot {
-        width: 8px;
-        height: 8px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
-        background: #4caf50;
+        background: #00d4aa;
+        box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.3);
+        animation: statusPulse 2s infinite;
+        position: relative;
     }
 
-    .wisechat-status-dot.offline {
-        background: #ff9800;
-    }
+        .wisechat-status-dot.offline {
+            background: #ff9f43;
+            box-shadow: 0 0 0 3px rgba(255, 159, 67, 0.3);
+        }
 
+    /* Premium messages area */
     .wisechat-messages {
         flex: 1;
-        padding: 16px;
+        padding: 20px;
         overflow-y: auto;
-        background: #fafafa;
+        background: linear-gradient(180deg, #fafbfc 0%, #f8f9fa 100%);
         scroll-behavior: smooth;
+        position: relative;
     }
 
-    .wisechat-messages::-webkit-scrollbar {
-        width: 4px;
-    }
+        .wisechat-messages::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
 
-    .wisechat-messages::-webkit-scrollbar-track {
-        background: transparent;
-    }
+        .wisechat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
 
-    .wisechat-messages::-webkit-scrollbar-thumb {
-        background: #ccc;
-        border-radius: 2px;
-    }
+        .wisechat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
 
+        .wisechat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #ddd, #bbb);
+            border-radius: 3px;
+            transition: background 0.3s ease;
+        }
+
+            .wisechat-messages::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(45deg, #bbb, #999);
+            }
+
+    /* Enhanced welcome section */
     .wisechat-welcome {
         text-align: center;
-        padding: 40px 20px;
+        padding: 60px 20px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 12px;
+        gap: 16px;
+        animation: fadeInUp 0.8s ease-out;
     }
 
+        .wisechat-welcome .mud-icon-root {
+            animation: bounce 2s infinite;
+        }
+
+    /* Premium message styling */
     .wisechat-message {
         display: flex;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
         align-items: flex-end;
-        gap: 8px;
-        animation: slideIn 0.3s ease-out;
+        gap: 12px;
+        animation: slideInMessage 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .wisechat-message.user {
-        flex-direction: row-reverse;
-    }
+        .wisechat-message.user {
+            flex-direction: row-reverse;
+        }
 
     .wisechat-avatar {
         flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
     }
 
+        .wisechat-avatar:hover {
+            transform: scale(1.1);
+        }
+
     .wisechat-message-content {
-        max-width: 280px;
+        max-width: 300px;
         display: flex;
         flex-direction: column;
+        font-color:white;
     }
 
     .wisechat-message.user .wisechat-message-content {
         align-items: flex-end;
     }
 
+    /* Stunning message bubbles */
     .wisechat-message-bubble {
-        background: white;
-        padding: 12px 16px;
-        border-radius: 18px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        padding: 14px 18px;
+        border-radius: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
         position: relative;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.04);
     }
+
+        .wisechat-message-bubble:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
 
     .wisechat-message.user .wisechat-message-bubble {
-        background: var(--mud-palette-primary);
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
         color: white;
+        
+        box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3), 0 2px 4px rgba(var(--mud-palette-primary-rgb), 0.2);
     }
 
+    /* Enhanced message tails */
     .wisechat-message.agent .wisechat-message-bubble::before {
         content: '';
         position: absolute;
         bottom: 0;
-        left: -8px;
+        left: -10px;
         width: 0;
         height: 0;
-        border: 8px solid transparent;
-        border-right-color: white;
+        border: 10px solid transparent;
+        border-right-color: #ffffff;
         border-bottom: 0;
         transform: translateY(50%);
+        filter: drop-shadow(-2px 2px 4px rgba(0, 0, 0, 0.1));
     }
 
     .wisechat-message.user .wisechat-message-bubble::before {
         content: '';
         position: absolute;
         bottom: 0;
-        right: -8px;
+        right: -10px;
         width: 0;
         height: 0;
-        border: 8px solid transparent;
+        border: 10px solid transparent;
         border-left-color: var(--mud-palette-primary);
         border-bottom: 0;
         transform: translateY(50%);
+        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
     }
 
     .wisechat-timestamp {
-        margin-top: 4px;
-        opacity: 0.7;
+        margin-top: 6px;
+        opacity: 0.6;
+        font-size: 11px;
     }
 
     .wisechat-message-status {
         display: flex;
         align-items: flex-end;
         opacity: 0.7;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }
 
+    /* Enhanced typing indicator */
     .wisechat-typing-indicator {
-        background: white;
-        padding: 12px 16px;
-        border-radius: 18px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        padding: 16px 20px;
+        border-radius: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        animation: fadeIn 0.3s ease;
     }
 
     .wisechat-typing-dots {
         display: flex;
-        gap: 4px;
-    }
-
-    .wisechat-typing-dots span {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #ccc;
-        animation: typing 1.4s infinite;
-    }
-
-    .wisechat-typing-dots span:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-
-    .wisechat-typing-dots span:nth-child(3) {
-        animation-delay: 0.4s;
-    }
-
-    .wisechat-quick-actions {
-        padding: 12px 16px;
-        border-top: 1px solid #eee;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .wisechat-input-area {
-        border-top: 1px solid #eee;
-        background: white;
-    }
-
-    .wisechat-input {
-        display: flex;
-        align-items: flex-end;
-        padding: 12px 16px;
-        gap: 8px;
-    }
-
-    .wisechat-input-controls {
-        display: flex;
+        gap: 6px;
         align-items: center;
+    }
+
+        .wisechat-typing-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ddd, #bbb);
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+            .wisechat-typing-dots span:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+
+            .wisechat-typing-dots span:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+
+    /* Premium input area */
+    .wisechat-input-area {
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+        backdrop-filter: blur(10px);
+        padding: 20px;
     }
 
     .wisechat-input-wrapper {
         display: flex;
         align-items: center;
-        gap: 8px;
-        width: 100%;
+        gap: 12px;
+        background: white;
+        border-radius: 16px;
+        padding: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
     }
+
+        .wisechat-input-wrapper:focus-within {
+            box-shadow: 0 6px 20px rgba(var(--mud-palette-primary-rgb), 0.15), 0 0 0 3px rgba(var(--mud-palette-primary-rgb), 0.1);
+            border-color: var(--mud-palette-primary);
+        }
 
     .wisechat-input-field {
         flex: 1;
-        padding: 12px 16px;
-        border: 1px solid var(--mud-palette-lines-default);
-        border-radius: 4px;
+        padding: 14px 18px;
+        border: none;
+        border-radius: 12px;
         font-size: 14px;
-        transition: border-color 0.2s ease;
-        background: white;
+        background: transparent;
+        transition: all 0.3s ease;
+        line-height: 1.4;
     }
 
-    .wisechat-input-field:focus {
-        outline: none;
-        border-color: var(--mud-palette-primary);
-    }
+        .wisechat-input-field:focus {
+            outline: none;
+        }
 
-    .wisechat-input-field:disabled {
-        background: var(--mud-palette-background-grey);
-        cursor: not-allowed;
-    }
+        .wisechat-input-field::placeholder {
+            color: #94a3b8;
+            transition: color 0.3s ease;
+        }
 
+        .wisechat-input-field:focus::placeholder {
+            color: #cbd5e1;
+        }
+
+        .wisechat-input-field:disabled {
+            background: rgba(0, 0, 0, 0.02);
+            cursor: not-allowed;
+            color: #94a3b8;
+        }
+
+    /* Enhanced send button */
     .wisechat-send-button {
         flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3);
     }
 
-    @@keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @@keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-    }
-
-    @@keyframes typing {
-        0%, 60%, 100% { transform: scale(1); opacity: 0.5; }
-        30% { transform: scale(1.2); opacity: 1; }
-    }
-
-    /* Mobile Responsive */
-    @@media (max-width: 480px) {
-        .wisechat-window {
-            width: calc(100vw - 32px);
-            height: calc(100vh - 120px);
-            right: 16px;
-            left: 16px;
-            bottom: 80px;
+        .wisechat-send-button:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(var(--mud-palette-primary-rgb), 0.4);
         }
 
-        .wisechat-widget-container {
-            right: 16px;
-            bottom: 16px;
+        .wisechat-send-button:active {
+            transform: translateY(0) scale(0.98);
         }
-    }
+
+        .wisechat-send-button:disabled {
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+        }
 
     .wisechat-status-message {
         text-align: center;
-        padding: 8px;
-        margin: 8px 0;
-        background: rgba(0, 0, 0, 0.05);
-        border-radius: 8px;
+        padding: 12px;
+        margin: 12px 0;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 12px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    /* Animations */
+    @@keyframes pulseGlow {
+        0%, 100%
+
+    {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    }
+
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(255, 71, 87, 0.6);
+    }
+
+    }
+
+    @@keyframes gradientShift {
+        0%, 100%
+
+    {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    }
+
+    @@keyframes shimmer {
+        0%
+
+    {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+
+    }
+
+    @@keyframes statusPulse {
+        0%, 100%
+
+    {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    }
+
+    @@keyframes slideInMessage {
+        0%
+
+    {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    }
+
+    @@keyframes fadeInUp {
+        0%
+
+    {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    @@keyframes bounce {
+        0%, 20%, 50%, 80%, 100%
+
+    {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-10px);
+    }
+
+    60% {
+        transform: translateY(-5px);
+    }
+
+    }
+
+    @@keyframes typingBounce {
+        0%, 60%, 100%
+
+    {
+        transform: scale(1) translateY(0);
+        opacity: 0.5;
+    }
+
+    30% {
+        transform: scale(1.3) translateY(-8px);
+        opacity: 1;
+    }
+
+    }
+
+    @@keyframes fadeIn {
+        0%
+
+    {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+
+    }
+
+    /* Mobile Responsive Enhancements */
+    @@media (max-width: 480px) {
+        .chat-widget-container
+
+    {
+        bottom: 16px;
+        right: 16px;
+    }
+
+    .wisechat-window {
+        width: calc(100vw - 32px);
+        height: calc(100vh - 140px);
+        right: 16px;
+        left: 16px;
+        bottom: 80px;
+        border-radius: 20px;
+    }
+
+    .wisechat-fab {
+        width: 56px;
+        height: 56px;
+    }
+
+    .wisechat-notification-badge {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+        top: -8px;
+        right: -8px;
+    }
+
+    }
+
+    /* Dark mode support */
+    @@media (prefers-color-scheme: dark) {
+        .wisechat-window
+
+    {
+        background: rgba(26, 32, 44, 0.95);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .wisechat-messages {
+        background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+    }
+
+    .wisechat-message-bubble {
+        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .wisechat-input-wrapper {
+        background: #2d3748;
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .wisechat-input-field {
+        color: white;
+    }
+
+        .wisechat-input-field::placeholder {
+            color: #a0aec0;
+        }
+
+    }
+
+    /* High contrast mode support */
+    @@media (prefers-contrast: high) {
+        .wisechat-window
+
+    {
+        border: 2px solid #000;
+    }
+
+    .wisechat-message-bubble {
+        border: 1px solid #000;
+    }
+
+    .wisechat-input-wrapper {
+        border: 2px solid #000;
+    }
+
+    }
+
+    .wisechat-formatted-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        line-height: 1.5;
+    }
+
+    .wisechat-bullet-list {
+        margin: 0.5rem 0;
+        padding-left: 0.5rem;
+    }
+
+    .wisechat-bullet,
+    .wisechat-nested-bullet {
+        display: flex;
+        align-items: flex-start;
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .wisechat-nested-bullet {
+        padding-left: 2.5rem;
+    }
+
+    .wisechat-bullet .bullet,
+    .wisechat-nested-bullet .bullet {
+        position: absolute;
+        left: 0.5rem;
+        color: var(--mud-palette-primary);
+        font-size: 1.2rem;
+    }
+
+    .wisechat-bullet .bullet-content,
+    .wisechat-nested-bullet .bullet-content {
+        flex: 1;
+        padding-left: 0.5rem;
+    }
+
+    .wisechat-numbered-point {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .wisechat-text-line {
+        margin: 0.5rem 0;
+    }
+
+    .wisechat-spacing {
+        height: 0.8rem;
+    }
+
+    .wisechat-formatted-content strong {
+        font-weight: 600;
+        color: var(--mud-palette-primary);
+        display: block;
+        margin: 1rem 0 0.5rem 0;
+    }
+
+    /* Dark mode support */
+    @@media (prefers-color-scheme: dark) {
+        .wisechat-formatted-content strong {
+            color: var(--mud-palette-primary-lighten);
+        }
+
+        .wisechat-bullet .bullet,
+        .wisechat-nested-bullet .bullet {
+            color: var(--mud-palette-primary-lighten);
+        }
     }
 </style>
 
@@ -647,6 +1046,78 @@
         {
             // Ignore JS interop errors
         }
+    }
+
+    private string FormatMessageContent(string content)
+    {
+        if (string.IsNullOrEmpty(content))
+            return content;
+
+        // First, normalize line endings and remove any extra spaces
+        content = content.Replace("\r\n", "\n").Trim();
+
+        // Handle bold text (text between **)
+        var boldPattern = @"\*\*(.*?)\*\*";
+        var formattedContent = Regex.Replace(content, boldPattern, "<strong>$1</strong>");
+
+        // Split into lines and process
+        var lines = formattedContent.Split('\n');
+        var formattedLines = new List<string>();
+        var inBulletList = false;
+
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                formattedLines.Add("<div class='wisechat-spacing'></div>");
+                inBulletList = false;
+                continue;
+            }
+
+            // Handle bullet points (lines starting with - or *)
+            if (line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+            {
+                if (!inBulletList)
+                {
+                    formattedLines.Add("<div class='wisechat-bullet-list'>");
+                    inBulletList = true;
+                }
+
+                var bulletContent = line.TrimStart().Substring(1).TrimStart();
+                var isNested = line.StartsWith("    ");
+                var bulletClass = isNested ? "wisechat-nested-bullet" : "wisechat-bullet";
+                formattedLines.Add($"<div class='{bulletClass}'><span class='bullet'>•</span><span class='bullet-content'>{bulletContent}</span></div>");
+            }
+            // Handle numbered lists
+            else if (Regex.IsMatch(line.TrimStart(), @"^\d+\."))
+            {
+                if (inBulletList)
+                {
+                    formattedLines.Add("</div>");
+                    inBulletList = false;
+                }
+                var numberedContent = line.TrimStart();
+                formattedLines.Add($"<div class='wisechat-numbered-point'>{numberedContent}</div>");
+            }
+            // Regular text
+            else
+            {
+                if (inBulletList)
+                {
+                    formattedLines.Add("</div>");
+                    inBulletList = false;
+                }
+                formattedLines.Add($"<div class='wisechat-text-line'>{line}</div>");
+            }
+        }
+
+        // Close any open bullet list
+        if (inBulletList)
+        {
+            formattedLines.Add("</div>");
+        }
+
+        return string.Join("", formattedLines);
     }
 
     public async ValueTask DisposeAsync()

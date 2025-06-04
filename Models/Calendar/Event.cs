@@ -14,3 +14,4 @@ namespace HolidayApp.Models
         public string? Location { get; set; }
     }
 }
+
