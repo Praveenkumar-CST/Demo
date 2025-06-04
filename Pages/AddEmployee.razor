@@ -34,7 +34,17 @@
                         </MudItem>
                         <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
                             <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddUser">Add Employee</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddUser" Disabled="@isAdding">
+                                @if (isAdding)
+                                {
+                                    <MudProgressCircular Color="Color.Info" Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    <span>Loading...</span>
+                                }
+                                else
+                                {
+                                    <span>Add Employee</span>
+                                }
+                            </MudButton>
                         </MudItem>
                     </MudGrid>
                 </MudForm>
@@ -121,7 +131,17 @@
                         </MudItem>
                         <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
                             <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ResetBasicDetails">Reset</MudButton>
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">Save Details</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@isSaving">
+                                @if (isSaving)
+                                {
+                                    <MudProgressCircular Color="Color.Info" Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <span>Save Details</span>
+                                }
+                            </MudButton>
                         </MudItem>
                     </MudGrid>
                 </EditForm>
@@ -138,6 +158,8 @@
     private MudForm addUserForm;
     private string savedUserEmail = "";
     private string savedUserPassword = "";
+    private bool isAdding = false;
+    private bool isSaving = false;
 
     private string ValidateEmail(string email)
     {
@@ -171,6 +193,8 @@
 
     private async Task AddUser()
     {
+        isAdding = true;
+        await InvokeAsync(StateHasChanged); // Update UI to show loader in button
         await JS.InvokeVoidAsync("console.log", $"AddUser called with Email: {newUserEmail}, Password: {newUserPassword}");
 
         await addUserForm.Validate();
@@ -178,6 +202,8 @@
         {
             await JS.InvokeVoidAsync("console.error", $"Validation failed: Email: {newUserEmail}");
             Snackbar.Add("Please fix form errors.", Severity.Error);
+            isAdding = false;
+            await InvokeAsync(StateHasChanged);
             return;
         }
 
@@ -192,6 +218,8 @@
             {
                 await JS.InvokeVoidAsync("console.error", "Failed to retrieve Employee ID from Supabase.");
                 Snackbar.Add("Failed to retrieve Employee ID from Supabase.", Severity.Error);
+                isAdding = false;
+                await InvokeAsync(StateHasChanged);
                 return;
             }
 
@@ -215,10 +243,17 @@
             await JS.InvokeVoidAsync("console.error", $"Error adding employee: {ex.Message}");
             Snackbar.Add($"Error adding employee: {ex.Message}", Severity.Error);
         }
+        finally
+        {
+            isAdding = false;
+            await InvokeAsync(StateHasChanged); // Update UI to remove loader
+        }
     }
 
     private async Task SaveBasicDetails()
     {
+        isSaving = true;
+        await InvokeAsync(StateHasChanged); // Update UI to show loader in button
         try
         {
             await JS.InvokeVoidAsync("console.log", $"Saving EmployeeBasicDetails: {System.Text.Json.JsonSerializer.Serialize(employeeBasicDetails)}");
@@ -244,6 +279,11 @@
         {
             await JS.InvokeVoidAsync("console.error", $"Error saving employee basic details: {ex.Message}");
             Snackbar.Add($"Error saving employee details: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+            await InvokeAsync(StateHasChanged); // Update UI to remove loader
         }
     }
 
