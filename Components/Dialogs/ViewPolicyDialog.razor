@@ -1,0 +1,74 @@
+@using WiseHR.Models
+@using MudBlazor
+@inject IJSRuntime JSRuntime
+
+<MudDialog Options="new DialogOptions { 
+    CloseOnEscapeKey = true,
+    CloseButton = true,
+    MaxWidth = MaxWidth.Small,
+    FullWidth = false,
+    NoHeader = false,
+    Position = DialogPosition.Center
+}">
+    <DialogContent>
+        @if (IsLoading)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (Policy != null && !string.IsNullOrEmpty(Base64Content))
+        {
+            <MudText>Would you like to open the PDF in a new tab?</MudText>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error">Failed to load policy content</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="OpenInNewTab">Open PDF</MudButton>
+        <MudButton OnClick="Close">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .mud-dialog-full-height {
+        height: 90vh;
+    }
+
+    .mud-dialog-content-full-height {
+        padding: 0;
+        height: calc(90vh - 52px); /* Subtract the height of the dialog actions */
+    }
+</style>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    
+    [Parameter] public PolicyResponseDto Policy { get; set; }
+    [Parameter] public string Base64Content { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+
+    private void Close()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+
+    private async Task OpenInNewTab()
+    {
+        try
+        {
+            // Create a blob URL for the PDF
+            var bytes = Convert.FromBase64String(Base64Content);
+            var base64 = Convert.ToBase64String(bytes);
+            var url = $"data:{Policy.ContentType};base64,{base64}";
+            
+            // Open in new tab
+            await JSRuntime.InvokeVoidAsync("openPdfInNewTab", url, Policy.FileName);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error opening PDF: {ex.Message}");
+        }
+    }
+} 
