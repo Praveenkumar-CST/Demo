@@ -13,7 +13,6 @@ namespace WiseHR.Models
                     ("Employee List", "/home/employeeList"),
                     ("Role Management", "/home/rolemanagement"),
                     ("HIDE_Create Employee","/home/employees"),
-                    ("Create Employee","/home/employees"),
                     ("Organizational Hierarchy", "/role-hierarchy"),           
                     //("Add Employees", "/home/employees"),
                     ("Holiday Calendar", "/calendar"),
@@ -33,7 +32,7 @@ namespace WiseHR.Models
                     //("ReportList", "/reports"),
                      ("HIDE_EmployeeProfile", "/employee/.*"),
                      ("HIDE_Analytics", "/analytics"),
-                     ("Assign Mentee","/managers"),
+                     //("Assign Mentee","/managers"),
                     ("Asset","/asset"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
@@ -63,8 +62,7 @@ namespace WiseHR.Models
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
                     //("ReportList", "/reports"),
-                    ("HIDE_EmployeeProfile", "/employee/.*"),
-                  
+                    ("HIDE_EmployeeProfile", "/employee/.*"),                 
 
                 }
             },    {
@@ -106,9 +104,7 @@ namespace WiseHR.Models
                     ("HIDE_workExperience", "/workExperience"),
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
-                    ("HIDE_EmployeeProfile", "/employee/.*"),
-                      
-
+                    ("HIDE_EmployeeProfile", "/employee/.*"),                  
                 }
             },
             {
