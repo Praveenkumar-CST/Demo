@@ -17,7 +17,7 @@
     <MudPaper Class="pa-4" Elevation="3">
         <div class="d-flex align-center mb-4">
             <MudIcon Icon="@Icons.Material.Filled.Description" Class="mr-2" Color="Color.Primary" />
-            <MudText Typo="Typo.h5">Company Policies</MudText>
+            <MudText Typo="Typo.h5">Company Policies & Guidelines</MudText>
             <MudSpacer />
             @if (IsAdmin)
             {
@@ -42,6 +42,13 @@
                                 Label="Version"
                                 Required="true"
                                 RequiredError="Version is required!" />
+                    <MudSelect T="string" @bind-Value="newPolicy.Category"
+                             Label="Category"
+                             Required="true"
+                             RequiredError="Category is required!">
+                        <MudSelectItem Value="@("Policy")">Policy</MudSelectItem>
+                        <MudSelectItem Value="@("Guideline")">Guideline</MudSelectItem>
+                    </MudSelect>
                     <MudPaper Class="pa-4 mt-4" Elevation="0" Style="border: 2px dashed var(--mud-palette-primary);">
                         <div class="d-flex flex-column align-center">
                             <MudIcon Icon="@Icons.Material.Filled.Upload" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
@@ -88,41 +95,45 @@
         }
         else
         {
-            <MudTable Items="@_policies" Dense="true" Hover="true" Bordered="true" Striped="true">
-                <HeaderContent>
-                    <MudTh>Title</MudTh>
-                    <MudTh>Version</MudTh>
-                    <MudTh>Upload Date</MudTh>
-                    <MudTh>Uploaded By</MudTh>
-                    <MudTh>Actions</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Title">@context.Title</MudTd>
-                    <MudTd DataLabel="Version">@context.Version</MudTd>
-                    <MudTd DataLabel="Upload Date">@context.UploadDate.ToLocalTime().ToString("g")</MudTd>
-                    <MudTd DataLabel="Uploaded By">@context.UploadedBy</MudTd>
-                    <MudTd>
-                        <MudButtonGroup Size="Size.Small" Variant="Variant.Text">
-                            <MudButton OnClick="@(() => ViewPolicy(context.PolicyId))"
-                                     StartIcon="@Icons.Material.Filled.Visibility">
-                                View
-                            </MudButton>
-                            <MudButton OnClick="@(() => DownloadPolicy(context.PolicyId))"
-                                     StartIcon="@Icons.Material.Filled.Download">
-                                Download
-                            </MudButton>
-                            @if (IsAdmin)
-                            {
-                                <MudButton OnClick="@(() => DeletePolicy(context.PolicyId))"
-                                         StartIcon="@Icons.Material.Filled.Delete"
-                                         Color="Color.Error">
-                                    Delete
+            @foreach (var category in _policies.Select(p => p.Category).Distinct())
+            {
+                <MudText Typo="Typo.h6" Class="mt-4 mb-2">@category</MudText>
+                <MudTable Items="@_policies.Where(p => p.Category == category)" Dense="true" Hover="true" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Title</MudTh>
+                        <MudTh>Version</MudTh>
+                        <MudTh>Upload Date</MudTh>
+                        <MudTh>Uploaded By</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Title">@context.Title</MudTd>
+                        <MudTd DataLabel="Version">@context.Version</MudTd>
+                        <MudTd DataLabel="Upload Date">@context.UploadDate.ToLocalTime().ToString("g")</MudTd>
+                        <MudTd DataLabel="Uploaded By">@context.UploadedBy</MudTd>
+                        <MudTd>
+                            <MudButtonGroup Size="Size.Small" Variant="Variant.Text">
+                                <MudButton OnClick="@(() => ViewPolicy(context.PolicyId))"
+                                         StartIcon="@Icons.Material.Filled.Visibility">
+                                    View
                                 </MudButton>
-                            }
-                        </MudButtonGroup>
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
+                                <MudButton OnClick="@(() => DownloadPolicy(context.PolicyId))"
+                                         StartIcon="@Icons.Material.Filled.Download">
+                                    Download
+                                </MudButton>
+                                @if (IsAdmin)
+                                {
+                                    <MudButton OnClick="@(() => DeletePolicy(context.PolicyId))"
+                                             StartIcon="@Icons.Material.Filled.Delete"
+                                             Color="Color.Error">
+                                        Delete
+                                    </MudButton>
+                                }
+                            </MudButtonGroup>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
         }
     </MudPaper>
 </MudContainer>
@@ -259,6 +270,7 @@
             var content = new MultipartFormDataContent();
             content.Add(new StringContent(newPolicy.Title), "Title");
             content.Add(new StringContent(newPolicy.Version), "Version");
+            content.Add(new StringContent(newPolicy.Category), "Category");
 
             // Create a stream content for the file
             var fileContent = new StreamContent(_selectedFile.OpenReadStream(maxAllowedSize: 10485760)); // 10MB
