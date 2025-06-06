@@ -32,12 +32,55 @@
         // Timeout policy
         private static readonly IAsyncPolicy<HttpResponseMessage> _timeoutPolicy = Policy
             .TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10));
+        private string ToTitleCase(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+            return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
+        }
+
+        private string ToUpperCase(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+            return input.ToUpper();
+        }
+
+        private string ToLowerCase(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+            return input.ToLower();
+        }
+
+        // Capitalize BankingInformation fields
+        private void CapitalizeBankingInformation(BankingInformation bankingInfo)
+        {
+            // Title Case
+            bankingInfo.BankName = ToTitleCase(bankingInfo.BankName);
+            bankingInfo.Branch = ToTitleCase(bankingInfo.Branch);
+            bankingInfo.Name = ToTitleCase(bankingInfo.Name);
+            bankingInfo.State = ToTitleCase(bankingInfo.State);
+            bankingInfo.AccountType = ToTitleCase(bankingInfo.AccountType);
+
+            // Uppercase
+            bankingInfo.EmployeeID = ToUpperCase(bankingInfo.EmployeeID);
+            bankingInfo.IFSCode = ToUpperCase(bankingInfo.IFSCode);
+            bankingInfo.PANNumber = ToUpperCase(bankingInfo.PANNumber);
+
+            // Lowercase
+            bankingInfo.Phone = ToLowerCase(bankingInfo.Phone);
+
+            // Unchanged: AccountNumber, AadhaarNumber, AadhaarBase64Content, PanBase64Content, PassbookBase64Content
+        }
 
         public async Task<bool> RegisterBankingInfo(BankingInformation bankingInfo)
         {
             try
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                CapitalizeBankingInformation(bankingInfo);
+
                 var response = await _retryPolicy.ExecuteAsync(() =>
                     _timeoutPolicy.ExecuteAsync(() =>
                         _httpClient.PostAsJsonAsync("BankingInformation/BankingInfoRegistry", bankingInfo)));
@@ -185,6 +228,8 @@
             try
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                CapitalizeBankingInformation(bankingInfo);
+
                 var response = await _retryPolicy.ExecuteAsync(() =>
                     _timeoutPolicy.ExecuteAsync(() =>
                         _httpClient.PostAsJsonAsync("BankingInformation/UpdateBankingInfo", bankingInfo)));

@@ -9,6 +9,7 @@ using MudBlazor;
 using Blazored.SessionStorage;
 using FingerFrontend.AdminAttendanceViewModel;
 using Microsoft.Extensions.Caching.Memory;
+using Syncfusion.Blazor;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -54,6 +55,8 @@ builder.Services.AddScoped<CountryService>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<SearchService>();
+
+builder.Services.AddSyncfusionBlazor();
 
 builder.Services.AddScoped<IUserService, UserService>();
 // Register ChatService

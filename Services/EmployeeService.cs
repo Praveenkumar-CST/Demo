@@ -32,21 +32,105 @@
         // Timeout policy
         private static readonly IAsyncPolicy<HttpResponseMessage> _timeoutPolicy = Policy
             .TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10));
+        private string ToTitleCase(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+            return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
+        }
+
+        private string ToUpperCase(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+            return input.ToUpper();
+        }
+
+        private string ToLowerCase(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+            return input.ToLower();
+        }
+
+        private void CapitalizeEmployeeDetails(EmployeeDetails employee)
+        {
+            // Names
+            employee.FirstName = ToTitleCase(employee.FirstName);
+            employee.LastName = ToTitleCase(employee.LastName);
+            employee.MiddleName = ToTitleCase(employee.MiddleName);
+            employee.FatherName = ToTitleCase(employee.FatherName);
+            employee.MotherName = ToTitleCase(employee.MotherName);
+            employee.EmergencyContact1Name = ToTitleCase(employee.EmergencyContact1Name);
+            employee.EmergencyContact2Name = ToTitleCase(employee.EmergencyContact2Name);
+            employee.PassportFullName = ToTitleCase(employee.PassportFullName);
+
+            // Addresses
+            employee.CurrentAddress = ToTitleCase(employee.CurrentAddress);
+            employee.CurrentCity = ToTitleCase(employee.CurrentCity);
+            employee.CurrentState = ToTitleCase(employee.CurrentState);
+            employee.PermanentAddress = ToTitleCase(employee.PermanentAddress);
+            employee.PermanentCity = ToTitleCase(employee.PermanentCity);
+            employee.PermanentState = ToTitleCase(employee.PermanentState);
+            employee.EmergencyContact1Address = ToTitleCase(employee.EmergencyContact1Address);
+            employee.EmergencyContact1City = ToTitleCase(employee.EmergencyContact1City);
+            employee.EmergencyContact1State = ToTitleCase(employee.EmergencyContact1State);
+            employee.EmergencyContact2Address = ToTitleCase(employee.EmergencyContact2Address);
+            employee.EmergencyContact2City = ToTitleCase(employee.EmergencyContact2City);
+            employee.EmergencyContact2State = ToTitleCase(employee.EmergencyContact2State);
+
+            // Emails
+            employee.CurrentEmail = ToLowerCase(employee.CurrentEmail);
+            employee.PermanentEmail = ToLowerCase(employee.PermanentEmail);
+
+            // Codes
+            employee.EmployeeID = ToUpperCase(employee.EmployeeID);
+            employee.EmployeeCode = ToUpperCase(employee.EmployeeCode);
+
+            // Other string fields
+            employee.TypeOfEmployment = ToTitleCase(employee.TypeOfEmployment);
+            employee.Level = ToTitleCase(employee.Level);
+            employee.Designation = ToTitleCase(employee.Designation);
+            employee.Gender = ToTitleCase(employee.Gender);
+            employee.MaritalStatus = ToTitleCase(employee.MaritalStatus);
+            employee.BloodGroup = ToTitleCase(employee.BloodGroup);
+            employee.Nationality = ToTitleCase(employee.Nationality);
+            employee.PhysicallyChallenged = ToTitleCase(employee.PhysicallyChallenged);
+            employee.EmergencyContact1Relationship = ToTitleCase(employee.EmergencyContact1Relationship);
+            employee.EmergencyContact2Relationship = ToTitleCase(employee.EmergencyContact2Relationship);
+            employee.Allergies = ToTitleCase(employee.Allergies);
+            employee.Medications = ToTitleCase(employee.Medications);
+            employee.PassportNationality = ToTitleCase(employee.PassportNationality);
+            employee.PassportPlaceOfIssue = ToTitleCase(employee.PassportPlaceOfIssue);
+            employee.JoiningLocation = ToTitleCase(employee.JoiningLocation);
+            employee.Sons = ToTitleCase(employee.Sons);
+            employee.Daughters = ToTitleCase(employee.Daughters);
+            employee.PhotoContentType = ToTitleCase(employee.PhotoContentType);
+        }
 
         public async Task<bool> RegisterEmployee(EmployeeDetails employee)
         {
-            var response = await _retryPolicy.ExecuteAsync(() =>
-                _timeoutPolicy.ExecuteAsync(() =>
-                    _httpClient.PostAsJsonAsync("EmployeeDetails/EmployeeDetailsRegistry", employee)));
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                _cache.Remove("AllEmployees");
-                return await response.Content.ReadFromJsonAsync<bool>();
-            }
+                CapitalizeEmployeeDetails(employee);
 
-            Console.WriteLine($"Error registering employee: {response.StatusCode}");
-            return false;
+                var response = await _retryPolicy.ExecuteAsync(() =>
+                    _timeoutPolicy.ExecuteAsync(() =>
+                        _httpClient.PostAsJsonAsync("EmployeeDetails/EmployeeDetailsRegistry", employee)));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _cache.Remove("AllEmployees");
+                    return await response.Content.ReadFromJsonAsync<bool>();
+                }
+
+                Console.WriteLine($"Error registering employee: {response.StatusCode}");
+                return false;
+            }catch(HttpRequestException ex)
+    {
+                Console.WriteLine($"HTTP error: {ex.Message}");
+                return false;
+            }
         }
 
         public async Task<EmployeeDetails> GetEmployeeDetails(string employeeId)
@@ -268,6 +352,8 @@
 
         public async Task<bool> UpdateEmployee(EmployeeDetails employee)
         {
+            CapitalizeEmployeeDetails(employee);
+
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _httpClient.PostAsJsonAsync("EmployeeDetails/UpdateEmployeeDetails", employee)));
@@ -344,6 +430,11 @@
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                 // Save employee details
+                employee.TypeOfEmployment = ToTitleCase(employee.TypeOfEmployment);
+                employee.Level = ToTitleCase(employee.Level);
+                employee.Designation = ToTitleCase(employee.Designation);
+                employee.JoiningLocation = ToTitleCase(employee.JoiningLocation);
+                employee.CurrentEmail = employee.CurrentEmail?.ToLower();
                 var saveResponse = await _retryPolicy.ExecuteAsync(() =>
                     _timeoutPolicy.ExecuteAsync(() =>
                         _httpClient.PostAsJsonAsync("api/EmployeeBasicDetails", employee)));
@@ -511,7 +602,11 @@
                         _httpClient.PutAsJsonAsync($"api/EmployeeBasicDetails/{employee.EmployeeID}", employee)));
 
                 Console.WriteLine($"UpdateEmployeeBasicDetails({employee.EmployeeID}) took {stopwatch.ElapsedMilliseconds}ms");
-
+                employee.TypeOfEmployment = ToTitleCase(employee.TypeOfEmployment);
+                employee.Level = ToTitleCase(employee.Level);
+                employee.Designation = ToTitleCase(employee.Designation);
+                employee.JoiningLocation = ToTitleCase(employee.JoiningLocation);
+                employee.CurrentEmail = employee.CurrentEmail?.ToLower();
                 if (response.IsSuccessStatusCode)
                 {
                     _cache.Remove("AllEmployeeBasicDetails");
