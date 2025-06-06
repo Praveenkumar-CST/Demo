@@ -76,7 +76,7 @@
                         </MudButton>
                     </MudForm>
                     <MudStack Row="true" Spacing="4" Class="justify-center">
-                        <MudLink Underline="Underline.Hover" Color="Color.Primary" @onclick="() => ShowForm(FormState.Signup)">Sign Up</MudLink>
+                        @* <MudLink Underline="Underline.Hover" Color="Color.Primary" @onclick="() => ShowForm(FormState.Signup)">Sign Up</MudLink> *@
                         <MudLink Underline="Underline.Hover" Color="Color.Primary" @onclick="() => ShowForm(FormState.ForgotPassword)">Forgot Password?</MudLink>
                     </MudStack>
                 </MudItem>
@@ -328,46 +328,33 @@
         }
         try
         {
-            var (token, error) = await AuthService.Login(Email, Password);
-            await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
-            await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
-            Console.WriteLine($"Email to store: {Email}");
-            if (!string.IsNullOrEmpty(token))
+            // Special case for user with email jaya555priya@gmail.com and password jp@123
+            if (Email == "jaya555priya@gmail.com" && Password == "jp@123")
             {
-                var userDetails = await UserService.GetUserByEmailAsync(Email);
-                if (userDetails != null)
+                var (token, error) = await AuthService.Login(Email, Password);
+                if (!string.IsNullOrEmpty(token))
                 {
-                    // 🔹 Store EmpId in localStorage
-                    await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
-                    Console.WriteLine($"EmpId stored in localStorage: {userDetails.EmpId}");
-                }else{
-                    Console.WriteLine($"Error in storing the EmpId sessionStorage: {userDetails.EmpId}");
+                    await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
+                    await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
+                    Console.WriteLine($"Email to store: {Email}");
 
-                }
-                // Fetch employee details based on email
-                var employeeDetails = await EmployeeService.GetEmployeeDetailsByEmail(Email);
-                if (employeeDetails != null)
-                {
-                    // Verify the token and check role
+                    var userDetails = await UserService.GetUserByEmailAsync(Email);
+                    if (userDetails != null)
+                    {
+                        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
+                        Console.WriteLine($"EmpId stored in sessionStorage: {userDetails.EmpId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error in storing the EmpId sessionStorage: {userDetails?.EmpId}");
+                    }
+
                     var (role, verifyError) = await AuthService.VerifyToken();
                     if (!string.IsNullOrEmpty(role))
                     {
                         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
-
                         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
-                        // Navigate based on role
-                        if (role == "Admin")
-                        {
-                            NavigationManager.NavigateTo("/home");
-                        }
-                        else if (role == "Employee")
-                        {
-                            NavigationManager.NavigateTo("/home"); // Navigate to dashboard if user is an employee
-                        }
-                        else
-                        {
-                            NavigationManager.NavigateTo("/home");
-                        }
+                        NavigationManager.NavigateTo("/home");
                     }
                     else
                     {
@@ -376,19 +363,70 @@
                 }
                 else
                 {
-                    // If employee details are not found, navigate to registration page
-                    NavigationManager.NavigateTo("/registration");
+                    LoginErrorMessage = "Invalid email or password.";
                 }
             }
             else
             {
-                if (error != null && (error.Contains("Invalid email or password") || error.Contains("User not found") || error.Contains("Invalid credentials")))
+                // Original logic for other users
+                var (token, error) = await AuthService.Login(Email, Password);
+                await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
+                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
+                Console.WriteLine($"Email to store: {Email}");
+                if (!string.IsNullOrEmpty(token))
                 {
-                    LoginErrorMessage = "Invalid email or password.";
+                    var userDetails = await UserService.GetUserByEmailAsync(Email);
+                    if (userDetails != null)
+                    {
+                        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
+                        Console.WriteLine($"EmpId stored in sessionStorage: {userDetails.EmpId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error in storing the EmpId sessionStorage: {userDetails?.EmpId}");
+                    }
+
+                    var employeeDetails = await EmployeeService.GetEmployeeDetailsByEmail(Email);
+                    if (employeeDetails != null)
+                    {
+                        var (role, verifyError) = await AuthService.VerifyToken();
+                        if (!string.IsNullOrEmpty(role))
+                        {
+                            await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
+                            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
+                            if (role == "Admin")
+                            {
+                                NavigationManager.NavigateTo("/home");
+                            }
+                            else if (role == "Employee")
+                            {
+                                NavigationManager.NavigateTo("/home");
+                            }
+                            else
+                            {
+                                NavigationManager.NavigateTo("/home");
+                            }
+                        }
+                        else
+                        {
+                            LoginErrorMessage = "Invalid email or password.";
+                        }
+                    }
+                    else
+                    {
+                        NavigationManager.NavigateTo("/registration");
+                    }
                 }
                 else
                 {
-                    LoginErrorMessage = "Invalid email or password.";
+                    if (error != null && (error.Contains("Invalid email or password") || error.Contains("User not found") || error.Contains("Invalid credentials")))
+                    {
+                        LoginErrorMessage = "Invalid email or password.";
+                    }
+                    else
+                    {
+                        LoginErrorMessage = "Invalid email or password.";
+                    }
                 }
             }
         }
@@ -399,6 +437,92 @@
         IsLoading = false;
         StateHasChanged();
     }
+    // private async Task HandleLogin()
+    // {
+    //     if (loginForm == null) return;
+    //     IsLoading = true;
+    //     ErrorMessage = "";
+    //     LoginErrorMessage = "";
+    //     await loginForm.Validate();
+    //     if (!loginForm.IsValid)
+    //     {
+    //         IsLoading = false;
+    //         StateHasChanged();
+    //         return;
+    //     }
+    //     try
+    //     {
+    //         var (token, error) = await AuthService.Login(Email, Password);
+    //         await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
+    //         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
+    //         Console.WriteLine($"Email to store: {Email}");
+    //         if (!string.IsNullOrEmpty(token))
+    //         {
+    //             var userDetails = await UserService.GetUserByEmailAsync(Email);
+    //             if (userDetails != null)
+    //             {
+    //                 🔹 Store EmpId in localStorage
+    //                 await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
+    //                 Console.WriteLine($"EmpId stored in localStorage: {userDetails.EmpId}");
+    //             }else{
+    //                 Console.WriteLine($"Error in storing the EmpId sessionStorage: {userDetails.EmpId}");
+
+    //             }
+    //             Fetch employee details based on email
+    //             var employeeDetails = await EmployeeService.GetEmployeeDetailsByEmail(Email);
+    //             if (employeeDetails != null)
+    //             {
+    //                 Verify the token and check role
+    //                 var (role, verifyError) = await AuthService.VerifyToken();
+    //                 if (!string.IsNullOrEmpty(role))
+    //                 {
+    //                     await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
+
+    //                     await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
+    //                     Navigate based on role
+    //                     if (role == "Admin")
+    //                     {
+    //                         NavigationManager.NavigateTo("/home");
+    //                     }
+    //                     else if (role == "Employee")
+    //                     {
+    //                         NavigationManager.NavigateTo("/home"); Navigate to dashboard if user is an employee
+    //                     }
+    //                     else
+    //                     {
+    //                         NavigationManager.NavigateTo("/home");
+    //                     }
+    //                 }
+    //                 else
+    //                 {
+    //                     LoginErrorMessage = "Invalid email or password.";
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 If employee details are not found, navigate to registration page
+    //                 NavigationManager.NavigateTo("/registration");
+    //             }
+    //         }
+    //         else
+    //         {
+    //             if (error != null && (error.Contains("Invalid email or password") || error.Contains("User not found") || error.Contains("Invalid credentials")))
+    //             {
+    //                 LoginErrorMessage = "Invalid email or password.";
+    //             }
+    //             else
+    //             {
+    //                 LoginErrorMessage = "Invalid email or password.";
+    //             }
+    //         }
+    //     }
+    //     catch (Exception)
+    //     {
+    //         LoginErrorMessage = "Invalid email or password.";
+    //     }
+    //     IsLoading = false;
+    //     StateHasChanged();
+    // }
 
     private async Task HandleSignup()
     {

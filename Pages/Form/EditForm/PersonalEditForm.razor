@@ -150,7 +150,7 @@ else
                             <ValidationMessage For="@(() => employeeDetails.MaritalStatus)" />
 
                         </MudItem>
-                        @if (employeeDetails.MaritalStatus != "UnMarried")
+                        @if (employeeDetails.MaritalStatus != "Unmarried")
                         {
                             <MudItem xs="12" sm="4" md="3">
                                 <MudTextField Label="No of Sons" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="employeeDetails.Sons"

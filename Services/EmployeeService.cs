@@ -102,7 +102,6 @@
             employee.Medications = ToTitleCase(employee.Medications);
             employee.PassportNationality = ToTitleCase(employee.PassportNationality);
             employee.PassportPlaceOfIssue = ToTitleCase(employee.PassportPlaceOfIssue);
-            employee.JoiningLocation = ToTitleCase(employee.JoiningLocation);
             employee.Sons = ToTitleCase(employee.Sons);
             employee.Daughters = ToTitleCase(employee.Daughters);
             employee.PhotoContentType = ToTitleCase(employee.PhotoContentType);

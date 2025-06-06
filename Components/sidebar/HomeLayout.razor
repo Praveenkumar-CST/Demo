@@ -18,6 +18,7 @@
 @inject AnalyticsCacheService AnalyticsCache
 @inject ILogger<HomeLayout> Logger
 
+
 <MudThemeProvider />
 <MudSnackbarProvider />
 
@@ -62,7 +63,6 @@
                 }
             </div>
 
-            @* Display error message if search fails *@
             @if (!string.IsNullOrEmpty(_searchError))
             {
                 <MudText Typo="Typo.body1" Color="Color.Error" Class="mt-2 position-absolute" Style="top: 100%; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 1.1rem; font-weight: 500;">@_searchError</MudText>
@@ -74,7 +74,14 @@
         <MudMenu AnchorOrigin="Origin.BottomLeft">
             <ActivatorContent>
                 <div class="d-flex align-center justify-end ">
-                    @if (!string.IsNullOrEmpty(userProfilePicture))
+                    @if (Email == "jaya555priya@gmail.com")
+                    {
+                        <img src="images/logo1.png"
+                             class="border-hover-color-shift profile-bounce neon-glow"
+                             alt="Employee Photo"
+                             style="width: 55px; height: 55px; object-fit: cover;" />
+                    }
+                    else if (!string.IsNullOrEmpty(userProfilePicture))
                     {
                         <img src="@userProfilePicture"
                              class="border-hover-color-shift profile-bounce neon-glow " alt="Employee Photo"
@@ -446,6 +453,7 @@
     private bool IsAdmin = false;
     private bool _isSearching;
     private List<EmployeeSearchResult> _searchResults = new();
+    private string? Email;
 
     // Close sidebar when mouse leaves
     private async Task HandleMouseLeave()
@@ -604,6 +612,7 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        Email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
 
         // Initialize cache service by preloading analytics data
         try
