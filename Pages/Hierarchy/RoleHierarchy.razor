@@ -1,0 +1,243 @@
+﻿@page "/role-hierarchy"
+@using WiseHR.Models
+@using WiseHR.Services
+@using MudBlazor
+@inject IUserService UserService
+@using WiseHR.Models
+@using WiseHRServer.Models
+@using MudBlazor
+@using WiseHR.Components.sidebar
+@using System.Globalization
+@layout WiseHR.Components.sidebar.HomeLayout
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Role Hierarchy</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate Color="Color.Primary" Class="ma-4" Style="margin: auto;" />
+    }
+    else if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="ma-4">@_errorMessage</MudAlert>
+    }
+    else
+    {
+        <div class="hierarchy-container">
+            @foreach (var node in _roleNodes)
+            {
+                <div class="level">
+                    <MudCard Class="role-card">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@node.Value.RoleName</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @foreach (var user in node.Value.Children.Where(c => !c.IsRole))
+                            {
+                                <MudCard Class="user-card mb-2">
+                                    <MudCardContent>
+                                        <MudText>@user.User!.Email</MudText>
+                                        @if (!string.IsNullOrEmpty(user.User!.EmpId))
+                                        {
+                                            <MudText Typo="Typo.caption">Emp ID: @user.User.EmpId</MudText>
+                                        }
+                                    </MudCardContent>
+                                </MudCard>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                    @if (node.Value.Children.Any(c => c.IsRole))
+                    {
+                        <div class="connector"></div>
+                        @foreach (var childNode in node.Value.Children.Where(c => c.IsRole))
+                        {
+                            <div class="level">
+                                <MudCard Class="role-card">
+                                    <MudCardHeader>
+                                        <CardHeaderContent>
+                                            <MudText Typo="Typo.h6">@childNode.RoleName</MudText>
+                                        </CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent>
+                                        @foreach (var user in childNode.Children.Where(c => !c.IsRole))
+                                        {
+                                            <MudCard Class="user-card mb-2">
+                                                <MudCardContent>
+                                                    <MudText>@user.User!.Email</MudText>
+                                                    @if (!string.IsNullOrEmpty(user.User!.EmpId))
+                                                    {
+                                                        <MudText Typo="Typo.caption">Emp ID: @user.User.EmpId</MudText>
+                                                    }
+                                                </MudCardContent>
+                                            </MudCard>
+                                        }
+                                    </MudCardContent>
+                                </MudCard>
+                                @if (childNode.Children.Any(c => c.IsRole))
+                                {
+                                    <div class="connector"></div>
+                                    @foreach (var grandChildNode in childNode.Children.Where(c => c.IsRole))
+                                    {
+                                        <div class="level">
+                                            <MudCard Class="role-card">
+                                                <MudCardHeader>
+                                                    <CardHeaderContent>
+                                                        <MudText Typo="Typo.h6">@grandChildNode.RoleName</MudText>
+                                                    </CardHeaderContent>
+                                                </MudCardHeader>
+                                                <MudCardContent>
+                                                    @foreach (var user in grandChildNode.Children.Where(c => !c.IsRole))
+                                                    {
+                                                        <MudCard Class="user-card mb-2">
+                                                            <MudCardContent>
+                                                                <MudText>@user.User!.Email</MudText>
+                                                                @if (!string.IsNullOrEmpty(user.User!.EmpId))
+                                                                {
+                                                                    <MudText Typo="Typo.caption">Emp ID: @user.User.EmpId</MudText>
+                                                                }
+                                                            </MudCardContent>
+                                                        </MudCard>
+                                                    }
+                                                </MudCardContent>
+                                            </MudCard>
+                                            @if (grandChildNode.Children.Any(c => c.IsRole))
+                                            {
+                                                <div class="connector"></div>
+                                                <div class="level">
+                                                    <MudCard Class="role-card">
+                                                        <MudCardHeader>
+                                                            <CardHeaderContent>
+                                                                <MudText Typo="Typo.h6">@grandChildNode.Children.First(c => c.IsRole).RoleName</MudText>
+                                                            </CardHeaderContent>
+                                                        </MudCardHeader>
+                                                        <MudCardContent>
+                                                            @foreach (var user in grandChildNode.Children.First(c => c.IsRole).Children.Where(c => !c.IsRole))
+                                                            {
+                                                                <MudCard Class="user-card mb-2">
+                                                                    <MudCardContent>
+                                                                        <MudText>@user.User!.Email</MudText>
+                                                                        @if (!string.IsNullOrEmpty(user.User!.EmpId))
+                                                                        {
+                                                                            <MudText Typo="Typo.caption">Emp ID: @user.User.EmpId</MudText>
+                                                                        }
+                                                                    </MudCardContent>
+                                                                </MudCard>
+                                                            }
+                                                        </MudCardContent>
+                                                    </MudCard>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    }
+</MudContainer>
+
+<style>
+    .hierarchy-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .level {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .role-card {
+        background-color: #e6f3ff;
+        border: 1px solid #007bff;
+        border-radius: 5px;
+        width: 100%;
+        max-width: 600px;
+        margin: 10px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-card {
+        background-color: #f8f9fa;
+        border: 1px solid #6c757d;
+        border-radius: 3px;
+        width: 100%;
+        max-width: 550px;
+        margin: 5px auto;
+    }
+
+    .connector {
+        width: 2px;
+        height: 20px;
+        background-color: #007bff;
+        margin: 10px auto;
+    }
+</style>
+
+@code {
+    private List<CustomTreeItemData<RoleNode>> _roleNodes = new();
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+    private string[] _roles = { "Admin", "HR", "Manager", "Employee" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Create hierarchy
+            var adminNode = new RoleNode { RoleName = "Admin", IsRole = true };
+            var hrNode = new RoleNode { RoleName = "HR", IsRole = true };
+            var managerNode = new RoleNode { RoleName = "Manager", IsRole = true };
+            var employeeNode = new RoleNode { RoleName = "Employee", IsRole = true };
+
+            // Fetch users for each role
+            var adminUsers = await UserService.GetUsersByRoleAsync("Admin") ?? new List<User>();
+            var hrUsers = await UserService.GetUsersByRoleAsync("HR") ?? new List<User>();
+            var managerUsers = await UserService.GetUsersByRoleAsync("Manager") ?? new List<User>();
+            var employeeUsers = await UserService.GetUsersByRoleAsync("Employee") ?? new List<User>();
+
+            // Add user nodes
+            adminNode.Children.AddRange(adminUsers.Select(u => new RoleNode { User = u, IsRole = false }));
+            hrNode.Children.AddRange(hrUsers.Select(u => new RoleNode { User = u, IsRole = false }));
+            managerNode.Children.AddRange(managerUsers.Select(u => new RoleNode { User = u, IsRole = false }));
+            employeeNode.Children.AddRange(employeeUsers.Select(u => new RoleNode { User = u, IsRole = false }));
+
+            // Build hierarchy: Admin -> HR -> Manager -> Employee
+            adminNode.Children.Add(hrNode);
+            hrNode.Children.Add(managerNode);
+            managerNode.Children.Add(employeeNode);
+
+            _roleNodes.Add(new CustomTreeItemData<RoleNode>(adminNode));
+            _isLoading = false;
+        }
+        catch (Exception ex)
+        {
+            _isLoading = false;
+            _errorMessage = $"Error loading role hierarchy: {ex.Message}";
+        }
+    }
+    public class CustomTreeItemData<T> : TreeItemData<T>
+    {
+        public CustomTreeItemData(T value) : base(value)
+        {
+        }
+
+        public List<CustomTreeItemData<T>> ChildItems { get; set; } = new();
+    }
+    public class RoleNode
+    {
+        public string RoleName { get; set; } = string.Empty;
+        public User? User { get; set; }
+        public bool IsRole { get; set; }
+        public List<RoleNode> Children { get; set; } = new();
+    }
+}

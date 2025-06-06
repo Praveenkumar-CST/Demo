@@ -339,6 +339,7 @@
             <tr>
                 <th>Qualification</th>
                 <th>University</th>
+                        <th>College</th>
                 <th>Year of Passing</th>
                 <th>Percentage</th>
             </tr>
@@ -349,6 +350,7 @@
                 <tr>
                     <td>@edu.Qualification</td>
                     <td>@edu.University</td>
+                    <td>@edu.College</td>
                     <td>@edu.YearOfPassing</td>
                     <td>@edu.Percentage</td>
                 </tr>
@@ -388,8 +390,114 @@
     </div>
     </div>
 </MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-1">
 
+@* <MudContainer MaxWidth="MaxWidth.Large" Class="mt-1"> *@
+
+@*     <div class="container mt-4"> *@
+@*         <div class="card shadow-sm"> *@
+@*             <div class="card-body"> *@
+@*                 <!-- Policy List --> *@
+@*                 <h4>Policies & Guidelines</h4> *@
+@*                 <ul class="list-group list-group-flush"> *@
+@*                     @foreach (var item in policyDocuments) *@
+@*                     { *@
+@*                         <li class="list-group-item d-flex justify-content-between align-items-center"> *@
+@*                             <div> *@
+@*                                 <span>@item.Name</span> *@
+@*                             </div> *@
+@*                             <div> *@
+@*                                 <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => PreviewPolicy(item)">Preview</button> *@
+@*                              <MudButton Variant="Variant.Filled" *@
+@*                            Color="@(item.IsAcknowledged ? Color.Success : Color.Default)" *@
+@*                            Size="Size.Small" *@
+@*                            OnClick="() => AcknowledgePolicy(item)" *@
+@*                            Disabled="@(!item.HasPreviewed || item.IsAcknowledged || !item.IsPdfScrolledToEnd)"> *@
+@*                     @(item.IsAcknowledged ? "Acknowledged" : "Acknowledge") *@
+@*                 </MudButton> *@
+
+@*                             </div> *@
+@*                         </li> *@
+@*                     } *@
+@*                 </ul> *@
+@*                 <!-- Submission Alert --> *@
+@*                 @if (isSubmitted) *@
+@*                 { *@
+@*                     <div class="alert alert-success alert-dismissible fade show mt-3" role="alert"> *@
+@*                         Form submitted successfully! *@
+@*                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> *@
+@*                     </div> *@
+@*                 } *@
+@*                 @if (isSubmitting) *@
+@*                 { *@
+@*                     <div class="d-flex flex-column align-items-center mt-4"> *@
+@*                         <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" /> *@
+@*                         <MudText Class="mt-2" Typo="Typo.subtitle1"> *@
+@*                             <b>Submitting your details. Please wait...</b> *@
+@*                         </MudText> *@
+@*                     </div> *@
+@*                 } *@
+@*                 <!-- Submit Button --> *@
+@*                 <div class="text-center mt-3"> *@
+@*                     <button type="button" class="btn btn-reset" @onclick="ShowConfirmDialog" disabled="@(!CanSubmit)"> *@
+@*                         Submit *@
+@*                     </button> *@
+@*                 </div> *@
+              
+
+@*             </div> *@
+@*         </div> *@
+
+@*         <!-- PDF Preview Modal --> *@
+@*         <!-- PDF Preview Modal --> *@
+@*         @if (!string.IsNullOrEmpty(activePdfUrl)) *@
+@*         { *@
+@*             <div @key="renderCounter" class="modal fade show" style="display: block; margin-top:50px" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="@(!ShowModal)"> *@
+@*                 <div class="modal-dialog modal-lg"> *@
+@*                     <div class="modal-content"> *@
+@*                         <div class="modal-header"> *@
+@*                             <h5 class="modal-title" id="pdfModalLabel">Preview: @activePdfName</h5> *@
+@*                             <button type="button" class="btn-close" @onclick="ClosePreview" aria-label="Close"></button> *@
+@*                         </div> *@
+@*                         <div class="modal-body"> *@
+@*                             <div id="pdfViewer" style="height: 450px; overflow-y: scroll;"> *@
+@*                                 <iframe src="@activePdfUrl" width="100%" height="800px" style="border: none;"></iframe> *@
+@*                             </div> *@
+@*                         </div> *@
+@*                         <div class="modal-footer">                           *@
+@*                             <button type="button" class="btn btn-reset" @onclick="ClosePreview" disabled="@(!isEndOfPdfReached)"> *@
+@*                                 Close *@
+@*                             </button> *@
+@*                         </div> *@
+@*                     </div> *@
+@*                 </div> *@
+@*             </div> *@
+@*             <div class="modal-backdrop fade show"></div> *@
+@*         } *@
+@*         <!-- Confirmation Dialog Modal --> *@
+@*         @if (showConfirmDialog) *@
+@*         { *@
+@*             <div class="modal fade show" style="display: block; margin-top:250px; margin-left:20px;"  tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true"> *@
+@*                 <div class="modal-dialog modal-sm"> *@
+@*                     <div class="modal-content"> *@
+@*                         <div class="modal-header"> *@
+@*                             <h5 class="modal-title" id="confirmModalLabel">Confirm Submission</h5> *@
+@*                             <button type="button" class="btn-close" @onclick="CloseConfirmDialog" aria-label="Close"></button> *@
+@*                         </div> *@
+@*                         <div class="modal-body"> *@
+@*                            Are you sure you want to submit the details? Once submitted, any modifications will require an Edit Request.                        </div> *@
+@*                         <div class="modal-footer"> *@
+@*                             <button type="button" class="btn btn-primary" @onclick="CloseConfirmDialog">Cancel</button> *@
+@*                             <button type="button" class="btn btn-info" @onclick="ConfirmSubmit">Confirm</button> *@
+@*                         </div> *@
+@*                     </div> *@
+@*                 </div> *@
+@*             </div> *@
+@*             <div class="modal-backdrop fade show"></div> *@
+@*         } *@
+
+@*     </div> *@
+@* </MudContainer> *@
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-1">
     <div class="container mt-4">
         <div class="card shadow-sm">
             <div class="card-body">
@@ -404,14 +512,13 @@
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => PreviewPolicy(item)">Preview</button>
-                             <MudButton Variant="Variant.Filled"
-                           Color="@(item.IsAcknowledged ? Color.Success : Color.Default)"
-                           Size="Size.Small"
-                           OnClick="() => AcknowledgePolicy(item)"
-                           Disabled="@(!item.HasPreviewed || item.IsAcknowledged || !item.IsPdfScrolledToEnd)">
-                    @(item.IsAcknowledged ? "Acknowledged" : "Acknowledge")
-                </MudButton>
-
+                                <MudButton Variant="Variant.Filled"
+                                           Color="@(item.IsAcknowledged ? Color.Success : Color.Default)"
+                                           Size="Size.Small"
+                                           OnClick="() => AcknowledgePolicy(item)"
+                                           Disabled="@(!CanAcknowledgePolicy(item))">
+                                    @(item.IsAcknowledged ? "Acknowledged" : "Acknowledge")
+                                </MudButton>
                             </div>
                         </li>
                     }
@@ -439,12 +546,9 @@
                         Submit
                     </button>
                 </div>
-              
-
             </div>
         </div>
 
-        <!-- PDF Preview Modal -->
         <!-- PDF Preview Modal -->
         @if (!string.IsNullOrEmpty(activePdfUrl))
         {
@@ -453,16 +557,41 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="pdfModalLabel">Preview: @activePdfName</h5>
-                            <button type="button" class="btn-close" @onclick="ClosePreview" aria-label="Close"></button>
+                            <div class="ms-3 d-flex align-items-center">
+                                @if (countdownSeconds > 0)
+                                {
+                                    <MudText Typo="Typo.body2" Class="text-warning me-3">
+                                        <MudIcon Icon="Icons.Material.Filled.Timer" Size="Size.Small" />
+                                        Please wait @countdownSeconds seconds to close
+                                    </MudText>
+                                }
+                                else if (isEndOfPdfReached)
+                                {
+                                    <MudText Typo="Typo.body2" Class="text-success me-3">
+                                        <MudIcon Icon="Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                                        Ready to close
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Class="text-info me-3">
+                                        Please scroll to the end of the document
+                                    </MudText>
+                                }
+                            </div>
+                            <button type="button" class="btn-close" @onclick="ClosePreview" disabled="@(!CanCloseModal)" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div id="pdfViewer" style="height: 450px; overflow-y: scroll;">
                                 <iframe src="@activePdfUrl" width="100%" height="800px" style="border: none;"></iframe>
                             </div>
                         </div>
-                        <div class="modal-footer">                          
-                            <button type="button" class="btn btn-reset" @onclick="ClosePreview" disabled="@(!isEndOfPdfReached)">
-                                Close
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-reset" @onclick="ClosePreview" disabled="@(!CanCloseModal)">
+                                Close @if (countdownSeconds > 0)
+                                {
+                                    <span>(@countdownSeconds)</span>
+                                }
                             </button>
                         </div>
                     </div>
@@ -473,7 +602,7 @@
         <!-- Confirmation Dialog Modal -->
         @if (showConfirmDialog)
         {
-            <div class="modal fade show" style="display: block; margin-top:250px; margin-left:20px;"  tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+            <div class="modal fade show" style="display: block; margin-top:250px; margin-left:20px;" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-sm">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -481,7 +610,8 @@
                             <button type="button" class="btn-close" @onclick="CloseConfirmDialog" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                           Are you sure you want to submit the details? Once submitted, any modifications will require an Edit Request.                        </div>
+                            Are you sure you want to submit the details? Once submitted, any modifications will require an Edit Request.
+                        </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" @onclick="CloseConfirmDialog">Cancel</button>
                             <button type="button" class="btn btn-info" @onclick="ConfirmSubmit">Confirm</button>
@@ -491,7 +621,6 @@
             </div>
             <div class="modal-backdrop fade show"></div>
         }
-
     </div>
 </MudContainer>
 
@@ -510,46 +639,72 @@
         border-color: #007bff;
         cursor: pointer;
     }
+
+    /* Timer styling */
+    .text-warning {
+        color: #ffc107 !important;
+    }
+
+    .text-success {
+        color: #198754 !important;
+    }
+
+    .text-info {
+        color: #0dcaf0 !important;
+    }
 </style>
 
 @code {
-    public bool ShowModal { get; set; } = true;
-
+    private bool ShowModal { get; set; } = true;
     private BankingInformation bankingInfo = new BankingInformation();
     private Experience experience = new Experience();
-    private EmployeeDetails employeeDetails = new EmployeeDetails(); 
+    private EmployeeDetails employeeDetails = new EmployeeDetails();
     private List<Education> educationList = new();
     private List<WorkExperience> workList = new();
     private List<EmployeeDetails> allEmployees = new();
     private bool isSubmitting = false;
+    private bool isEndOfPdfReached { get; set; } = false;
+    private string? activePdfUrl = null;
+    private string? activePdfName = null;
+
+    // Timer-related properties
+    private System.Timers.Timer? countdownTimer;
+    private int countdownSeconds = 30; // Start countdown from 30 seconds
+    private const int InitialCountdownSeconds = 30;
 
     [Parameter]
     public EventCallback<string> OnSubmit { get; set; }
 
-    public bool isEndOfPdfReached { get; set; } = false;
-
     private List<PolicyItem> policyDocuments = new()
-        {
+    {
         new PolicyItem { Name = "Attendance Policy", Url = "/pdfs/Wise Work Attendance Policy v3.pdf" },
-        new PolicyItem { Name = "Git Guidelines", Url = "/pdfs/Git Guidelines.pdf" },
-        new PolicyItem { Name = "Code of Conduct", Url = "/pdfs/Wise Work Code of Conduct v1.pdf" },
-        new PolicyItem { Name = "CSharp Coding Guidelines", Url = "/pdfs/CSharp Coding Guidelines.pdf" },
-        new PolicyItem { Name = "Json Coding Guidelines", Url = "/pdfs/Json Coding Guidelines.pdf" },
-        new PolicyItem { Name = "MongoDB Coding Guidelines", Url = "/pdfs/MongoDB Coding Guidelines.pdf" },
-        new PolicyItem { Name = "Python Coding Guidelines", Url = "/pdfs/Python Coding Guidelines.pdf" }
-
+        //new PolicyItem { Name = "Git Guidelines", Url = "/pdfs/Git Guidelines.pdf" },
+        new PolicyItem { Name = "Code of Conduct", Url = "/pdfs/Wise Work Code of Conduct v1.pdf" }
+        // new PolicyItem { Name = "CSharp Coding Guidelines", Url = "/pdfs/CSharp Coding Guidelines.pdf" },
+        // new PolicyItem { Name = "JSON Coding Guidelines", Url = "/pdfs/Json Coding Guidelines.pdf" },
+        // new PolicyItem { Name = "MongoDB Coding Guidelines", Url = "/pdfs/MongoDB Coding Guidelines.pdf" },
+        // new PolicyItem { Name = "Python Coding Guidelines", Url = "/pdfs/Python Coding Guidelines.pdf" }
     };
 
-    private string? activePdfUrl = null;
-    private string? activePdfName = null;
-
+    // Updated properties for better control
     private bool CanSubmit => policyDocuments.All(p => p.HasPreviewed && p.IsAcknowledged);
+    private bool CanCloseModal => countdownSeconds <= 0 && isEndOfPdfReached;
+
+    private bool CanAcknowledgePolicy(PolicyItem item)
+    {
+        return item.HasPreviewed && item.IsAcknowledged == false && item.IsPdfScrolledToEnd && item.HasCompletedMinimumTime;
+    }
+
     private async Task AcknowledgePolicy(PolicyItem item)
     {
-        item.IsAcknowledged = true;
-        Snackbar.Add($"Policy '{item.Name}' acknowledged.", Severity.Success);
-        await InvokeAsync(StateHasChanged);
+        if (CanAcknowledgePolicy(item))
+        {
+            item.IsAcknowledged = true;
+            Snackbar.Add($"Policy '{item.Name}' acknowledged.", Severity.Success);
+            await InvokeAsync(StateHasChanged);
+        }
     }
+
     private DotNetObjectReference<ConfirmationPage>? dotNetHelperRef;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -557,21 +712,18 @@
         if (firstRender)
         {
             dotNetHelperRef = DotNetObjectReference.Create(this);
-
             if (JSRuntime != null && dotNetHelperRef != null)
             {
                 await JSRuntime.InvokeVoidAsync("pdfScrollHelper.detectScrollEnd", dotNetHelperRef);
             }
         }
     }
-  
-
 
     public void Dispose()
     {
         dotNetHelperRef?.Dispose();
+        countdownTimer?.Dispose();
     }
-  
 
     private int renderCounter = 0;
 
@@ -584,12 +736,10 @@
         if (doc != null)
         {
             doc.IsPdfScrolledToEnd = true;
+            // Note: Don't set HasCompletedMinimumTime here - let the timer handle it
         }
-
         renderCounter++;
-        Console.WriteLine($"isEndOfPdfReached set to: {isEndOfPdfReached}");
         await InvokeAsync(StateHasChanged);
-        Console.WriteLine("Close button enabled: " + isEndOfPdfReached);
     }
 
     private async Task PreviewPolicy(PolicyItem item)
@@ -597,8 +747,13 @@
         activePdfUrl = item.Url;
         activePdfName = item.Name;
         item.HasPreviewed = true;
-       // isEndOfPdfReached = false;
-       policyDocuments.ForEach(p => p.IsPdfScrolledToEnd = false); // reset scroll state
+
+        // Reset states for this document
+        policyDocuments.ForEach(p => p.IsPdfScrolledToEnd = false);
+        isEndOfPdfReached = false;
+        countdownSeconds = InitialCountdownSeconds; // Reset countdown to 30 seconds
+
+        StartCountdownTimer(); // Start the 30-second countdown
         await InvokeAsync(StateHasChanged);
         await Task.Delay(300);
 
@@ -611,12 +766,53 @@
 
     private async Task ClosePreview()
     {
-        Console.WriteLine($"Close clicked, isEndOfPdfReached before reset: {isEndOfPdfReached}");
+        if (!CanCloseModal) return;
+
+        StopCountdownTimer();
         activePdfUrl = null;
-        Console.WriteLine("Close clicked: " + isEndOfPdfReached);
         isEndOfPdfReached = false;
+        countdownSeconds = InitialCountdownSeconds;
         await InvokeAsync(StateHasChanged);
     }
+
+    private void StartCountdownTimer()
+    {
+        StopCountdownTimer(); // Stop any existing timer
+
+        countdownTimer = new System.Timers.Timer(1000); // Update every second
+        countdownTimer.Elapsed += async (sender, e) =>
+        {
+            if (countdownSeconds > 0)
+            {
+                countdownSeconds--;
+            }
+            else
+            {
+                // Timer has reached 0
+                var doc = policyDocuments.FirstOrDefault(p => p.Url == activePdfUrl);
+                if (doc != null)
+                {
+                    doc.HasCompletedMinimumTime = true;
+                }
+                StopCountdownTimer();
+            }
+
+            await InvokeAsync(StateHasChanged);
+        };
+        countdownTimer.AutoReset = true;
+        countdownTimer.Start();
+    }
+
+    private void StopCountdownTimer()
+    {
+        if (countdownTimer != null)
+        {
+            countdownTimer.Stop();
+            countdownTimer.Dispose();
+            countdownTimer = null;
+        }
+    }
+
     public class PolicyItem
     {
         public string Name { get; set; } = "";
@@ -624,7 +820,9 @@
         public bool HasPreviewed { get; set; } = false;
         public bool IsAcknowledged { get; set; } = false;
         public bool IsPdfScrolledToEnd { get; set; } = false;
+        public bool HasCompletedMinimumTime { get; set; } = false; // Renamed for clarity
     }
+
     protected override async Task OnInitializedAsync()
     {
         var bankingInfoJson = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "bankingInfo");
