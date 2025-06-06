@@ -669,8 +669,8 @@
 
     // Timer-related properties
     private System.Timers.Timer? countdownTimer;
-    private int countdownSeconds = 60; // Start countdown from 30 seconds
-    private const int InitialCountdownSeconds = 60;
+    private int countdownSeconds = 30; // Start countdown from 30 seconds
+    private const int InitialCountdownSeconds = 30;
 
     [Parameter]
     public EventCallback<string> OnSubmit { get; set; }
@@ -755,7 +755,7 @@
 
         StartCountdownTimer(); // Start the 30-second countdown
         await InvokeAsync(StateHasChanged);
-        await Task.Delay(600);
+        await Task.Delay(300);
 
         if (JSRuntime != null)
         {

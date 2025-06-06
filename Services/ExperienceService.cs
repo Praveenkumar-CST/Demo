@@ -32,12 +32,59 @@ public class ExperienceService
     // Timeout policy
     private static readonly IAsyncPolicy<HttpResponseMessage> _timeoutPolicy = Policy
         .TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10));
+    private string ToTitleCase(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return input;
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
+    }
+
+    private string ToUpperCase(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return input;
+        return input.ToUpper();
+    }
+
+    // Capitalize Experience fields
+    private void CapitalizeExperience(Experience experience)
+    {
+        // Capitalize EmployeeID
+        experience.EmployeeID = ToUpperCase(experience.EmployeeID);
+
+        // Capitalize EducationQualifications
+        foreach (var education in experience.EducationQualifications)
+        {
+            education.Qualification = ToTitleCase(education.Qualification);
+            education.University = ToTitleCase(education.University);
+            education.College = ToTitleCase(education.College);
+            // YearOfPassing and Percentage are non-string, no capitalization needed
+        }
+
+        // Capitalize WorkExperiences
+        foreach (var workExp in experience.WorkExperiences)
+        {
+            workExp.Employer = ToTitleCase(workExp.Employer);
+            workExp.Location = ToTitleCase(workExp.Location);
+            workExp.Designation = ToTitleCase(workExp.Designation);
+            // DateOfJoining and DateOfLeaving are DateTime, no capitalization needed
+        }
+
+        // Ensure JSON properties are updated
+        experience.EducationJson = experience.EducationQualifications.Any()
+            ? System.Text.Json.JsonSerializer.Serialize(experience.EducationQualifications)
+            : null;
+        experience.WorkExperienceJson = experience.WorkExperiences.Any()
+            ? System.Text.Json.JsonSerializer.Serialize(experience.WorkExperiences)
+            : null;
+    }
 
     public async Task<bool> RegisterExperienceAsync(Experience experience)
     {
         try
         {
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            CapitalizeExperience(experience);
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _httpClient.PostAsJsonAsync("Experience/ExperienceRegistry", experience)));
@@ -224,6 +271,8 @@ public class ExperienceService
         try
         {
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            CapitalizeExperience(experience);
+
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _httpClient.PostAsJsonAsync("Experience/UpdateExperience", experience)));
