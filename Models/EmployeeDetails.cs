@@ -183,7 +183,6 @@ namespace WiseHR.Models
         public string? EmergencyContact2Mobile { get; set; } = string.Empty;
 
 
-
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

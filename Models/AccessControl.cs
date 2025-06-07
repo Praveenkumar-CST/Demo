@@ -32,12 +32,11 @@ namespace WiseHR.Models
                     //("ReportList", "/reports"),
                      ("HIDE_EmployeeProfile", "/employee/.*"),
                      ("HIDE_Analytics", "/analytics"),
-                     //("Assign Mentee","/managers"),
+                    //("Assign Mentee","/managers"),
                     ("Asset","/asset"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
                     ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
-
                 }
             },
             {
