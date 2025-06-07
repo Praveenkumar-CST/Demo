@@ -828,7 +828,7 @@
     protected override async Task OnInitializedAsync()
     {
         UserRole = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "userRole");
-        CurrentEmail = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+        CurrentEmail = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "email");
         Console.WriteLine($"EmployeeProfile OnInitializedAsync: UserRole = {UserRole}, CurrentEmail = {CurrentEmail}"); // DEBUG
 
         await LoadData();
