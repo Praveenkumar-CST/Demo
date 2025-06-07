@@ -74,14 +74,8 @@
         <MudMenu AnchorOrigin="Origin.BottomLeft">
             <ActivatorContent>
                 <div class="d-flex align-center justify-end ">
-                    @if (Email == "jaya555priya@gmail.com")
-                    {
-                        <img src="images/logo1.png"
-                             class="border-hover-color-shift profile-bounce neon-glow"
-                             alt="Employee Photo"
-                             style="width: 55px; height: 55px; object-fit: cover;" />
-                    }
-                    else if (!string.IsNullOrEmpty(userProfilePicture))
+
+                    @if (!string.IsNullOrEmpty(userProfilePicture))
                     {
                         <img src="@userProfilePicture"
                              class="border-hover-color-shift profile-bounce neon-glow " alt="Employee Photo"
@@ -730,10 +724,11 @@
 
     private async Task NavigateToProfile()
     {
-        Console.WriteLine($"Navigate to current user profile, employeeId: {employeeId}");
-        if (!string.IsNullOrEmpty(employeeId))
+        var empid = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "EmpId");
+        Console.WriteLine($"Navigate to current user profile, employeeId: {empid}");
+        if (!string.IsNullOrEmpty(empid))
         {
-            NavigationManager.NavigateTo($"/employee/{employeeId}");
+            NavigationManager.NavigateTo($"/employee/{empid}");
         }
         else
         {

@@ -52,7 +52,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient<MentorAssignmentService>();
 builder.Services.AddScoped<MentorAssignmentService>();
 
-builder.Services.AddScoped<WiseHR.Models.NewFolder.CountryService>();
+builder.Services.AddScoped<CountryService>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<SearchService>();
