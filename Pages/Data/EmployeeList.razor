@@ -27,24 +27,34 @@ else if (hasError)
 }
 else if (pagedEmployees.Any())
 {
-    <!-- Search and Filter Row -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <input type="text"
-               class="form-control w-50"
-               placeholder="Search Employee"
-               @bind="searchQuery"
-               @oninput="HandleSearchInput" />
-
-        <select class="form-select w-auto ms-2"
-                @bind="SelectedDesignation">
-            <option value="">All Designations</option>
-            @foreach (var designation in designations)
-            {
-                <option value="@designation">@designation</option>
-            }
-        </select>
+    <MudItem xs="12" sm="6" md="2">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PersonAdd"
+                   OnClick='() => NavigationManager.NavigateTo("/home/employees")'
+                   Class="w-70" >
+            Employee
+        </MudButton>
+    </MudItem>
+    <br/>
+    <!-- Search and Filter Row --> 
+     <div class="d-flex justify-content-between align-items-center mb-3"> 
+        <input type="text" 
+               class="form-control w-50" 
+                placeholder="Search Employee" 
+               @bind="searchQuery" 
+               @oninput="HandleSearchInput" /> 
+   
+         <select class="form-select w-auto ms-2" 
+                 @bind="SelectedDesignation"> 
+             <option value="">All Designations</option> 
+             @foreach (var designation in designations) 
+             { 
+              <option value="@designation">@designation</option> 
+           } 
+       </select> 
     </div>
-
+ 
     <div class="table-responsive">
         <table class="table table-hover">
             <thead>
