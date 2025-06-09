@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Text.Json
 @using System.Text.RegularExpressions
+@using System.Text
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -27,7 +28,6 @@
         @* Header *@
         <div class="wisechat-header">
             <div class="wisechat-header-content">
-              
                 <MudFab IconSize="Size.Large" EndIcon="@(isOpen ? Icons.Material.Filled.SupportAgent : Icons.Material.Filled.SupportAgent)"
                         Color="Color.Primary"
                         OnClick="ToggleChat"
@@ -39,6 +39,11 @@
                         <MudText Typo="Typo.subtitle2">@(isConnected ? "Online" : "Connecting...")</MudText>
                     </div>
                 </div>
+                <MudFab IconSize="Size.Small" EndIcon="@(isOpen ? Icons.Material.Filled.Add : Icons.Material.Filled.Add)"
+                      
+                              OnClick="StartNewChat"
+                              Class="wisechat-new-chat-button"
+                              Title="Start New Chat"/>
             </div>
         </div>
 
@@ -124,22 +129,22 @@
 
         @* Input Area *@
         <div class="wisechat-input-area">
-            <div class="wisechat-input">
-                <div class="wisechat-input-wrapper">
-                    <input type="text"
-                           @bind="currentMessage"
-                           @bind:event="oninput"
-                           @onkeypress="OnKeyPress"
-                           placeholder="Ask me anything about WiseHR..."
-                           disabled="@(!isConnected || isSending)"
-                           class="wisechat-input-field" />
+            <div class="wisechat-input-wrapper">
+                <textarea
+                       @bind="currentMessage"
+                       @bind:event="oninput"
+                       @onkeydown="OnKeyDown"
+                       placeholder="Ask me anything about WiseONE..."
+                       disabled="@(!isConnected || isSending)"
+                       class="wisechat-input-field"
+                       rows="1"
+                       @ref="inputRef"></textarea>
 
-                    <MudIconButton Icon="Icons.Material.Filled.Send" 
-                                  Color="Color.Secondary" 
-                                  OnClick="SendMessage"
-                                  Disabled="string.IsNullOrWhiteSpace(currentMessage) || !isConnected || isSending"
-                                  Class="wisechat-send-button"/>
-                </div>
+                <MudIconButton Icon="Icons.Material.Filled.Send" 
+                              Color="Color.Secondary" 
+                              OnClick="SendMessage"
+                              Disabled="string.IsNullOrWhiteSpace(currentMessage) || !isConnected || isSending"
+                              Class="wisechat-send-button"/>
             </div>
         </div>
     </div>
@@ -283,9 +288,30 @@
     .wisechat-header-content {
         display: flex;
         align-items: center;
-        gap: 14px;
+        
+               gap: 14px;
         position: relative;
         z-index: 1;
+
+    }
+
+    .wisechat-new-chat-button {
+        margin-left: auto;
+        transition: transform 0.2s ease;
+        width:40px;
+        height:40px;
+       
+        
+    }
+
+        .wisechat-new-chat-button .mud-icon-root.mud-svg-icon {
+            fill: white;
+            width:25px;
+            height:25px;
+        }
+    .wisechat-new-chat-button:hover {
+        transform: rotate(90deg);
+            background-color: rgb(138 131 166);
     }
 
     .wisechat-header-text {
@@ -510,7 +536,7 @@
 
     .wisechat-input-wrapper {
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         gap: 12px;
         background: white;
         border-radius: 16px;
@@ -520,10 +546,10 @@
         transition: all 0.3s ease;
     }
 
-        .wisechat-input-wrapper:focus-within {
-            box-shadow: 0 6px 20px rgba(var(--mud-palette-primary-rgb), 0.15), 0 0 0 3px rgba(var(--mud-palette-primary-rgb), 0.1);
-            border-color: var(--mud-palette-primary);
-        }
+    .wisechat-input-wrapper:focus-within {
+        box-shadow: 0 6px 20px rgba(var(--mud-palette-primary-rgb), 0.15), 0 0 0 3px rgba(var(--mud-palette-primary-rgb), 0.1);
+        border-color: var(--mud-palette-primary);
+    }
 
     .wisechat-input-field {
         flex: 1;
@@ -531,29 +557,32 @@
         border: none;
         border-radius: 12px;
         font-size: 14px;
+        line-height: 1.4;
         background: transparent;
         transition: all 0.3s ease;
-        line-height: 1.4;
+        resize: none;
+        max-height: 150px;
+        overflow-y: auto;
     }
 
-        .wisechat-input-field:focus {
-            outline: none;
-        }
+    .wisechat-input-field:focus {
+        outline: none;
+    }
 
-        .wisechat-input-field::placeholder {
-            color: #94a3b8;
-            transition: color 0.3s ease;
-        }
+    .wisechat-input-field::placeholder {
+        color: #94a3b8;
+        transition: color 0.3s ease;
+    }
 
-        .wisechat-input-field:focus::placeholder {
-            color: #cbd5e1;
-        }
+    .wisechat-input-field:focus::placeholder {
+        color: #cbd5e1;
+    }
 
-        .wisechat-input-field:disabled {
-            background: rgba(0, 0, 0, 0.02);
-            cursor: not-allowed;
-            color: #94a3b8;
-        }
+    .wisechat-input-field:disabled {
+        background: rgba(0, 0, 0, 0.02);
+        cursor: not-allowed;
+        color: #94a3b8;
+    }
 
     /* Enhanced send button */
     .wisechat-send-button {
@@ -564,22 +593,23 @@
         background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3);
+        margin-bottom: 4px;
     }
 
-        .wisechat-send-button:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(var(--mud-palette-primary-rgb), 0.4);
-        }
+    .wisechat-send-button:hover:not(:disabled) {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(var(--mud-palette-primary-rgb), 0.4);
+    }
 
-        .wisechat-send-button:active {
-            transform: translateY(0) scale(0.98);
-        }
+    .wisechat-send-button:active {
+        transform: translateY(0) scale(0.98);
+    }
 
-        .wisechat-send-button:disabled {
-            opacity: 0.5;
-            transform: none;
-            box-shadow: none;
-        }
+    .wisechat-send-button:disabled {
+        opacity: 0.5;
+        transform: none;
+        box-shadow: none;
+    }
 
     .wisechat-status-message {
         text-align: center;
@@ -588,6 +618,41 @@
         background: rgba(0, 0, 0, 0.04);
         border-radius: 12px;
         animation: fadeIn 0.3s ease;
+    }
+
+    /* Dark mode input support */
+    @@media (prefers-color-scheme: dark) {
+        .wisechat-input-area {
+            background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+            border-top-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .wisechat-input-wrapper {
+            background: #2d3748;
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .wisechat-input-field {
+            color: #e2e8f0;
+        }
+
+        .wisechat-input-field::placeholder {
+            color: #a0aec0;
+        }
+
+        .wisechat-input-field:focus::placeholder {
+            color: #cbd5e1;
+        }
+
+        .wisechat-input-field:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: #a0aec0;
+        }
+
+        .wisechat-status-message {
+            background: rgba(255, 255, 255, 0.05);
+        }
     }
 
     /* Animations */
@@ -809,6 +874,7 @@
         white-space: pre-wrap;
         word-wrap: break-word;
         line-height: 1.5;
+        font-size: 0.95rem;
     }
 
     .wisechat-bullet-list {
@@ -875,6 +941,218 @@
             color: var(--mud-palette-primary-lighten);
         }
     }
+
+    /* Table Styles */
+    .wisechat-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .wisechat-table th {
+        background: var(--mud-palette-primary);
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .wisechat-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .wisechat-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .wisechat-table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .wisechat-table tr:hover {
+        background: #f0f0f0;
+    }
+
+    /* Dark mode table support */
+    @@media (prefers-color-scheme: dark) {
+        .wisechat-table {
+            background: #2d3748;
+        }
+
+        .wisechat-table th {
+            background: var(--mud-palette-primary-darken);
+        }
+
+        .wisechat-table td {
+            border-bottom-color: #4a5568;
+        }
+
+        .wisechat-table tr:nth-child(even) {
+            background: #2d3748;
+        }
+
+        .wisechat-table tr:hover {
+            background: #4a5568;
+        }
+    }
+
+    /* Enhanced Asset Table Styles */
+    .wisechat-asset-table-container {
+        margin: 1rem 0;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    .wisechat-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        font-size: 0.9rem;
+    }
+
+    .wisechat-table th {
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        color: white;
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .wisechat-table td {
+        padding: 16px;
+        border-bottom: 1px solid #eee;
+        vertical-align: top;
+    }
+
+    .wisechat-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .wisechat-table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .wisechat-table tr:hover {
+        background: #f0f0f0;
+        transition: background-color 0.2s ease;
+    }
+
+    .wisechat-table td:nth-child(4) {
+        max-width: 300px;
+        white-space: normal;
+    }
+
+    /* Dark mode table support */
+    @@media (prefers-color-scheme: dark) {
+        .wisechat-table {
+            background: #2d3748;
+        }
+
+        .wisechat-table th {
+            background: linear-gradient(135deg, var(--mud-palette-primary-darken) 0%, var(--mud-palette-primary) 100%);
+        }
+
+        .wisechat-table td {
+            border-bottom-color: #4a5568;
+            color: #e2e8f0;
+        }
+
+        .wisechat-table tr:nth-child(even) {
+            background: #2d3748;
+        }
+
+        .wisechat-table tr:hover {
+            background: #4a5568;
+        }
+    }
+
+    /* Text Formatting Styles */
+    .wisechat-heading {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--mud-palette-primary);
+        margin: 1.5rem 0 0.8rem 0;
+        padding-bottom: 0.3rem;
+        border-bottom: 2px solid var(--mud-palette-primary-lighten);
+    }
+
+    .wisechat-subheading {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--mud-palette-primary-darken);
+        margin: 1.2rem 0 0.6rem 0;
+    }
+
+    .wisechat-bold {
+        font-weight: 600;
+        color: var(--mud-palette-primary-darken);
+    }
+
+    .wisechat-italic {
+        font-style: italic;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .wisechat-code {
+        font-family: 'Consolas', 'Monaco', monospace;
+        background: #f5f5f5;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .wisechat-highlight {
+        background: linear-gradient(120deg, rgba(var(--mud-palette-primary-rgb), 0.2) 0%, rgba(var(--mud-palette-primary-rgb), 0.2) 100%);
+        background-repeat: no-repeat;
+        background-size: 100% 0.2em;
+        background-position: 0 88%;
+        transition: background-size 0.25s ease-in;
+    }
+
+    .wisechat-highlight:hover {
+        background-size: 100% 100%;
+    }
+
+    /* Dark mode text support */
+    @@media (prefers-color-scheme: dark) {
+        .wisechat-heading {
+            color: var(--mud-palette-primary-lighten);
+            border-bottom-color: var(--mud-palette-primary);
+        }
+
+        .wisechat-subheading {
+            color: var(--mud-palette-primary-lighten);
+        }
+
+        .wisechat-bold {
+            color: var(--mud-palette-primary-lighten);
+        }
+
+        .wisechat-italic {
+            color: var(--mud-palette-text-secondary);
+        }
+
+        .wisechat-code {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+
+        .wisechat-highlight {
+            background: linear-gradient(120deg, rgba(var(--mud-palette-primary-rgb), 0.3) 0%, rgba(var(--mud-palette-primary-rgb), 0.3) 100%);
+        }
+    }
 </style>
 
 @code {
@@ -892,6 +1170,7 @@
 
     // UI References
     private ElementReference messagesContainer;
+    private ElementReference inputRef;
 
     // Data Models
     [Parameter] public string? EmployeeId { get; set; }
@@ -945,6 +1224,7 @@
     {
         statusMessage = status;
         await InvokeAsync(StateHasChanged);
+        await ScrollToBottom();
     }
 
     private async void HandleConnectionStateChanged()
@@ -1010,11 +1290,22 @@
         }
     }
 
-    private async Task OnKeyPress(KeyboardEventArgs e)
+    private async Task OnKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !e.ShiftKey)
+        if (e.Key == "Enter")
         {
-            await InvokeAsync(async () => await SendMessage());
+            if (e.ShiftKey)
+            {
+                // Insert a new line
+                var currentPosition = await JSRuntime.InvokeAsync<int>("getCursorPosition", inputRef);
+                currentMessage = currentMessage.Insert(currentPosition, "\n");
+                StateHasChanged();
+            }
+            else
+            {
+                // Send message
+                await SendMessage();
+            }
         }
     }
 
@@ -1053,27 +1344,86 @@
         // First, normalize line endings and remove any extra spaces
         content = content.Replace("\r\n", "\n").Trim();
 
+        // Check if content matches asset list pattern
+        if (content.Contains("Successfully executed get_assets") || 
+            (content.Contains("Asset Tag Prefix:") && content.Contains("Total Instances:")))
+        {
+            return FormatAssetListAsTable(content);
+        }
+
+        // Handle headings (lines starting with #)
+        content = Regex.Replace(content, @"^#\s+(.+)$", "<div class='wisechat-heading'>$1</div>", RegexOptions.Multiline);
+        content = Regex.Replace(content, @"^##\s+(.+)$", "<div class='wisechat-subheading'>$1</div>", RegexOptions.Multiline);
+
         // Handle bold text (text between **)
-        var boldPattern = @"\*\*(.*?)\*\*";
-        var formattedContent = Regex.Replace(content, boldPattern, "<strong>$1</strong>");
+        content = Regex.Replace(content, @"\*\*(.*?)\*\*", "<span class='wisechat-bold'>$1</span>");
+
+        // Handle italic text (text between *)
+        content = Regex.Replace(content, @"\*(.*?)\*", "<span class='wisechat-italic'>$1</span>");
+
+        // Handle code (text between `)
+        content = Regex.Replace(content, @"`(.*?)`", "<span class='wisechat-code'>$1</span>");
+
+        // Handle highlighted text (text between ==)
+        content = Regex.Replace(content, @"==(.*?)==", "<span class='wisechat-highlight'>$1</span>");
 
         // Split into lines and process
-        var lines = formattedContent.Split('\n');
+        var lines = content.Split('\n');
         var formattedLines = new List<string>();
         var inBulletList = false;
+        var inTable = false;
+        var tableRows = new List<string>();
 
         foreach (var line in lines)
         {
             if (string.IsNullOrWhiteSpace(line))
             {
+                if (inTable)
+                {
+                    formattedLines.Add("</tbody></table>");
+                    inTable = false;
+                }
+                else if (inBulletList)
+                {
+                    formattedLines.Add("</div>");
+                    inBulletList = false;
+                }
                 formattedLines.Add("<div class='wisechat-spacing'></div>");
-                inBulletList = false;
                 continue;
             }
 
-            // Handle bullet points (lines starting with - or *)
-            if (line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+            // Check if this is a table header (contains | characters)
+            if (line.Contains("|"))
             {
+                if (!inTable)
+                {
+                    formattedLines.Add("<table class='wisechat-table'><thead><tr>");
+                    inTable = true;
+                }
+
+                var cells = line.Split('|').Where(c => !string.IsNullOrWhiteSpace(c)).Select(c => c.Trim());
+                var rowContent = string.Join("", cells.Select(c => $"<th>{c}</th>"));
+                formattedLines.Add($"<tr>{rowContent}</tr>");
+
+                // If this is the header row, close thead and open tbody
+                if (line.Contains("---"))
+                {
+                    formattedLines.Add("</thead><tbody>");
+                }
+                else if (!line.Contains("---"))
+                {
+                    formattedLines.Add("</tr>");
+                }
+            }
+            // Handle bullet points (lines starting with - or *)
+            else if (line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+            {
+                if (inTable)
+                {
+                    formattedLines.Add("</tbody></table>");
+                    inTable = false;
+                }
+
                 if (!inBulletList)
                 {
                     formattedLines.Add("<div class='wisechat-bullet-list'>");
@@ -1088,7 +1438,12 @@
             // Handle numbered lists
             else if (Regex.IsMatch(line.TrimStart(), @"^\d+\."))
             {
-                if (inBulletList)
+                if (inTable)
+                {
+                    formattedLines.Add("</tbody></table>");
+                    inTable = false;
+                }
+                else if (inBulletList)
                 {
                     formattedLines.Add("</div>");
                     inBulletList = false;
@@ -1099,7 +1454,12 @@
             // Regular text
             else
             {
-                if (inBulletList)
+                if (inTable)
+                {
+                    formattedLines.Add("</tbody></table>");
+                    inTable = false;
+                }
+                else if (inBulletList)
                 {
                     formattedLines.Add("</div>");
                     inBulletList = false;
@@ -1108,13 +1468,97 @@
             }
         }
 
-        // Close any open bullet list
+        // Close any open lists or tables
+        if (inTable)
+        {
+            formattedLines.Add("</tbody></table>");
+        }
         if (inBulletList)
         {
             formattedLines.Add("</div>");
         }
 
         return string.Join("", formattedLines);
+    }
+
+    private string FormatAssetListAsTable(string content)
+    {
+        var lines = content.Split('\n');
+        var assets = new List<Dictionary<string, string>>();
+        var currentAsset = new Dictionary<string, string>();
+        var instances = new List<string>();
+
+        foreach (var line in lines)
+        {
+            var trimmedLine = line.Trim();
+            if (string.IsNullOrWhiteSpace(trimmedLine)) continue;
+
+            if (trimmedLine.StartsWith("Successfully executed"))
+            {
+                continue;
+            }
+            else if (trimmedLine.Contains("Asset Tag Prefix:"))
+            {
+                if (currentAsset.Count > 0)
+                {
+                    currentAsset["Instances"] = string.Join("<br>", instances);
+                    assets.Add(currentAsset);
+                    instances.Clear();
+                }
+                currentAsset = new Dictionary<string, string>();
+                var parts = trimmedLine.Split(':');
+                currentAsset["Asset Type"] = parts[0].Trim();
+                currentAsset["Tag Prefix"] = parts[1].Trim();
+            }
+            else if (trimmedLine.Contains("Total Instances:"))
+            {
+                var parts = trimmedLine.Split(':');
+                currentAsset["Total Instances"] = parts[1].Trim();
+            }
+            else if (trimmedLine.StartsWith("•"))
+            {
+                instances.Add(trimmedLine.Substring(1).Trim());
+            }
+        }
+
+        // Add the last asset
+        if (currentAsset.Count > 0)
+        {
+            currentAsset["Instances"] = string.Join("<br>", instances);
+            assets.Add(currentAsset);
+        }
+
+        var tableHtml = new StringBuilder();
+        tableHtml.Append("<div class='wisechat-asset-table-container'>");
+        tableHtml.Append("<table class='wisechat-table'>");
+        tableHtml.Append("<thead><tr>");
+        tableHtml.Append("<th>Asset Type</th>");
+        tableHtml.Append("<th>Tag Prefix</th>");
+        tableHtml.Append("<th>Total Instances</th>");
+        tableHtml.Append("<th>Instances</th>");
+        tableHtml.Append("</tr></thead><tbody>");
+
+        foreach (var asset in assets)
+        {
+            tableHtml.Append("<tr>");
+            tableHtml.Append($"<td>{asset["Asset Type"]}</td>");
+            tableHtml.Append($"<td>{asset["Tag Prefix"]}</td>");
+            tableHtml.Append($"<td>{asset["Total Instances"]}</td>");
+            tableHtml.Append($"<td>{asset["Instances"]}</td>");
+            tableHtml.Append("</tr>");
+        }
+
+        tableHtml.Append("</tbody></table></div>");
+        return tableHtml.ToString();
+    }
+
+    private async Task StartNewChat()
+    {
+        messages.Clear();
+        currentMessage = string.Empty;
+        statusMessage = string.Empty;
+        isTyping = false;
+        StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()
@@ -1124,6 +1568,14 @@
         ChatService.OnConnectionStateChanged -= HandleConnectionStateChanged;
         await ChatService.DisposeAsync();
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initializeTextarea", inputRef);
+        }
+    }
 }
 
 <script>
@@ -1131,5 +1583,16 @@
         if (element) {
             element.scrollTop = element.scrollHeight;
         }
+    };
+
+    window.getCursorPosition = (element) => {
+        return element.selectionStart;
+    };
+
+    window.initializeTextarea = (element) => {
+        element.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
     };
 </script>

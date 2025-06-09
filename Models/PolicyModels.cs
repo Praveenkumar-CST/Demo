@@ -16,6 +16,7 @@ namespace WiseHR.Models
         public DateTime? LastModifiedDate { get; set; }
         public string LastModifiedBy { get; set; }
         public bool IsActive { get; set; }
+        public string Category { get; set; }
     }
 
     public class PolicyUploadDto
@@ -23,6 +24,7 @@ namespace WiseHR.Models
         public string Title { get; set; }
         public string Version { get; set; }
         public IBrowserFile File { get; set; }
+        public string Category { get; set; }
     }
 
     public class PolicyResponseDto

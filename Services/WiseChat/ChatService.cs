@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
+using System.Net.Http.Json;
 
 namespace WiseHR_Frontend.Services
 {
@@ -21,9 +22,9 @@ namespace WiseHR_Frontend.Services
     public class ChatService : IChatService
     {
         private readonly NavigationManager _navigationManager;
+        private readonly HttpClient _httpClient;
         private HubConnection? _hubConnection;
         private bool _isConnected;
-        private const string BACKEND_URL = "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net";
         private readonly SynchronizationContext? _synchronizationContext;
 
         public bool IsConnected => _isConnected;
@@ -33,9 +34,10 @@ namespace WiseHR_Frontend.Services
         public event Action? OnConnectionStateChanged;
         public event Action<string, string>? OnMessageReceived;
 
-        public ChatService(NavigationManager navigationManager)
+        public ChatService(NavigationManager navigationManager, HttpClient httpClient)
         {
             _navigationManager = navigationManager;
+            _httpClient = httpClient;
             _synchronizationContext = SynchronizationContext.Current;
         }
 
@@ -55,7 +57,7 @@ namespace WiseHR_Frontend.Services
         {
             try
             {
-                var hubUrl = $"{BACKEND_URL}/chathub";
+                var hubUrl = $"{_httpClient.BaseAddress}chathub";
                 Console.WriteLine($"Connecting to chat hub at: {hubUrl}");
                 
                 _hubConnection = new HubConnectionBuilder()

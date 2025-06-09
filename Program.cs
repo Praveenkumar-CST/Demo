@@ -65,6 +65,8 @@ var apiBaseUrl = "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.n
 
 // Register ChatService
 builder.Services.AddScoped<IChatService, ChatService>();
+
+
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 builder.Services.AddSingleton(new ApiConfig { BaseUrl = apiBaseUrl });
 
