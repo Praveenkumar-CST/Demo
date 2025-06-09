@@ -31,7 +31,7 @@
         <select id="yearSelect" class="year-dropdown"
                 @bind="_selectedYear"
                 @bind:after="async () => await FetchHolidaysAsync()">
-            @foreach (var year in _availableYears)
+            @foreach (var year in _availableYears.OrderBy(y => y))
             {
                 <option value="@year">@year</option>
             }
@@ -120,6 +120,28 @@
     </div>
 </div>
 
+@if (IsSnackbarVisible)
+{
+    <div class="snackbar success">
+        Successfully saved optional holidays!
+    </div>
+}
+
+@if (IsLoading)
+{
+    <div style="text-align: center;">
+        <div class="loading-spinner"></div>
+    </div>
+}
+else if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <p class="error-message">@ErrorMessage</p>
+}
+else if (string.IsNullOrEmpty(JoiningLocation))
+{
+    <p class="error-message">Employee location not assigned</p>
+}
+
 <style>
     .loading-spinner {
         border: 4px solid #3b82f6;
@@ -170,7 +192,7 @@
         transition: all 0.3s ease;
     }
 
-        .location_dropdown:focus, .year-dropdown:focus {
+        .location-dropdown:focus, .year-dropdown:focus {
             border-color: #3498db;
             outline: none;
         }
@@ -317,28 +339,6 @@
     }
 </style>
 
-@if (IsSnackbarVisible)
-{
-    <div class="snackbar success">
-        Successfully saved optional holidays!
-    </div>
-}
-
-@if (IsLoading)
-{
-    <div style="text-align: center;">
-        <div class="loading-spinner"></div>
-    </div>
-}
-else if (!string.IsNullOrEmpty(ErrorMessage))
-{
-    <p class="error-message">@ErrorMessage</p>
-}
-else if (string.IsNullOrEmpty(JoiningLocation))
-{
-    <p class="error-message">Employee location not assigned</p>
-}
-
 @code {
     private static readonly int MaxSelections = 2;
     private static readonly int SnackbarDurationMs = 2000;
@@ -357,7 +357,7 @@ else if (string.IsNullOrEmpty(JoiningLocation))
     private string? JoiningLocation { get; set; }
     private string? SelectedLocation { get; set; }
     private int _selectedYear = DateTime.Now.Year;
-    private int[] _availableYears = Enumerable.Range(DateTime.Now.Year - 5, 11).ToArray();
+    private int[] _availableYears = Array.Empty<int>();
     private string? authToken;
     private string[] AvailableLocations { get; set; } = Array.Empty<string>();
     private bool IsUserLocationSelected => !string.IsNullOrEmpty(JoiningLocation) &&
@@ -477,6 +477,33 @@ else if (string.IsNullOrEmpty(JoiningLocation))
         }
     }
 
+    private void UpdateYearsList()
+    {
+        var years = AllHolidays
+            .Select(h => DateTime.TryParse(h.Date, out var date) ? date.Year : (int?)null)
+            .Where(y => y.HasValue)
+            .Select(y => y.Value)
+            .Distinct()
+            .ToArray();
+
+        if (years.Any())
+        {
+            _availableYears = years;
+            if (!_availableYears.Contains(_selectedYear))
+            {
+                _selectedYear = _availableYears.Contains(DateTime.Now.Year) ? DateTime.Now.Year : _availableYears.Max();
+            }
+        }
+        else
+        {
+            _availableYears = new[] { DateTime.Now.Year };
+            _selectedYear = DateTime.Now.Year;
+            ErrorMessage = "No years found in holiday data. Using current year.";
+            StateHasChanged();
+            Task.Delay(3000).ContinueWith(_ => { ErrorMessage = null; StateHasChanged(); });
+        }
+    }
+
     private async Task FetchHolidaysAsync()
     {
         try
@@ -538,6 +565,8 @@ else if (string.IsNullOrEmpty(JoiningLocation))
                 }
             }
 
+            UpdateYearsList(); // Update years based on fetched holidays
+
             AvailableLocations = AllHolidays
                 .Where(h => !string.IsNullOrEmpty(h.Location))
                 .Select(h => h.Location!.Trim())
@@ -571,6 +600,8 @@ else if (string.IsNullOrEmpty(JoiningLocation))
                 .OrderByDescending(h => h.IsSelected)
                 .ThenByDescending(h => DateTime.TryParse(h.Date, out var date) ? date : DateTime.MinValue)
                 .ToArray();
+
+            Console.WriteLine($"Fetched {AllHolidays.Length} holidays for {SelectedLocation ?? "All"} in {_selectedYear}. Permanent: {PermanentHolidays.Length}, Optional: {OptionalHolidays.Length}, Years: {string.Join(", ", _availableYears)}");
         }
         catch (Exception ex)
         {
