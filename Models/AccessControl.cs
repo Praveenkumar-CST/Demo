@@ -13,7 +13,7 @@ namespace WiseHR.Models
                     ("Employee List", "/home/employeeList"),
                     ("Role Management", "/home/rolemanagement"),
                     ("Create Employee","/home/employees"),
-                    //("Organizational Hierarchy", "/role-hierarchy"),
+                    ("Organizational Hierarchy", "/role-hierarchy"),
                
                     //("Add Employees", "/home/employees"),
                     ("Holiday Calendar", "/calendar"),

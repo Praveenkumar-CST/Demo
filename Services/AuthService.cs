@@ -11,7 +11,6 @@ namespace WiseHR.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IJSRuntime _jsRuntime;
-        private readonly string _baseUrl;
 
         private readonly string _supabaseUrl = "https://fhhnmffpdcyktnjahnwq.supabase.co";
         private readonly string _supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoaG5tZmZwZGN5a3RuamFobndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzczNzA4MDAsImV4cCI6MjA1Mjk0NjgwMH0.1b7s7qJ-yyZXo9wgzq5ZlOnaSxsKRcHDZyYb9J7LU60";
@@ -22,16 +21,8 @@ namespace WiseHR.Services
             _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
 
 
-
-            //_baseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:7028";
-            ///_baseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7021";
-            //_baseUrl = configuration["ApiBaseUrl"] ?? "http://172.210.14.62:5000/";
-            _baseUrl = configuration["ApiBaseUrl"] ?? "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net/";
-
-
             _supabaseUrl = configuration["Supabase:Url"] ?? _supabaseUrl;
             _supabaseKey = configuration["Supabase:AnonKey"] ?? _supabaseKey;
-            _httpClient.BaseAddress = new Uri(_baseUrl);
         }
 
         public async Task<(string? Token, string? Error)> Login(string email, string password)
