@@ -10,6 +10,7 @@ using Blazored.SessionStorage;
 using FingerFrontend.AdminAttendanceViewModel;
 using Microsoft.Extensions.Caching.Memory;
 using Syncfusion.Blazor;
+using WiseHR.Models.NewFolder;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -59,8 +60,14 @@ builder.Services.AddScoped<SearchService>();
 builder.Services.AddSyncfusionBlazor();
 
 builder.Services.AddScoped<IUserService, UserService>();
+//var apiBaseUrl = "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net";
+var apiBaseUrl = "https://localhost:7021/";
+
 // Register ChatService
 builder.Services.AddScoped<IChatService, ChatService>();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7021/") });
-//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net") });
+
+
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
+builder.Services.AddSingleton(new ApiConfig { BaseUrl = apiBaseUrl });
+
 await builder.Build().RunAsync();

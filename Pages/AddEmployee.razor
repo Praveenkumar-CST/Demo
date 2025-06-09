@@ -121,7 +121,7 @@
                             <MudDatePicker Label="Date of Joining" Variant="Variant.Outlined" Margin="Margin.Dense"
                                            Date="@employeeBasicDetails.DateOfJoining"
                                            DateChanged="@(date => employeeBasicDetails.DateOfJoining = date ?? DateTime.Now)"
-                                           Required="true" MaxDate="DateTime.Now" />
+                                           Required="true" />
                             <ValidationMessage For="@(() => employeeBasicDetails.DateOfJoining)" />
                         </MudItem>
                         <MudItem xs="12" sm="6">

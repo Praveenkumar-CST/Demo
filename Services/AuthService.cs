@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using WiseHR.Models;
+using WiseHR.Models.NewFolder;
 
 namespace WiseHR.Services
 {
@@ -15,11 +16,10 @@ namespace WiseHR.Services
         private readonly string _supabaseUrl = "https://fhhnmffpdcyktnjahnwq.supabase.co";
         private readonly string _supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoaG5tZmZwZGN5a3RuamFobndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzczNzA4MDAsImV4cCI6MjA1Mjk0NjgwMH0.1b7s7qJ-yyZXo9wgzq5ZlOnaSxsKRcHDZyYb9J7LU60";
 
-        public AuthService(HttpClient httpClient, IConfiguration configuration, IJSRuntime jsRuntime)
+        public AuthService(HttpClient httpClient, ApiConfig config, IConfiguration configuration, IJSRuntime jsRuntime)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
-
 
             _supabaseUrl = configuration["Supabase:Url"] ?? _supabaseUrl;
             _supabaseKey = configuration["Supabase:AnonKey"] ?? _supabaseKey;

@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Text.Json
 @using System.Text.RegularExpressions
+@using System.Text
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -900,6 +901,142 @@
             color: var(--mud-palette-primary-lighten);
         }
     }
+
+    /* Table Styles */
+    .wisechat-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .wisechat-table th {
+        background: var(--mud-palette-primary);
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .wisechat-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .wisechat-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .wisechat-table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .wisechat-table tr:hover {
+        background: #f0f0f0;
+    }
+
+    /* Dark mode table support */
+    @@media (prefers-color-scheme: dark) {
+        .wisechat-table {
+            background: #2d3748;
+        }
+
+        .wisechat-table th {
+            background: var(--mud-palette-primary-darken);
+        }
+
+        .wisechat-table td {
+            border-bottom-color: #4a5568;
+        }
+
+        .wisechat-table tr:nth-child(even) {
+            background: #2d3748;
+        }
+
+        .wisechat-table tr:hover {
+            background: #4a5568;
+        }
+    }
+
+    /* Enhanced Asset Table Styles */
+    .wisechat-asset-table-container {
+        margin: 1rem 0;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    .wisechat-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        font-size: 0.9rem;
+    }
+
+    .wisechat-table th {
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        color: white;
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .wisechat-table td {
+        padding: 16px;
+        border-bottom: 1px solid #eee;
+        vertical-align: top;
+    }
+
+    .wisechat-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .wisechat-table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .wisechat-table tr:hover {
+        background: #f0f0f0;
+        transition: background-color 0.2s ease;
+    }
+
+    .wisechat-table td:nth-child(4) {
+        max-width: 300px;
+        white-space: normal;
+    }
+
+    /* Dark mode table support */
+    @@media (prefers-color-scheme: dark) {
+        .wisechat-table {
+            background: #2d3748;
+        }
+
+        .wisechat-table th {
+            background: linear-gradient(135deg, var(--mud-palette-primary-darken) 0%, var(--mud-palette-primary) 100%);
+        }
+
+        .wisechat-table td {
+            border-bottom-color: #4a5568;
+            color: #e2e8f0;
+        }
+
+        .wisechat-table tr:nth-child(even) {
+            background: #2d3748;
+        }
+
+        .wisechat-table tr:hover {
+            background: #4a5568;
+        }
+    }
 </style>
 
 @code {
@@ -970,6 +1107,7 @@
     {
         statusMessage = status;
         await InvokeAsync(StateHasChanged);
+        await ScrollToBottom();
     }
 
     private async void HandleConnectionStateChanged()
@@ -1078,6 +1216,13 @@
         // First, normalize line endings and remove any extra spaces
         content = content.Replace("\r\n", "\n").Trim();
 
+        // Check if content matches asset list pattern
+        if (content.Contains("Successfully executed get_assets") || 
+            (content.Contains("Asset Tag Prefix:") && content.Contains("Total Instances:")))
+        {
+            return FormatAssetListAsTable(content);
+        }
+
         // Handle bold text (text between **)
         var boldPattern = @"\*\*(.*?)\*\*";
         var formattedContent = Regex.Replace(content, boldPattern, "<strong>$1</strong>");
@@ -1086,19 +1231,59 @@
         var lines = formattedContent.Split('\n');
         var formattedLines = new List<string>();
         var inBulletList = false;
+        var inTable = false;
+        var tableRows = new List<string>();
 
         foreach (var line in lines)
         {
             if (string.IsNullOrWhiteSpace(line))
             {
+                if (inTable)
+                {
+                    formattedLines.Add("</table>");
+                    inTable = false;
+                }
+                else if (inBulletList)
+                {
+                    formattedLines.Add("</div>");
+                    inBulletList = false;
+                }
                 formattedLines.Add("<div class='wisechat-spacing'></div>");
-                inBulletList = false;
                 continue;
             }
 
-            // Handle bullet points (lines starting with - or *)
-            if (line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+            // Check if this is a table header (contains | characters)
+            if (line.Contains("|"))
             {
+                if (!inTable)
+                {
+                    formattedLines.Add("<table class='wisechat-table'><thead><tr>");
+                    inTable = true;
+                }
+
+                var cells = line.Split('|').Where(c => !string.IsNullOrWhiteSpace(c)).Select(c => c.Trim());
+                var rowContent = string.Join("", cells.Select(c => $"<th>{c}</th>"));
+                formattedLines.Add($"<tr>{rowContent}</tr>");
+
+                // If this is the header row, close thead and open tbody
+                if (line.Contains("---"))
+                {
+                    formattedLines.Add("</thead><tbody>");
+                }
+                else if (!line.Contains("---"))
+                {
+                    formattedLines.Add("</tr>");
+                }
+            }
+            // Handle bullet points (lines starting with - or *)
+            else if (line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+            {
+                if (inTable)
+                {
+                    formattedLines.Add("</tbody></table>");
+                    inTable = false;
+                }
+
                 if (!inBulletList)
                 {
                     formattedLines.Add("<div class='wisechat-bullet-list'>");
@@ -1113,7 +1298,12 @@
             // Handle numbered lists
             else if (Regex.IsMatch(line.TrimStart(), @"^\d+\."))
             {
-                if (inBulletList)
+                if (inTable)
+                {
+                    formattedLines.Add("</tbody></table>");
+                    inTable = false;
+                }
+                else if (inBulletList)
                 {
                     formattedLines.Add("</div>");
                     inBulletList = false;
@@ -1124,7 +1314,12 @@
             // Regular text
             else
             {
-                if (inBulletList)
+                if (inTable)
+                {
+                    formattedLines.Add("</tbody></table>");
+                    inTable = false;
+                }
+                else if (inBulletList)
                 {
                     formattedLines.Add("</div>");
                     inBulletList = false;
@@ -1133,13 +1328,88 @@
             }
         }
 
-        // Close any open bullet list
+        // Close any open lists or tables
+        if (inTable)
+        {
+            formattedLines.Add("</tbody></table>");
+        }
         if (inBulletList)
         {
             formattedLines.Add("</div>");
         }
 
         return string.Join("", formattedLines);
+    }
+
+    private string FormatAssetListAsTable(string content)
+    {
+        var lines = content.Split('\n');
+        var assets = new List<Dictionary<string, string>>();
+        var currentAsset = new Dictionary<string, string>();
+        var instances = new List<string>();
+
+        foreach (var line in lines)
+        {
+            var trimmedLine = line.Trim();
+            if (string.IsNullOrWhiteSpace(trimmedLine)) continue;
+
+            if (trimmedLine.StartsWith("Successfully executed"))
+            {
+                continue;
+            }
+            else if (trimmedLine.Contains("Asset Tag Prefix:"))
+            {
+                if (currentAsset.Count > 0)
+                {
+                    currentAsset["Instances"] = string.Join("<br>", instances);
+                    assets.Add(currentAsset);
+                    instances.Clear();
+                }
+                currentAsset = new Dictionary<string, string>();
+                var parts = trimmedLine.Split(':');
+                currentAsset["Asset Type"] = parts[0].Trim();
+                currentAsset["Tag Prefix"] = parts[1].Trim();
+            }
+            else if (trimmedLine.Contains("Total Instances:"))
+            {
+                var parts = trimmedLine.Split(':');
+                currentAsset["Total Instances"] = parts[1].Trim();
+            }
+            else if (trimmedLine.StartsWith("•"))
+            {
+                instances.Add(trimmedLine.Substring(1).Trim());
+            }
+        }
+
+        // Add the last asset
+        if (currentAsset.Count > 0)
+        {
+            currentAsset["Instances"] = string.Join("<br>", instances);
+            assets.Add(currentAsset);
+        }
+
+        var tableHtml = new StringBuilder();
+        tableHtml.Append("<div class='wisechat-asset-table-container'>");
+        tableHtml.Append("<table class='wisechat-table'>");
+        tableHtml.Append("<thead><tr>");
+        tableHtml.Append("<th>Asset Type</th>");
+        tableHtml.Append("<th>Tag Prefix</th>");
+        tableHtml.Append("<th>Total Instances</th>");
+        tableHtml.Append("<th>Instances</th>");
+        tableHtml.Append("</tr></thead><tbody>");
+
+        foreach (var asset in assets)
+        {
+            tableHtml.Append("<tr>");
+            tableHtml.Append($"<td>{asset["Asset Type"]}</td>");
+            tableHtml.Append($"<td>{asset["Tag Prefix"]}</td>");
+            tableHtml.Append($"<td>{asset["Total Instances"]}</td>");
+            tableHtml.Append($"<td>{asset["Instances"]}</td>");
+            tableHtml.Append("</tr>");
+        }
+
+        tableHtml.Append("</tbody></table></div>");
+        return tableHtml.ToString();
     }
 
     private async Task StartNewChat()
