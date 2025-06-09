@@ -53,7 +53,7 @@ namespace WiseHR.Services
         public async Task<SubmitLeaveResponse> SubmitLeaveRequestAsync(LeaveRequestDto request)
         {
             await AddAuthorizationHeader();
-            var response = await _httpClient.PostAsJsonAsync("https://localhost:7021/api/LeaveManagement/request", request);
+            var response = await _httpClient.PostAsJsonAsync("api/LeaveManagement/request", request);
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -65,7 +65,7 @@ namespace WiseHR.Services
         public async Task<List<LeaveRequest>> GetPendingRequestsAsync()
         {
             await AddAuthorizationHeader();
-            var response = await _httpClient.GetAsync("https://localhost:7021/api/LeaveManagement/requests");
+            var response = await _httpClient.GetAsync("api/LeaveManagement/requests");
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -77,7 +77,7 @@ namespace WiseHR.Services
         public async Task<MyHistoryResponse> GetMyLeaveHistoryAsync()
         {
             await AddAuthorizationHeader();
-            var response = await _httpClient.GetAsync("https://localhost:7021/api/LeaveManagement/my-history");
+            var response = await _httpClient.GetAsync("api/LeaveManagement/my-history");
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -103,7 +103,7 @@ namespace WiseHR.Services
             query["pageSize"] = request.PageSize.ToString();
 
             await AddAuthorizationHeader();
-            var response = await _httpClient.GetAsync($"https://localhost:7021/api/LeaveManagement/history?{query}");
+            var response = await _httpClient.GetAsync($"api/LeaveManagement/history?{query}");
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -115,7 +115,7 @@ namespace WiseHR.Services
         public async Task<List<LeaveRequest>> GetRequestStatusAsync()
         {
             await AddAuthorizationHeader();
-            var response = await _httpClient.GetAsync("https://localhost:7021/api/LeaveManagement/request-status");
+            var response = await _httpClient.GetAsync("api/LeaveManagement/request-status");
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -127,7 +127,7 @@ namespace WiseHR.Services
         public async Task<ApproveRejectResponse> ApproveRejectRequestAsync(ApproveRejectDto request)
         {
             await AddAuthorizationHeader();
-            var response = await _httpClient.PostAsJsonAsync("https://localhost:7021/api/LeaveManagement/approve-reject", request);
+            var response = await _httpClient.PostAsJsonAsync("api/LeaveManagement/approve-reject", request);
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -139,7 +139,7 @@ namespace WiseHR.Services
         public async Task<QuotaResponse> ManageDefaultLeaveQuotaAsync(DefaultLeaveQuotaDto request)
         {
             await AddAuthorizationHeader();
-            var response = await _httpClient.PostAsJsonAsync("https://localhost:7021/api/LeaveManagement/default-quota", request);
+            var response = await _httpClient.PostAsJsonAsync("api/LeaveManagement/default-quota", request);
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -151,7 +151,7 @@ namespace WiseHR.Services
         public async Task<QuotaResponse> ManageIndividualLeaveQuotaAsync(IndividualLeaveQuotaDto request)
         {
             await AddAuthorizationHeader();
-            var response = await _httpClient.PostAsJsonAsync("https://localhost:7021/api/LeaveManagement/individual-quota", request);
+            var response = await _httpClient.PostAsJsonAsync("api/LeaveManagement/individual-quota", request);
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();

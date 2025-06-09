@@ -12,13 +12,14 @@ namespace WiseHR.Models
                     ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
                     ("Role Management", "/home/rolemanagement"),
-                    ("Organizational Hierarchy", "/home/hierarchy"),
-                    
+                    ("HIDE_Create Employee","/home/employees"),
+                    ("Organizational Hierarchy", "/role-hierarchy"),           
                     //("Add Employees", "/home/employees"),
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
                     ("LeaveManagement", "/admin/leave"),
 
+                    ("Policies", "/policies"),
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -30,15 +31,14 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports"),
+                    //("ReportList", "/reports"),
                      ("HIDE_EmployeeProfile", "/employee/.*"),
                      ("HIDE_Analytics", "/analytics"),
-                     ("Assign Mentee","/managers"),
+                    //("Assign Mentee","/managers"),
                     ("Asset","/asset"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
                     ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
-
                 }
             },
             {
@@ -46,9 +46,10 @@ namespace WiseHR.Models
                 {
                     ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
-                    ("Organizational Hierarchy", "/home/hierarchy"),
+                    //("Organizational Hierarchy", "/role-hierarchy"),
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
+                    ("Policies", "/policies"),
                     ("LeaveManagement", "/admin/leave"),
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     //("Add Employees", "/home/employees"),
@@ -62,9 +63,8 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports"),
-                    ("HIDE_EmployeeProfile", "/employee/.*"),
-                  
+                    //("ReportList", "/reports"),
+                    ("HIDE_EmployeeProfile", "/employee/.*"),                 
 
                 }
             },    {
@@ -73,11 +73,12 @@ namespace WiseHR.Models
                      ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
                     ("Role Management", "/home/rolemanagement"),
-                    ("Organizational Hierarchy", "/home/hierarchy"),
+                    //("Organizational Hierarchy", "/home/hierarchy"),
                     //("Add Employees", "/home/employees"),
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
                     ("LeaveManagement", "/admin/leave"),
+                    ("Policies", "/policies"),
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -89,10 +90,10 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports"),
+                    //("ReportList", "/reports"),
                      ("HIDE_EmployeeProfile", "/employee/.*"),
                      ("HIDE_Analytics", "/analytics"),
-                     ("Assign Mentee","/managers")
+                     //("Assign Mentee","/managers")
                 }
             },
             {
@@ -107,9 +108,7 @@ namespace WiseHR.Models
                     ("HIDE_workExperience", "/workExperience"),
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
-                    ("HIDE_EmployeeProfile", "/employee/.*"),
-                      
-
+                    ("HIDE_EmployeeProfile", "/employee/.*"),                  
                 }
             },
             {

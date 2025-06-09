@@ -1,5 +1,6 @@
 ﻿using WiseHR.Models;
 
+
 namespace WiseHR.Services
 {
     public interface IUserService
@@ -10,5 +11,6 @@ namespace WiseHR.Services
         Task UpdateUserRoleAsync(string id, string role);
         Task DeleteUserAsync(string id);
         Task<User> CreateUserAsync(string email, string password);
+        Task<User?> GetUserByEmailAsync(string email);
     }
 }

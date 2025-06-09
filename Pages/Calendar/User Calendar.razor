@@ -7,14 +7,17 @@
 @using System.Text
 @using System.Text.Json
 @using System.Net.Http.Headers
+@using OfficeOpenXml
+@using iTextSharp.text
+@using iTextSharp.text.pdf
 @layout HomeLayout
 
-<h3 class="holiday-title">Holiday List</h3>
+<h3 class="holiday-title">Holiday List @(_selectedYear)</h3>
 
-<div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
-    <div>
+<div class="header-container">
+    <div class="location-selection">
         <label for="locationSelect" style="margin-right: 10px;"><b>View Location:</b></label>
-        <select id="locationSelect" class="location-select location-dropdown" 
+        <select id="locationSelect" class="location-select location-dropdown"
                 @bind="SelectedLocation"
                 @bind:after="async () => await FetchHolidaysAsync()">
             @foreach (var location in AvailableLocations)
@@ -23,11 +26,26 @@
             }
         </select>
     </div>
+    <div class="year-selection">
+        <label for="yearSelect"><b>Select Year:</b></label>
+        <select id="yearSelect" class="year-dropdown"
+                @bind="_selectedYear"
+                @bind:after="async () => await FetchHolidaysAsync()">
+            @foreach (var year in _availableYears)
+            {
+                <option value="@year">@year</option>
+            }
+        </select>
+    </div>
+    <div>
+        <button class="download-button" @onclick="DownloadExcelAsync">Download Excel</button>
+        <button class="download-button" @onclick="DownloadPdfAsync">Download PDF</button>
+    </div>
 </div>
 
 <div class="holiday-boxes">
     <div class="permanent-holidays">
-        <h4>Permanent Holidays</h4>
+        <h4>Fixed Holidays</h4>
         <table class="holiday-table">
             <thead>
                 <tr>
@@ -39,7 +57,7 @@
             <tbody>
                 @foreach (var holiday in PermanentHolidays.OrderByDescending(h => DateTime.Parse(h.Date)))
                 {
-                    <tr>
+                    <tr class="@(IsFutureDate(holiday.Date) ? "" : "past-holiday")">
                         <td>@FormatDateWithoutDay(holiday.Date)</td>
                         <td>@GetDayOfWeek(holiday.Date)</td>
                         <td>@holiday.Description</td>
@@ -70,9 +88,9 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var holiday in OptionalHolidays.OrderByDescending(h => DateTime.Parse(h.Date)))
+                @foreach (var holiday in OptionalHolidays)
                 {
-                    <tr>
+                    <tr class="@(IsFutureDate(holiday.Date) ? "" : "past-holiday")">
                         <td>@FormatDateWithoutDay(holiday.Date)</td>
                         <td>@GetDayOfWeek(holiday.Date)</td>
                         <td>@holiday.Description</td>
@@ -81,7 +99,7 @@
                             <td>
                                 <input type="checkbox"
                                        @bind="holiday.IsSelected"
-                                       @bind:after="async () => await UpdateSelectionAsync()"
+                                       @bind:after="async () => await DebounceUpdateSelectionAsync()"
                                        disabled="@IsCheckboxDisabled(holiday)" />
                             </td>
                         }
@@ -92,8 +110,8 @@
         @if (SelectedCount > 0 && IsUserLocationSelected)
         {
             <div class="save-section">
-                <button class="save-button" 
-                        @onclick="SaveSelectionAsync" 
+                <button class="save-button"
+                        @onclick="SaveSelectionAsync"
                         disabled="@(string.IsNullOrEmpty(UserEmail) || IsLoading || IsSaving)">
                     Save Selection (@SelectedCount selected)
                 </button>
@@ -104,7 +122,7 @@
 
 <style>
     .loading-spinner {
-        border: 4px solid #3b82f6; /* Blue border */
+        border: 4px solid #3b82f6;
         border-top: 4px solid transparent;
         border-radius: 50%;
         width: 40px;
@@ -112,6 +130,7 @@
         animation: spin 1s linear infinite;
         margin: 20px auto;
     }
+
     .saving-overlay {
         position: absolute;
         top: 0;
@@ -125,31 +144,36 @@
         z-index: 10;
     }
 
-    .locationSelect {
-        justify-content: center;
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
         margin-bottom: 20px;
+    }
+
+    .location-selection, .year-selection {
         display: flex;
         align-items: center;
         gap: 10px;
-        justify-content: center;
     }
-    
-    .location-dropdown {
+
+    .location-select, .location-dropdown, .year-dropdown {
         padding: 8px 16px;
-        border: 1px solid #3498db; /* Blue border */
+        border: 1px solid #3498db;
         border-radius: 6px;
         font-family: 'Segoe UI', sans-serif;
         font-size: 14px;
-        background-color: #e8f4f8; /* Light blue background */
+        background-color: #e8f4f8;
         color: #2c3e50;
         cursor: pointer;
         transition: all 0.3s ease;
     }
 
-    .location-dropdown:focus {
-        border-color: #3498db; /* Blue border on focus */
-        outline: none;
-    }
+        .location_dropdown:focus, .year-dropdown:focus {
+            border-color: #3498db;
+            outline: none;
+        }
 
     body {
         background-color: #ffffff;
@@ -183,9 +207,9 @@
         box-sizing: border-box;
     }
 
-    .optional-holidays .holiday-table td input[type="checkbox"] {
-        margin-left: 1cm;
-    }
+        .optional-holidays .holiday-table td input[type="checkbox"] {
+            margin-left: 1cm;
+        }
 
     .holiday-table {
         width: 100%;
@@ -194,32 +218,37 @@
         table-layout: fixed;
     }
 
-    .holiday-table th {
-        background-color: #1e90ff;
-        color: #ffffff;
-        padding: 10px;
-        text-align: left;
-    }
+        .holiday-table th {
+            background-color: #1e90ff;
+            color: #ffffff;
+            padding: 10px;
+            text-align: left;
+        }
 
-    .holiday-table td {
-        padding: 10px;
-        border-bottom: 1px solid #000000;
-        color: #000000;
-        overflow-wrap: break-word;
-        word-break: break-word;
-    }
+        .holiday-table td {
+            padding: 10px;
+            border-bottom: 1px solid #000000;
+            color: #000000;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
 
-    .holiday-table td.event-description {
-        height: auto;
-    }
+            .holiday-table td.event-description {
+                height: auto;
+            }
 
-    .holiday-table tr:nth-child(even) {
-        background-color: #ffffff;
-    }
+        .holiday-table tr:nth-child(even) {
+            background-color: #ffffff;
+        }
 
-    .holiday-table tr:hover {
-        background-color: #87cefa;
-    }
+        .holiday-table tr:hover {
+            background-color: #87cefa;
+        }
+
+        .holiday-table tr.past-holiday {
+            background-color: #bcc1c3;
+            color: #ffffff;
+        }
 
     .error-message {
         color: #000000;
@@ -239,7 +268,7 @@
         text-align: center;
     }
 
-    .save-button {
+    .save-button, .download-button {
         padding: 8px 16px;
         background-color: #1e90ff;
         color: white;
@@ -247,58 +276,44 @@
         border-radius: 5px;
         cursor: pointer;
         font-size: 14px;
+        margin-left: 10px;
     }
 
-    .save-button:hover {
-        background-color: #4682b4;
-    }
+        .save-button:hover, .download-button:hover {
+            background-color: #4682b4;
+        }
 
     .snackbar {
         position: fixed;
         bottom: 20px;
         right: 20px;
-        transform: none; 
-        padding: 12px 24px; /* Adjusted padding */
+        transform: none;
+        padding: 12px 24px;
         border-radius: 12px;
         color: #000000;
         font-size: 14px;
         z-index: 1000;
         opacity: 1;
         transition: opacity 0.3s ease-in-out;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Added shadow for depth */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
-    .snackbar.success {
-        background-color: rgb(66, 200, 100); /* Green color */
-    }
+        .snackbar.success {
+            background-color: rgb(66, 200, 100);
+        }
 
     .holiday-title {
         font-size: 27px;
     }
 
-    .back-button-container {
-        display: flex;
-        justify-content: flex-start;
-        margin-bottom: 1rem;
-    }
-
-    .back-button {
-        background-color: #3498db;
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-    }
-
-    .back-button:hover {
-        background-color: #3498db;
-    }
-
     @@keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
 </style>
 
@@ -319,10 +334,6 @@ else if (!string.IsNullOrEmpty(ErrorMessage))
 {
     <p class="error-message">@ErrorMessage</p>
 }
-else if (AllHolidays.Length == 0)
-{
-    <p>No holidays found for your location (@(SelectedLocation ?? "Unknown")).</p>
-}
 else if (string.IsNullOrEmpty(JoiningLocation))
 {
     <p class="error-message">Employee location not assigned</p>
@@ -331,6 +342,7 @@ else if (string.IsNullOrEmpty(JoiningLocation))
 @code {
     private static readonly int MaxSelections = 2;
     private static readonly int SnackbarDurationMs = 2000;
+    private static readonly int DebounceDelayMs = 300;
     private Event[] AllHolidays { get; set; } = Array.Empty<Event>();
     private Event[] PermanentHolidays { get; set; } = Array.Empty<Event>();
     private Event[] OptionalHolidays { get; set; } = Array.Empty<Event>();
@@ -344,10 +356,20 @@ else if (string.IsNullOrEmpty(JoiningLocation))
     private string? UserEmail { get; set; }
     private string? JoiningLocation { get; set; }
     private string? SelectedLocation { get; set; }
+    private int _selectedYear = DateTime.Now.Year;
+    private int[] _availableYears = Enumerable.Range(DateTime.Now.Year - 5, 11).ToArray();
     private string? authToken;
     private string[] AvailableLocations { get; set; } = Array.Empty<string>();
-    private bool IsUserLocationSelected => !string.IsNullOrEmpty(JoiningLocation) && 
+    private bool IsUserLocationSelected => !string.IsNullOrEmpty(JoiningLocation) &&
                                           string.Equals(SelectedLocation?.Trim(), JoiningLocation?.Trim(), StringComparison.OrdinalIgnoreCase);
+    private bool HasSavedHolidays { get; set; } = false;
+
+    // In-memory cache
+    private static readonly Dictionary<string, Event[]> _holidaysCache = new Dictionary<string, Event[]>();
+    private static readonly Dictionary<string, Event[]> _savedHolidaysCache = new Dictionary<string, Event[]>();
+    private static readonly Dictionary<string, string> _employeeLocationCache = new Dictionary<string, string>();
+
+    private System.Timers.Timer? _debounceTimer;
 
     protected override async Task OnInitializedAsync()
     {
@@ -369,8 +391,7 @@ else if (string.IsNullOrEmpty(JoiningLocation))
             }
 
             await FetchEmployeeLocationAsync();
-            // Set default location to first available or keep null if no location is set
-            SelectedLocation = string.IsNullOrEmpty(JoiningLocation) ? null : 
+            SelectedLocation = string.IsNullOrEmpty(JoiningLocation) ? null :
                               string.Equals(JoiningLocation?.Trim(), "Bangalore", StringComparison.OrdinalIgnoreCase) ? "Bangalore" : JoiningLocation;
             await FetchHolidaysAsync();
         }
@@ -389,6 +410,13 @@ else if (string.IsNullOrEmpty(JoiningLocation))
     {
         try
         {
+            var cacheKey = $"location_{UserEmail}";
+            if (_employeeLocationCache.TryGetValue(cacheKey, out var cachedLocation))
+            {
+                JoiningLocation = cachedLocation;
+                return;
+            }
+
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
             var employeeDetailsUrl = $"/EmployeeDetails/GetJoiningLocationByEmail/{Uri.EscapeDataString(UserEmail ?? string.Empty)}";
             var response = await HttpClient.GetAsync(employeeDetailsUrl);
@@ -396,13 +424,15 @@ else if (string.IsNullOrEmpty(JoiningLocation))
             {
                 var employeeDetails = await response.Content.ReadFromJsonAsync<EmployeeDetails>();
                 JoiningLocation = employeeDetails?.JoiningLocation?.Trim();
-                // No error message if JoiningLocation is empty; allow all data to be shown
+                if (!string.IsNullOrEmpty(JoiningLocation))
+                {
+                    _employeeLocationCache[cacheKey] = JoiningLocation;
+                }
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                // Handle 404 specifically
                 ErrorMessage = "Employee location not assigned";
-                JoiningLocation = null; // Ensure JoiningLocation is null to trigger read-only mode
+                JoiningLocation = null;
             }
             else
             {
@@ -436,9 +466,9 @@ else if (string.IsNullOrEmpty(JoiningLocation))
             var decodedPayload = Encoding.UTF8.GetString(decodedPayloadBytes);
 
             using var jsonDoc = JsonDocument.Parse(decodedPayload);
-            return jsonDoc.RootElement.TryGetProperty("email", out var emailElement) 
-                && emailElement.ValueKind == JsonValueKind.String 
-                ? emailElement.GetString() 
+            return jsonDoc.RootElement.TryGetProperty("email", out var emailElement)
+                && emailElement.ValueKind == JsonValueKind.String
+                ? emailElement.GetString()
                 : null;
         }
         catch
@@ -454,60 +484,93 @@ else if (string.IsNullOrEmpty(JoiningLocation))
             IsLoading = true;
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
 
-            // Fetch saved holidays only if user has a location
+            // Check cache for saved holidays
             if (!string.IsNullOrEmpty(UserEmail) && !string.IsNullOrEmpty(JoiningLocation))
             {
-                var savedHolidaysUrl = $"/api/SavedHolidays/{Uri.EscapeDataString(UserEmail)}";
-                var savedResponse = await HttpClient.GetAsync(savedHolidaysUrl);
-                SavedHolidays = await savedResponse.Content.ReadFromJsonAsync<Event[]>() ?? Array.Empty<Event>();
-                SavedHolidays = SavedHolidays
-                    .Where(h => h.Date != null && h.Description != null && h.HolidayType != null && h.Location != null)
-                    .Take(MaxSelections)
-                    .ToArray();
+                var savedHolidaysCacheKey = $"saved_{UserEmail}_{_selectedYear}";
+                if (_savedHolidaysCache.TryGetValue(savedHolidaysCacheKey, out var cachedSavedHolidays))
+                {
+                    SavedHolidays = cachedSavedHolidays;
+                    HasSavedHolidays = SavedHolidays.Any();
+                }
+                else
+                {
+                    var savedHolidaysUrl = $"/api/SavedHolidays/{Uri.EscapeDataString(UserEmail)}";
+                    var savedResponse = await HttpClient.GetAsync(savedHolidaysUrl);
+                    SavedHolidays = await savedResponse.Content.ReadFromJsonAsync<Event[]>() ?? Array.Empty<Event>();
+                    SavedHolidays = SavedHolidays
+                        .Where(h => h.Date != null && h.Description != null && h.HolidayType != null && h.Location != null)
+                        .Where(h => DateTime.TryParse(h.Date, out var date) && date.Year == _selectedYear)
+                        .Take(MaxSelections)
+                        .ToArray();
+                    HasSavedHolidays = SavedHolidays.Any();
+                    _savedHolidaysCache[savedHolidaysCacheKey] = SavedHolidays;
+                }
             }
             else
             {
                 SavedHolidays = Array.Empty<Event>();
+                HasSavedHolidays = false;
             }
 
-            // Fetch all holidays
-            const string eventsUrl = "/api/Events";
-            var httpResponse = await HttpClient.GetAsync(eventsUrl);
-            if (httpResponse.IsSuccessStatusCode)
+            // Check cache for all holidays
+            var holidaysCacheKey = $"holidays_{_selectedYear}";
+            if (_holidaysCache.TryGetValue(holidaysCacheKey, out var cachedHolidays))
             {
-                var holidays = await httpResponse.Content.ReadFromJsonAsync<Event[]>() ?? Array.Empty<Event>();
-                // Get unique locations
-                AvailableLocations = holidays
-                    .Where(h => !string.IsNullOrEmpty(h.Location))
-                    .Select(h => h.Location!.Trim())
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(l => l)
-                    .ToArray();
-
-                // Filter holidays by selected location or show all if no location selected
-                AllHolidays = holidays
-                    .Where(h => h.Date != null && h.Description != null && h.HolidayType != null && h.Location != null)
-                    .Where(h => string.IsNullOrEmpty(SelectedLocation) || 
-                                string.Equals(h.Location?.Trim(), SelectedLocation?.Trim(), StringComparison.OrdinalIgnoreCase))
-                    .ToArray();
-
-                // Mark saved holidays as selected only if user has a location
-                if (!string.IsNullOrEmpty(JoiningLocation))
-                {
-                    foreach (var holiday in AllHolidays)
-                    {
-                        holiday.IsSelected = SavedHolidays.Any(s => s.Date == holiday.Date && 
-                                                                  string.Equals(s.Location?.Trim(), holiday.Location?.Trim(), StringComparison.OrdinalIgnoreCase));
-                    }
-                }
-
-                PermanentHolidays = AllHolidays.Where(h => h.HolidayType == "Permanent").ToArray();
-                OptionalHolidays = AllHolidays.Where(h => h.HolidayType == "Optional").ToArray();
+                AllHolidays = cachedHolidays;
             }
             else
             {
-                ErrorMessage = $"Failed to fetch holidays. Status: {httpResponse.StatusCode}";
+                const string eventsUrl = "/api/Events";
+                var httpResponse = await HttpClient.GetAsync(eventsUrl);
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    var holidays = await httpResponse.Content.ReadFromJsonAsync<Event[]>() ?? Array.Empty<Event>();
+                    AllHolidays = holidays
+                        .Where(h => h.Date != null && h.Description != null && h.HolidayType != null && h.Location != null)
+                        .ToArray();
+                    _holidaysCache[holidaysCacheKey] = AllHolidays;
+                }
+                else
+                {
+                    ErrorMessage = $"Failed to fetch holidays. Status: {httpResponse.StatusCode}";
+                    return;
+                }
             }
+
+            AvailableLocations = AllHolidays
+                .Where(h => !string.IsNullOrEmpty(h.Location))
+                .Select(h => h.Location!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(l => l)
+                .ToArray();
+
+            // Filter holidays based on selected location and year
+            var filteredHolidays = AllHolidays
+                .Where(h => string.IsNullOrEmpty(SelectedLocation) ||
+                            string.Equals(h.Location?.Trim(), SelectedLocation?.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Where(h => DateTime.TryParse(h.Date, out var date) && date.Year == _selectedYear)
+                .ToArray();
+
+            if (!string.IsNullOrEmpty(JoiningLocation))
+            {
+                foreach (var holiday in filteredHolidays)
+                {
+                    holiday.IsSelected = SavedHolidays.Any(s => s.Date == holiday.Date &&
+                                                              string.Equals(s.Location?.Trim(), holiday.Location?.Trim(), StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            PermanentHolidays = filteredHolidays
+                .Where(h => h.HolidayType == "Permanent")
+                .OrderByDescending(h => DateTime.TryParse(h.Date, out var date) ? date : DateTime.MinValue)
+                .ToArray();
+
+            OptionalHolidays = filteredHolidays
+                .Where(h => h.HolidayType == "Optional")
+                .OrderByDescending(h => h.IsSelected)
+                .ThenByDescending(h => DateTime.TryParse(h.Date, out var date) ? date : DateTime.MinValue)
+                .ToArray();
         }
         catch (Exception ex)
         {
@@ -540,15 +603,13 @@ else if (string.IsNullOrEmpty(JoiningLocation))
             await InvokeAsync(StateHasChanged);
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
 
-            // Get selected holidays, limited to MaxSelections
             var selectedHolidays = OptionalHolidays
                 .Where(h => h.IsSelected)
                 .Take(MaxSelections)
                 .Select(h => new { Date = h.Date, EventName = h.Description, UserEmail, Location = h.Location })
                 .ToArray();
 
-            // Delete deselected holidays
-            foreach (var holiday in SavedHolidays.Where(s => !selectedHolidays.Any(o => o.Date == s.Date && 
+            foreach (var holiday in SavedHolidays.Where(s => !selectedHolidays.Any(o => o.Date == s.Date &&
                                                                                      string.Equals(o.Location?.Trim(), s.Location?.Trim(), StringComparison.OrdinalIgnoreCase))))
             {
                 var response = await HttpClient.DeleteAsync(
@@ -560,7 +621,6 @@ else if (string.IsNullOrEmpty(JoiningLocation))
                 }
             }
 
-            // Save selected holidays
             if (selectedHolidays.Any())
             {
                 var postResponse = await HttpClient.PostAsJsonAsync("/api/SavedHolidays", selectedHolidays);
@@ -571,10 +631,14 @@ else if (string.IsNullOrEmpty(JoiningLocation))
                 }
             }
 
-            // Update SavedHolidays to ensure UI consistency
             SavedHolidays = selectedHolidays
                 .Select(h => new Event { Date = h.Date, Description = h.EventName, Location = h.Location, HolidayType = "Optional", IsSelected = true })
                 .ToArray();
+            HasSavedHolidays = SavedHolidays.Any();
+
+            // Update cache for saved holidays
+            var savedHolidaysCacheKey = $"saved_{UserEmail}_{_selectedYear}";
+            _savedHolidaysCache[savedHolidaysCacheKey] = SavedHolidays;
 
             IsSnackbarVisible = true;
             await FetchHolidaysAsync();
@@ -593,20 +657,148 @@ else if (string.IsNullOrEmpty(JoiningLocation))
         }
     }
 
-    private async Task UpdateSelectionAsync()
+    private async Task DebounceUpdateSelectionAsync()
     {
-        if (SelectedCount > MaxSelections)
+        if (_debounceTimer != null)
         {
-            var firstSelected = OptionalHolidays
-                .Where(h => h.IsSelected && IsFutureDate(h.Date))
-                .OrderBy(h => DateTime.Parse(h.Date!))
-                .FirstOrDefault();
-            if (firstSelected != null)
-            {
-                firstSelected.IsSelected = false;
-            }
+            _debounceTimer.Stop();
+            _debounceTimer.Dispose();
         }
-        await InvokeAsync(StateHasChanged);
+
+        _debounceTimer = new System.Timers.Timer(DebounceDelayMs);
+        _debounceTimer.Elapsed += async (sender, e) =>
+        {
+            if (SelectedCount > MaxSelections)
+            {
+                var firstSelected = OptionalHolidays
+                    .Where(h => h.IsSelected && IsFutureDate(h.Date))
+                    .OrderBy(h => DateTime.Parse(h.Date!))
+                    .FirstOrDefault();
+                if (firstSelected != null)
+                {
+                    firstSelected.IsSelected = false;
+                }
+            }
+            await InvokeAsync(StateHasChanged);
+        };
+        _debounceTimer.AutoReset = false;
+        _debounceTimer.Start();
+    }
+
+    private async Task DownloadExcelAsync()
+    {
+        try
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Holidays");
+
+            worksheet.Cells[1, 1].Value = "Date";
+            worksheet.Cells[1, 2].Value = "Day";
+            worksheet.Cells[1, 3].Value = "Event";
+            worksheet.Cells[1, 4].Value = "Type";
+
+            var filteredHolidays = string.IsNullOrEmpty(SelectedLocation)
+                ? AllHolidays
+                : AllHolidays.Where(h => string.Equals(h.Location?.Trim(), SelectedLocation?.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
+
+            var row = 2;
+            foreach (var holiday in filteredHolidays.OrderByDescending(h => DateTime.Parse(h.Date)))
+            {
+                worksheet.Cells[row, 1].Value = FormatDateWithoutDay(holiday.Date);
+                worksheet.Cells[row, 2].Value = GetDayOfWeek(holiday.Date);
+                worksheet.Cells[row, 3].Value = holiday.Description ?? "";
+                worksheet.Cells[row, 4].Value = holiday.HolidayType ?? "";
+                row++;
+            }
+
+            worksheet.Cells.AutoFitColumns();
+
+            using (var range = worksheet.Cells[1, 1, 1, 4])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(30, 144, 255));
+                range.Style.Font.Color.SetColor(System.Drawing.Color.White);
+            }
+
+            var fileBytes = package.GetAsByteArray();
+            var fileName = $"Holidays_{SelectedLocation ?? "All"}_{_selectedYear}.xlsx";
+            var base64String = Convert.ToBase64String(fileBytes);
+            await JSRuntime.InvokeVoidAsync("eval", $@"let link = document.createElement('a');
+                link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{base64String}';
+                link.download = '{fileName}';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error downloading Excel: {ex.Message}";
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task DownloadPdfAsync()
+    {
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            using var document = new Document(PageSize.A4, 25, 25, 30, 30);
+            PdfWriter.GetInstance(document, memoryStream);
+            document.Open();
+
+            var title = new Paragraph($"Holiday List - {SelectedLocation ?? "All Locations"} {_selectedYear}", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16));
+            title.Alignment = Element.ALIGN_CENTER;
+            document.Add(title);
+            document.Add(new Paragraph("\n"));
+
+            var table = new PdfPTable(4);
+            table.WidthPercentage = 100;
+            table.SetWidths(new float[] { 1, 1, 2, 1 });
+
+            var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+            var cellFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+
+            string[] headers = { "Date", "Day", "Event", "Type" };
+            foreach (var header in headers)
+            {
+                var cell = new PdfPCell(new Phrase(header, headerFont));
+                cell.Padding = 5;
+                table.AddCell(cell);
+            }
+
+            var filteredHolidays = string.IsNullOrEmpty(SelectedLocation)
+                ? AllHolidays
+                : AllHolidays.Where(h => string.Equals(h.Location?.Trim(), SelectedLocation?.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
+
+            foreach (var holiday in filteredHolidays.OrderByDescending(h => DateTime.Parse(h.Date)))
+            {
+                table.AddCell(new PdfPCell(new Phrase(FormatDateWithoutDay(holiday.Date), cellFont)) { Padding = 5 });
+                table.AddCell(new PdfPCell(new Phrase(GetDayOfWeek(holiday.Date), cellFont)) { Padding = 5 });
+                table.AddCell(new PdfPCell(new Phrase(holiday.Description ?? "", cellFont)) { Padding = 5 });
+                table.AddCell(new PdfPCell(new Phrase(holiday.HolidayType ?? "", cellFont)) { Padding = 5 });
+            }
+
+            document.Add(table);
+            document.Close();
+
+            var fileBytes = memoryStream.ToArray();
+            var fileName = $"Holidays_{SelectedLocation ?? "All"}_{_selectedYear}.pdf";
+            var base64String = Convert.ToBase64String(fileBytes);
+            await JSRuntime.InvokeVoidAsync("eval", $@"let link = document.createElement('a');
+                link.href = 'data:application/pdf;base64,{base64String}';
+                link.download = '{fileName}';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error downloading PDF: {ex.Message} {(ex.InnerException != null ? $"Inner: {ex.InnerException.Message}" : "")}";
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private bool IsFutureDate(string? date)
@@ -621,7 +813,7 @@ else if (string.IsNullOrEmpty(JoiningLocation))
     private bool IsCheckboxDisabled(Event holiday)
     {
         return !IsUserLocationSelected ||
-               !IsFutureDate(holiday.Date) || 
+               !IsFutureDate(holiday.Date) ||
                (SelectedCount >= MaxSelections && !holiday.IsSelected);
     }
 
@@ -645,6 +837,6 @@ else if (string.IsNullOrEmpty(JoiningLocation))
 
     public void Dispose()
     {
-        // No resources to dispose
+        _debounceTimer?.Dispose();
     }
 }

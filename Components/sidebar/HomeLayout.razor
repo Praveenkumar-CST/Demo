@@ -7,6 +7,7 @@
 @using System.Net.Http.Headers
 @using WiseHR.Dtos
 @using WiseHRServer.Models
+@using WiseHR.Components.Chat
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
 @using System.Text.RegularExpressions
@@ -16,6 +17,7 @@
 @inject IDialogService DialogService
 @inject AnalyticsCacheService AnalyticsCache
 @inject ILogger<HomeLayout> Logger
+
 
 <MudThemeProvider />
 <MudSnackbarProvider />
@@ -45,7 +47,6 @@
                                  ShowProgressIndicator="true"
                                  ValueChanged="OnSearchItemSelected"
                                  @bind-Text="_searchText"
-                                 @onkeyup="HandleSearchInputKeyUp"
                                  ItemTemplate="@ResultTemplate"
                                  MaxItems="15"
                                  ToStringFunc="@(e => null)" />
@@ -62,7 +63,6 @@
                 }
             </div>
 
-            @* Display error message if search fails *@
             @if (!string.IsNullOrEmpty(_searchError))
             {
                 <MudText Typo="Typo.body1" Color="Color.Error" Class="mt-2 position-absolute" Style="top: 100%; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 1.1rem; font-weight: 500;">@_searchError</MudText>
@@ -74,6 +74,7 @@
         <MudMenu AnchorOrigin="Origin.BottomLeft">
             <ActivatorContent>
                 <div class="d-flex align-center justify-end ">
+
                     @if (!string.IsNullOrEmpty(userProfilePicture))
                     {
                         <img src="@userProfilePicture"
@@ -84,7 +85,7 @@
                     {
                         <MudAvatar Size="Size.Large"
                                    Class="cursor-pointer"
-                                   Style="background-color: var(--secondary); color: var(--text-primary); border: 2px solid var(--primary);">
+                                   Style="background-color: var(--secondary); color: white; border: 2px solid var(--primary);">
                             @userInitials
                         </MudAvatar>
                     }
@@ -105,7 +106,7 @@
 </MudAppBar>
 
 <!-- Sidebar -->
-<div class="sidebar-container" @onmouseleave="HandleMouseLeave">
+<div class="sidebar-container">
     <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
 </div>
 
@@ -117,8 +118,10 @@
 </MudMainContent>
 <MudPopoverProvider />
 
-<!-- Popover Support -->
-
+<!-- Chat Widget -->
+<div class="chat-widget-container">
+    <WiseChatWidget />
+</div>
 
 <style>
     .logo-hover:hover {
@@ -269,10 +272,27 @@
     ::deep .mud-drawer.open .mud-nav-link span {
         display: inline; /* Show text when expanded */
     }
+
+    /* Analytics Link Styles */
+    /* .analytics-link { */
+    /*     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+    /*     -webkit-background-clip: text; */
+    /*     -webkit-text-fill-color: transparent; */
+    /*     background-clip: text; */
+    /*     font-style: italic; */
+    /*     padding: 0px 0px; */
+    /*     text-align: center; */
+
+    /*     font-weight: 500; */
+    /*     border-radius: 8px; */
+    /*     background-color: rgba(102, 126, 234, 0.1); */
+    /*     margin: 8px 0; */
+    /* } */
+
     /* Main Grid Container */
     .py-2.px-1 {
         padding: 16px 8px;
-        margin: 4px 0;
+        margin: 12px 0;
         border-radius: 16px;
         box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -291,10 +311,11 @@
 
     /* MudAvatar Custom Styling */
     .mud-avatar {
-        background: linear-gradient(135deg, #667eea 0%, #441278 100%);
+        background: linear-gradient(135deg, #1d349e 0%, #764ba2 100%);
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         border: 3px solid #ffffff;
         font-weight: 600;
+       
         letter-spacing: 1px;
     }
 
@@ -320,7 +341,6 @@
 
     /* Name Text Styling */
     .mud-typography-body1 {
-        text-align:center;
         font-weight: 600;
         color: #2d3748;
         margin-bottom: 4px;
@@ -399,6 +419,13 @@
         background-size: 200px 100%;
         animation: shimmer 1.5s infinite;
     }
+
+    .chat-widget-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
 </style>
 
 @code {
@@ -420,6 +447,7 @@
     private bool IsAdmin = false;
     private bool _isSearching;
     private List<EmployeeSearchResult> _searchResults = new();
+    private string? Email;
 
     // Close sidebar when mouse leaves
     private async Task HandleMouseLeave()
@@ -578,6 +606,7 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        Email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
 
         // Initialize cache service by preloading analytics data
         try
@@ -695,10 +724,11 @@
 
     private async Task NavigateToProfile()
     {
-        Console.WriteLine($"Navigate to current user profile, employeeId: {employeeId}");
-        if (!string.IsNullOrEmpty(employeeId))
+        var empid = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "EmpId");
+        Console.WriteLine($"Navigate to current user profile, employeeId: {empid}");
+        if (!string.IsNullOrEmpty(empid))
         {
-            NavigationManager.NavigateTo($"/employee/{employeeId}");
+            NavigationManager.NavigateTo($"/employee/{empid}");
         }
         else
         {

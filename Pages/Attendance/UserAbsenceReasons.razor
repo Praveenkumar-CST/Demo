@@ -5,7 +5,7 @@
 @inject WiseHR.Services.AuthService AuthService
 @inject IJSRuntime JSRuntime
 @layout HomeLayout
-@using FingerFrontend.Models
+@using FingerFrontend.AdminAttendanceViewModel
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
@@ -21,7 +21,7 @@
 <!-- Reasons Table -->
 <div class="reasons-container">
     <div class="table-header">
-        Absence Reasons
+        Absence Requests
     </div>
     @if (isLoading)
     {
@@ -178,7 +178,7 @@
 
 @code {
     private string userId = "";
-    private List<AbsenceReasonDto> absenceReasons = new();
+    private List<AbsenceReasonData> absenceReasons = new();
     private bool isLoading = false;
     private string? errorMessage;
     private const string SupabaseUrl = "https://fhhnmffpdcyktnjahnwq.supabase.co";
@@ -338,7 +338,7 @@
                 return;
             }
 
-            var reasons = await response.Content.ReadFromJsonAsync<List<AbsenceReasonDto>>() ?? new();
+            var reasons = await response.Content.ReadFromJsonAsync<List<AbsenceReasonData>>() ?? new();
             absenceReasons.AddRange(reasons.OrderBy(r => r.Date).ThenBy(r => r.StartTime));
 
             if (!absenceReasons.Any())
@@ -365,15 +365,5 @@
     {
         errorMessage = null;
     }
-
-    private class EmployeeCodeResponse
-    {
-        public string EmployeeCode { get; set; } = string.Empty;
+    
     }
-
-    private class UserResponse
-    {
-        public string? Id { get; set; }
-        public string? Email { get; set; }
-    }
-}
