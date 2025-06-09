@@ -27,7 +27,6 @@
         @* Header *@
         <div class="wisechat-header">
             <div class="wisechat-header-content">
-              
                 <MudFab IconSize="Size.Large" EndIcon="@(isOpen ? Icons.Material.Filled.SupportAgent : Icons.Material.Filled.SupportAgent)"
                         Color="Color.Primary"
                         OnClick="ToggleChat"
@@ -39,6 +38,11 @@
                         <MudText Typo="Typo.subtitle2">@(isConnected ? "Online" : "Connecting...")</MudText>
                     </div>
                 </div>
+                <MudFab IconSize="Size.Small" EndIcon="@(isOpen ? Icons.Material.Filled.Add : Icons.Material.Filled.Add)"
+                      
+                              OnClick="StartNewChat"
+                              Class="wisechat-new-chat-button"
+                              Title="Start New Chat"/>
             </div>
         </div>
 
@@ -283,9 +287,30 @@
     .wisechat-header-content {
         display: flex;
         align-items: center;
-        gap: 14px;
+        
+               gap: 14px;
         position: relative;
         z-index: 1;
+
+    }
+
+    .wisechat-new-chat-button {
+        margin-left: auto;
+        transition: transform 0.2s ease;
+        width:40px;
+        height:40px;
+       
+        
+    }
+
+        .wisechat-new-chat-button .mud-icon-root.mud-svg-icon {
+            fill: white;
+            width:25px;
+            height:25px;
+        }
+    .wisechat-new-chat-button:hover {
+        transform: rotate(90deg);
+            background-color: rgb(138 131 166);
     }
 
     .wisechat-header-text {
@@ -1115,6 +1140,15 @@
         }
 
         return string.Join("", formattedLines);
+    }
+
+    private async Task StartNewChat()
+    {
+        messages.Clear();
+        currentMessage = string.Empty;
+        statusMessage = string.Empty;
+        isTyping = false;
+        StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()
