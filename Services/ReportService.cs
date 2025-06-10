@@ -53,11 +53,11 @@ public class ReportService
     private void CapitalizeExperience(ReportModel report)
     {
         // Capitalize EmployeeID
-        report.FortnightRemarks1 = ToTitleCase(report.FortnightRemarks1);
-        report.FortnightRemarks2 = ToTitleCase(report.FortnightRemarks2);
+        //report.Performance1= ToTitleCase(report.Performance1);
+        //report.Performance2= ToTitleCase(report.Performance2);
+        report.Feedback2= ToTitleCase(report.Feedback2);
+        report.Feedback1= ToTitleCase(report.Feedback1);
         report.ProjectsWorkedOn = ToTitleCase(report.ProjectsWorkedOn); 
-        report.FileName = ToTitleCase(report.FileName);
-
         //
     }
 

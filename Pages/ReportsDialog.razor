@@ -11,132 +11,271 @@
 @layout HomeLayout
 @inject IJSRuntime JS
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="m-1.5">
-    @if (isLoading)
-    {
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-            <MudText Align="Align.Center">Loading...</MudText>
-        </div>
-    }
-    else
-    {
-        @if (Role?.ToLower() != "employee")
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudPaper Elevation="2" Class="pa-4">
+        @if (isLoading)
         {
-            <div class="d-flex mb-3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenReportDialog">
-                    Add Report
-                </MudButton>
-            </div>
-        }
-        @if (reports.Any())
-        {
-            <div style="max-width: 100%;" class="rounded-table-wrapper">
-                <MudTable Class="small-table" Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="width:max-content;">
-                    <HeaderContent>
-                        <MudTh>S.NO</MudTh>
-                        <MudTh>Name</MudTh>
-                        <MudTh>Email</MudTh>
-                        <MudTh>Phone</MudTh>
-                        <MudTh>Institution</MudTh>
-                        <MudTh>Mentor</MudTh>
-                        <MudTh>Projects</MudTh>
-                        <MudTh>Pro-Stage</MudTh>
-                        <MudTh>Progress%</MudTh>
-                        <MudTh>FortnightRemark1</MudTh>
-                        <MudTh>FortnightRemark2</MudTh>
-                        @if (Role?.ToLower() != "employee")
-                        {
-                            <MudTh>Actions</MudTh>
-                        }
-                    </HeaderContent>
-                    <RowTemplate Context="report">
-                        <MudTd DataLabel="S.NO">@((reports.IndexOf(report) + 1))</MudTd>
-                        <MudTd DataLabel="Mentee Name">@report.MenteeName</MudTd>
-                        <MudTd DataLabel="Mentee Email">
-                            <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Color="Color.Primary" Class="mr-1" />
-                            @report.MenteeEmail
-                        </MudTd>
-                        <MudTd DataLabel="Phone">
-                            <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Color="Color.Secondary" Class="mr-1" />
-                            @(_menteeDetailsCache.TryGetValue(report.MenteeId, out var mentee) ? mentee.CurrentMobile ?? "N/A" : "N/A")
-                        </MudTd>
-                        <MudTd DataLabel="Institution">
-                            <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Color="Color.Info" Class="mr-1" />
-                            @(_menteeExperienceCache.TryGetValue(report.MenteeId, out var exp) ? GetInstitution(exp) : "N/A")
-                        </MudTd>
-                        <MudTd DataLabel="Mentor">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                @if (_mentorPhotos.TryGetValue(report.MentorId, out var photo) && !string.IsNullOrEmpty(photo.Base64Content))
-                                {
-                                    <img src="data:@photo.ContentType;base64,@photo.Base64Content" alt="Mentor Photo" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
-                                }
-                                <MudChip T="string" Color="Color.Tertiary" Variant="Variant.Filled">@report.MentorName</MudChip>
-                            </div>
-                        </MudTd>
-                        <MudTd DataLabel="Project">@report.ProjectsWorkedOn</MudTd>
-                        <MudTd DataLabel="Pro-Stage">
-                            <MudChip T="string" Color="@GetStageColor(report.ProgressStage)" Variant="Variant.Outlined">@report.ProgressStage</MudChip>
-                        </MudTd>
-                        <MudTd DataLabel="Progress%">
-                            <MudProgressLinear Value="@report.ProgressPercentage" Color="@GetProgressColor(report.ProgressPercentage)" Style="min-width:100px;" />
-                            @if (report.ProgressPercentage == 100)
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="ml-1" />
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Autorenew" Color="Color.Warning" Class="ml-1" />
-                            }
-                        </MudTd>
-                        <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
-                        <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
-                        @if (Role?.ToLower() != "employee")
-                        {
-                            <MudTd>
-                                <div style="display: flex; gap: 2px;">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditReportDialog(report))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteReport(report.Id))" />
-                                </div>
-                            </MudTd>
-                        }
-                    </RowTemplate>
-                </MudTable>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 150px;">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+                <MudText Align="Align.Center" Class="mt-2" Typo="Typo.body2">Loading...</MudText>
             </div>
         }
         else
         {
-            <MudText Color="Color.Secondary" Align="Align.Center" Class="mt-4">No reports found.</MudText>
+            <MudGrid Spacing="2">
+                <!-- Filter and Search Section -->
+                <MudItem xs="12">
+                    <MudPaper Elevation="1" Class="pa-3 mb-3">
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12" sm="4" md="3">
+                                <MudSelect T="int?"
+                                           Label="Year"
+                                           Value="selectedYear"
+                                           ValueChanged="OnYearChanged"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Dense="true">
+                                    <MudSelectItem T="int?" Value="@(null)">All Years</MudSelectItem>
+                                    @foreach (var year in availableYears)
+                                    {
+                                        <MudSelectItem T="int?" Value="@year">@year</MudSelectItem>
+                                    }
+                                </MudSelect>
+
+                            </MudItem>
+                            <MudItem xs="12" sm="4" md="3">
+                                <MudSelect T="int?"
+                                           Label="Month"
+                                           Value="selectedMonth"
+                                           ValueChanged="OnMonthChanged"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Dense="true">
+                                    <MudSelectItem T="int?" Value="@(null)">All Months</MudSelectItem>
+                                    @foreach (var month in Enumerable.Range(1, 12))
+                                    {
+                                        <MudSelectItem T="int?" Value="@month">
+                                            @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="4" md="3">
+                                <MudTextField @bind-Value="searchQuery"
+                                Label="Search"
+                                Variant="Variant.Outlined"
+                                Margin="Margin.Dense"
+                                Dense="true"
+                                Placeholder="Search by project, mentee, or mentor..."
+                                DebounceInterval="300"
+                                OnDebounceIntervalElapsed="ApplyFilters" />
+                            </MudItem>
+                            <MudItem xs="12" sm="4" md="3" Class="d-flex align-center">
+                                <MudButton Variant="Variant.Filled"
+                                Color="Color.Secondary"
+                                StartIcon="@Icons.Material.Filled.Clear"
+                                Size="Size.Small"
+                                OnClick="ClearFilters"
+                                Disabled="@(!selectedYear.HasValue && !selectedMonth.HasValue && string.IsNullOrEmpty(searchQuery))"
+                                FullWidth="true">
+                                    Clear
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Add Report Button -->
+                @if (Role?.ToLower() != "employee")
+                {
+                    <MudItem xs="12" Class="d-flex justify-end">
+                        <MudButton Variant="Variant.Filled"
+                        Color="Color.Primary"
+                        StartIcon="@Icons.Material.Filled.Add"
+                        Size="Size.Small"
+                        OnClick="OpenReportDialog">
+                            Add Report
+                        </MudButton>
+                    </MudItem>
+                }
+
+                <!-- Reports Table -->
+                @if (filteredReports.Any())
+                {
+                    <MudItem xs="12">
+                        <MudTable Items="filteredReports"
+                        Dense="true"
+                        Hover="true"
+                        Bordered="true"
+                        Striped="true"
+                        Breakpoint="Breakpoint.Sm"
+                        Elevation="0"
+                        Class="excel-table">
+                            <ToolBarContent>
+                                <MudText Typo="Typo.subtitle1">Reports (@filteredReports.Count)</MudText>
+                            </ToolBarContent>
+                            <HeaderContent>
+                                <MudTh Class="excel-header">S.No</MudTh>
+                                <MudTh Class="excel-header">Mentee</MudTh>
+                                <MudTh Class="excel-header">Mentor</MudTh>
+                                <MudTh Class="excel-header">Project</MudTh>
+                                <MudTh Class="excel-header">Progress</MudTh>
+                                <MudTh Class="excel-header">Fortnight 1</MudTh>
+                                <MudTh Class="excel-header">Fortnight 2</MudTh>
+                                @if (Role?.ToLower() != "employee")
+                                {
+                                    <MudTh Class="excel-header">Actions</MudTh>
+                                }
+                            </HeaderContent>
+                            <RowTemplate Context="report">
+                                <MudTd DataLabel="S.No" Style="width: 30px;">@((filteredReports.IndexOf(report) + 1))</MudTd>
+                                <MudTd DataLabel="Mentee" Style="max-width: 120px;">
+                                    <MudText Typo="Typo.body2" Class="truncate" title="@report.MenteeName">@report.MenteeName</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="truncate" title="@report.MenteeEmail">@report.MenteeEmail</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Mentor" Style="max-width: 120px;">                                    
+                                        <MudText Typo="Typo.body2" Class="truncate" title="@report.MentorName">@report.MentorName</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="truncate" title="@report.MentorEmail">@report.MentorEmail</MudText>
+
+                                </MudTd>
+                                <MudTd DataLabel="Project & Stage" Style="max-width: 100px;">
+                                    <div title="@report.ProjectsWorkedOn">
+                                        <strong>Project:</strong> @report.ProjectsWorkedOn
+                                    </div>
+                                    <div class="mt-1">
+                                        <strong>Stage:</strong>
+                                        <MudChip T="string"
+                                                 Color="@GetStageColor(report.ProgressStage)"
+                                                 Variant="Variant.Outlined"
+                                                 Size="Size.Small">
+                                            @report.ProgressStage
+                                        </MudChip>
+                                    </div>
+                                </MudTd>
+                                <MudTd DataLabel="Progress" Style="max-width: 100px;">
+                                    <MudProgressLinear Value="@report.ProgressPercentage"
+                                    Color="@GetProgressColor(report.ProgressPercentage)"
+                                    Size="Size.Small"
+                                    Class="progress-bar" />
+                                    <MudText Typo="Typo.caption" Class="mt-1">@report.ProgressPercentage%</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Fortnight 1" Style="max-width: 120px;">
+                                    @if (!string.IsNullOrEmpty(report.Performance1))
+                                    {
+                                        <MudText Typo="Typo.caption">Perf: <MudChip T="string" Color="@GetPerformanceColor(report.Performance1)" Size="Size.Small">@report.Performance1</MudChip></MudText>
+                                        <MudText Typo="Typo.caption" Class="truncate" title="@report.Feedback1">FB: @(report.Feedback1?.Length > 20 ? report.Feedback1.Substring(0, 20) + "..." : report.Feedback1)</MudText>
+                                        <MudText Typo="Typo.caption">SP: @report.CompletedStoryPoints1</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">N/A</MudText>
+                                    }
+                                </MudTd>
+                                <MudTd DataLabel="Fortnight 2" Style="max-width: 100px;">
+                                    @if (!string.IsNullOrEmpty(report.Performance2))
+                                    {
+                                        <MudText Typo="Typo.caption">Perf: <MudChip T="string" Color="@GetPerformanceColor(report.Performance2)" Size="Size.Small">@report.Performance2</MudChip></MudText>
+                                        <MudText Typo="Typo.caption" Class="truncate" title="@report.Feedback2">FB: @(report.Feedback2?.Length > 20 ? report.Feedback2.Substring(0, 20) + "..." : report.Feedback2)</MudText>
+                                        <MudText Typo="Typo.caption">SP: @report.CompletedStoryPoints2</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">N/A</MudText>
+                                    }
+                                </MudTd>
+                                @if (Role?.ToLower() != "employee")
+                                {
+                                    <MudTd DataLabel="Actions" Style="width: 80px;">
+                                        <div style="display: flex; gap: 4px;">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                            Color="Color.Primary"
+                                            Size="Size.Small"
+                                            OnClick="@(() => OpenEditReportDialog(report))"
+                                            Title="Edit" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                            Color="Color.Error"
+                                            Size="Size.Small"
+                                            OnClick="@(() => DeleteReport(report.Id))"
+                                            Title="Delete" />
+                                        </div>
+                                    </MudTd>
+                                }
+                            </RowTemplate>
+                            <PagerContent>
+                                <MudTablePager RowsPerPage="10" />
+                            </PagerContent>
+                        </MudTable>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12">
+                        <MudAlert Severity="Severity.Info" Class="mt-3 pa-2">No reports found.</MudAlert>
+                    </MudItem>
+                }
+            </MudGrid>
         }
-    }
-    @if (isSubmitting)
-    {
-        <MudOverlay Visible="true" DarkBackground="true" Class="d-flex justify-center align-center" ZIndex="1300">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-            <MudText Class="ml-2" Typo="Typo.h6" Color="Color.Primary">Submitting...</MudText>
-        </MudOverlay>
-    }
+        @if (isSubmitting)
+        {
+            <MudOverlay Visible="true" DarkBackground="true" Class="d-flex justify-center align-center" ZIndex="1300">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+                <MudText Class="ml-2" Typo="Typo.body2" Color="Color.Primary">Submitting...</MudText>
+            </MudOverlay>
+        }
+    </MudPaper>
 </MudContainer>
 
 <style>
-    .small-table td,
-    .small-table th {
-        font-size: 12px !important;
-        padding: 4px 8px !important;
+    .excel-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #ffffff;
+    border-radius: 6px;
+    overflow: hidden;
     }
 
-    .small-table .mud-icon {
-        font-size: 16px !important;
+    .excel-header {
+    background-color: #e8f0fe !important;
+    font-weight: 600 !important;
+    color: #1a3c6c !important;
+    text-transform: uppercase;
+    font-size: 11px !important;
+    padding: 8px 10px !important;
+    border-bottom: 1px solid #d3d3d3 !important;
     }
 
-    .rounded-table-wrapper {
-        border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    .excel-table td {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+    vertical-align: middle;
+    border-bottom: 1px solid #e0e0e0 !important;
+    }
+
+    .excel-table tr:hover {
+    background-color: #f5faff !important;
+    }
+
+    .truncate {
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    }
+
+    .progress-bar {
+    min-width: 60px;
+    border-radius: 3px;
+    }
+
+    .mud-table-container {
+    padding: 0 !important;
     }
 </style>
 
 @code {
     private List<ReportModel> reports = new();
+    private List<ReportModel> filteredReports = new();
     private string? Role { get; set; }
     private string? Email { get; set; }
     private Dictionary<string, EmployeeDetails> _menteeDetailsCache = new();
@@ -144,6 +283,10 @@
     private Dictionary<string, (string ContentType, string Base64Content)> _mentorPhotos = new();
     private bool isLoading = true;
     private bool isSubmitting = false;
+    private int? selectedYear = null;
+    private int? selectedMonth = null;
+    private string searchQuery = string.Empty;
+    private List<int> availableYears = Enumerable.Range(2020, DateTime.UtcNow.Year - 2019).ToList();
 
     private Color GetProgressColor(int percentage) => percentage switch
     {
@@ -155,8 +298,18 @@
     private Color GetStageColor(string? stage) => stage?.ToLower() switch
     {
         "completed" => Color.Success,
-        "in-progress" => Color.Warning,
-        "not started" => Color.Error,
+        "in progress" => Color.Warning,
+        "planning" => Color.Info,
+        _ => Color.Default
+    };
+
+    private Color GetPerformanceColor(string? performance) => performance?.ToLower() switch
+    {
+        "excellent" => Color.Success,
+        "good" => Color.Success,
+        "average" => Color.Info,
+        "below average" => Color.Warning,
+        "poor" => Color.Error,
         _ => Color.Default
     };
 
@@ -175,28 +328,25 @@
         isLoading = true;
         try
         {
-            Console.WriteLine("[DEBUG] Initializing reports page...");
             var roleTask = JS.InvokeAsync<string>("sessionStorage.getItem", "userRole").AsTask();
             var emailTask = JS.InvokeAsync<string>("sessionStorage.getItem", "email").AsTask();
             await Task.WhenAll(roleTask, emailTask);
 
             Role = await roleTask;
             Email = await emailTask;
-            Console.WriteLine($"[DEBUG] Role: {Role}, Email: {Email}");
 
             if (string.IsNullOrEmpty(Role) || string.IsNullOrEmpty(Email))
             {
                 Snackbar.Add("Role or Email is missing from session.", Severity.Error);
-                Console.WriteLine("[DEBUG] Missing role or email");
                 return;
             }
 
             await LoadReportsBasedOnRole();
+            ApplyFilters();
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error initializing: {ex.Message}", Severity.Error);
-            Console.WriteLine($"[DEBUG] Error in OnInitializedAsync: {ex.Message}");
         }
         finally
         {
@@ -207,7 +357,6 @@
 
     private async Task LoadReportsBasedOnRole()
     {
-        Console.WriteLine("[DEBUG] Loading reports based on role...");
         try
         {
             var empDetailsTask = EmployeeService.GetEmployeeDetailsByEmail(Email!);
@@ -222,18 +371,15 @@
             await Task.WhenAll(empDetailsTask, reportsTask);
             var empDetails = empDetailsTask.Result;
             reports = reportsTask.Result ?? new List<ReportModel>();
-            Console.WriteLine($"[DEBUG] Reports loaded: {reports.Count}");
 
             if (empDetails == null)
             {
                 Snackbar.Add("Employee details not found.", Severity.Error);
-                Console.WriteLine("[DEBUG] No employee details found");
                 return;
             }
 
             var uniqueMentorIds = reports.Select(r => r.MentorId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToList();
             var uniqueMenteeIds = reports.Select(r => r.MenteeId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToList();
-            Console.WriteLine($"[DEBUG] Unique Mentor IDs: {uniqueMentorIds.Count}, Mentee IDs: {uniqueMenteeIds.Count}");
 
             var missingMentorIds = uniqueMentorIds.Where(id => !_mentorPhotos.ContainsKey(id)).ToList();
             var missingMenteeIds = uniqueMenteeIds.Where(id => !_menteeDetailsCache.ContainsKey(id)).ToList();
@@ -253,7 +399,6 @@
                 if (mentor != null && !string.IsNullOrEmpty(mentor.PhotoBase64Content))
                 {
                     _mentorPhotos[id] = (mentor.PhotoContentType, mentor.PhotoBase64Content);
-                    Console.WriteLine($"[DEBUG] Cached mentor photo for ID: {id}");
                 }
             }
 
@@ -263,7 +408,6 @@
                 if (mentee != null)
                 {
                     _menteeDetailsCache[id] = mentee;
-                    Console.WriteLine($"[DEBUG] Cached mentee details for ID: {id}");
                 }
             }
 
@@ -273,22 +417,55 @@
                 if (exp != null)
                 {
                     _menteeExperienceCache[id] = exp;
-                    Console.WriteLine($"[DEBUG] Cached mentee experience for ID: {id}");
                 }
             }
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error loading reports: {ex.Message}", Severity.Error);
-            Console.WriteLine($"[DEBUG] Error in LoadReportsBasedOnRole: {ex.Message}");
         }
+    }
+
+    private void ApplyFilters()
+    {
+        var query = searchQuery?.Trim().ToLower();
+        filteredReports = reports.Where(r =>
+            (!selectedYear.HasValue || r.SubmittedOn.Year == selectedYear.Value) &&
+            (!selectedMonth.HasValue || r.SubmittedOn.Month == selectedMonth.Value) &&
+            (string.IsNullOrEmpty(query) ||
+             r.ProjectsWorkedOn?.ToLower().Contains(query) == true ||
+             r.MenteeName?.ToLower().Contains(query) == true ||
+             r.MenteeEmail?.ToLower().Contains(query) == true ||
+             r.MentorName?.ToLower().Contains(query) == true ||
+             r.MentorEmail?.ToLower().Contains(query) == true)
+        ).ToList();
+        StateHasChanged();
+    }
+
+    private async Task OnYearChanged(int? year)
+    {
+        selectedYear = year;
+        ApplyFilters();
+    }
+
+    private async Task OnMonthChanged(int? month)
+    {
+        selectedMonth = month;
+        ApplyFilters();
+    }
+
+    private async Task ClearFilters()
+    {
+        selectedYear = null;
+        selectedMonth = null;
+        searchQuery = string.Empty;
+        ApplyFilters();
     }
 
     private async Task OpenReportDialog()
     {
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true, CloseOnEscapeKey = false };
         isSubmitting = true;
-        Console.WriteLine("[DEBUG] Opening add report dialog...");
         var dialog = await DialogService.ShowAsync<FortnightReportForm>("Submit Fortnight Report", options);
         var result = await dialog.Result;
         isSubmitting = false;
@@ -296,18 +473,15 @@
         if (!result.Canceled && result.Data is ReportModel newReport)
         {
             Snackbar.Add("Report added successfully.", Severity.Success);
-            Console.WriteLine($"[DEBUG] Report added, ID: {newReport.Id}, Mentee: {newReport.MenteeName}");
-            // Add the new report to the list instantly
             reports.Add(newReport);
-            // Update cache for the new report
             await UpdateCacheForReport(newReport);
+            ApplyFilters();
             StateHasChanged();
         }
         else
         {
-            Console.WriteLine("[DEBUG] Add report dialog canceled or no report data returned");
-            // Fallback to full reload if dialog doesn't return the report
             await LoadReportsBasedOnRole();
+            ApplyFilters();
             StateHasChanged();
         }
     }
@@ -317,7 +491,6 @@
         var parameters = new DialogParameters { { nameof(FortnightReportForm.Report), report } };
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true, CloseOnEscapeKey = false };
         isSubmitting = true;
-        Console.WriteLine($"[DEBUG] Opening edit report dialog for report ID: {report.Id}");
         var dialog = await DialogService.ShowAsync<FortnightReportForm>("Edit Fortnight Report", parameters, options);
         var result = await dialog.Result;
         isSubmitting = false;
@@ -325,7 +498,6 @@
         if (!result.Canceled)
         {
             Snackbar.Add("Report updated successfully.", Severity.Success);
-            Console.WriteLine("[DEBUG] Report updated, updating table...");
             var updatedReport = await ReportService.GetReportByIdAsync(report.Id);
             if (updatedReport != null)
             {
@@ -340,44 +512,37 @@
             {
                 await LoadReportsBasedOnRole();
             }
+            ApplyFilters();
             StateHasChanged();
-        }
-        else
-        {
-            Console.WriteLine("[DEBUG] Edit report dialog canceled");
         }
     }
 
     private async Task DeleteReport(int id)
     {
-        Console.WriteLine($"[DEBUG] Deleting report ID: {id}");
         try
         {
             bool isDeleted = await ReportService.DeleteReportAsync(id);
             if (isDeleted)
             {
                 Snackbar.Add("Report deleted successfully.", Severity.Success);
-                Console.WriteLine("[DEBUG] Report deleted, removing from table...");
                 reports.RemoveAll(r => r.Id == id);
                 await CleanUpCache();
+                ApplyFilters();
                 StateHasChanged();
             }
             else
             {
                 Snackbar.Add("Failed to delete report.", Severity.Error);
-                Console.WriteLine("[DEBUG] Failed to delete report");
             }
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error deleting report: {ex.Message}", Severity.Error);
-            Console.WriteLine($"[DEBUG] Error in DeleteReport: {ex.Message}");
         }
     }
 
     private async Task UpdateCacheForReport(ReportModel report)
     {
-        Console.WriteLine($"[DEBUG] Updating cache for report ID: {report.Id}");
         try
         {
             var mentorId = report.MentorId;
@@ -389,7 +554,6 @@
                 if (mentor != null && !string.IsNullOrEmpty(mentor.PhotoBase64Content))
                 {
                     _mentorPhotos[mentorId] = (mentor.PhotoContentType, mentor.PhotoBase64Content);
-                    Console.WriteLine($"[DEBUG] Cached mentor photo for ID: {mentorId}");
                 }
             }
 
@@ -401,7 +565,6 @@
                     if (mentee != null)
                     {
                         _menteeDetailsCache[menteeId] = mentee;
-                        Console.WriteLine($"[DEBUG] Cached mentee details for ID: {menteeId}");
                     }
                 }
 
@@ -411,20 +574,18 @@
                     if (exp != null)
                     {
                         _menteeExperienceCache[menteeId] = exp;
-                        Console.WriteLine($"[DEBUG] Cached mentee experience for ID: {menteeId}");
                     }
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[DEBUG] Error updating cache: {ex.Message}");
+            Snackbar.Add($"Error updating cache: {ex.Message}", Severity.Error);
         }
     }
 
     private async Task CleanUpCache()
     {
-        Console.WriteLine("[DEBUG] Cleaning up cache...");
         try
         {
             var activeMentorIds = reports.Select(r => r.MentorId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToHashSet();
@@ -437,45 +598,21 @@
             foreach (var id in mentorIdsToRemove)
             {
                 _mentorPhotos.Remove(id);
-                Console.WriteLine($"[DEBUG] Removed mentor photo cache for ID: {id}");
             }
 
             foreach (var id in menteeIdsToRemove)
             {
                 _menteeDetailsCache.Remove(id);
-                Console.WriteLine($"[DEBUG] Removed mentee details cache for ID: {id}");
             }
 
             foreach (var id in experienceIdsToRemove)
             {
                 _menteeExperienceCache.Remove(id);
-                Console.WriteLine($"[DEBUG] Removed mentee experience cache for ID: {id}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[DEBUG] Error cleaning up cache: {ex.Message}");
+            Snackbar.Add($"Error cleaning up cache: {ex.Message}", Severity.Error);
         }
-    }
-
-    private async Task DownloadFile(ReportModel report)
-    {
-        Console.WriteLine($"[DEBUG] Downloading file for report ID: {report.Id}");
-        if (report.UploadedFile != null && !string.IsNullOrEmpty(report.FileName))
-        {
-            var base64 = Convert.ToBase64String(report.UploadedFile);
-            await JS.InvokeVoidAsync("downloadBase64File", "application/octet-stream", base64, report.FileName);
-            Console.WriteLine($"[DEBUG] File downloaded: {report.FileName}");
-        }
-        else
-        {
-            Console.WriteLine("[DEBUG] No file to download");
-        }
-    }
-
-    public class Report
-    {
-        public string ReportName { get; set; } = string.Empty;
-        public DateTime Date { get; set; }
     }
 }
