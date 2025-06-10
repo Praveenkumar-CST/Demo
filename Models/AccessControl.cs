@@ -18,6 +18,9 @@ namespace WiseHR.Models
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
                     ("Policies", "/policies"),
+
+                    ("LeaveManagement", "/admin/leave"),
+
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -48,6 +51,7 @@ namespace WiseHR.Models
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
                     ("Policies", "/policies"),
+                    ("LeaveManagement", "/admin/leave"),
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     //("Add Employees", "/home/employees"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
@@ -75,6 +79,7 @@ namespace WiseHR.Models
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
                     ("Policies", "/policies"),
+                    ("LeaveManagement", "/admin/leave"),
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -98,6 +103,7 @@ namespace WiseHR.Models
                     ("Dashboard", "/home"),
                     ("Holiday Calendar", "/user"),
                     ("Attendance", "/UserAttendanceView"),
+                    ("LeaveManagement", "/employee/leave"),
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
