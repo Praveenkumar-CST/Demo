@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using System.Net.Http.Json;
 
-namespace WiseHR_Frontend.Services
+namespace WiseHR.Services
 {
     public interface IChatService : IAsyncDisposable
     {
@@ -16,7 +16,7 @@ namespace WiseHR_Frontend.Services
         event Action<string> OnStatusReceived;
         event Action OnConnectionStateChanged;
         Task InitializeAsync();
-        Task SendQueryAsync(string user, string message, string? userId);
+        Task SendQueryAsync(string user, string message, string? userId, string sessionId);
     }
 
     public class ChatService : IChatService
@@ -118,7 +118,7 @@ namespace WiseHR_Frontend.Services
             }
         }
 
-        public async Task SendQueryAsync(string user, string message, string? userId)
+        public async Task SendQueryAsync(string user, string message, string? userId, string sessionId)
         {
             if (_hubConnection is null || _hubConnection.State != HubConnectionState.Connected)
             {
@@ -126,10 +126,10 @@ namespace WiseHR_Frontend.Services
                 throw new InvalidOperationException("Chat service is not connected");
             }
 
-            Console.WriteLine($"Sending query - User: {user}, Message: {message}, UserId: {userId}");
+            Console.WriteLine($"Sending query - User: {user}, Message: {message}, UserId: {userId}, SessionId: {sessionId}");
             try
             {
-                await _hubConnection.SendAsync("SendQuery", user, message, userId);
+                await _hubConnection.SendAsync("SendQuery", user, message, userId, sessionId);
                 Console.WriteLine("Query sent successfully");
             }
             catch (Exception ex)
