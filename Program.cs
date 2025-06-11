@@ -1,3 +1,7 @@
+
+using Blazored.SessionStorage;
+using FingerFrontend.AdminAttendanceViewModel;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Caching.Memory;
@@ -14,8 +18,6 @@ using FingerFrontend.AdminAttendanceViewModel;
 using Microsoft.Extensions.Caching.Memory;
 using Syncfusion.Blazor;
 using WiseHR.Models.NewFolder;
-using Microsoft.AspNetCore.Components.Authorization;
-
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -63,10 +65,6 @@ builder.Services.AddScoped<SearchService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 
 builder.Services.AddScoped<LeaveManagementService>();
-
-
-
-
 
 builder.Services.AddSyncfusionBlazor();
 
