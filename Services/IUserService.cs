@@ -1,5 +1,6 @@
 ﻿using WiseHR.Models;
 
+
 namespace WiseHR.Services
 {
     public interface IUserService
