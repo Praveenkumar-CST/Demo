@@ -27,7 +27,7 @@ namespace WiseHR.Models
 
         [Required(ErrorMessage = "Date of Joining is required")]
 
-        public DateTime DateOfJoining { get; set; }
+        public DateTime? DateOfJoining { get; set; }
 
         [Required(ErrorMessage = "Level is required")]
         public string Level { get; set; }
