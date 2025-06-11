@@ -138,6 +138,8 @@ namespace WiseHR.Models
                 "Holiday Calendar" => Icons.Material.Filled.Event,
                 "Fortnight Report" => Icons.Material.Filled.Assignment,
                 "ReportList" => Icons.Material.Filled.Assessment,
+                "LeaveManagement" => Icons.Material.Filled.WorkOff,
+
                 _ => Icons.Material.Filled.Menu
             };
         }

@@ -12,71 +12,67 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <!-- Leave Balance Cards and Actions -->
-    <MudGrid>
+    <MudGrid Justify="Justify.Center">
         @if (historyResponse?.Balances != null)
         {
-            var visibleBalances = showAllLeaves ? historyResponse.Balances : historyResponse.Balances.Where(b => b.LeaveType.ToLower() == "casual" || b.LeaveType.ToLower() == "sick" || b.LeaveType.ToLower() == "privilege").Take(3);
-
-            @foreach (var balance in visibleBalances)
-            {
-                var progressAngle = balance.TotalQuota > 0 ? (360 * balance.Available / balance.TotalQuota) : 0;
-                var cssClass = GetLeaveTypeClass(balance.LeaveType);
-
-                <MudItem xs="12" sm="6" md="2">
-                    <div class="leave-card @cssClass">
-                        <div class="leave-title">@balance.LeaveType Leave</div>
-                        <div class="circular-progress">
-                            <div class="progress-circle" style="--progress-angle: @(progressAngle)deg;">
-                                <div class="progress-inner">
-                                    <div class="progress-value">@GetDisplayValue(balance)</div>
-                                    <div class="progress-label">Available</div>
+            var visibleBalances = showAllLeaves ? historyResponse.Balances : historyResponse.Balances.Where(b => b.LeaveType.ToLower() == "sick" || b.LeaveType.ToLower() == "privilege" || b.LeaveType.ToLower() == "unpaid");
+            <MudItem xs="12">
+                <MudGrid Justify="Justify.Center">
+                    @foreach (var balance in visibleBalances)
+                    {
+                        var progressAngle = balance.TotalQuota > 0 ? (360 * balance.Available / balance.TotalQuota) : 0;
+                        var cssClass = GetLeaveTypeClass(balance.LeaveType);
+                        <MudItem xs="12" sm="6" md="3" Class="d-flex justify-center">
+                            <div class="leave-card @cssClass compact-card">
+                                <div class="leave-title">@balance.LeaveType Leave</div>
+                                <div class="circular-progress">
+                                    <div class="progress-circle" style="--progress-angle: @(progressAngle)deg;">
+                                        <div class="progress-inner">
+                                            <div class="progress-value">@GetDisplayValue(balance)</div>
+                                            <div class="progress-label">Available</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="leave-details">
+                                    <div><span>Available</span><span>@balance.Available D</span></div>
+                                    <div><span>Consumed</span><span>@balance.Consumed D</span></div>
+                                    <div><span>Annual Quota</span><span>@balance.TotalQuota D</span></div>
+                                </div>
+                                <div class="leave-actions-buttons">
+                                    <button class="action-btn apply-btn" @onclick="() => OpenLeavePopup(balance.LeaveType)">
+                                        Apply
+                                    </button>
+                                    <button class="action-btn logs-btn" @onclick="() => OpenLogsPopup(balance.LeaveType)">
+                                        Logs
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-                        <div class="leave-details">
-                            <div><span>Available</span><span>@balance.Available D</span></div>
-                            <div><span>Consumed</span><span>@balance.Consumed D</span></div>
-                            <div><span>Annual Quota</span><span>@balance.TotalQuota D</span></div>
-                        </div>
-                        <div class="leave-actions-buttons">
-                            <button class="action-btn apply-btn" @onclick="() => OpenLeavePopup(balance.LeaveType)">
-                                Apply
-                            </button>
-                            <button class="action-btn logs-btn" @onclick="() => OpenLogsPopup(balance.LeaveType)">
-                                Logs
-                            </button>
-                        </div>
-                    </div>
-                </MudItem>
-            }
-
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudItem>
             @if (!showAllLeaves && historyResponse.Balances.Count() > 3)
             {
-                <MudItem xs="12" sm="6" md="2">
-                    <div class="expand-card" @onclick="ToggleShowAllLeaves">
-                        <div class="expand-content">
-                            <div class="expand-icon">+</div>
-                            <div class="expand-text">Show More</div>
-                            <div class="expand-count">@(historyResponse.Balances.Count() - 3) more</div>
-                        </div>
+                <div class="show-more-container" @onclick="ToggleShowAllLeaves">
+                    <div class="show-more-btn">
+                        <span class="expand-icon">+</span>
+                        <span class="expand-text">Show More (@(historyResponse.Balances.Count() - 3) more)</span>
                     </div>
-                </MudItem>
+                </div>
             }
             else if (showAllLeaves && historyResponse.Balances.Count() > 3)
             {
-                <MudItem xs="12" sm="6" md="2">
-                    <div class="expand-card" @onclick="ToggleShowAllLeaves">
-                        <div class="expand-content">
-                            <div class="expand-icon">−</div>
-                            <div class="expand-text">Show Less</div>
-                        </div>
+                <div class="show-more-container" @onclick="ToggleShowAllLeaves">
+                    <div class="show-more-btn">
+                        <span class="expand-icon">−</span>
+                        <span class="expand-text">Show Less</span>
                     </div>
-                </MudItem>
+                </div>
             }
         }
         else
         {
-            <MudItem xs="12">
+            <MudItem xs="12" Class="d-flex justify-center">
                 <MudProgressCircular Indeterminate="true" />
             </MudItem>
         }
@@ -150,6 +146,7 @@
 <!-- Leave Application Popup -->
 @if (showLeavePopup)
 {
+
     <div class="popup-overlay" @onclick="CloseLeavePopup">
         <div class="popup-content" @onclick:stopPropagation="true">
             <div class="popup-header">
@@ -159,23 +156,41 @@
 
             <MudForm @ref="form" Model="leaveRequest" Validation="@(new LeaveRequestDtoValidator())">
                 <MudGrid>
-                    <MudItem xs="12" sm="6">
+                    <!-- Hide the Leave Type block using style -->
+                    <MudItem xs="12" sm="6" Style="display: none;">
                         <MudSelect Label="Leave Type" @bind-Value="leaveRequest.LeaveType" Required="true" Variant="Variant.Outlined">
                             <MudSelectItem Value="@("Privilege")">Privilege</MudSelectItem>
                             <MudSelectItem Value="@("Sick")">Sick</MudSelectItem>
-                            <MudSelectItem Value="@("Casual")">Casual</MudSelectItem>
                             <MudSelectItem Value="@("Maternity")">Maternity</MudSelectItem>
                             <MudSelectItem Value="@("Paternity")">Paternity</MudSelectItem>
                         </MudSelect>
                     </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker Label="Start Date" @bind-Date="leaveRequest.StartDate" Required="true" DateFormat="MMM dd, yyyy" Variant="Variant.Outlined" />
+                    <MudItem xs="12" sm="6" Class="pr-sm-2">
+                        <MudDatePicker Label="Start Date"
+                                       @bind-Date="leaveRequest.StartDate"
+                                       Required="true"
+                                       DateFormat="MMM dd, yyyy"
+                                       Variant="Variant.Outlined"
+                                       MinDate="DateTime.Today"
+                                       AnchorOrigin="Origin.TopLeft"
+                                       TransformOrigin="Origin.TopRight" />
                     </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker Label="End Date" @bind-Date="leaveRequest.EndDate" Required="true" DateFormat="MMM dd, yyyy" Variant="Variant.Outlined" />
+                    <MudItem xs="12" sm="6" Class="pl-sm-2">
+                        <MudDatePicker Label="End Date"
+                                       @bind-Date="leaveRequest.EndDate"
+                                       Required="true"
+                                       DateFormat="MMM dd, yyyy"
+                                       Variant="Variant.Outlined"
+                                       MinDate="DateTime.Today"
+                                       AnchorOrigin="Origin.TopLeft"
+                                       TransformOrigin="Origin.TopRight" />
                     </MudItem>
                     <MudItem xs="12">
-                        <MudTextField Label="Reason" @bind-Value="leaveRequest.Reason" Required="true" Lines="3" Variant="Variant.Outlined" />
+                        <MudTextField Label="Reason"
+                                      @bind-Value="leaveRequest.Reason"
+                                      Required="true"
+                                      Lines="3"
+                                      Variant="Variant.Outlined" />
                     </MudItem>
 
                     <MudItem xs="12" Class="d-flex justify-end gap-4">
@@ -714,7 +729,6 @@
 
     }
 
-    /* Grid alignment */
     .mud-grid-item {
         display: flex;
         padding: 0 !important;
@@ -739,6 +753,49 @@
     .mud-grid {
         margin: 0 !important;
         width: 100% !important;
+    }
+
+    /* Add spacing between date pickers on small screens and up */
+    @@media (min-width: 600px) {
+        .pr-sm-2
+
+    {
+        padding-right: 8px !important;
+    }
+
+    .pl-sm-2 {
+        padding-left: 8px !important;
+    }
+
+    .show-more-container {
+        text-align: center;
+        margin-top: 16px;
+    }
+
+    .show-more-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background-color: #f5f5f5;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #333;
+        transition: background-color 0.3s;
+    }
+
+        .show-more-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+    .expand-icon {
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .expand-text {
+        font-size: 14px;
     }
 </style>
 
@@ -812,7 +869,6 @@
         return leaveType?.ToLower() switch
         {
             "annual" => "annual-leave",
-            "casual" => "casual-leave",
             "sick" => "sick-leave",
             "maternity" => "maternity-leave",
             "paternity" => "paternity-leave",

@@ -44,7 +44,9 @@ namespace WiseHR.Services
             var user = authState.User;
 
             var name = user.FindFirst(ClaimTypes.Name)?.Value ?? "";
-            var email = user.FindFirst(ClaimTypes.Email)?.Value ?? "";
+            var email = user.FindFirst(ClaimTypes.Email)?.Value ??
+                        user.FindFirst("email")?.Value ??
+                        user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value ?? "";
             var role = user.FindFirst(ClaimTypes.Role)?.Value ?? "";
 
             return (name, email, role);
@@ -74,29 +76,14 @@ namespace WiseHR.Services
             return await response.Content.ReadFromJsonAsync<List<LeaveRequest>>();
         }
 
-        public async Task<MyHistoryResponse> GetMyLeaveHistoryAsync()
-        {
-            await AddAuthorizationHeader();
-            var response = await _httpClient.GetAsync("api/LeaveManagement/my-history");
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException($"Failed to get leave history. Status: {response.StatusCode}, Reason: {errorContent}");
-            }
-            return await response.Content.ReadFromJsonAsync<MyHistoryResponse>();
-        }
-
         public async Task<MyHistoryResponse> GetUserHistoryAsync(UserHistoryRequestDto request)
         {
-            if (string.IsNullOrEmpty(request.Name) && string.IsNullOrEmpty(request.UserId) &&
-                string.IsNullOrEmpty(request.EmployeeId) && string.IsNullOrEmpty(request.Email))
+            if (string.IsNullOrEmpty(request.EmployeeId) && string.IsNullOrEmpty(request.Email))
             {
-                throw new ArgumentException("At least one search parameter (Name, UserId, EmployeeId, or Email) is required.");
+                throw new ArgumentException("At least one search parameter (EmployeeId or Email) is required.");
             }
 
             var query = HttpUtility.ParseQueryString(string.Empty);
-            if (!string.IsNullOrEmpty(request.Name)) query["name"] = request.Name;
-            if (!string.IsNullOrEmpty(request.UserId)) query["userId"] = request.UserId;
             if (!string.IsNullOrEmpty(request.EmployeeId)) query["employeeId"] = request.EmployeeId;
             if (!string.IsNullOrEmpty(request.Email)) query["email"] = request.Email;
             query["pageNumber"] = request.PageNumber.ToString();
@@ -158,6 +145,18 @@ namespace WiseHR.Services
                 throw new HttpRequestException($"Failed to manage individual leave quota. Status: {response.StatusCode}, Reason: {errorContent}");
             }
             return await response.Content.ReadFromJsonAsync<QuotaResponse>();
+        }
+
+        public async Task<MyHistoryResponse> GetMyLeaveHistoryAsync()
+        {
+            await AddAuthorizationHeader();
+            var response = await _httpClient.GetAsync("api/LeaveManagement/my-history");
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Failed to get leave history. Status: {response.StatusCode}, Reason: {errorContent}");
+            }
+            return await response.Content.ReadFromJsonAsync<MyHistoryResponse>();
         }
     }
 }
