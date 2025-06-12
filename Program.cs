@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using WiseHR;
@@ -65,6 +64,7 @@ var apiBaseUrl = "https://localhost:7021/";
 // Register ChatService
 builder.Services.AddScoped<IChatService, ChatService>();
 
+builder.Services.AddScoped<IChatHistoryService, ChatHistoryService>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 builder.Services.AddSingleton(new ApiConfig { BaseUrl = apiBaseUrl });
