@@ -7,405 +7,414 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="pa-4">
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h4" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Class="mr-2" />
+            Mentor Hierarchy
+        </MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary">
+            Manage mentor-mentee relationships in a hierarchical structure
+        </MudText>
+    </MudPaper>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     @if (isPageLoading)
     {
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-            <MudText Align="Align.Center">Loading...</MudText>
-        </div>
+        <MudPaper Class="pa-8 text-center" Elevation="0">
+            <MudProgressCircular Indeterminate Color="Color.Primary" Size="Size.Large" />
+            <MudText Typo="Typo.h6" Class="mt-4">Loading hierarchy...</MudText>
+        </MudPaper>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">
+            <MudText>@errorMessage</MudText>
+        </MudAlert>
     }
     else
     {
-
-
-        if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
-        }
-        else if (managers == null || !managers.Any())
-        {
-            <MudAlert Severity="Severity.Info">No managers found.</MudAlert>
-        }
-        else
-        {
-            <MudGrid>
-                @foreach (var manager in managers)
-                {
-                    if (manager != null)
+        <MudPaper Class="pa-4" Elevation="0">
+            @* Admin Section *@
+            @if (GetAdminNodes().Any())
+            {
+                <MudText Typo="Typo.h6" Class="mb-3 text-primary">Administrators</MudText>
+                <MudGrid Class="mb-6">
+                    @foreach (var adminNode in GetAdminNodes())
                     {
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudCard Elevation="6" Class="pa-2" Style="background-color:#E3F2FD">
-                                <MudCardHeader>
-                                    <CardHeaderContent>
-                                        <MudText Typo="Typo.h6">@manager.Email</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @manager.Id</MudText>
-                                        <MudChip T="string" Color="Color.Info" Size="Size.Small">@manager.Role</MudChip>
-                                    </CardHeaderContent>
-                                </MudCardHeader>
-
-                                <MudCardContent>
-                                    <MudText Typo="Typo.body1">Mentees Assigned: <strong>@(menteeCounts.TryGetValue(manager.Id, out var count) ? count : 0)</strong></MudText>
-
-                                    <MudExpansionPanels>
-                                        <MudExpansionPanel Text="View Mentees">
-                                            @if (menteeLoadingStates.Contains(manager.Id))
-                                            {
-                                                <MudProgressLinear Indeterminate="true" Color="Color.Info" />
-                                            }
-                                            else if (!menteeLists.ContainsKey(manager.Id) || !menteeLists[manager.Id].Any())
-                                            {
-                                                <MudText>No mentees assigned.</MudText>
-                                            }
-                                            else
-                                            {
-                                                <MudList T="string" Dense="true">
-                                                    @foreach (var mentee in menteeLists[manager.Id])
-                                                    {
-                                                        <MudListItem>
-                                                            <MudStack Row="true" Justify="Justify.SpaceBetween">
-                                                                <MudText>@mentee</MudText>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                                Color="Color.Error"
-                                                                Size="Size.Small"
-                                                                OnClick="() => DeleteMenteeAsync(manager.Id, mentee)" />
-                                                            </MudStack>
-                                                        </MudListItem>
-                                                    }
-                                                </MudList>
-                                            }
-                                        </MudExpansionPanel>
-                                    </MudExpansionPanels>
-                                </MudCardContent>
-
-                                <MudCardActions>
-                                    <button class="btn btn-primary me-2" @onclick="() => Assign(manager.Id, true)">Assign</button>
-                                </MudCardActions>
-                            </MudCard>
+                        <MudItem xs="12" md="6" lg="4">
+                            @RenderMentorCard(adminNode.Value)
                         </MudItem>
                     }
-                }
-            </MudGrid>
-        }
-        <br/>
+                </MudGrid>
+            }
 
-        if (!string.IsNullOrEmpty(errorMessageAdmins))
-        {
-            <MudAlert Severity="Severity.Error">@errorMessageAdmins</MudAlert>
-        }
-        else if (admins == null || !admins.Any())
-        {
-            <MudAlert Severity="Severity.Info">No admins found.</MudAlert>
-        }
-        else
-        {
-            <MudGrid>
-                @foreach (var admin in admins)
-                {
-                    if (admin != null)
+            @* HR Section *@
+            @if (GetHRNodes().Any())
+            {
+                <MudText Typo="Typo.h6" Class="mb-3 text-primary">Human Resources</MudText>
+                <MudGrid Class="mb-6">
+                    @foreach (var hrNode in GetHRNodes())
                     {
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudCard Elevation="6" Class="pa-2" Style="background-color:#F3E5F5">
-                                <MudCardHeader>
-                                    <CardHeaderContent>
-                                        <MudText Typo="Typo.h6">@admin.Email</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @admin.Id</MudText>
-                                        <MudChip T="string" Color="Color.Secondary" Size="Size.Small">@admin.Role</MudChip>
-                                    </CardHeaderContent>
-                                </MudCardHeader>
-
-                                <MudCardContent>
-                                    <MudText Typo="Typo.body1">Mentees Assigned: <strong>@(menteeCounts.TryGetValue(admin.Id, out var count) ? count : 0)</strong></MudText>
-
-                                    <MudExpansionPanels>
-                                        <MudExpansionPanel Text="View Mentees">
-                                            @if (menteeLoadingStates.Contains(admin.Id))
-                                            {
-                                                <MudProgressLinear Indeterminate="true" Color="Color.Secondary" />
-                                            }
-                                            else if (!menteeLists.ContainsKey(admin.Id) || !menteeLists[admin.Id].Any())
-                                            {
-                                                <MudText>No mentees assigned.</MudText>
-                                            }
-                                            else
-                                            {
-                                                <MudList T="string" Dense="true">
-                                                    @foreach (var mentee in menteeLists[admin.Id])
-                                                    {
-                                                        <MudListItem>
-                                                            <MudStack Row="true" Justify="Justify.SpaceBetween">
-                                                                <MudText>@mentee</MudText>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                                Color="Color.Error"
-                                                                Size="Size.Small"
-                                                                OnClick="() => DeleteMenteeAsync(admin.Id, mentee)" />
-                                                            </MudStack>
-                                                        </MudListItem>
-                                                    }
-                                                </MudList>
-                                            }
-                                        </MudExpansionPanel>
-                                    </MudExpansionPanels>
-                                </MudCardContent>
-                                <MudCardActions>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => Assign(admin.Id, false)">Assign</MudButton>
-
-                                </MudCardActions>
-
-                            </MudCard>
+                        <MudItem xs="12" md="6" lg="4">
+                            @RenderMentorCard(hrNode.Value)
                         </MudItem>
                     }
-                }
-            </MudGrid>
-        }
-        @if (showModal)
-        {
-            <div class="modal show d-block mt-20" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Mentor: @selectedManagerEmail</h5>
-                            <button type="button" class="btn-close" @onclick="CloseModal"></button>
-                        </div>
-                        <div class="modal-body">
-                            @if (isLoadingEmployees)
-                            {
-                                <div class="d-flex justify-center mt-5">
-                                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
-                                    <MudText Class="ml-3 mt-2">@loadingStatus</MudText>
-                                </div>                        }
-                            else if (employees == null || !employees.Any())
-                            {
-                                <p>No users available for assignment.</p>
-                            }
-                            else
-                            {
-                                <ul class="list-group">
-                                    @foreach (var emp in employees)
-                                    {
-                                        <li class="list-group-item">
-                                            <input type="checkbox" @bind="emp.IsSelected" />
-                                            <span>
-                                                @emp.Email
-                                                @if (managers?.Any(m => m.Email == emp.Email) == true)
-                                                {
-                                                    <strong>(Manager)</strong>
-                                                }
-                                                else if (admins?.Any(a => a.Email == emp.Email) == true)
-                                                {
-                                                    <strong>(Admin)</strong>
-                                                }
-                                                else
-                                                {
-                                                    <strong>(Employee)</strong>
-                                                }
-                                            </span>
-                                        </li>
-                                    }
-                                </ul>
-                            }
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-primary" @onclick="CloseModal">Cancel</button>
-                            <button class="btn btn-primary" @onclick="AssignMenteesAsync" disabled="@isAssigning">
-                                @if (isAssigning)
-                                {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                }Assign Selected
-                            </button>
-                             
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
+                </MudGrid>
+            }
 
+            @* Manager Section *@
+            @if (GetManagerNodes().Any())
+            {
+                <MudText Typo="Typo.h6" Class="mb-3 text-primary">Managers</MudText>
+                <MudGrid Class="mb-6">
+                    @foreach (var managerNode in GetManagerNodes())
+                    {
+                        <MudItem xs="12" md="6" lg="4">
+                            @RenderMentorCard(managerNode.Value)
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        </MudPaper>
     }
 
+    @* Assignment Modal *@
+    @if (showModal)
+    {
+        <MudOverlay Visible="true" DarkBackground="true" ZIndex="1300">
+            <MudPaper Class="modal-content" Elevation="8">
+                <div class="modal-header">
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Class="mr-2" />
+                        Assign Mentees to @selectedMentorEmail
+                    </MudText>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   OnClick="CloseModal"
+                                   Size="Size.Small" />
+                </div>
+
+                <div class="modal-body">
+                    @if (isLoadingEmployees)
+                    {
+                        <div class="text-center pa-8">
+                            <MudProgressCircular Indeterminate Color="Color.Primary" Size="Size.Large" />
+                            <MudText Class="mt-4">@loadingStatus</MudText>
+                        </div>
+                    }
+                    else if (employees == null || !employees.Any())
+                    {
+                        <MudAlert Severity="Severity.Info" Class="ma-4">
+                            No users available for assignment.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.subtitle1" Class="mb-3">
+                            Select employees to assign as mentees:
+                        </MudText>
+                        <div class="employee-list">
+                            @for (int i = 0; i < employees.Count; i++)
+                            {
+                                var index = i; // Capture the loop variable
+                                var emp = employees[index];
+                                <div class="employee-item">
+                                    <MudCheckBox T="bool"
+                                                 Value="@emp.IsSelected"
+                                                 ValueChanged="@((bool value) => HandleCheckboxChange(index, value))"
+                                                 Label="@GetEmployeeDisplayText(emp)"
+                                                 Color="Color.Primary" />
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <MudButton OnClick="CloseModal"
+                               Variant="Variant.Text"
+                               Class="mr-2">
+                        Cancel
+                    </MudButton>
+                    <MudButton OnClick="AssignMenteesAsync"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@(isAssigning || !employees.Any(e => e.IsSelected))">
+                        @if (isAssigning)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate Class="mr-2" />
+                            <span>Assigning...</span>
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Check" Class="mr-1" />
+                            <span>Assign Selected</span>
+                        }
+                    </MudButton>
+                </div>
+            </MudPaper>
+        </MudOverlay>
+    }
 </MudContainer>
 
-
-
 @code {
+    private RenderFragment RenderMentorCard(MentorNode mentor) => __builder =>
+    {
+        <MudCard Class="mentor-card" Elevation="1">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Default" Size="Size.Medium">
+                        <MudIcon Icon="@GetRoleIcon(mentor.Role)" />
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" Class="mentor-name">
+                        @mentor.MentorEmail
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        ID: @mentor.MentorEmployeeID
+                    </MudText>
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Variant="Variant.Text">
+                        @mentor.Role
+                    </MudChip>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudIconButton Icon="@Icons.Material.Filled.PersonAdd"
+                                   Color="Color.Primary"
+                                   OnClick="@(() => Assign(mentor.MentorId, mentor.IsManager))"
+                                   Title="Assign Mentees" />
+                </CardHeaderActions>
+            </MudCardHeader>
+
+            <MudCardContent Class="pt-0">
+                @if (mentor.Mentees.Any())
+                {
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small" Class="mr-1" />
+                        Mentees (@mentor.Mentees.Count)
+                    </MudText>
+                    <div class="mentees-container">
+                        @foreach (var mentee in mentor.Mentees)
+                        {
+                            <div class="mentee-item">
+                                <div class="mentee-info">
+                                    <MudText Typo="Typo.body2" Class="mentee-name">
+                                        @mentee.MenteeEmail
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        ID: @mentee.MenteeEmployeeID
+                                    </MudText>
+                                </div>
+                                <MudIconButton Icon="@Icons.Material.Filled.PersonRemove"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => DeleteMenteeAsync(mentor.MentorId, mentee.MenteeEmail))"
+                                               Title="Remove Mentee" />
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="ma-0">
+                        <MudText Typo="Typo.caption">No mentees assigned yet</MudText>
+                    </MudAlert>
+                }
+            </MudCardContent>
+        </MudCard>
+    };
+
+    private void HandleCheckboxChange(int index, bool value)
+    {
+        if (index >= 0 && index < employees.Count)
+        {
+            employees[index].IsSelected = value;
+            StateHasChanged();
+        }
+    }
+
+    private string GetEmployeeDisplayText(SelectableUser emp)
+    {
+        var roleText = "";
+        if (managers?.Any(m => m.Email == emp.Email) == true) roleText = " (Manager)";
+        else if (admins?.Any(a => a.Email == emp.Email) == true) roleText = " (Admin)";
+        else if (hrs?.Any(h => h.Email == emp.Email) == true) roleText = " (HR)";
+        else roleText = " (Employee)";
+
+        return $"{emp.Email}{roleText}";
+    }
+
+    private List<CustomTreeItemData<MentorNode>> GetAdminNodes()
+    {
+        return mentorNodes.Where(n => n.Value.Role == "Admin").ToList();
+    }
+
+    private List<CustomTreeItemData<MentorNode>> GetHRNodes()
+    {
+        return mentorNodes.Where(n => n.Value.Role == "HR").ToList();
+    }
+
+    private List<CustomTreeItemData<MentorNode>> GetManagerNodes()
+    {
+        return mentorNodes.Where(n => n.Value.Role == "Manager").ToList();
+    }
+
+    private string GetRoleIcon(string role)
+    {
+        return role switch
+        {
+            "Admin" => Icons.Material.Filled.AdminPanelSettings,
+            "HR" => Icons.Material.Filled.People,
+            "Manager" => Icons.Material.Filled.SupervisorAccount,
+            _ => Icons.Material.Filled.Person
+        };
+    }
+
+    // All your existing C# code...
+    private List<CustomTreeItemData<MentorNode>> mentorNodes = new();
     private List<User>? managers;
     private List<User>? admins;
     private List<SelectableUser> employees = new();
-    private List<string> menteeEmails = new();
-
-
-    private bool isLoadingEmployees = false;
-    private bool isLoadingView = false;
-
-    private string? errorMessage;
-    private string? errorMessageAdmins;
-    private string? loadingStatus;
-
-    private bool showModal = false;
-    private bool showViewModal = false;
-
-    private string? selectedManagerId;
-    private string? selectedManagerEmail;
-    private string? viewManagerEmail;
-    private bool isManagerAssignment = true;
-
     private bool isPageLoading = true;
-
-    private HashSet<string> menteeLoadingStates = new HashSet<string>();
-    private Dictionary<string, List<string>> menteeLists = new Dictionary<string, List<string>>();
-    private Dictionary<string, int> menteeCounts = new Dictionary<string, int>();
-    private Dictionary<string, List<EmployeeDetails>> filteredMenteeDetails = new();
+    private bool isLoadingEmployees = false;
+    private string? errorMessage;
+    private string? loadingStatus;
+    private bool showModal = false;
+    private string? selectedMentorId;
+    private string? selectedMentorEmail;
+    private bool isManagerAssignment = true;
+    private bool isAssigning = false;
+    private List<User>? hrs;
 
     protected override async Task OnInitializedAsync()
     {
         isPageLoading = true;
-
-        Console.WriteLine("Initializing component...");
-
         try
         {
-            Console.WriteLine("Fetching managers and admins...");
-
             var managersTask = UserService.GetUsersByRoleAsync("Manager");
             var adminsTask = UserService.GetUsersByRoleAsync("Admin");
+            var hrsTask = UserService.GetUsersByRoleAsync("HR");
+            await Task.WhenAll(managersTask, adminsTask, hrsTask);
 
-            await Task.WhenAll(managersTask, adminsTask);
+            managers = managersTask.Result ?? new();
+            admins = adminsTask.Result ?? new();
+            hrs = hrsTask.Result ?? new();
 
-            managers = managersTask.Result;
-            admins = adminsTask.Result;
-
-            Console.WriteLine($"Managers fetched: {managers?.Count}");
-            Console.WriteLine($"Admins fetched: {admins?.Count}");
-
-            // Initialize dictionaries for all managers and admins
-            foreach (var manager in managers ?? new List<User>())
-            {
-                menteeLists[manager.Id] = new List<string>();
-                menteeCounts[manager.Id] = 0;
-                Console.WriteLine($"Initialized manager: {manager.Email}");
-
-            }
-            foreach (var admin in admins ?? new List<User>())
-            {
-                menteeLists[admin.Id] = new List<string>();
-                menteeCounts[admin.Id] = 0;
-                Console.WriteLine($"Initialized admin: {admin.Email}");
-
-            }
-
-            // Load mentee data for all managers and admins
-            await LoadAllMenteeData();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error loading managers: {ex.Message}";
-            errorMessageAdmins = $"Error loading admins: {ex.Message}";
-            Console.WriteLine($"Error in OnInitializedAsync: {ex.Message}");
-
-        }
-        finally
-        {
-
-            isPageLoading = false;
-
-        }
-    }
-    private async Task LoadAllMenteeData()
-    {
-        try
-        {
-            var allUsers = (managers ?? new List<User>()).Concat(admins ?? new List<User>()).ToList();
-            var validUsers = new List<(User user, EmployeeDetails mentorDetails)>();
+            mentorNodes.Clear();
+            var allUsers = admins.Concat(hrs).Concat(managers).ToList();
 
             foreach (var user in allUsers)
             {
                 if (string.IsNullOrEmpty(user.Id) || string.IsNullOrEmpty(user.Email)) continue;
 
                 var mentorDetails = await EmployeeService.GetEmployeeDetailsByEmail(user.Email);
-                if (mentorDetails != null)
-                {
-                    validUsers.Add((user, mentorDetails));
-                }
-            }
+                if (mentorDetails == null) continue;
 
-            var assignments = await MentorAssignmentService.GetAllAssignmentsAsync();
-            var allEmployees = await EmployeeService.GetAllEmployees();
+                var role = user.Role;
+                var node = new MentorNode
+                    {
+                        MentorId = user.Id,
+                        MentorEmail = user.Email,
+                        MentorEmployeeID = mentorDetails.EmployeeID,
+                        IsManager = user.Role == "Manager",
+                        Role = role,
+                        Mentees = new List<MenteeNode>()
+                    };
 
-            foreach (var (user, mentorDetails) in validUsers)
-            {
-                menteeLoadingStates.Add(user.Id); // Show loading
-                StateHasChanged();
+                var assignments = await MentorAssignmentService.GetAllAssignmentsAsync();
+                var myAssignments = assignments.Where(a => a.MentorEmployeeID == mentorDetails.EmployeeID).ToList();
 
-                var myAssignments = assignments
-                    .Where(a => a.MentorEmployeeID == mentorDetails.EmployeeID)
-                    .ToList();
-
-                var menteeEmails = new List<string>();
                 foreach (var assignment in myAssignments)
                 {
                     var mentee = await EmployeeService.GetEmployeeDetails(assignment.MenteeEmployeeID);
                     if (mentee != null && !string.IsNullOrWhiteSpace(mentee.CurrentEmail))
                     {
-                        menteeEmails.Add(mentee.CurrentEmail);
+                        node.Mentees.Add(new MenteeNode
+                            {
+                                MenteeEmployeeID = mentee.EmployeeID,
+                                MenteeEmail = mentee.CurrentEmail
+                            });
                     }
                 }
 
-                var filteredMentees = allEmployees
-                    .Where(emp => !string.IsNullOrWhiteSpace(emp.CurrentEmail) && menteeEmails.Contains(emp.CurrentEmail))
-                    .ToList();
-
-                menteeLists[user.Id] = menteeEmails;
-                menteeCounts[user.Id] = menteeEmails.Count;
-                filteredMenteeDetails[user.Id] = filteredMentees;
-
-                menteeLoadingStates.Remove(user.Id); // Remove loading
+                mentorNodes.Add(new CustomTreeItemData<MentorNode>(node));
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error loading mentee data: {ex.Message}";
+            errorMessage = $"Error loading mentor hierarchy: {ex.Message}";
             Snackbar.Add(errorMessage, Severity.Error);
         }
         finally
         {
+            isPageLoading = false;
             StateHasChanged();
         }
     }
 
-    private async void Assign(string? userId, bool isManager)
+    private async Task Assign(string? mentorId, bool isManager)
     {
+        if (string.IsNullOrEmpty(mentorId)) return;
+
+        // Clear previous state
+        employees.Clear();
+        selectedMentorId = mentorId;
+        selectedMentorEmail = null;
         isLoadingEmployees = true;
         showModal = true;
-        if (string.IsNullOrEmpty(userId))
-            return;
+        StateHasChanged();
 
-        var user = isManager ? managers?.FirstOrDefault(m => m.Id == userId) : admins?.FirstOrDefault(a => a.Id == userId);
-        if (user == null || string.IsNullOrWhiteSpace(user.Email))
+        var mentorNode = mentorNodes.FirstOrDefault(n => n.Value.MentorId == mentorId)?.Value;
+        if (mentorNode == null)
         {
-            errorMessage = $"{(isManager ? "Manager" : "Admin")} not found or email is missing.";
-            Snackbar.Add($"{(isManager ? "Manager" : "Admin")} not found or email is missing.", Severity.Error);
-
+            errorMessage = "Mentor not found.";
+            Snackbar.Add(errorMessage, Severity.Error);
+            isLoadingEmployees = false;
+            showModal = false;
+            StateHasChanged();
             return;
         }
 
-        selectedManagerId = userId;
-        isManagerAssignment = isManager;
+        var role = mentorNode.Role;
+        User? user = null;
+        if (role == "Manager")
+        {
+            user = managers?.FirstOrDefault(m => m.Id == mentorId);
+        }
+        else if (role == "Admin")
+        {
+            user = admins?.FirstOrDefault(a => a.Id == mentorId);
+        }
+        else if (role == "HR")
+        {
+            user = hrs?.FirstOrDefault(h => h.Id == mentorId);
+        }
+
+        if (user == null || string.IsNullOrWhiteSpace(user.Email))
+        {
+            errorMessage = $"{role} not found or email is missing.";
+            Snackbar.Add(errorMessage, Severity.Error);
+            isLoadingEmployees = false;
+            showModal = false;
+            StateHasChanged();
+            return;
+        }
 
         var userDetails = await EmployeeService.GetEmployeeDetailsByEmail(user.Email);
         if (userDetails == null)
         {
-            errorMessage = $"{(isManager ? "Manager's" : "Admin's")} employee details not found.";
-            Snackbar.Add($"{(isManager ? "Manager's" : "Admin's")} employee details not found.", Severity.Error);
-
+            errorMessage = $"{role}'s employee details not found.";
+            Snackbar.Add(errorMessage, Severity.Error);
+            isLoadingEmployees = false;
+            showModal = false;
+            StateHasChanged();
             return;
         }
 
-        selectedManagerEmail = userDetails.CurrentEmail ?? user.Email;
-
-        Console.WriteLine($"{(isManager ? "Manager" : "Admin")} Email: {selectedManagerEmail}");
-        Console.WriteLine($"{(isManager ? "Manager" : "Admin")} Designation: {userDetails.Designation}");
-        StateHasChanged();
+        selectedMentorEmail = userDetails.CurrentEmail ?? user.Email;
         await LoadEmployeesAsync();
+        isLoadingEmployees = false;
         StateHasChanged();
     }
 
@@ -419,15 +428,34 @@
             var allUsers = new List<User>();
             var employeesTask = UserService.GetUsersByRoleAsync("Employee");
             var managersTask = UserService.GetUsersByRoleAsync("Manager");
-            var adminsTask = isManagerAssignment ? Task.FromResult(new List<User>()) : UserService.GetUsersByRoleAsync("Admin");
+            var adminsTask = Task.FromResult(new List<User>());
+            var hrsTask = Task.FromResult(new List<User>());
 
-            await Task.WhenAll(employeesTask, managersTask, adminsTask);
+            var mentorNode = mentorNodes.FirstOrDefault(n => n.Value.MentorId == selectedMentorId)?.Value;
+            var mentorRole = mentorNode?.Role;
+
+            if (mentorRole == "HR")
+            {
+                hrsTask = UserService.GetUsersByRoleAsync("HR");
+            }
+            else if (mentorRole == "Admin")
+            {
+                adminsTask = UserService.GetUsersByRoleAsync("Admin");
+                hrsTask = UserService.GetUsersByRoleAsync("HR");
+            }
+
+            await Task.WhenAll(employeesTask, managersTask, adminsTask, hrsTask);
 
             allUsers.AddRange(employeesTask.Result);
-            allUsers.AddRange(managersTask.Result.Where(m => m.Email != selectedManagerEmail)); 
-            if (!isManagerAssignment)
+            allUsers.AddRange(managersTask.Result.Where(m => m.Email != selectedMentorEmail));
+            if (mentorRole == "Admin")
             {
-                allUsers.AddRange(adminsTask.Result.Where(a => a.Email != selectedManagerEmail)); 
+                allUsers.AddRange(adminsTask.Result.Where(a => a.Email != selectedMentorEmail));
+                allUsers.AddRange(hrsTask.Result.Where(h => h.Email != selectedMentorEmail));
+            }
+            else if (mentorRole == "HR")
+            {
+                allUsers.AddRange(hrsTask.Result.Where(h => h.Email != selectedMentorEmail));
             }
 
             var allAssignments = await MentorAssignmentService.GetAllAssignmentsAsync();
@@ -450,7 +478,6 @@
 
             employees = filtered;
             loadingStatus = $"{employees.Count} users available for assignment.";
-            isLoadingEmployees = false;
         }
         catch (Exception ex)
         {
@@ -460,28 +487,31 @@
         finally
         {
             isLoadingEmployees = false;
+            StateHasChanged();
         }
     }
-    private bool isAssigning = false;
 
     private async Task AssignMenteesAsync()
     {
+        if (isAssigning) return; // Prevent double-clicks
+
         isAssigning = true;
         errorMessage = null;
 
         try
         {
-            if (string.IsNullOrEmpty(selectedManagerEmail))
+            if (string.IsNullOrEmpty(selectedMentorEmail))
             {
-                errorMessage = "Invalid user email.";
+                errorMessage = "Invalid mentor email.";
                 Snackbar.Add(errorMessage, Severity.Error);
                 return;
             }
 
-            var mentorDetails = await EmployeeService.GetEmployeeDetailsByEmail(selectedManagerEmail);
+            var mentorDetails = await EmployeeService.GetEmployeeDetailsByEmail(selectedMentorEmail);
             if (mentorDetails == null)
             {
-                errorMessage = $"{(isManagerAssignment ? "Manager" : "Admin")} employee details not found.";
+                var mentorRole = mentorNodes.FirstOrDefault(n => n.Value.MentorId == selectedMentorId)?.Value.Role ?? "Mentor";
+                errorMessage = $"{mentorRole} employee details not found.";
                 Snackbar.Add(errorMessage, Severity.Error);
                 return;
             }
@@ -517,183 +547,114 @@
                     {
                         allSuccess = false;
                         Snackbar.Add($"Failed to assign {details.CurrentEmail}", Severity.Error);
-                        Console.WriteLine($"Failed to assign mentee {details.EmployeeID}");
                     }
                 }
             }
 
             if (allSuccess)
             {
-                showModal = false;
-                   isAssigning = false;
                 Snackbar.Add("Mentees assigned successfully!", Severity.Success);
                 CloseModal();
-                await ReloadManagersAndAdmins();
+                await ReloadMentorNodes();
             }
             else
             {
                 errorMessage = "Some mentees could not be assigned.";
             }
         }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error assigning mentees: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
+        }
         finally
         {
             isAssigning = false;
+            StateHasChanged();
         }
     }
 
-    // private async Task AssignMenteesAsync()
-    // {
-    //     errorMessage = null;
-
-    //     if (string.IsNullOrEmpty(selectedManagerEmail))
-    //     {
-    //         errorMessage = "Invalid user email.";
-    //         Snackbar.Add(errorMessage, Severity.Error);
-
-    //         return;
-    //     }
-
-    //     var mentorDetails = await EmployeeService.GetEmployeeDetailsByEmail(selectedManagerEmail);
-    //     if (mentorDetails == null)
-    //     {
-    //         errorMessage = $"{(isManagerAssignment ? "Manager" : "Admin")} employee details not found.";
-    //         Snackbar.Add(errorMessage, Severity.Error);
-
-    //         return;
-    //     }
-
-    //     var selectedMentees = employees.Where(e => e.IsSelected).ToList();
-    //     if (!selectedMentees.Any())
-    //     {
-    //         errorMessage = "No mentees selected.";
-    //         Snackbar.Add(errorMessage, Severity.Warning);
-
-    //         return;
-    //     }
-
-    //     bool allSuccess = true;
-
-    //     foreach (var mentee in selectedMentees)
-    //     {
-    //         var details = await EmployeeService.GetEmployeeDetailsByEmail(mentee.Email);
-    //         if (details != null)
-    //         {
-    //             var assignment = new MentorAssignment
-    //                 {
-    //                     MentorEmployeeID = mentorDetails.EmployeeID,
-    //                     MentorEmail = mentorDetails.CurrentEmail,
-    //                     MentorDesignation = mentorDetails.Designation,
-    //                     MenteeEmployeeID = details.EmployeeID,
-    //                     MenteeEmail = details.CurrentEmail,
-    //                     MenteeDesignation = details.Designation,
-    //                     AssignedDate = DateTime.UtcNow
-    //                 };
-
-    //             var success = await MentorAssignmentService.CreateAssignmentAsync(assignment);
-    //             if (!success)
-    //             {
-    //                 allSuccess = false;
-    //                 Snackbar.Add($"Failed to assign {details.CurrentEmail}", Severity.Error);
-
-    //                 Console.WriteLine($"Failed to assign mentee {details.EmployeeID}");
-    //             }
-    //         }
-    //     }
-
-    //     if (allSuccess)
-    //     {
-    //         Snackbar.Add("Mentees assigned successfully!", Severity.Success);
-    //         showModal = false;
-    //         CloseModal();
-    //         await ReloadManagersAndAdmins();
-
-    //     }
-    //     else
-    //     {
-    //         errorMessage = "Some mentees could not be assigned.";
-    //     }
-    // }
-    private async Task ReloadManagersAndAdmins()
+    private async Task ReloadMentorNodes()
     {
         isPageLoading = true;
+        StateHasChanged();
 
         try
         {
-            managers = await UserService.GetUsersByRoleAsync("Manager");
-            admins = await UserService.GetUsersByRoleAsync("Admin");
+            // Clear existing data
+            mentorNodes.Clear();
 
-            menteeLists.Clear();
-            menteeCounts.Clear();
+            var managersTask = UserService.GetUsersByRoleAsync("Manager");
+            var adminsTask = UserService.GetUsersByRoleAsync("Admin");
+            var hrsTask = UserService.GetUsersByRoleAsync("HR");
+            await Task.WhenAll(managersTask, adminsTask, hrsTask);
 
-            foreach (var user in managers.Concat(admins))
+            managers = managersTask.Result ?? new();
+            admins = adminsTask.Result ?? new();
+            hrs = hrsTask.Result ?? new();
+
+            var allUsers = admins.Concat(hrs).Concat(managers).ToList();
+
+            foreach (var user in allUsers)
             {
-                if (!string.IsNullOrEmpty(user.Id))
-                {
-                    menteeLists[user.Id] = new();
-                    menteeCounts[user.Id] = 0;
-                }
-            }
+                if (string.IsNullOrEmpty(user.Id) || string.IsNullOrEmpty(user.Email)) continue;
 
-            await LoadAllMenteeData();
+                var mentorDetails = await EmployeeService.GetEmployeeDetailsByEmail(user.Email);
+                if (mentorDetails == null) continue;
+
+                var role = user.Role;
+                var node = new MentorNode
+                    {
+                        MentorId = user.Id,
+                        MentorEmail = user.Email,
+                        MentorEmployeeID = mentorDetails.EmployeeID,
+                        IsManager = user.Role == "Manager",
+                        Role = role,
+                        Mentees = new List<MenteeNode>()
+                    };
+
+                var assignments = await MentorAssignmentService.GetAllAssignmentsAsync();
+                var myAssignments = assignments.Where(a => a.MentorEmployeeID == mentorDetails.EmployeeID).ToList();
+
+                foreach (var assignment in myAssignments)
+                {
+                    var mentee = await EmployeeService.GetEmployeeDetails(assignment.MenteeEmployeeID);
+                    if (mentee != null && !string.IsNullOrWhiteSpace(mentee.CurrentEmail))
+                    {
+                        node.Mentees.Add(new MenteeNode
+                            {
+                                MenteeEmployeeID = mentee.EmployeeID,
+                                MenteeEmail = mentee.CurrentEmail
+                            });
+                    }
+                }
+
+                mentorNodes.Add(new CustomTreeItemData<MentorNode>(node));
+            }
         }
         catch (Exception ex)
         {
-            Snackbar.Add("Error reloading data after assignment: " + ex.Message, Severity.Error);
+            Snackbar.Add($"Error reloading mentor hierarchy: {ex.Message}", Severity.Error);
         }
         finally
         {
             isPageLoading = false;
+            StateHasChanged();
         }
     }
 
     private void CloseModal()
     {
         showModal = false;
-        selectedManagerId = null;
-        selectedManagerEmail = null;
+        selectedMentorId = null;
+        selectedMentorEmail = null;
         employees.Clear();
         isManagerAssignment = true;
+        isLoadingEmployees = false;
+        isAssigning = false;
+        StateHasChanged();
     }
 
-    private async void ViewMentees(string? userId)
-    {
-        if (string.IsNullOrEmpty(userId)) return;
-
-        var user = managers?.FirstOrDefault(m => m.Id == userId) ?? admins?.FirstOrDefault(a => a.Id == userId);
-        if (user == null) return;
-
-        viewManagerEmail = user.Email;
-        showViewModal = true;
-        isLoadingView = true;
-        menteeEmails.Clear();
-
-        try
-        {
-            var mentorDetails = await EmployeeService.GetEmployeeDetailsByEmail(user.Email!);
-            if (mentorDetails == null) return;
-
-            var assignments = await MentorAssignmentService.GetAllAssignmentsAsync();
-            var myAssignments = assignments.Where(a => a.MentorEmployeeID == mentorDetails.EmployeeID).ToList();
-
-            foreach (var assignment in myAssignments)
-            {
-                var mentee = await EmployeeService.GetEmployeeDetails(assignment.MenteeEmployeeID);
-                if (mentee != null && !string.IsNullOrWhiteSpace(mentee.CurrentEmail))
-                {
-                    menteeEmails.Add(mentee.CurrentEmail);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error viewing mentees: {ex.Message}");
-        }
-        finally
-        {
-            isLoadingView = false;
-            StateHasChanged();
-        }
-    }
     private async Task DeleteMenteeAsync(string mentorId, string menteeEmail)
     {
         try
@@ -709,27 +670,16 @@
             if (confirmed == true)
             {
                 var success = await MentorAssignmentService.DeleteAssignmentByMenteeEmailAsync(menteeEmail);
-
                 if (success)
                 {
                     Snackbar.Add("Mentee assignment deleted successfully.", Severity.Success);
-
-                    // Remove from the list in UI
-                    if (menteeLists.ContainsKey(mentorId))
-                    {
-                        menteeLists[mentorId].Remove(menteeEmail);
-                        menteeCounts[mentorId] = menteeLists[mentorId].Count;
-                    }
-
-                    StateHasChanged(); // Refresh the UI
+                    await ReloadMentorNodes();
                 }
                 else
                 {
                     Snackbar.Add("Failed to delete mentee assignment.", Severity.Error);
                 }
-                return;
             }
-
         }
         catch (Exception ex)
         {
@@ -737,6 +687,28 @@
         }
     }
 
+    // Your existing classes remain the same
+    public class CustomTreeItemData<T> : TreeItemData<T>
+    {
+        public CustomTreeItemData(T value) : base(value) { }
+        public List<CustomTreeItemData<T>> ChildItems { get; set; } = new();
+    }
+
+    public class MentorNode
+    {
+        public string MentorId { get; set; } = string.Empty;
+        public string MentorEmail { get; set; } = string.Empty;
+        public string MentorEmployeeID { get; set; } = string.Empty;
+        public bool IsManager { get; set; }
+        public List<MenteeNode> Mentees { get; set; } = new();
+        public string Role { get; set; } = string.Empty;
+    }
+
+    public class MenteeNode
+    {
+        public string MenteeEmployeeID { get; set; } = string.Empty;
+        public string MenteeEmail { get; set; } = string.Empty;
+    }
 
     public class SelectableUser
     {
@@ -745,3 +717,112 @@
         public bool IsSelected { get; set; } = false;
     }
 }
+
+<style>
+    /* Minimal, clean styling */
+    .mentor-card {
+        border: 1px solid #e0e0e0;
+        background: #fafafa;
+        transition: box-shadow 0.2s ease;
+    }
+
+        .mentor-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+    .mentor-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .mentees-container {
+        background: #f5f5f5;
+        border-radius: 4px;
+        padding: 8px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .mentee-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        margin-bottom: 4px;
+    }
+
+        .mentee-item:last-child {
+            margin-bottom: 0;
+        }
+
+    .mentee-info {
+        flex: 1;
+    }
+
+    .mentee-name {
+        font-weight: 500;
+        color: #333;
+    }
+
+    /* Modal using MudOverlay */
+    .modal-content {
+        background: white;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        margin: auto;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .modal-body {
+        padding: 16px 24px;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 16px 24px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .employee-list {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+    }
+
+    .employe-e-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        background: white;
+    }
+
+    .employee-item:last-child {
+        border-bottom: none;
+    }
+
+    .employee-item:hover {
+        background: #f9f9f9;
+    }
+
+    .text-primary {
+        color: #1976d2 !important;
+    }
+</style>

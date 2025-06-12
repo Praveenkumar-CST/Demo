@@ -17,10 +17,9 @@ namespace WiseHR.Models
                     //("Add Employees", "/home/employees"),
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
-                    ("Policies", "/policies"),
-
                     ("LeaveManagement", "/admin/leave"),
 
+                    ("Policies", "/policies"),
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -78,8 +77,8 @@ namespace WiseHR.Models
                     //("Add Employees", "/home/employees"),
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
-                    ("Policies", "/policies"),
                     ("LeaveManagement", "/admin/leave"),
+                    ("Policies", "/policies"),
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -139,6 +138,8 @@ namespace WiseHR.Models
                 "Holiday Calendar" => Icons.Material.Filled.Event,
                 "Fortnight Report" => Icons.Material.Filled.Assignment,
                 "ReportList" => Icons.Material.Filled.Assessment,
+                "LeaveManagement" => Icons.Material.Filled.WorkOff,
+
                 _ => Icons.Material.Filled.Menu
             };
         }
