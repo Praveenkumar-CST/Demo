@@ -15,7 +15,11 @@
         <Authorized>
             <!-- Leave Request Overview -->
             <MudCard Class="mb-6" Elevation="3">
-                
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Class="font-weight-bold">Leave Request Overview</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
                 <MudCardContent>
                     @if (isLoading)
                     {
@@ -636,6 +640,11 @@
                         }
 
                         <MudStack Row Spacing="2" Justify="Justify.FlexEnd">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       OnClick="LoadIndividualQuotaHistory">
+                                Refresh
+                            </MudButton>
                             <MudButton Variant="Variant.Filled"
                                        Color="Color.Secondary"
                                        OnClick="@(() => ShowIndividualQuotaHistory = false)">
@@ -2049,65 +2058,65 @@
     }
 
     private async Task SearchHistory()
+{
+    if (historyForm != null)
     {
-        if (historyForm != null)
+        await historyForm.Validate();
+        if (historyForm.IsValid)
         {
-            await historyForm.Validate();
-            if (historyForm.IsValid)
+            try
             {
-                try
+                currentSearchId++;
+
+                if (!string.IsNullOrWhiteSpace(historyRequest.SearchTerm))
                 {
-                    currentSearchId++;
-
-                    if (!string.IsNullOrWhiteSpace(historyRequest.SearchTerm))
+                    if (historyRequest.SearchTerm.Contains("@"))
                     {
-                        if (historyRequest.SearchTerm.Contains("@"))
-                        {
-                            historyRequest.Email = historyRequest.SearchTerm.Trim();
-                            historyRequest.EmployeeId = null; 
-                        }
-                        else
-                        {
-                            historyRequest.EmployeeId = historyRequest.SearchTerm.Trim();
-                            historyRequest.Email = null; 
-                        }
-                    }
-
-                    historyResponse = await LeaveService.GetUserHistoryAsync(historyRequest);
-                    if (historyTable != null)
-                    {
-                        await historyTable.ReloadServerData();
-                    }
-                    if (historyResponse == null || !historyResponse.History.Any())
-                    {
-                        Snackbar.Add("No results found for the search criteria.", MudBlazor.Severity.Info);
+                        historyRequest.Email = historyRequest.SearchTerm.Trim();
+                        historyRequest.EmployeeId = null; 
                     }
                     else
                     {
-                        Snackbar.Add("History and balances loaded successfully", MudBlazor.Severity.Success);
+                        historyRequest.EmployeeId = historyRequest.SearchTerm.Trim();
+                        historyRequest.Email = null; 
                     }
                 }
-                catch (HttpRequestException ex)
+
+                historyResponse = await LeaveService.GetUserHistoryAsync(historyRequest);
+                if (historyTable != null)
                 {
-                    Snackbar.Add($"Error loading history: {ex.Message}", MudBlazor.Severity.Error);
-                    historyResponse = null;
+                    await historyTable.ReloadServerData();
                 }
-                catch (Exception ex)
+                if (historyResponse == null || !historyResponse.History.Any())
                 {
-                    Snackbar.Add($"Unexpected error loading history: {ex.Message}", MudBlazor.Severity.Error);
-                    historyResponse = null;
+                    Snackbar.Add("No results found for the search criteria.", MudBlazor.Severity.Info);
                 }
-                finally
+                else
                 {
-                    StateHasChanged();
+                    Snackbar.Add("History and balances loaded successfully", MudBlazor.Severity.Success);
                 }
             }
-            else
+            catch (HttpRequestException ex)
             {
-                Snackbar.Add("Please enter valid search criteria.", MudBlazor.Severity.Warning);
+                Snackbar.Add($"Error loading history: {ex.Message}", MudBlazor.Severity.Error);
+                historyResponse = null;
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Unexpected error loading history: {ex.Message}", MudBlazor.Severity.Error);
+                historyResponse = null;
+            }
+            finally
+            {
+                StateHasChanged();
             }
         }
+        else
+        {
+            Snackbar.Add("Please enter valid search criteria.", MudBlazor.Severity.Warning);
+        }
     }
+}
 
     private void ToggleShowMore()
     {
