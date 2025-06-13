@@ -21,18 +21,18 @@
     </div>
 
     @if (loading)
-        {
+    {
         <div class="loading-container">
             <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
             <span>Loading asset details...</span>
         </div>
-        }
+    }
     else if (asset == null)
-        {
+    {
         <div class="error-message">Asset not found. @errorMessage</div>
-        }
+    }
     else
-        {
+    {
         <div class="asset-details-container">
             <div class="asset-header">
                 <h2>@asset.Name Details</h2>
@@ -57,24 +57,24 @@
             </div>
 
             @if (asset.Specifications.Any())
-                {
+            {
                 <MudExpansionPanel Text="Specifications" Style="margin: 10px 0;">
                     <div class="specifications-content">
                         @foreach (var spec in asset.Specifications)
-                            {
+                        {
                             <div class="spec-item">
                                 <strong>@spec.Key:</strong> @spec.Value
                             </div>
-                            }
+                        }
                     </div>
                 </MudExpansionPanel>
-                }
+            }
             else
-                {
+            {
                 <div class="specifications-content">
                     <p>No specifications available.</p>
                 </div>
-                }
+            }
 
             <div class="asset-instances">
                 <h3>Instances</h3>
@@ -89,15 +89,15 @@
                                         @(sortOrder == "Ascending" ? "↑" : "↓")
                                     </span>
                                     @if (showAssetTagFilter)
-                                        {
+                                    {
                                         <select class="filter-dropdown" @onchange="ApplyAssetTagFilter">
                                             <option value="" disabled selected>Select Asset Tag</option>
                                             @foreach (var tag in uniqueAssetTags)
-                                                {
+                                            {
                                                 <option value="@tag">@tag</option>
-                                                }
+                                            }
                                         </select>
-                                        }
+                                    }
                                 </div>
                             </MudTh>
                             <MudTh>
@@ -105,15 +105,15 @@
                                     BRAND
                                     <MudIconButton Icon="@Icons.Material.Filled.FilterList" OnClick="ToggleBrandFilter" Size="Size.Small" Style="margin-left: 5px; color: var(--text-secondary);" />
                                     @if (showBrandFilter)
-                                        {
+                                    {
                                         <select class="filter-dropdown" @onchange="ApplyBrandFilter">
                                             <option value="">Select Brand</option>
                                             @foreach (var brand in availableBrands)
-                                                {
+                                            {
                                                 <option value="@brand">@brand</option>
-                                                }
+                                            }
                                         </select>
-                                        }
+                                    }
                                 </div>
                             </MudTh>
                             <MudTh>
@@ -121,15 +121,15 @@
                                     STATUS
                                     <MudIconButton Icon="@Icons.Material.Filled.FilterList" OnClick="ToggleStatusFilter" Size="Size.Small" Style="margin-left: 5px; color: var(--text-secondary);" />
                                     @if (showStatusFilter)
-                                        {
+                                    {
                                         <select class="filter-dropdown" @onchange="ApplyStatusFilter">
                                             <option value="" disabled selected>Select Status</option>
                                             @foreach (var status in availableStatuses)
-                                                {
+                                            {
                                                 <option value="@status">@status</option>
-                                                }
+                                            }
                                         </select>
-                                        }
+                                    }
                                 </div>
                             </MudTh>
                             <MudTh>ACTION</MudTh>
@@ -158,26 +158,18 @@
                                         disabled="@(instance.Status == "Decommissioned")">
                                     Decommission
                                 </button>
-                                @if (instance.Status == "Unavailable" && instanceReturnDates.ContainsKey(instance.Id))
+                                @if (instance.Status == "Unavailable")
+                                {
+                                    if (countdownTimers.ContainsKey(instance.Id))
                                     {
-                                    var returnDate = instanceReturnDates[instance.Id];
-                                    if (returnDate > DateTime.UtcNow + istOffset)
-                                        {
-                                        if (countdownTimers.ContainsKey(instance.Id))
-                                            {
-                                            var time = countdownTimers[instance.Id];
-                                            <div class="timer-display">@($"{time.Days}d {time.Hours}h {time.Minutes}m {time.Seconds}s")</div>
-                                            }
-                                        else
-                                            {
-                                            <div class="timer-display">Timer not initialized</div>
-                                            }
-                                        }
-                                    else
-                                        {
-                                        <div class="timer-display overdue">Overdue</div>
-                                        }
+                                        var time = countdownTimers[instance.Id];
+                                        <div class="timer-display">@($"{time.Days}d {time.Hours}h {time.Minutes}m {time.Seconds}s")</div>
                                     }
+                                    else
+                                    {
+                                        <div class="timer-display">Timer not initialized</div>
+                                    }
+                                }
                             </MudTd>
                         </RowTemplate>
                         <ChildRowContent Context="instance">
@@ -186,18 +178,18 @@
                                     <MudExpansionPanel IsExpanded="false" Class="mdc-expansion-panel">
                                         <div class="spec-content">
                                             @if (instance.Specifications != null && instance.Specifications.Any())
-                                                {
+                                            {
                                                 @foreach (var spec in instance.Specifications)
-                                                    {
+                                                {
                                                     <div class="spec-item">
                                                         <strong>@spec.Key:</strong> @spec.Value
                                                     </div>
-                                                    }
                                                 }
+                                            }
                                             else
-                                                {
+                                            {
                                                 <p>No specifications available.</p>
-                                                }
+                                            }
                                         </div>
                                     </MudExpansionPanel>
                                 </MudTd>
@@ -207,15 +199,15 @@
                 </div>
             </div>
         </div>
-        }
+    }
 
     @if (!string.IsNullOrEmpty(errorMessage))
-        {
+    {
         <div class="alert alert-danger mt-3" role="alert">@errorMessage</div>
-        }
+    }
 
     @if (showDecommissionModal)
-        {
+    {
         <div class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
@@ -258,7 +250,7 @@
                 </div>
             </div>
         </div>
-        }
+    }
 </div>
 
 <style>
@@ -755,7 +747,7 @@
     private HashSet<int> notifiedInstanceIds = new();
 
     protected override async Task OnInitializedAsync()
-        {
+    {
         // Configure Snackbar
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
         Snackbar.Configuration.SnackbarVariant = Variant.Filled;
@@ -763,21 +755,21 @@
 
         await LoadAsset();
         StartTimer();
-        }
+    }
 
     private async Task LoadAsset()
-        {
+    {
         try
-            {
+        {
             loading = true;
             StateHasChanged();
             asset = await AssetStateService.GetAssetAsync(Id);
             if (asset == null || asset.Instances == null)
-                {
+            {
                 errorMessage = "Asset data is empty or invalid.";
                 Snackbar.Add(errorMessage, Severity.Error);
                 return;
-                }
+            }
 
             availableBrands = asset.Instances
                 .Where(i => !string.IsNullOrEmpty(i.Brand))
@@ -794,95 +786,94 @@
             filteredInstances = asset.Instances;
             await LoadInstanceIssueStatus();
             ApplyFilters();
-            }
+        }
         catch (Exception ex)
-            {
+        {
             errorMessage = $"Error loading asset: {ex.Message}";
             Snackbar.Add(errorMessage, Severity.Error);
             asset = null;
-            }
+        }
         finally
-            {
+        {
             loading = false;
             StateHasChanged();
-            }
         }
+    }
 
     private async Task LoadInstanceIssueStatus()
-        {
+    {
         instanceIssueStatus.Clear();
         instanceReturnDates.Clear();
         foreach (var instance in asset?.Instances ?? new List<AssetInstance>())
-            {
+        {
             try
-                {
+            {
                 bool hasActiveIssue = await AssetStateService.HasActiveIssueRecordAsync(instance.Id);
                 instanceIssueStatus[instance.Id] = hasActiveIssue;
-                if (hasActiveIssue && instance.Status == "Unavailable")
-                    {
+                
+                if (instance.Status == "Unavailable")
+                {
                     var issueRecords = await AssetsService.GetAssetIssueRecordsAsync(instance.Id);
                     if (issueRecords == null || !issueRecords.Any())
-                        {
-                        if (!notifiedInstanceIds.Contains(instance.Id))
-                            {
-                            Snackbar.Add($"No issue records for instance {instance.AssetTag}", Severity.Warning);
-                            notifiedInstanceIds.Add(instance.Id);
-                            }
                         continue;
-                        }
-                    var activeIssue = issueRecords
+                    var lastReturn = issueRecords
                         .Where(r => r.ReturnedOn != default)
-                        .OrderByDescending(r => r.IssuedOn)
+                        .OrderByDescending(r => r.ReturnedOn)
                         .FirstOrDefault();
-                    if (activeIssue != null)
-                        {
-                        // Store the UTC time directly
-                        instanceReturnDates[instance.Id] = activeIssue.ReturnedOn;
-                        }
-                    else
-                        {
-                        if (!notifiedInstanceIds.Contains(instance.Id))
-                            {
-                            Snackbar.Add($"No valid ReturnedOn for instance {instance.AssetTag}", Severity.Warning);
-                            notifiedInstanceIds.Add(instance.Id);
-                            }
-                        }
-                    }
-                }
-            catch (Exception ex)
-                {
-                if (!notifiedInstanceIds.Contains(instance.Id))
+                    if (lastReturn != null)
                     {
-                    errorMessage = $"Error checking issue status for instance {instance.Id}: {ex.Message}";
-                    Snackbar.Add(errorMessage, Severity.Error);
-                    notifiedInstanceIds.Add(instance.Id);
+                        var returnDate = lastReturn.ReturnedOn;
+                        var istDate = returnDate.AddHours(5.5);
+                        var endOfDayIst = new DateTime(istDate.Year, istDate.Month, istDate.Day, 23, 59, 59, DateTimeKind.Local);
+                        var utcEndOfDay = endOfDayIst.AddHours(-5.5);
+                        instanceReturnDates[instance.Id] = utcEndOfDay;
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                if (!notifiedInstanceIds.Contains(instance.Id))
+                {
+                    errorMessage = $"Error checking issue status for instance {instance.Id}: {ex.Message}";
+                    Snackbar.Add(errorMessage, Severity.Error);
+                    notifiedInstanceIds.Add(instance.Id);
+                }
+            }
         }
+    }
 
     private void StartTimer()
-        {
+    {
         timer = new System.Timers.Timer(1000);
-        timer.Elapsed += (sender, e) => UpdateCountdown();
+        timer.Elapsed += (sender, e) => 
+        {
+            UpdateCountdown();
+        };
         timer.AutoReset = true;
         timer.Start();
-        }
+    }
 
     private void UpdateCountdown()
+    {
+        if (asset?.Instances == null)
         {
-        if (asset?.Instances == null) return;
+            return;
+        }
 
         bool updated = false;
+        var now = DateTime.UtcNow;
+        var nowIst = now.AddHours(5.5);
+
         foreach (var instance in asset.Instances)
-            {
+        {
             if (instance.Status == "Unavailable" && instanceReturnDates.ContainsKey(instance.Id))
-                {
+            {
                 var returnDate = instanceReturnDates[instance.Id];
-                var now = DateTime.UtcNow;
-                if (returnDate > now)
-                    {
-                    var distance = returnDate - now;
+                var returnDateIst = returnDate.AddHours(5.5);
+
+                if (returnDateIst > nowIst)
+                {
+                    var distance = returnDateIst - nowIst;
                     var time = (
                         Days: (int)distance.TotalDays,
                         Hours: distance.Hours,
@@ -891,211 +882,203 @@
                     );
                     countdownTimers[instance.Id] = time;
                     updated = true;
-                    }
-                else if (countdownTimers.ContainsKey(instance.Id))
-                    {
+                }
+                else
+                {
                     countdownTimers.Remove(instance.Id);
                     updated = true;
-                    }
                 }
-            else if (countdownTimers.ContainsKey(instance.Id))
-                {
-                countdownTimers.Remove(instance.Id);
-                updated = true;
-                }
-            }
-
-        if (updated)
-            {
-            InvokeAsync(StateHasChanged);
             }
         }
 
-    private void ApplyFilters()
+        if (updated)
         {
+            InvokeAsync(() => 
+            {
+                StateHasChanged();
+            });
+        }
+    }
+
+    private void ApplyFilters()
+    {
         if (asset?.Instances == null) return;
 
         var filtered = asset.Instances.AsEnumerable();
 
         if (!string.IsNullOrEmpty(selectedAssetTagFilter))
-            {
+        {
             filtered = filtered.Where(i => i.AssetTag.Equals(selectedAssetTagFilter, StringComparison.OrdinalIgnoreCase));
-            }
+        }
         if (!string.IsNullOrEmpty(selectedBrandFilter))
-            {
+        {
             filtered = filtered.Where(i => i.Brand != null && i.Brand.Equals(selectedBrandFilter, StringComparison.OrdinalIgnoreCase));
-            }
+        }
         if (!string.IsNullOrEmpty(selectedStatusFilter))
-            {
+        {
             filtered = filtered.Where(i => i.Status.Equals(selectedStatusFilter, StringComparison.OrdinalIgnoreCase));
-            }
+        }
 
         filteredInstances = sortOrder == "Ascending"
             ? filtered.OrderBy(i => i.AssetTag).ToList()
             : filtered.OrderByDescending(i => i.AssetTag).ToList();
 
         StateHasChanged();
-        }
+    }
 
     private void ApplyAssetTagFilter(ChangeEventArgs e)
-        {
+    {
         selectedAssetTagFilter = e.Value?.ToString() ?? "";
         showAssetTagFilter = false;
         ApplyFilters();
-        }
+    }
 
     private void ApplyBrandFilter(ChangeEventArgs e)
-        {
+    {
         selectedBrandFilter = e.Value?.ToString() ?? "";
         showBrandFilter = false;
         ApplyFilters();
-        }
+    }
 
     private void ApplyStatusFilter(ChangeEventArgs e)
-        {
+    {
         selectedStatusFilter = e.Value?.ToString() ?? "";
         showStatusFilter = false;
         ApplyFilters();
-        }
+    }
 
     private void ToggleAssetTagFilter()
-        {
+    {
         showAssetTagFilter = !showAssetTagFilter;
         showBrandFilter = false;
         showStatusFilter = false;
         StateHasChanged();
-        }
+    }
 
     private void ToggleBrandFilter()
-        {
+    {
         showBrandFilter = !showBrandFilter;
         showAssetTagFilter = false;
         showStatusFilter = false;
         StateHasChanged();
-        }
+    }
 
     private void ToggleStatusFilter()
-        {
+    {
         showStatusFilter = !showStatusFilter;
         showAssetTagFilter = false;
         showBrandFilter = false;
         StateHasChanged();
-        }
+    }
 
     private void ToggleSortOrder()
-        {
+    {
         sortOrder = sortOrder == "Ascending" ? "Descending" : "Ascending";
         ApplyFilters();
-        }
+    }
 
     private string GetStatusClass(string status)
-        {
+    {
         return status switch
-            {
-                "Available" => "Available",
-                "Unavailable" => "Unavailable",
-                "Decommissioned" => "Decommissioned",
-                _ => ""
-                };
-        }
+        {
+            "Available" => "Available",
+            "Unavailable" => "Unavailable",
+            "Decommissioned" => "Decommissioned",
+            _ => ""
+        };
+    }
 
     private void NavigateToHome()
-        {
+    {
         Navigation.NavigateTo("/asset");
-        }
+    }
 
     private async Task HandleInstanceAction(int instanceId, string status, bool hasActiveIssue)
-        {
+    {
         var instance = asset?.Instances.FirstOrDefault(i => i.Id == instanceId);
         if (instance == null)
-            {
+        {
             errorMessage = $"Instance with ID {instanceId} not found.";
             Snackbar.Add(errorMessage, Severity.Error);
             StateHasChanged();
             return;
-            }
+        }
 
         string navUrl = $"/assets/{Id}/instance/{instanceId}/history";
         if (status == "Decommissioned")
-            {
+        {
             Navigation.NavigateTo(navUrl);
-            }
+        }
         else if (status == "Unavailable")
-            {
+        {
             Navigation.NavigateTo($"{navUrl}?openUnassignDialog=true");
             notifiedInstanceIds.Remove(instanceId); // Clear notification tracking on unassign
-            }
-        else
-            {
-            Navigation.NavigateTo($"{navUrl}?openDialog=true");
-            }
         }
+        else
+        {
+            Navigation.NavigateTo($"{navUrl}?openDialog=true");
+        }
+    }
 
     private void OpenDecommissionModal(int instanceId, string assetTag)
-        {
-        Console.WriteLine($"Opening decommission modal for instance {instanceId}, assetTag: {assetTag}");
+    {
         selectedInstanceId = instanceId;
         // Set the current date in IST without time
         decommissionModel = new DecommissionDto
-                {
+            {
                 AssetTag = assetTag,
                 DecommissionDate = DateTime.UtcNow.AddHours(5.5).Date
-                };
+            };
         showDecommissionModal = true;
         StateHasChanged();
-        }
+    }
 
     private void CloseDecommissionModal()
-        {
-        Console.WriteLine("Closing decommission modal");
+    {
         showDecommissionModal = false;
         decommissionModel = new();
         selectedInstanceId = 0;
         StateHasChanged();
-        }
+    }
 
     private async Task SubmitDecommission()
-        {
-        Console.WriteLine($"Submitting decommission for instance {selectedInstanceId}, data: {JsonSerializer.Serialize(decommissionModel)}");
+    {
         try
-            {
+        {
             loading = true;
             StateHasChanged();
 
             // Validate instance status
             var instance = asset?.Instances.FirstOrDefault(i => i.Id == selectedInstanceId);
             if (instance == null)
-                {
+            {
                 errorMessage = "Instance not found.";
                 Snackbar.Add(errorMessage, Severity.Error);
-                Console.WriteLine(errorMessage);
                 return;
-                }
+            }
 
             if (instance.Status == "Decommissioned")
-                {
+            {
                 errorMessage = "This instance is already decommissioned.";
                 Snackbar.Add(errorMessage, Severity.Error);
-                Console.WriteLine(errorMessage);
                 return;
-                }
+            }
 
             // Get UTC time for API
             var utcDecommissionDate = decommissionModel.GetUtcDecommissionDate();
 
             var decommissionData = new
-                {
+            {
                 assetTag = decommissionModel.AssetTag,
                 decommissionedBy = decommissionModel.DecommissionedBy,
                 approvedBy = decommissionModel.ApprovedBy,
                 decommissionDate = utcDecommissionDate?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                 remark = decommissionModel.Remark
-                };
+            };
 
             var response = await Http.PostAsJsonAsync($"/api/Assets/instances/{selectedInstanceId}/decommission", decommissionData);
-            Console.WriteLine($"API Response Status: {response.StatusCode}");
             if (response.IsSuccessStatusCode)
-                {
+            {
                 Snackbar.Add($"Instance {decommissionModel.AssetTag} decommissioned successfully.", Severity.Success);
                 // Update local instance status
                 instance.Status = "Decommissioned";
@@ -1105,31 +1088,29 @@
                 CloseDecommissionModal();
                 await LoadInstanceIssueStatus();
                 ApplyFilters();
-                }
+            }
             else
-                {
+            {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 errorMessage = $"Error decommissioning instance: {errorContent}";
                 Snackbar.Add(errorMessage, Severity.Error);
-                Console.WriteLine($"API Error: {errorContent}");
-                }
             }
+        }
         catch (Exception ex)
-            {
+        {
             errorMessage = $"Error decommissioning instance: {ex.Message}";
             Snackbar.Add(errorMessage, Severity.Error);
-            Console.WriteLine($"Exception: {ex.Message}, StackTrace: {ex.StackTrace}");
-            }
+        }
         finally
-            {
+        {
             loading = false;
             StateHasChanged();
-            }
         }
+    }
 
     public void Dispose()
-        {
+    {
         timer?.Stop();
         timer?.Dispose();
-        }
+    }
 }
