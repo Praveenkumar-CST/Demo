@@ -8,30 +8,39 @@ namespace WiseHR.Models
     {
         private readonly string _fortnight;
         private readonly int _day;
-
+        private readonly int _month;
+        private readonly int _year;
         public RequiredForFortnightAttribute(string fortnight)
         {
             _fortnight = fortnight;
-            _day = DateTime.UtcNow.Day; // Current day for validation
+            var now = DateTime.UtcNow;
+            _day = now.Day;
+            _month = now.Month;
+            _year = now.Year;// Current day for validation
         }
 
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
-            bool isFirstFortnight = _day >= 1 && _day <= 15;
-            bool isSecondFortnight = _day >= 16 && _day <= 31;
+            // First fortnight: 11th to 24th of the current month
+            bool isFirstFortnightSubmission = _day >= 11 && _day <= 24;
 
-            if (_fortnight == "First" && isFirstFortnight && value == null)
+            // Second fortnight: 24th of current month to 11th of next month
+            bool isSecondFortnightSubmission = (_day >= 24 && _month == DateTime.UtcNow.Month) ||
+                                              (_day <= 11 && _month == DateTime.UtcNow.Month && _year == DateTime.UtcNow.Year);
+
+            if (_fortnight == "First" && isFirstFortnightSubmission && value == null)
             {
-                return new ValidationResult(ErrorMessage ?? $"{validationContext.DisplayName} is required for the first fortnight.");
+                return new ValidationResult(ErrorMessage ?? $"{validationContext.DisplayName} is required for the first fortnight (11th to 24th).");
             }
-            else if (_fortnight == "Second" && isSecondFortnight && value == null)
+            else if (_fortnight == "Second" && isSecondFortnightSubmission && value == null)
             {
-                return new ValidationResult(ErrorMessage ?? $"{validationContext.DisplayName} is required for the second fortnight.");
+                return new ValidationResult(ErrorMessage ?? $"{validationContext.DisplayName} is required for the second fortnight (24th to next month's 11th).");
             }
 
             return ValidationResult.Success;
         }
-    }
+    
+}
 
     public class ReportModel
     {
@@ -78,15 +87,11 @@ namespace WiseHR.Models
         // Project
         [Required(ErrorMessage = "ProjectWorkedOn is required")]
         public string ProjectsWorkedOn { get; set; }
-
-        // Progress
-        [Required(ErrorMessage = "ProgressStage is required")]
-        public string ProgressStage { get; set; }
-
-        [Required(ErrorMessage = "ProgressPercentage is required")]
-        public int ProgressPercentage { get; set; }
-
         // Time Tracking
-        public DateTime SubmittedOn { get; set; } = DateTime.UtcNow;
+        public DateTime? FirstFortnightSubmittedOn { get; set; } // Added for first fortnight submission time
+        public DateTime? SecondFortnightSubmittedOn { get; set; } // Added for second fortnight submission time
+        public DateTime SubmittedOn { get; set; } = DateTime.UtcNow; // Keep for initial creation
+        public bool IsEditable { get; set; }
+        public string? CustomProjectName { get; set; }
     }
 }
