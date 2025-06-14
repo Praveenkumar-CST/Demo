@@ -261,36 +261,19 @@
                         <MudSelect Label="Leave Type" @bind-Value="leaveRequest.LeaveType" Required="true" Variant="Variant.Outlined">
                             <MudSelectItem Value="@("Privilege")">Privilege</MudSelectItem>
                             <MudSelectItem Value="@("Sick")">Sick</MudSelectItem>
+                            <MudSelectItem Value="@("Casual")">Casual</MudSelectItem>
                             <MudSelectItem Value="@("Maternity")">Maternity</MudSelectItem>
                             <MudSelectItem Value="@("Paternity")">Paternity</MudSelectItem>
                         </MudSelect>
                     </MudItem>
-                    <MudItem xs="12" sm="6" Class="pr-sm-2">
-                        <MudDatePicker Label="Start Date"
-                                       @bind-Date="leaveRequest.StartDate"
-                                       Required="true"
-                                       DateFormat="MMM dd, yyyy"
-                                       Variant="Variant.Outlined"
-                                       MinDate="DateTime.Today"
-                                       AnchorOrigin="Origin.TopLeft"
-                                       TransformOrigin="Origin.TopRight" />
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="Start Date" @bind-Date="leaveRequest.StartDate" Required="true" DateFormat="MMM dd, yyyy" Variant="Variant.Outlined" />
                     </MudItem>
-                    <MudItem xs="12" sm="6" Class="pl-sm-2">
-                        <MudDatePicker Label="End Date"
-                                       @bind-Date="leaveRequest.EndDate"
-                                       Required="true"
-                                       DateFormat="MMM dd, yyyy"
-                                       Variant="Variant.Outlined"
-                                       MinDate="DateTime.Today"
-                                       AnchorOrigin="Origin.TopLeft"
-                                       TransformOrigin="Origin.TopRight" />
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="End Date" @bind-Date="leaveRequest.EndDate" Required="true" DateFormat="MMM dd, yyyy" Variant="Variant.Outlined" />
                     </MudItem>
                     <MudItem xs="12">
-                        <MudTextField Label="Reason"
-                                      @bind-Value="leaveRequest.Reason"
-                                      Required="true"
-                                      Lines="3"
-                                      Variant="Variant.Outlined" />
+                        <MudTextField Label="Reason" @bind-Value="leaveRequest.Reason" Required="true" Lines="3" Variant="Variant.Outlined" />
                     </MudItem>
 
                     <MudItem xs="12" Class="d-flex justify-end gap-4">
@@ -886,6 +869,7 @@
         }
     }
 
+    /* Grid alignment */
     .mud-grid-item {
         display: flex;
         padding: 0 !important;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -45,7 +46,7 @@ namespace WiseHR.Services
 
             var name = user.FindFirst(ClaimTypes.Name)?.Value ?? "";
             var email = user.FindFirst("email")?.Value ??
-                        user.FindFirst(ClaimTypes.Email)?.Value ??"";
+                        user.FindFirst(ClaimTypes.Email)?.Value ?? "";
             var role = user.FindFirst(ClaimTypes.Role)?.Value ?? "";
 
             return (name, email, role);

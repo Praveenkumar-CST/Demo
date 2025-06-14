@@ -41,7 +41,7 @@
 
     <!-- Search Section -->
     <div class="search-container">
-        <input type="text" class="search-input" placeholder="Search by Employee ID" @bind="userIdSearch" @oninput="OnUserIdSearchInput" />
+        <input type="text" class="search-input" placeholder="Search by User ID" @bind="userIdSearch" @oninput="OnUserIdSearchInput" />
         <input type="text" class="search-input" placeholder="Search by Name" @bind="nameSearch" @oninput="OnNameSearchInput" />
         <button class="clear-button" @onclick="ClearSearch">
             <i class="fas fa-times"></i> Clear
@@ -60,7 +60,7 @@
     else
     {
         <div class="request-row" style="font-weight: 600; color: #1e293b; background-color: #f1f5f9;">
-            <div>Employee ID</div>
+            <div>User ID</div>
             <div>Name</div>
             <div>Date & Time</div>
             <div>Reason</div>

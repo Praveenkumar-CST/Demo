@@ -31,8 +31,8 @@
                     }
                     else
                     {
-                        <MudGrid Class="@(showAllLeaveTypes ? "" : "justify-center")">
-                            @foreach (var quota in leaveQuotas.Where(q => showAllLeaveTypes || new[] { "Privilege", "Sick", "Unpaid" }.Contains(q.LeaveType)))
+                        <MudGrid>
+                            @foreach (var quota in leaveQuotas)
                             {
                                 <MudItem xs="12" sm="6" md="3">
                                     <MudPaper Class="pa-4 text-center" Style="@GetGradientStyle(quota.LeaveType)">
@@ -43,14 +43,6 @@
                                 </MudItem>
                             }
                         </MudGrid>
-                        <MudStack AlignItems="AlignItems.Center" Class="mt-4">
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@(showAllLeaveTypes ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
-                                       OnClick="ToggleShowMore">
-                                @(showAllLeaveTypes ? "Show Less" : "Show More")
-                            </MudButton>
-                        </MudStack>
                     }
                 </MudCardContent>
             </MudCard>
@@ -65,8 +57,9 @@
                         </MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary" 
+                                   StartIcon="Icons.Material.Filled.Refresh"
                                    OnClick="RefreshPendingRequests"
                                    Disabled="@isLoading">
                             Refresh
@@ -689,6 +682,7 @@
                 </MudCard>
             </MudItem>
 
+            <!-- User History and Balances Results -->
             @if (historyResponse != null)
             {
                 <MudGrid Class="px-4" Spacing="4">
@@ -696,8 +690,8 @@
                         <MudCard Elevation="4" Class="mb-6" Style="border-radius: 16px;">
                             <MudCardHeader Class="py-4">
                                 <CardHeaderContent>
-                                    <MudText Typo="Typo.h5" Class="font-weight-bold">
-                                        <MudIcon Icon="Icons.Material.Filled.TableChart" Class="mr-2" Size="Size.Medium" />
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold">
+                                        <MudIcon Icon="Icons.Material.Filled.TableChart" Class="mr-2" />
                                         Leave History Results
                                     </MudText>
                                 </CardHeaderContent>
@@ -715,26 +709,53 @@
                                 {
                                     <MudTable @ref="historyTable" Hover="true" Breakpoint="Breakpoint.None" Dense="false" Elevation="0" Class="enhanced-table" ServerData="@LoadServerData">
                                         <HeaderContent>
-                                            <MudTh Class="table-header">Employee</MudTh>
-                                            <MudTh Class="table-header">Email</MudTh>
-                                            <MudTh Class="table-header">Leave Type</MudTh>
-                                            <MudTh Class="table-header">Duration</MudTh>
-                                            <MudTh Class="table-header">Reason</MudTh>
-                                            <MudTh Class="table-header">Mentor</MudTh>
-                                            <MudTh Class="table-header">Approver</MudTh>
-                                            <MudTh Class="table-header">Status</MudTh>
-                                            <MudTh Class="table-header">Approved At</MudTh>
+                                            <MudTh Style="font-weight: 600; background-color: #f8f9fa;">
+                                                <MudIcon Icon="Icons.Material.Filled.Person" Size="Size.Small" Class="mr-1" />
+                                                Employee
+                                            </MudTh>
+                                            <MudTh Style="font-weight: 600; background-color: #f8f9fa;">
+                                                <MudIcon Icon="Icons.Material.Filled.Email" Size="Size.Small" Class="mr-1" />
+                                                Email
+                                            </MudTh>
+                                            <MudTh Style="font-weight: 600; background-color: #f8f9fa;">
+                                                <MudIcon Icon="Icons.Material.Filled.Category" Size="Size.Small" Class="mr-1" />
+                                                Leave Type
+                                            </MudTh>
+                                            <MudTh Style="font-weight: 600; background-color: #f8f9fa;">
+                                                <MudIcon Icon="Icons.Material.Filled.DateRange" Size="Size.Small" Class="mr-1" />
+                                                Duration
+                                            </MudTh>
+                                            <MudTh Style="font-weight: 600; background-color: #f8f9fa;">
+                                                <MudIcon Icon="Icons.Material.Filled.Description" Size="Size.Small" Class="mr-1" />
+                                                Reason
+                                            </MudTh>
+                                            <MudTh Style="font-weight: 600; background-color: #f8f9fa;">
+                                                <MudIcon Icon="Icons.Material.Filled.SupervisorAccount" Size="Size.Small" Class="mr-1" />
+                                                Mentor
+                                            </MudTh>
+                                            <MudTh Style="font-weight: 600; background-color: #f8f9fa;">
+                                                <MudIcon Icon="Icons.Material.Filled.SupervisorAccount" Size="Size.Small" Class="mr-1" />
+                                                Approver
+                                            </MudTh>
+                                            <MudTh Style="font-weight: 600; background-color: #f8f9fa;">
+                                                <MudIcon Icon="Icons.Material.Filled.CheckCircle" Size="Size.Small" Class="mr-1" />
+                                                Status
+                                            </MudTh>
+                                            <MudTh Style="font-weight: 600; background-color: #f8f9fa;">
+                                                <MudIcon Icon="Icons.Material.Filled.Schedule" Size="Size.Small" Class="mr-1" />
+                                                Approved At
+                                            </MudTh>
                                         </HeaderContent>
                                         <RowTemplate>
-                                            <MudTd DataLabel="Employee" Class="table-cell">
+                                            <MudTd DataLabel="Employee">
                                                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                    <MudAvatar Size="Size.Medium" Color="Color.Primary">
+                                                    <MudAvatar Size="Size.Small" Color="Color.Primary">
                                                         @(context.Name?.Substring(0, 1).ToUpper() ?? "U")
                                                     </MudAvatar>
-                                                    <MudText Typo="Typo.body1">@context.Name</MudText>
+                                                    <MudText>@context.Name</MudText>
                                                 </MudStack>
                                             </MudTd>
-                                            <MudTd DataLabel="Email" Class="table-cell">
+                                            <MudTd DataLabel="Email">
                                                 <MudText Typo="Typo.body2">@context.Email</MudText>
                                             </MudTd>
                                             <MudTd DataLabel="Leave Type" Class="table-cell">
@@ -747,8 +768,8 @@
                                                     <MudText Typo="Typo.body2">
                                                         @context.StartDate.ToString("MMM dd") - @context.EndDate.ToString("MMM dd, yyyy")
                                                     </MudText>
-                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                                        @((context.EndDate - context.StartDate).Days + 1) day(s)
+                                                    <MudText Typo="Typo.caption" Class="text-muted">
+                                                        @((context.EndDate - context.StartDate).Days + 1) leave(s)
                                                     </MudText>
                                                 </MudStack>
                                             </MudTd>
@@ -757,16 +778,16 @@
                                                     @context.Reason
                                                 </MudText>
                                             </MudTd>
-                                            <MudTd DataLabel="Mentor" Class="table-cell">
+                                            <MudTd DataLabel="Mentor">
                                                 <MudStack Spacing="1">
                                                     <MudText Typo="Typo.body2">@context.MentorName</MudText>
-                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.MentorEmail</MudText>
+                                                    <MudText Typo="Typo.caption" Class="text-muted">@context.MentorEmail</MudText>
                                                 </MudStack>
                                             </MudTd>
-                                            <MudTd DataLabel="Approver" Class="table-cell">
+                                            <MudTd DataLabel="Approver">
                                                 <MudStack Spacing="1">
                                                     <MudText Typo="Typo.body2">@context.ApproverName</MudText>
-                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ApproverEmail</MudText>
+                                                    <MudText Typo="Typo.caption" Class="text-muted">@context.ApproverEmail</MudText>
                                                 </MudStack>
                                             </MudTd>
                                             <MudTd DataLabel="Status" Class="table-cell">
@@ -781,16 +802,16 @@
                                             </MudTd>
                                         </RowTemplate>
                                         <PagerContent>
-                                            <MudTablePager Class="px-4 py-3" />
+                                            <MudTablePager />
                                         </PagerContent>
                                     </MudTable>
                                 }
                                 else
                                 {
-                                    <MudPaper Class="pa-8 text-center" Elevation="0">
+                                    <MudPaper Class="pa-8 text-center" Style="background-color: #f5f5f5;">
                                         <MudIcon Icon="Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
-                                        <MudText Typo="Typo.h6" Class="mt-4 mb-2">No leave history found</MudText>
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Try searching with different criteria</MudText>
+                                        <MudText Typo="Typo.h6" Class="mt-2">No leave history found</MudText>
+                                        <MudText Typo="Typo.body2" Class="text-muted">Try searching with different criteria</MudText>
                                     </MudPaper>
                                 }
                             </MudCardContent>
@@ -894,7 +915,7 @@
         white-space: nowrap;
         font-size: 1.1rem;
     }
-
+    
     .flex-grow-1 {
         flex-grow: 1;
     }
@@ -1760,13 +1781,15 @@
     {
         try
         {
+            // Ensure pending requests are loaded
             if (pendingRequests == null)
             {
                 await LoadPendingRequests();
             }
 
-            var leaveTypes = new[] { "Privilege", "Sick", "Maternity", "Paternity", "Unpaid" };
+            var leaveTypes = new[] { "Privilege", "Sick", "Casual", "Maternity", "Paternity", "Unpaid" };
 
+            // Count pending requests by leave type
             leaveQuotas = leaveTypes.Select(type => new LeaveQuotaDto
             {
                 LeaveType = type,
@@ -1780,6 +1803,7 @@
             {
                 new LeaveQuotaDto { LeaveType = "Privilege", RequestCount = 0 },
                 new LeaveQuotaDto { LeaveType = "Sick", RequestCount = 0 },
+                new LeaveQuotaDto { LeaveType = "Casual", RequestCount = 0 },
                 new LeaveQuotaDto { LeaveType = "Maternity", RequestCount = 0 },
                 new LeaveQuotaDto { LeaveType = "Paternity", RequestCount = 0 },
                 new LeaveQuotaDto { LeaveType = "Unpaid", RequestCount = 0 }
@@ -2191,6 +2215,7 @@
     {
         "Privilege" => Color.Success,
         "Sick" => Color.Warning,
+        "Casual" => Color.Info,
         "Maternity" => Color.Secondary,
         "Paternity" => Color.Primary,
         "Unpaid" => Color.Error,
@@ -2201,6 +2226,7 @@
     {
         "Privilege" => Icons.Material.Filled.BeachAccess,
         "Sick" => Icons.Material.Filled.LocalHospital,
+        "Casual" => Icons.Material.Filled.Coffee,
         "Maternity" => Icons.Material.Filled.FamilyRestroom,
         "Paternity" => Icons.Material.Filled.Man,
         "Unpaid" => Icons.Material.Filled.MoneyOff,
@@ -2211,6 +2237,7 @@
     {
         "Privilege" => "background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); border-radius: 12px;",
         "Sick" => "background: linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%); border-radius: 12px;",
+        "Casual" => "background: linear-gradient(135deg, #e3f2fd 0%, #90caf9 100%); border-radius: 12px;",
         "Maternity" => "background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%); border-radius: 12px;",
         "Paternity" => "background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%); border-radius: 12px;",
         "Unpaid" => "background: linear-gradient(135deg, #ffebee 0%, #ef9a9a 100%); border-radius: 12px;",
@@ -2256,7 +2283,6 @@
         {
             RuleFor(x => x.LeaveType).NotEmpty().WithMessage("Leave type is required");
             RuleFor(x => x.Quota).GreaterThanOrEqualTo(0).WithMessage("Quota cannot be negative");
-            RuleFor(x => x.Description).NotEmpty().When(x => x.Quota > 0).WithMessage("Description is required for assigning extra leaves");
         }
     }
 
@@ -2267,7 +2293,6 @@
             RuleFor(x => x.EmployeeID).NotEmpty().WithMessage("Employee ID is required");
             RuleFor(x => x.LeaveType).NotEmpty().WithMessage("Leave type is required");
             RuleFor(x => x.Quota).GreaterThanOrEqualTo(0).WithMessage("Quota cannot be negative");
-            RuleFor(x => x.Description).NotEmpty().When(x => x.Quota > 0).WithMessage("Description is required for assigning extra leaves");
         }
     }
 
