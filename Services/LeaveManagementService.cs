@@ -44,9 +44,8 @@ namespace WiseHR.Services
             var user = authState.User;
 
             var name = user.FindFirst(ClaimTypes.Name)?.Value ?? "";
-            var email = user.FindFirst(ClaimTypes.Email)?.Value ??
-                        user.FindFirst("email")?.Value ??
-                        user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value ?? "";
+            var email = user.FindFirst("email")?.Value ??
+                        user.FindFirst(ClaimTypes.Email)?.Value ??"";
             var role = user.FindFirst(ClaimTypes.Role)?.Value ?? "";
 
             return (name, email, role);
@@ -76,7 +75,7 @@ namespace WiseHR.Services
             return await response.Content.ReadFromJsonAsync<List<LeaveRequest>>();
         }
 
-        public async Task<MyHistoryResponse> GetUserHistoryAsync(UserHistoryRequestDto request)
+        public async Task<UserHistoryResponse> GetUserHistoryAsync(UserHistoryRequestDto request)
         {
             if (string.IsNullOrEmpty(request.EmployeeId) && string.IsNullOrEmpty(request.Email))
             {
@@ -96,7 +95,7 @@ namespace WiseHR.Services
                 var errorContent = await response.Content.ReadAsStringAsync();
                 throw new HttpRequestException($"Failed to get user history. Status: {response.StatusCode}, Reason: {errorContent}");
             }
-            return await response.Content.ReadFromJsonAsync<MyHistoryResponse>();
+            return await response.Content.ReadFromJsonAsync<UserHistoryResponse>();
         }
 
         public async Task<List<LeaveRequest>> GetRequestStatusAsync()
@@ -147,7 +146,7 @@ namespace WiseHR.Services
             return await response.Content.ReadFromJsonAsync<QuotaResponse>();
         }
 
-        public async Task<MyHistoryResponse> GetMyLeaveHistoryAsync()
+        public async Task<UserHistoryResponse> GetMyLeaveHistoryAsync()
         {
             await AddAuthorizationHeader();
             var response = await _httpClient.GetAsync("api/LeaveManagement/my-history");
@@ -156,7 +155,25 @@ namespace WiseHR.Services
                 var errorContent = await response.Content.ReadAsStringAsync();
                 throw new HttpRequestException($"Failed to get leave history. Status: {response.StatusCode}, Reason: {errorContent}");
             }
-            return await response.Content.ReadFromJsonAsync<MyHistoryResponse>();
+            return await response.Content.ReadFromJsonAsync<UserHistoryResponse>();
+        }
+
+        public async Task<QuotaHistoryResponse> GetQuotaHistoryAsync(QuotaHistoryRequestDto request)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            if (!string.IsNullOrEmpty(request.EmployeeId)) query["employeeId"] = request.EmployeeId;
+            if (!string.IsNullOrEmpty(request.LeaveType)) query["leaveType"] = request.LeaveType;
+            query["pageNumber"] = request.PageNumber.ToString();
+            query["pageSize"] = request.PageSize.ToString();
+
+            await AddAuthorizationHeader();
+            var response = await _httpClient.GetAsync($"api/LeaveManagement/quota-history?{query}");
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Failed to get quota history. Status: {response.StatusCode}, Reason: {errorContent}");
+            }
+            return await response.Content.ReadFromJsonAsync<QuotaHistoryResponse>();
         }
     }
 }
