@@ -51,14 +51,10 @@ namespace WiseHR.Models
 
     public class LeaveRequestDto
     {
-        public string Name { get; set; }
-        public string Email { get; set; }
         public string LeaveType { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string Reason { get; set; }
-        public string MentorName { get; set; }
-        public string MentorEmail { get; set; }
     }
 
     public class ApproveRejectDto
@@ -84,10 +80,17 @@ namespace WiseHR.Models
 
     public class UserHistoryRequestDto
     {
-        public string Name { get; set; }
-        public string UserId { get; set; }
         public string EmployeeId { get; set; }
         public string Email { get; set; }
+        public string SearchTerm { get; set; }
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+    }
+
+    public class QuotaHistoryRequestDto
+    {
+        public string EmployeeId { get; set; }
+        public string LeaveType { get; set; }
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
     }
@@ -115,16 +118,53 @@ namespace WiseHR.Models
         public int Available { get; set; }
     }
 
-    public class MyHistoryResponse
+    public class UserHistoryResponse
     {
-        public List<LeaveHistory> History { get; set; }
+        public string Message { get; set; }
+        public List<HistoryItem> History { get; set; }
         public List<UserLeaveBalance> Balances { get; set; }
         public Pagination Pagination { get; set; }
+    }
+
+    public class HistoryItem
+    {
+        public string EmployeeID { get; set; }
+        public string Email { get; set; }
+        public string Name { get; set; }
+        public string LeaveType { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string MentorName { get; set; }
+
+        public string Status { get; set; }
+        public DateTime? ApprovedAt { get; set; }
+        public string Reason { get; set; }
+        public string ApproverName { get; set; }
+    }
+
+    public class QuotaHistoryResponse
+    {
+        public string Message { get; set; }
+        public List<QuotaHistoryItem> History { get; set; }
+        public Pagination Pagination { get; set; }
+    }
+
+    public class QuotaHistoryItem
+    {
+        public string EmployeeID { get; set; }
+        public string LeaveType { get; set; }
+        public int PreviousQuota { get; set; }
+        public int NewQuota { get; set; }
+        public string Description { get; set; }
+        public string UpdatedByName { get; set; }
+        public string UpdatedByEmail { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 
     public class ApproveRejectResponse
     {
         public string Message { get; set; }
+        public string ApproverName { get; set; }
     }
 
     public class QuotaResponse
