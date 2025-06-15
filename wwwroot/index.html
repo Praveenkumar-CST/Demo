@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,132 +9,226 @@
     <link href="manifest.webmanifest" rel="manifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
-
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-
     <link rel="stylesheet" href="css/StyleSheet.css">
     <link rel="stylesheet" href="css/site.css">
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-    
-
 
     <style>
-        /* Optimized loading animation styles */
-        .loading-animation {
+        /* ===== WISEONE LOADER STYLES ===== */
+        .wiseone-loader {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: white;
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #ffffff; /* Changed to white */
+            z-index: 10000;
+            color: #333; /* Darker text for better contrast on white */
+            font-family: 'Arial', sans-serif;
+        }
+
+        .wiseone-header {
+            display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
-            perspective: 1000px;
-            transition: opacity 0.5s ease-out;
+            margin-bottom: 2rem;
+            margin-top: 20px;
         }
 
-            .loading-animation.hidden {
-                opacity: 0;
-                pointer-events: none;
-            }
-
-        .loading-logo {
-            width: 200px;
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        .wiseone-logo {
+            height: 120px;
+            width: 120px;
+            margin-right: 20px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(122, 114, 201, 0.7));
+            animation: pulse 2s infinite;
         }
 
-            .loading-logo:hover {
-                transform: translateX(-50%) scale(1.08);
-                filter: drop-shadow(0 4px 12px rgba(170, 16, 208, 0.2));
-            }
-
-        .content {
-            position: relative;
-            margin-top: 120px;
-        }
-
-            .content h2 {
-                color: #aa10d0;
-                font-size: 7em;
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                font-family: 'Poppins', sans-serif !important;
-                white-space: nowrap;
-                font-weight: 700;
-                letter-spacing: -2px;
-                backface-visibility: hidden;
-            }
-
-                .content h2:nth-child(1) {
-                    color: transparent;
-                    -webkit-text-stroke: 3px #aa10d0;
-                    z-index: 2;
-                }
-
-                .content h2:nth-child(2) {
-                    color: #d58aeb;
-                    animation: animate 3.5s ease-in-out infinite;
-                    transform: translate(-50%, -50%) translateZ(0);
-                    z-index: 1;
-                }
-
-        @keyframes animate {
-            0%, 100% {
-                clip-path: polygon( 0% 45%, 20% 44%, 40% 50%, 60% 58%, 80% 55%, 100% 50%, 100% 100%, 0% 100% );
-                transform: translate(-50%, -50%) scale(1) translateZ(0);
-            }
-
-            50% {
-                clip-path: polygon( 0% 55%, 20% 60%, 40% 62%, 60% 55%, 80% 48%, 100% 50%, 100% 100%, 0% 100% );
-                transform: translate(-50%, -50%) scale(1.02) translateZ(0);
-            }
-        }
-
-        /* Ensure the main content is scrollable */
-        body {
-            overflow: auto;
+        .wiseone-title {
+            font-size: 4.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #7a72c9, #a89ff9, #7a72c9);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+            text-shadow: none;
+            line-height: 1;
             margin: 0;
             padding: 0;
-            min-height: 100vh;
+            border: none;
+            outline: none;
         }
 
-        /* Blazor error UI should be above everything */
-        #blazor-error-ui {
-            position: fixed;
-            bottom: 0;
+        @keyframes shine {
+            0% {
+                background-position: 0% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            height: 12px;
+            background: rgba(81, 75, 130, 0.1); /* Lighter background for white theme */
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+            position: relative;
+            box-shadow: 0 0 15px rgba(122, 114, 201, 0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #514b82, #7a72c9, #a89ff9);
+            box-shadow: 0 0 10px rgba(122, 114, 201, 0.7);
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
             left: 0;
             right: 0;
-            z-index: 10000;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: progressShine 2s infinite;
+        }
+
+        @keyframes progressShine {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .progress-text {
+            font-size: 1.4rem;
+            margin-top: 0.5rem;
+            color: #7a72c9; /* Changed to match gradient */
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: rgba(51, 51, 51, 0.7); /* Darker for white background */
+            margin-top: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.7;
+            }
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(122, 114, 201, 0.3); /* More subtle on white */
+            border-radius: 50%;
+            animation: float 10s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-500px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* ===== ORIGINAL APP STYLES ===== */
+        #app {
             display: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        #blazor-error-ui {
+            background: lightyellow;
+            bottom: 0;
+            box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+            display: none;
+            left: 0;
+            padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        #blazor-error-ui .dismiss {
+            cursor: pointer;
+            position: absolute;
+            right: 0.75rem;
+            top: 0.5rem;
+        }
+
+        .loading-progress,
+        .loading-progress-text {
+            display: none !important;
         }
     </style>
 </head>
-
 <body>
-    <!-- Loading Animation -->
-    <div id="app-loading" class="loading-animation">
-        <img src="/assets/wwlogo.png" alt="WiseHR Logo" class="loading-logo">
-        <div class="content">
-            <h2>WISEONE</h2>
-            <h2>WISEONE</h2>
+    <!-- WISEONE Loader -->
+    <div id="loader" class="wiseone-loader">
+        <div class="wiseone-header">
+            <img src="images/logo1.png" class="wiseone-logo" alt="WISEONE Logo">
+            <h1 class="wiseone-title" id="titleText">WISEONE</h1>
         </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+        <p class="subtitle">Loading Intelligence...</p>
+        <div class="particles" id="particles"></div>
     </div>
-    <!-- Main app content container -->
-    <div id="app" style="display: none;"></div>
 
-    <!-- Existing error UI -->
+    <!-- Original App Content -->
+    <div id="app"></div>
+
     <div id="blazor-error-ui">
         An unhandled error has occurred.
         <a href="" class="reload">Reload</a>
@@ -143,135 +236,158 @@
     </div>
 
     <!-- Scripts -->
-    <script src="_framework/blazor.webassembly.js"></script>
-
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
-
-
     <script src="scripts/localStorage.js"></script>
     <script src="scripts/sessionStorage.js"></script>
     <script src="scripts/pdfScroll.js"></script>
     <script type="module" src="storage.js"></script>
-    <script src="js/fileDownload.js"></script>
-    <script src="scripts/fileOperations.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 
     <script>
+        // Generate animated particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            const size = Math.random() * 4 + 2;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            particle.style.animationDelay = `${Math.random() * 5}s`;
+            particle.style.animationDuration = `${Math.random() * 10 + 5}s`;
+            particlesContainer.appendChild(particle);
+        }
+
+        // Blazor WASM loading progress tracking
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const loaderElement = document.getElementById('loader');
+        const appElement = document.getElementById('app');
+        const titleText = document.getElementById('titleText');
+
+        let loadedBytes = 0;
+        let totalBytes = 0;
+        let resourcesLoaded = 0;
+        let totalResources = 0;
+        let shownPercentage = 0;
+
+        // Fallback progress updater (only used if actual loading fails)
+        const fallbackInterval = setInterval(() => {
+            if (shownPercentage < 90) {
+                shownPercentage += 1;
+                updateProgress(shownPercentage);
+            }
+        }, 100);
+
+        function updateProgress(percentage) {
+            percentage = Math.min(100, Math.max(0, percentage));
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage}%`;
+
+            // Dynamic text size adjustment
+            const baseFontSize = 4.5;
+            const maxExtra = 1.5;
+            const newFontSize = baseFontSize + (maxExtra * (percentage / 100));
+            titleText.style.fontSize = newFontSize + 'rem';
+        }
+
+        // Enhanced Blazor resource loader with actual progress tracking
+        function loadResourceWithProgress(type, name, defaultUri, integrity) {
+            // Special handling for dotnetjs resource
+            if (type === 'dotnetjs') {
+                return defaultUri;
+            }
+
+            return fetch(defaultUri, {
+                cache: 'no-cache',
+                integrity: integrity,
+            }).then(response => {
+                if (!totalResources) {
+                    // Initialize total resources count (approximate)
+                    totalResources = 20; // This is an estimate, actual count may vary
+                }
+
+                const contentLength = +response.headers.get('content-length') || 0;
+                totalBytes += contentLength;
+                resourcesLoaded++;
+
+                const reader = response.body.getReader();
+                let bytesLoaded = 0;
+
+                return new Response(new ReadableStream({
+                    start(controller) {
+                        function push() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    controller.close();
+                                    return;
+                                }
+                                bytesLoaded += value.length;
+                                loadedBytes += value.length;
+
+                                // Calculate progress based on both file count and bytes loaded
+                                const fileProgress = (resourcesLoaded / Math.max(totalResources, resourcesLoaded)) * 100;
+                                const byteProgress = totalBytes > 0 ? (loadedBytes / totalBytes) * 100 : 0;
+                                const newPercentage = Math.floor((fileProgress * 0.3) + (byteProgress * 0.7));
+
+                                if (newPercentage > shownPercentage) {
+                                    shownPercentage = newPercentage;
+                                    updateProgress(shownPercentage);
+                                    clearInterval(fallbackInterval); // Disable fallback when we have real progress
+                                }
+
+                                controller.enqueue(value);
+                                push();
+                            });
+                        }
+                        push();
+                    }
+                }));
+            });
+        }
+
+        // Start Blazor with our custom resource loader
+        Blazor.start({
+            loadBootResource: function (type, name, defaultUri, integrity) {
+                try {
+                    return loadResourceWithProgress(type, name, defaultUri, integrity);
+                } catch (error) {
+                    console.error('Resource loading failed:', error);
+                    return defaultUri;
+                }
+            }
+        }).then(() => {
+            clearInterval(fallbackInterval);
+            updateProgress(100);
+
+            // Smooth transition to the app
+            setTimeout(() => {
+                loaderElement.style.transition = 'opacity 0.5s ease';
+                loaderElement.style.opacity = '0';
+
+                setTimeout(() => {
+                    loaderElement.remove();
+                    appElement.style.display = 'block';
+
+                    // Dispatch event that app is fully loaded
+                    window.dispatchEvent(new Event('WISEONE:Loaded'));
+                }, 500);
+            }, 500);
+        }).catch(error => {
+            console.error('Blazor initialization failed:', error);
+            progressText.textContent = "Error loading application";
+            clearInterval(fallbackInterval);
+        });
+
+        // Original download function
         window.downloadBase64File = (contentType, base64Data, fileName) => {
             const linkSource = `data:${contentType};base64,${base64Data}`;
             const downloadLink = document.createElement("a");
             downloadLink.href = linkSource;
             downloadLink.download = fileName;
             downloadLink.click();
-        };
-
-
-        // Hide loading animation when Blazor is ready
-        window.addEventListener('load', function () {
-            // This will be called when the page loads, but we also need to wait for Blazor
-            setTimeout(function () {
-                const loadingElement = document.getElementById('app-loading');
-                const appElement = document.getElementById('app');
-
-                if (loadingElement) {
-                    loadingElement.classList.add('hidden');
-                    // Remove the element after the transition completes
-                    setTimeout(() => {
-                        loadingElement.remove();
-                        appElement.style.display = 'block';
-                    }, 500);
-                }
-            }, 1000); // Minimum show time for the loading animation
-        });
-
-        // Alternative approach for Blazor-specific loading
-        window.blazorLoaded = false;
-        window.addEventListener('blazor-loaded', function () {
-            window.blazorLoaded = true;
-            const loadingElement = document.getElementById('app-loading');
-            const appElement = document.getElementById('app');
-
-            if (loadingElement) {
-                loadingElement.classList.add('hidden');
-                setTimeout(() => {
-                    loadingElement.remove();
-                    appElement.style.display = 'block';
-                }, 500);
-            }
-        });
-    </script>
-
-    <!-- Add the downloadFile function here -->
-    <script>
-        window.downloadFile = function (fileName, contentType, content) {
-            const linkSource = `data:${contentType};base64,${content}`;
-            const downloadLink = document.createElement("a");
-            downloadLink.href = linkSource;
-            downloadLink.download = fileName;
-            downloadLink.click();
-        };
-
-        // File upload handling
-        window.handleFileUpload = function (inputElement) {
-            return new Promise((resolve, reject) => {
-                const file = inputElement.files[0];
-                if (!file) {
-                    reject("No file selected");
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    // Get the binary data from the ArrayBuffer
-                    const arrayBuffer = e.target.result;
-                    resolve({
-                        name: file.name,
-                        type: file.type,
-                        size: file.size,
-                        content: arrayBuffer
-                    });
-                };
-                reader.onerror = function (e) {
-                    reject("Error reading file");
-                };
-                // Read as ArrayBuffer instead of DataURL
-                reader.readAsArrayBuffer(file);
-            });
-        };
-
-        // File download handling
-        window.downloadFileFromStream = function (fileName, contentStream) {
-            const blob = new Blob([contentStream]);
-            const url = window.URL.createObjectURL(blob);
-            const anchorElement = document.createElement('a');
-            anchorElement.href = url;
-            anchorElement.download = fileName;
-            anchorElement.click();
-            anchorElement.remove();
-            window.URL.revokeObjectURL(url);
-        };
-
-        // Add this new function for handling file uploads
-        window.triggerFileInput = function (inputId) {
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.click();
-            }
-        };
-    </script>
-
-    <script>
-        window.openPdfInNewTab = function (dataUrl, fileName) {
-            // Create a new window with a simple iframe
-            const newWindow = window.open('', '_blank');
-            newWindow.document.write(`
-                    <iframe
-                        src="${dataUrl}"
-                        style="width:100%;height:100vh;border:none;"
-                        title="${fileName}"
-                    ></iframe>
-                `);
-            newWindow.document.close();
         };
     </script>
 </body>

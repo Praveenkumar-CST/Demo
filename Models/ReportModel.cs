@@ -39,8 +39,8 @@ namespace WiseHR.Models
 
             return ValidationResult.Success;
         }
-    
-}
+
+    }
 
     public class ReportModel
     {
