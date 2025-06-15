@@ -34,7 +34,8 @@ namespace WiseHR.Models
                      ("HIDE_EmployeeProfile", "/employee/.*"),
                      ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
-                    ("Asset","/asset"),
+                    ("Asset","/asset"),   
+                    ("List","/reportlist"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
                     ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")

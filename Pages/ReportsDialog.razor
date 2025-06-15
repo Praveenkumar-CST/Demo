@@ -81,7 +81,7 @@ else
                               Elevation="0"
                               Class="excel-table">
                         <HeaderContent>
-                            <MudTh Class="excel-header  ">S.No</MudTh>
+                            <MudTh Class="excel-header">S.No</MudTh>
                             <MudTh Class="excel-header">Mentee</MudTh>
                             <MudTh Class="excel-header">Project</MudTh>
                             <MudTh Class="excel-header">Fortnight 1</MudTh>
@@ -94,7 +94,6 @@ else
                                 <MudText Typo="Typo.body2">@report.MenteeName</MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">@report.MenteeEmail</MudText>
                             </MudTd>
-                            <!-- Update ProjectsWorkedOn and Fortnight fields in <RowTemplate> -->
                             <MudTd DataLabel="Project" Style="min-width: 150px;">
                                 <MudSelect T="string"
                                            @bind-Value="report.ProjectsWorkedOn"
@@ -317,10 +316,10 @@ else
         word-wrap: break-word !important; /* Ensure text wraps within the cell */
     }
 
-   
-.excel-table tr:hover {
-    background-color: #F5F5F5 !important; /* Light grey hover effect */
-}
+    .excel-table tr:hover {
+        background-color: #F5F5F5 !important; /* Light grey hover effect */
+    }
+
     .mud-table-container {
         padding: 0 !important;
     }
@@ -400,7 +399,6 @@ else
         position: relative; /* Ensure positioning context for sticky elements */
     }
 
-
         .table-scroll-container::-webkit-scrollbar {
             display: none; /* Chrome, Safari */
         }
@@ -431,14 +429,13 @@ else
         z-index: 3;
     }
 
-     .excel-table thead {
+    .excel-table thead {
         position: sticky;
         top: 0;
         background-color: #1877F2 !important;
         z-index: 10; /* Higher than sticky columns */
         box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.2); /* Optional: subtle shadow for visual separation */
     }
-
 </style>
 
 @code {
@@ -457,33 +454,68 @@ else
     private int? selectedMonth = DateTime.UtcNow.Month;
     private string searchQuery = string.Empty;
     private List<int> availableYears = Enumerable.Range(2020, DateTime.UtcNow.Year - 2019).ToList();
-    private bool isEditable => (!selectedYear.HasValue || !selectedMonth.HasValue) ||
-                             (selectedYear == DateTime.UtcNow.Year && selectedMonth == DateTime.UtcNow.Month);
+
+    private bool isEditable
+    {
+        get
+        {
+            var now = DateTime.UtcNow;
+            var selectedYearValue = selectedYear ?? now.Year;
+            var selectedMonthValue = selectedMonth ?? now.Month;
+
+            // If no year or month is selected, allow editing
+            if (!selectedYear.HasValue || !selectedMonth.HasValue)
+                return true;
+
+            // Current month (e.g., June 2025)
+            bool isCurrentMonth = selectedYearValue == now.Year && selectedMonthValue == now.Month;
+
+            // Next month (e.g., July 2025)
+            bool isNextMonth = selectedYearValue == now.AddMonths(1).Year && selectedMonthValue == now.AddMonths(1).Month;
+
+            // Previous month (e.g., May 2025)
+            bool isPreviousMonth = selectedYearValue == now.AddMonths(-1).Year && selectedMonthValue == now.AddMonths(-1).Month;
+
+            // First fortnight: 11th to 24th of the selected month
+            bool isFirstFortnightSubmission = isCurrentMonth && now.Day >= 11 && now.Day <= 24;
+
+            // Second fortnight: 24th of the selected month to 11th of the next month
+            bool isSecondFortnightSubmission =
+                (isCurrentMonth && now.Day >= 24) || // 24th–end of current month
+                (isNextMonth && now.Day <= 11) ||    // 1st–11th of next month
+                (isPreviousMonth && now.Day <= 11 && now.Month == selectedMonthValue + 1); // 1st–11th of current month for previous month's second fortnight
+
+            return isFirstFortnightSubmission || isSecondFortnightSubmission;
+        }
+    }
+
     private List<string> customProjects = new();
 
-                              private async Task LoadCustomProjects()
-{
-    try
+    private async Task LoadCustomProjects()
     {
-        var allReports = await ReportService.GetReportsAsync();
-        var predefinedProjects = GetPredefinedProjects();
-        customProjects.Clear();
-        customProjects.AddRange(allReports
-            .Where(r => !string.IsNullOrEmpty(r.ProjectsWorkedOn))
-            .Select(r => r.ProjectsWorkedOn)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Where(p => !predefinedProjects.Contains(p, StringComparer.OrdinalIgnoreCase)));
+        try
+        {
+            var allReports = await ReportService.GetReportsAsync();
+            var predefinedProjects = GetPredefinedProjects();
+            customProjects.Clear();
+            customProjects.AddRange(allReports
+                .Where(r => !string.IsNullOrEmpty(r.ProjectsWorkedOn))
+                .Select(r => r.ProjectsWorkedOn)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(p => !predefinedProjects.Contains(p, StringComparer.OrdinalIgnoreCase)));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading custom projects: {ex.Message}", Severity.Error);
+        }
     }
-    catch (Exception ex)
+
+    private List<string> GetPredefinedProjects()
     {
-        Snackbar.Add($"Error loading custom projects: {ex.Message}", Severity.Error);
+        return new List<string> { "WiseONE", "WiseULTIMA", "WiseMASTRO", "HUE Play", "HUE Create", "BlogAPP", "Others" };
     }
-}
-private List<string> GetPredefinedProjects()
-{
-    return new List<string> { "WiseONE", "WiseULTIMA", "WiseMASTRO","HUE Play", "HUE Create", "BlogAPP", "Others" };
-}
-private List<string> GetProjects()
+
+    private List<string> GetProjects()
     {
         var projects = GetPredefinedProjects();
         projects.AddRange(customProjects.Where(p => !p.Equals("Others", StringComparison.OrdinalIgnoreCase)));
@@ -497,6 +529,7 @@ private List<string> GetProjects()
         }
         return sortedProjects;
     }
+
     private bool IsFirstFortnightEditable
     {
         get
@@ -511,64 +544,59 @@ private List<string> GetProjects()
         get
         {
             var now = DateTime.UtcNow;
-            var currentMonth = now.Month;
-            var currentYear = now.Year;
-            var nextMonthDate = now.AddMonths(1);
+            var selectedYearValue = selectedYear ?? now.Year;
+            var selectedMonthValue = selectedMonth ?? now.Month;
+
+            bool isCurrentMonth = selectedYearValue == now.Year && selectedMonthValue == now.Month;
+            bool isNextMonth = selectedYearValue == now.AddMonths(1).Year && selectedMonthValue == now.AddMonths(1).Month;
+            bool isPreviousMonth = selectedYearValue == now.AddMonths(-1).Year && selectedMonthValue == now.AddMonths(-1).Month;
+
             return isEditable &&
-                   ((now.Day >= 24 && now.Month == currentMonth && now.Year == currentYear) ||
-                    (now.Day <= 11 && now.Month == nextMonthDate.Month && now.Year == nextMonthDate.Year));
+                   ((isCurrentMonth && now.Day >= 24) ||
+                    (isNextMonth && now.Day <= 11) ||
+                    (isPreviousMonth && now.Day <= 11 && now.Month == selectedMonthValue + 1));
         }
     }
 
     private bool IsRowInEditMode(int reportId) => editingRows.Contains(reportId);
     private bool IsRowSaving(int reportId) => savingRows.Contains(reportId);
 
- private bool IsRowEditable(int reportId)
-{
-    var report = filteredReports.FirstOrDefault(r => r.Id == reportId);
-    if (report == null)
-        return false;
+    private bool IsRowEditable(int reportId)
+    {
+        var report = filteredReports.FirstOrDefault(r => r.Id == reportId);
+        if (report == null) return false;
 
-    // Check if the report is within the current month
-    bool isCurrentMonth = (!selectedYear.HasValue || !selectedMonth.HasValue) ||
-                         (selectedYear == DateTime.UtcNow.Year && selectedMonth == DateTime.UtcNow.Month);
+        bool isFirstFortnightEditable = isEditable && IsFirstFortnightEditable &&
+                                       (!report.FirstFortnightSubmittedOn.HasValue ||
+                                        report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
-    // Check if first fortnight is editable: within submission window and within 48 hours
-    bool isFirstFortnightEditable = IsFirstFortnightEditable &&
-                                   (!report.FirstFortnightSubmittedOn.HasValue ||
-                                    report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+        bool isSecondFortnightEditable = isEditable && IsSecondFortnightEditable &&
+                                        (!report.SecondFortnightSubmittedOn.HasValue ||
+                                         report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
-    // Check if second fortnight is editable: within submission window and within 48 hours
-    bool isSecondFortnightEditable = IsSecondFortnightEditable &&
-                                    (!report.SecondFortnightSubmittedOn.HasValue ||
-                                     report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+        return isFirstFortnightEditable || isSecondFortnightEditable;
+    }
 
-    // Row is editable if in edit mode, in current month, and at least one fortnight is editable
-    return isCurrentMonth && (isFirstFortnightEditable || isSecondFortnightEditable) && IsRowInEditMode(reportId);
-}
     private bool IsEditDisabled(ReportModel report)
     {
         if (!isEditable)
             return true;
 
-        // Check if first fortnight is editable
         bool isFirstFortnightEditable = IsFirstFortnightEditable &&
                                        (!report.FirstFortnightSubmittedOn.HasValue ||
                                         report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
-        // Check if second fortnight is editable
         bool isSecondFortnightEditable = IsSecondFortnightEditable &&
                                         (!report.SecondFortnightSubmittedOn.HasValue ||
                                          report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
-        // Disable editing if neither fortnight is editable
         return !isFirstFortnightEditable && !isSecondFortnightEditable;
     }
 
     private string GetEditDisabledReason(ReportModel report)
     {
         if (!isEditable)
-            return "Editing disabled (outside current month)";
+            return "Editing disabled (outside submission window)";
 
         bool isFirstFortnightEditable = IsFirstFortnightEditable &&
                                        (!report.FirstFortnightSubmittedOn.HasValue ||
@@ -589,9 +617,9 @@ private List<string> GetProjects()
 
         return "Edit";
     }
+
     private bool IsProjectEditable(ReportModel report)
     {
-        // ProjectsWorkedOn is editable based on the most recent submission timestamp
         var latestSubmission = report.FirstFortnightSubmittedOn ?? report.SecondFortnightSubmittedOn;
         if (!latestSubmission.HasValue)
             return IsFirstFortnightEditable || IsSecondFortnightEditable;
@@ -612,7 +640,7 @@ private List<string> GetProjects()
 
         if (!isEditable)
         {
-            Snackbar.Add("Cannot edit reports outside the current month.", Severity.Warning);
+            Snackbar.Add("Cannot edit reports outside the submission window.", Severity.Warning);
             return;
         }
 
@@ -656,6 +684,7 @@ private List<string> GetProjects()
         editingRows.Add(reportId);
         StateHasChanged();
     }
+
     private void CancelEdit(int reportId)
     {
         if (originalReports.ContainsKey(reportId))
@@ -775,16 +804,16 @@ private List<string> GetProjects()
                     if (existingReport == null)
                     {
                         reports.Add(new ReportModel
-                            {
-                                MenteeId = mentee.EmployeeID,
-                                MenteeName = $"{mentee.FirstName} {mentee.LastName}",
-                                MenteeEmail = mentee.CurrentEmail,
-                                MentorId = empDetails.EmployeeID,
-                                MentorName = $"{empDetails.FirstName} {empDetails.LastName}",
-                                MentorDesignation = empDetails.Designation,
-                                MentorEmail = empDetails.CurrentEmail,
-                                SubmittedOn = new DateTime(selectedYear.Value, selectedMonth.Value, 1)
-                            });
+                        {
+                            MenteeId = mentee.EmployeeID,
+                            MenteeName = $"{mentee.FirstName} {mentee.LastName}",
+                            MenteeEmail = mentee.CurrentEmail,
+                            MentorId = empDetails.EmployeeID,
+                            MentorName = $"{empDetails.FirstName} {empDetails.LastName}",
+                            MentorDesignation = empDetails.Designation,
+                            MentorEmail = empDetails.CurrentEmail,
+                            SubmittedOn = new DateTime(selectedYear.Value, selectedMonth.Value, 1)
+                        });
                     }
 
                     if (!_menteeDetailsCache.ContainsKey(mentee.EmployeeID))
@@ -856,6 +885,7 @@ private List<string> GetProjects()
         await LoadReportsAndMentees();
         ApplyFilters();
     }
+
     private void OnProjectChanged(string value, ReportModel report)
     {
         if (value != "Others")
@@ -865,11 +895,12 @@ private List<string> GetProjects()
         report.ProjectsWorkedOn = value;
         StateHasChanged();
     }
+
     private async Task SaveReport(ReportModel report)
     {
         if (!isEditable)
         {
-            Snackbar.Add("Cannot save reports outside the current month.", Severity.Warning);
+            Snackbar.Add("Cannot save reports outside the submission window.", Severity.Warning);
             return;
         }
 
