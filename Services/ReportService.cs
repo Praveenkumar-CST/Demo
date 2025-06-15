@@ -49,17 +49,6 @@ public class ReportService
         return input.ToUpper();
     }
 
-    // Capitalize Experience fields
-    private void CapitalizeExperience(ReportModel report)
-    {
-        // Capitalize EmployeeID
-        report.FortnightRemarks1 = ToTitleCase(report.FortnightRemarks1);
-        report.FortnightRemarks2 = ToTitleCase(report.FortnightRemarks2);
-        report.ProjectsWorkedOn = ToTitleCase(report.ProjectsWorkedOn); 
-        report.FileName = ToTitleCase(report.FileName);
-
-        //
-    }
 
     public async Task<List<ReportModel>> GetReportsAsync(int page = 1, int pageSize = 50)
     {
@@ -385,7 +374,6 @@ public class ReportService
         try
         {
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            CapitalizeExperience(report);
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _http.PostAsJsonAsync(BaseUrl, report)));
@@ -413,7 +401,6 @@ public class ReportService
         try
         {
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            CapitalizeExperience(report);
 
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>

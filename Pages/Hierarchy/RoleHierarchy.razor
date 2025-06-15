@@ -7,8 +7,10 @@
 @using WiseHRServer.Models
 @using MudBlazor
 @inject IDialogService DialogService
-<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" >
-    <MudText Typo="Typo.h5" Class="mb-2 d-flex align-center">
+@inject IJSRuntime JSRuntime
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudText Typo="Typo.h5" Class="mb-1 d-flex align-center">
         <MudIcon Icon="@Icons.Material.Filled.AccountTree" Class="mr-2" />
         Organization Hierarchy
     </MudText>
@@ -42,15 +44,18 @@
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Root Level</MudText>
                                 </div>
                             </MudCardContent>
-                            <MudCardActions Class="justify-center pb-3">
-                                <MudTooltip Text="Add Top-Level Mentor">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Add"
-                                                   Color="Color.Primary"
-                                                   OnClick="@AddTopLevelMentor"
-                                                   Size="Size.Small"
-                                                   Class="action-btn" />
-                                </MudTooltip>
-                            </MudCardActions>
+                            @if (userRole == "Admin" || userRole == "Hr")
+                            {
+                                <MudCardActions Class="justify-center pb-3">
+                                    <MudTooltip Text="Add Top-Level Mentor">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                       Color="Color.Primary"
+                                                       OnClick="@AddTopLevelMentor"
+                                                       Size="Size.Small"
+                                                       Class="action-btn" />
+                                    </MudTooltip>
+                                </MudCardActions>
+                            }
                         </MudCard>
                     </div>
                 }
@@ -66,7 +71,6 @@
             </div>
         </MudPaper>
     }
-
     @if (showModal)
     {
         <div class="modal-overlay" @onclick="CloseModal">
@@ -147,10 +151,13 @@
     private RenderFragment RenderHierarchyNode(HierarchyNode node, int level) => __builder =>
     {
         <div class="hierarchy-node" data-level="@level">
-            <div class="node-connector" style="@GetConnectorStyle(level)"></div>
-            <MudCard Class="employee-card" Elevation="@(level == 0 ? 6 : 4)">
+            @if (level > 0)
+            {
+                <div class="node-connector" style="@GetConnectorStyle(level)"></div>
+            }
+            <MudCard Class="employee-card" Elevation="@(level == 0 ? 6 : 1)">
                 <MudCardHeader Class="align-center">
-                    <MudAvatar Color="Color.Primary" Size="Size.Small" Class="mr-1">
+                    <MudAvatar Color="Color.Primary" Size="Size.Small" class="mr-1">
                         <MudIcon Icon="@Icons.Material.Filled.Person" />
                     </MudAvatar>
                     <MudCardHeaderContent>
@@ -158,13 +165,14 @@
                             <MudText Typo="Typo.subtitle2" Class="employee-name">@node.Name</MudText>
                         </MudTooltip>
                     </MudCardHeaderContent>
-                    @if (level > 0 && showXMarks.ContainsKey(node.ParentMentorId ?? "") && showXMarks[node.ParentMentorId ?? ""])
+                    @if (userRole == "Admin" || userRole == "Hr")
                     {
                         <MudIconButton Icon="@Icons.Material.Filled.Close"
                                        Color="Color.Error"
                                        OnClick="@(() => ConfirmUnassignSingleAsync(node))"
                                        Size="Size.Small"
-                                       Class="card-close-btn" />
+                                       Class="card-close-btn"
+                                       Style="@(ShouldShowXMark(node) ? "display: block;" : "display: none;")" />
                     }
                 </MudCardHeader>
                 <MudCardContent Class="pt-0 pb-2">
@@ -172,39 +180,50 @@
                         <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" Class="mr-1" />
                         ID: @node.EmployeeID
                     </MudText>
-                    @if (node.Children.Any())
-                    {
-                        <MudText Typo="Typo.caption" Class="d-flex align-center mt-1">
-                            <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" Class="mr-1" />
-                            Mentees: @node.Children.Count
-                        </MudText>
-                    }
                 </MudCardContent>
                 <MudCardActions Class="justify-space-between px-3 pb-2 pt-0 flex-column">
                     <div class="action-row">
-                        <MudTooltip Text="Add Mentee">
-                            <MudButton Variant="Variant.Text"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.PersonAdd"
-                                       OnClick="@(() => AddMenteeAsync(node.EmployeeID))"
-                                       Size="Size.Small"
-                                       Class="action-btn">
-                                @if (node.Children.Any())
-                                {
-                                    <MudBadge Content="@node.Children.Count" Color="Color.Primary" Overlap="true" Class="ml-1" />
-                                }
-                            </MudButton>
-                        </MudTooltip>
-                        <div class="action-group">
-                            <MudTooltip Text="@(showXMarks.ContainsKey(node.EmployeeID) && showXMarks[node.EmployeeID] ? "Hide Unassign Options" : "Show Unassign Options")">
-                                <MudIconButton Icon="@Icons.Material.Filled.PersonRemove"
-                                               Color="Color.Error"
-                                               OnClick="@(() => ToggleXMarks(node.EmployeeID))"
-                                               Size="Size.Small"
-                                               Class="action-btn"
-                                               Disabled="@(!node.Children.Any())" />
+                        @if (userRole == "Admin" || userRole == "Hr")
+                        {
+                            <MudTooltip Text="Add Mentee">
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.PersonAdd"
+                                           OnClick="@(() => AddMenteeAsync(node.EmployeeID))"
+                                           Size="Size.Small"
+                                           Class="action-btn">
+                                    @if (GetTotalDescendantCount(node) > 0)
+                                    {
+                                        <MudBadge Content="@GetTotalDescendantCount(node)" Color="Color.Primary" Overlap="true" Class="ml-1" />
+                                    }
+                                </MudButton>
                             </MudTooltip>
-                        </div>
+                            <div class="action-group">
+                                <MudTooltip Text="@(showXMarks.ContainsKey(node.EmployeeID) && showXMarks[node.EmployeeID] ? "Hide Unassign Options" : "Show Unassign Options")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PersonRemove"
+                                                   Color="Color.Error"
+                                                   OnClick="@(() => ToggleXMarks(node.EmployeeID))"
+                                                   Size="Size.Small"
+                                                   Class="action-btn"
+                                                   Disabled="@(!node.Children.Any())" />
+                                </MudTooltip>
+                            </div>
+                        }
+                        @if (userRole == "Manager" || userRole == "Employee")
+                        {
+                            <MudTooltip Text="Mentees">
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.People"
+                                           Size="Size.Small"
+                                           Class="action-btn">
+                                    @if (GetTotalDescendantCount(node) > 0)
+                                    {
+                                        <MudBadge Content="@GetTotalDescendantCount(node)" Color="Color.Primary" Overlap="true" Class="ml-1" />
+                                    }
+                                </MudButton>
+                            </MudTooltip>
+                        }
                     </div>
                     @if (node.Children.Any())
                     {
@@ -234,17 +253,35 @@
         </div>
     };
 
-    private List<HierarchyNode> hierarchyNodes = [];
-    private List<SelectableEmployee> availableEmployees = [];
-    private Dictionary<string, bool> showXMarks = [];
+    private string userRole = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        userRole = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userRole");
+        await LoadHierarchyAsync();
+    }
+
+    private bool ShouldShowXMark(HierarchyNode node)
+    {
+        if (string.IsNullOrEmpty(node.ParentMentorId) && !node.Children.Any())
+            return false;
+
+        return !string.IsNullOrEmpty(node.ParentMentorId) &&
+               showXMarks.ContainsKey(node.ParentMentorId) &&
+               showXMarks[node.ParentMentorId];
+    }
+
+    private List<HierarchyNode> hierarchyNodes = new List<HierarchyNode>();
+    private List<SelectableEmployee> availableEmployees = new List<SelectableEmployee>();
+    private Dictionary<string, bool> showXMarks = new Dictionary<string, bool>();
     private bool isLoading = true;
     private bool isLoadingEmployees = false;
     private bool isAddingTopLevel = false;
     private bool isAssigning = false;
-    private string? selectedMentorId;
-    private string? selectedMentorName;
-    private string? errorMessage;
-    private string? loadingStatus;
+    private string selectedMentorId;
+    private string selectedMentorName;
+    private string errorMessage;
+    private string loadingStatus;
     private bool showModal = false;
 
     private string GetLevelColor(int level)
@@ -260,21 +297,19 @@
 
     private string GetConnectorStyle(int level)
     {
-        if (level == 0) return "display: none;";
-        return $"top: -24px; height: 24px; border-left: 3px solid {GetLevelColor(level - 1)};";
+        return $"top: -28px; height: 28px; border-left: 2px solid {GetLevelColor(level - 1)}; z-index: -1; position: absolute; left: 50%;";
     }
 
     private string GetChildrenStyle(int level)
     {
-        return $"margin-top: 48px; position: relative; width: 100%;";
+        return $"margin-top: 36px; position: relative; width: 100%; display: flex; justify-content: center; gap: 20px;";
     }
 
     private string GetHorizontalConnectorStyle(int level, int childCount)
     {
         if (childCount <= 1) return "display: none;";
-        // Approximate width based on number of children (180px per card + 16px gap)
-        int approxWidth = (childCount * 180) + ((childCount - 1) * 16);
-        return $"width: {approxWidth}px; top: -24px; border-top: 3px solid {GetLevelColor(level)};";
+        int approxWidth = (childCount * 190) + ((childCount - 1) * 20);
+        return $"width: {approxWidth}px; top: -14px; border-top: 2px solid {GetLevelColor(level)}; left: 50%; transform: translateX(-50%); z-index: -1; position: absolute;";
     }
 
     private void ToggleXMarks(string mentorId)
@@ -287,107 +322,127 @@
         {
             showXMarks[mentorId] = true;
         }
+
+        if (showXMarks.ContainsKey(mentorId) && !showXMarks[mentorId])
+        {
+            var mentorNode = FindNode(hierarchyNodes, mentorId);
+            if (mentorNode != null)
+            {
+                foreach (var descendant in Flatten(mentorNode).Skip(1))
+                {
+                    if (showXMarks.ContainsKey(descendant.EmployeeID))
+                    {
+                        showXMarks[descendant.EmployeeID] = false;
+                    }
+                }
+            }
+        }
+
         StateHasChanged();
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task ConfirmUnassignSingleAsync(HierarchyNode node)
     {
-        await LoadHierarchyAsync();
+        try
+        {
+            if (node.Children.Any())
+            {
+                SnackbarService.Add($"Cannot unassign {node.Name}. Please unassign all mentees before unassigning this mentor.", Severity.Warning);
+                return;
+            }
+
+            bool? confirmed = await DialogService.ShowMessageBox(
+                title: "Confirm Unassign",
+                message: $"Are you sure you want to unassign {node.Name} (ID: {node.EmployeeID}) from {(string.IsNullOrEmpty(node.ParentMentorId) ? "root level" : "their mentor")}?",
+                yesText: "Unassign",
+                cancelText: "Cancel",
+                options: new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }
+            );
+
+            if (confirmed == true)
+            {
+                await UnassignSingleAsync(node.EmployeeID);
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackbarService.Add($"Error showing confirmation: {ex.Message}", Severity.Error);
+        }
     }
 
-        private async Task ConfirmUnassignSingleAsync(HierarchyNode node)
+    private async Task UnassignSingleAsync(string employeeId)
+    {
+        try
         {
-            try
+            var assignments = await MentorAssignmentService.GetAllAssignmentsAsync() ?? new List<MentorAssignment>();
+            var assignment = assignments.FirstOrDefault(a => a.MenteeEmployeeID == employeeId);
+            if (assignment != null)
             {
-                // Check if the node has any children (mentees)
-                if (node.Children.Any())
+                var success = await MentorAssignmentService.DeleteAssignmentAsync(assignment.Id);
+                if (success)
                 {
-                    SnackbarService.Add($"Cannot unassign {node.Name}. Please unassign all mentees (L{GetNodeLevel(node) + 1}) before unassigning this mentor.", Severity.Warning);
-                    return;
-                }
+                    SnackbarService.Add("Mentee unassigned successfully.", Severity.Success);
+                    await LoadHierarchyAsync();
 
-                bool? confirmed = await DialogService.ShowMessageBox(
-                    title: "Confirm Unassign",
-                    message: $"Are you sure you want to unassign {node.Name} (ID: {node.EmployeeID})?",
-                    yesText: "Unassign",
-                    cancelText: "Cancel",
-                    options: new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }
-                );
-
-                if (confirmed == true)
-                {
-                    await UnassignSingleAsync(node.EmployeeID);
-                }
-            }
-            catch (Exception ex)
-            {
-                SnackbarService.Add($"Error showing confirmation: {ex.Message}", Severity.Error);
-            }
-        }
-
-        private async Task UnassignSingleAsync(string employeeId)
-        {
-            try
-            {
-                var assignments = await MentorAssignmentService.GetAllAssignmentsAsync() ?? [];
-                var assignment = assignments.FirstOrDefault(a => a.MenteeEmployeeID == employeeId);
-                if (assignment != null)
-                {
-                    var success = await MentorAssignmentService.DeleteAssignmentAsync(assignment.Id);
-                    if (success)
+                    var nodeToUnassign = FindNode(hierarchyNodes, employeeId);
+                    if (nodeToUnassign?.ParentMentorId != null)
                     {
-                        SnackbarService.Add("Mentee unassigned successfully.", Severity.Success);
-                        await LoadHierarchyAsync();
-                        // Reset X marks for the mentor if no mentees remain
-                        var node = FindNode(hierarchyNodes, employeeId);
-                        if (node?.ParentMentorId != null && showXMarks.ContainsKey(node.ParentMentorId))
+                        var parentNode = FindNode(hierarchyNodes, nodeToUnassign.ParentMentorId);
+                        if (parentNode != null && !parentNode.Children.Any())
                         {
-                            var parentNode = FindNode(hierarchyNodes, node.ParentMentorId);
-                            if (parentNode != null && !parentNode.Children.Any())
-                            {
-                                showXMarks[node.ParentMentorId] = false;
-                            }
+                            showXMarks[nodeToUnassign.ParentMentorId] = false;
                         }
                     }
-                    else
-                    {
-                        SnackbarService.Add("Failed to unassign mentee.", Severity.Error);
-                    }
+
+                    showXMarks.Clear();
+                }
+                else
+                {
+                    SnackbarService.Add("Failed to unassign mentee.", Severity.Error);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                SnackbarService.Add($"Error unassigning: {ex.Message}", Severity.Error);
+                SnackbarService.Add("Assignment not found.", Severity.Warning);
             }
         }
-
-        private int GetNodeLevel(HierarchyNode node)
+        catch (Exception ex)
         {
-            int level = 0;
-            var currentNode = node;
-            while (!string.IsNullOrEmpty(currentNode.ParentMentorId))
-            {
-                level++;
-                currentNode = FindNode(hierarchyNodes, currentNode.ParentMentorId);
-                if (currentNode == null) break;
-            }
-            return level + 1; // Add 1 to account for root (L1)
+            SnackbarService.Add($"Error unassigning: {ex.Message}", Severity.Error);
         }
-   
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private int GetNodeLevel(HierarchyNode node)
+    {
+        int level = 0;
+        var currentNode = node;
+        while (!string.IsNullOrEmpty(currentNode.ParentMentorId))
+        {
+            level++;
+            currentNode = FindNode(hierarchyNodes, currentNode.ParentMentorId);
+            if (currentNode == null) break;
+        }
+        return level;
+    }
+
     private async Task LoadHierarchyAsync()
     {
         isLoading = true;
         errorMessage = null;
         try
         {
-            var assignments = await MentorAssignmentService.GetAllAssignmentsAsync() ?? [];
-            hierarchyNodes = [];
+            var assignments = await MentorAssignmentService.GetAllAssignmentsAsync() ?? new List<MentorAssignment>();
+            hierarchyNodes = new List<HierarchyNode>();
             var hierarchyDict = new Dictionary<string, List<MentorAssignment>>();
             foreach (var assignment in assignments)
             {
                 if (!hierarchyDict.ContainsKey(assignment.MentorEmployeeID))
                 {
-                    hierarchyDict[assignment.MentorEmployeeID] = [];
+                    hierarchyDict[assignment.MentorEmployeeID] = new List<MentorAssignment>();
                 }
                 hierarchyDict[assignment.MentorEmployeeID].Add(assignment);
             }
@@ -402,8 +457,9 @@
                 {
                     EmployeeID = mentorDetails.EmployeeID,
                     Email = mentorDetails.CurrentEmail,
+                    Designation = mentorDetails.Designation,
                     Name = await GetEmployeeNameAsync(mentorDetails.EmployeeID, mentorDetails.CurrentEmail),
-                    Children = [],
+                    Children = new List<HierarchyNode>(),
                     IsExpanded = true
                 };
                 await BuildHierarchyNodeAsync(node, hierarchyDict);
@@ -428,7 +484,7 @@
         {
             var employeeByEmail = await EmployeeService.GetEmployeeDetailsByEmail(email);
             if (employeeByEmail != null && !string.IsNullOrEmpty(employeeByEmail.FirstName))
-                return employeeByEmail.FirstName;
+                return $"{employeeByEmail.FirstName} {employeeByEmail.LastName}";
             return email.Split('@')[0].Replace(".", " ").Replace("_", " ");
         }
         catch
@@ -453,14 +509,25 @@
             {
                 EmployeeID = menteeDetails.EmployeeID,
                 Email = menteeDetails.CurrentEmail,
+                Designation = menteeAssignment.MenteeDesignation ?? menteeDetails.Designation,
                 Name = await GetEmployeeNameAsync(menteeDetails.EmployeeID, menteeDetails.CurrentEmail),
                 ParentMentorId = node.EmployeeID,
-                Children = [],
+                Children = new List<HierarchyNode>(),
                 IsExpanded = false
             };
             node.Children.Add(childNode);
             await BuildHierarchyNodeAsync(childNode, hierarchyDict);
         }
+    }
+
+    private int GetTotalDescendantCount(HierarchyNode node)
+    {
+        int count = node.Children.Count;
+        foreach (var child in node.Children)
+        {
+            count += GetTotalDescendantCount(child);
+        }
+        return count;
     }
 
     private void ToggleNodeExpansion(HierarchyNode node)
@@ -500,12 +567,12 @@
     {
         isLoadingEmployees = true;
         loadingStatus = "Loading employees...";
-        availableEmployees = [];
+        availableEmployees = new List<SelectableEmployee>();
 
         try
         {
             var allEmployees = await EmployeeService.GetAllEmployees();
-            var assignments = await MentorAssignmentService.GetAllAssignmentsAsync() ?? [];
+            var assignments = await MentorAssignmentService.GetAllAssignmentsAsync() ?? new List<MentorAssignment>();
             var assignedMentorIds = new HashSet<string>(assignments.Select(a => a.MentorEmployeeID));
             var assignedMenteeIds = new HashSet<string>(assignments.Select(a => a.MenteeEmployeeID));
 
@@ -524,6 +591,7 @@
                         EmployeeID = emp.EmployeeID,
                         Email = emp.CurrentEmail,
                         Name = employeeName,
+                        Designation = emp.Designation,
                         IsSelected = false
                     });
                 }
@@ -606,14 +674,17 @@
             }
 
             bool allSuccess = true;
+            var mentorNode = FindNode(hierarchyNodes, selectedMentorId);
             foreach (var mentee in selectedMentees)
             {
                 var assignment = new MentorAssignment
                 {
                     MentorEmployeeID = selectedMentorId,
-                    MentorEmail = hierarchyNodes.SelectMany(n => Flatten(n)).First(n => n.EmployeeID == selectedMentorId).Email,
+                    MentorEmail = mentorNode?.Email,
+                    MentorDesignation = mentorNode?.Designation,
                     MenteeEmployeeID = mentee.EmployeeID,
                     MenteeEmail = mentee.Email,
+                    MenteeDesignation = mentee.Designation,
                     AssignedDate = DateTime.UtcNow
                 };
 
@@ -643,7 +714,7 @@
         }
     }
 
-    private HierarchyNode? FindNode(List<HierarchyNode> nodes, string employeeId)
+    private HierarchyNode FindNode(List<HierarchyNode> nodes, string employeeId)
     {
         foreach (var node in nodes)
         {
@@ -671,7 +742,7 @@
         isAssigning = false;
         selectedMentorId = null;
         selectedMentorName = null;
-        availableEmployees = [];
+        availableEmployees = new List<SelectableEmployee>();
         StateHasChanged();
     }
 
@@ -680,8 +751,9 @@
         public string EmployeeID { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public string? ParentMentorId { get; set; }
-        public List<HierarchyNode> Children { get; set; } = [];
+        public string Designation { get; set; }
+        public string ParentMentorId { get; set; }
+        public List<HierarchyNode> Children { get; set; } = new List<HierarchyNode>();
         public bool IsExpanded { get; set; }
     }
 
@@ -690,6 +762,7 @@
         public string EmployeeID { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        public string Designation { get; set; }
         public bool IsSelected { get; set; }
     }
 }
@@ -721,32 +794,27 @@
 
     .node-connector {
         position: absolute;
-        width: 3px;
-        background-color: transparent;
-        border-left: 3px solid #1976d2; /* Solid and thicker */
+        width: 2px;
+        background-color: #1976d2;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 0;
-        top: -24px;
-        height: 24px;
+        z-index: -2;
     }
 
     .horizontal-connector {
         position: absolute;
-        height: 3px;
-        background-color: transparent;
-        border-top: 3px solid #1976d2; /* Matches node-connector color */
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 0;
-        top: -24px;
+        height: 2px;
+        background-color: #1976d2;
+        left: 0;
+        right: 0;
+        z-index: -2;
     }
 
     .level-container {
         display: flex;
         flex-wrap: nowrap;
         justify-content: center;
-        gap: 16px;
+        gap: 20px;
         width: 100%;
         flex-direction: row;
     }
@@ -755,17 +823,17 @@
         display: flex;
         flex-wrap: nowrap;
         justify-content: center;
-        gap: 16px;
+        gap: 20px;
         width: 100%;
         max-width: none;
         padding: 0 12px;
         flex-direction: row;
-        margin-top: 48px;
+        margin-top: 36px;
         position: relative;
     }
 
     .org-card, .employee-card {
-        width: 180px;
+        width: 190px;
         background: white;
         border-radius: 6px;
         transition: all 0.2s ease;
@@ -799,7 +867,7 @@
     }
 
     .employee-card .mud-card-header {
-        padding: 8px 12px;
+        padding: 8px 32px 8px 12px;
         display: flex;
         align-items: center;
         position: relative;
@@ -824,10 +892,12 @@
         right: 8px;
         width: 24px;
         height: 24px;
+        z-index: 10;
+        background-color: transparent;
     }
 
     .card-close-btn:hover {
-        background-color: rgba(211, 47, 47, 0.1); /* Light red background on hover */
+        background-color: rgba(211, 47, 47, 0.1);
     }
 
     .action-btn, .expand-btn {
@@ -919,7 +989,7 @@
 
     .level-chip {
         position: absolute;
-        top: -24px;
+        top: -28px;
         left: 50%;
         transform: translateX(-50%);
         font-size: 0.75rem;
