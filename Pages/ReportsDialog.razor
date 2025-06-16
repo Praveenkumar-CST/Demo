@@ -439,15 +439,15 @@ else
 </style>
 
 @code {
-    private List<ReportModel> reports = new();
-    private List<ReportModel> filteredReports = new();
-    private Dictionary<int, ReportModel> originalReports = new();
-    private HashSet<int> editingRows = new();
-    private HashSet<int> savingRows = new();
+    private List<ReportModel> reports = [];
+    private List<ReportModel> filteredReports = [];
+    private Dictionary<int, ReportModel> originalReports = [];
+    private HashSet<int> editingRows = [];
+    private HashSet<int> savingRows = [];
     private string? Role { get; set; }
     private string? Email { get; set; }
-    private Dictionary<string, EmployeeDetails> _menteeDetailsCache = new();
-    private Dictionary<string, Experience> _menteeExperienceCache = new();
+    private Dictionary<string, EmployeeDetails> _menteeDetailsCache = [];
+    private Dictionary<string, Experience> _menteeExperienceCache = [];
     private bool isLoading = true;
     private bool isSubmitting = false;
     private int? selectedYear = DateTime.UtcNow.Year;
@@ -455,7 +455,7 @@ else
     private string searchQuery = string.Empty;
     private List<int> availableYears = Enumerable.Range(2020, DateTime.UtcNow.Year - 2019).ToList();
 
-    private bool isEditable
+    private bool IsEditable
     {
         get
         {
@@ -463,33 +463,24 @@ else
             var selectedYearValue = selectedYear ?? now.Year;
             var selectedMonthValue = selectedMonth ?? now.Month;
 
-            // If no year or month is selected, allow editing
             if (!selectedYear.HasValue || !selectedMonth.HasValue)
                 return true;
 
-            // Current month (e.g., June 2025)
             bool isCurrentMonth = selectedYearValue == now.Year && selectedMonthValue == now.Month;
-
-            // Next month (e.g., July 2025)
             bool isNextMonth = selectedYearValue == now.AddMonths(1).Year && selectedMonthValue == now.AddMonths(1).Month;
-
-            // Previous month (e.g., May 2025)
             bool isPreviousMonth = selectedYearValue == now.AddMonths(-1).Year && selectedMonthValue == now.AddMonths(-1).Month;
 
-            // First fortnight: 11th to 24th of the selected month
             bool isFirstFortnightSubmission = isCurrentMonth && now.Day >= 11 && now.Day <= 24;
-
-            // Second fortnight: 24th of the selected month to 11th of the next month
             bool isSecondFortnightSubmission =
-                (isCurrentMonth && now.Day >= 24) || // 24th–end of current month
-                (isNextMonth && now.Day <= 11) ||    // 1st–11th of next month
-                (isPreviousMonth && now.Day <= 11 && now.Month == selectedMonthValue + 1); // 1st–11th of current month for previous month's second fortnight
+                (isCurrentMonth && now.Day >= 24) ||
+                (isNextMonth && now.Day <= 11) ||
+                (isPreviousMonth && now.Day <= 11 && now.Month == selectedMonthValue + 1);
 
             return isFirstFortnightSubmission || isSecondFortnightSubmission;
         }
     }
 
-    private List<string> customProjects = new();
+    private List<string> customProjects = [];
 
     private async Task LoadCustomProjects()
     {
@@ -512,7 +503,7 @@ else
 
     private List<string> GetPredefinedProjects()
     {
-        return new List<string> { "WiseONE", "WiseULTIMA", "WiseMASTRO", "HUE Play", "HUE Create", "BlogAPP", "Others" };
+        return ["WiseONE", "WiseULTIMA", "WiseMASTRO", "HUE Play", "HUE Create", "BlogAPP", "Others"];
     }
 
     private List<string> GetProjects()
@@ -535,7 +526,7 @@ else
         get
         {
             var now = DateTime.UtcNow;
-            return isEditable && now.Day >= 11 && now.Day <= 24;
+            return IsEditable && now.Day >= 11 && now.Day <= 24;
         }
     }
 
@@ -551,10 +542,10 @@ else
             bool isNextMonth = selectedYearValue == now.AddMonths(1).Year && selectedMonthValue == now.AddMonths(1).Month;
             bool isPreviousMonth = selectedYearValue == now.AddMonths(-1).Year && selectedMonthValue == now.AddMonths(-1).Month;
 
-            return isEditable &&
-                   ((isCurrentMonth && now.Day >= 24) ||
-                    (isNextMonth && now.Day <= 11) ||
-                    (isPreviousMonth && now.Day <= 11 && now.Month == selectedMonthValue + 1));
+            return IsEditable &&
+                   (isCurrentMonth && now.Day >= 24 ||
+                    isNextMonth && now.Day <= 11 ||
+                    isPreviousMonth && now.Day <= 11 && now.Month == selectedMonthValue + 1);
         }
     }
 
@@ -566,45 +557,45 @@ else
         var report = filteredReports.FirstOrDefault(r => r.Id == reportId);
         if (report == null) return false;
 
-        bool isFirstFortnightEditable = isEditable && IsFirstFortnightEditable &&
-                                       (!report.FirstFortnightSubmittedOn.HasValue ||
-                                        report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+        bool isFirstFortnightEditable = IsFirstFortnightEditable &&
+                                        (!report.FirstFortnightSubmittedOn.HasValue ||
+                                         report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
-        bool isSecondFortnightEditable = isEditable && IsSecondFortnightEditable &&
-                                        (!report.SecondFortnightSubmittedOn.HasValue ||
-                                         report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+        bool isSecondFortnightEditable = IsSecondFortnightEditable &&
+                                         (!report.SecondFortnightSubmittedOn.HasValue ||
+                                          report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
-        return isFirstFortnightEditable || isSecondFortnightEditable;
+        return IsEditable && (isFirstFortnightEditable || isSecondFortnightEditable);
     }
 
     private bool IsEditDisabled(ReportModel report)
     {
-        if (!isEditable)
+        if (!IsEditable)
             return true;
 
         bool isFirstFortnightEditable = IsFirstFortnightEditable &&
-                                       (!report.FirstFortnightSubmittedOn.HasValue ||
-                                        report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+                                        (!report.FirstFortnightSubmittedOn.HasValue ||
+                                         report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
         bool isSecondFortnightEditable = IsSecondFortnightEditable &&
-                                        (!report.SecondFortnightSubmittedOn.HasValue ||
-                                         report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+                                         (!report.SecondFortnightSubmittedOn.HasValue ||
+                                          report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
         return !isFirstFortnightEditable && !isSecondFortnightEditable;
     }
 
     private string GetEditDisabledReason(ReportModel report)
     {
-        if (!isEditable)
+        if (!IsEditable)
             return "Editing disabled (outside submission window)";
 
         bool isFirstFortnightEditable = IsFirstFortnightEditable &&
-                                       (!report.FirstFortnightSubmittedOn.HasValue ||
-                                        report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+                                        (!report.FirstFortnightSubmittedOn.HasValue ||
+                                         report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
         bool isSecondFortnightEditable = IsSecondFortnightEditable &&
-                                        (!report.SecondFortnightSubmittedOn.HasValue ||
-                                         report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+                                         (!report.SecondFortnightSubmittedOn.HasValue ||
+                                          report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
         if (!isFirstFortnightEditable && !isSecondFortnightEditable)
         {
@@ -612,7 +603,7 @@ else
                 return "Editing disabled (past 48-hour window for first fortnight)";
             if (report.SecondFortnightSubmittedOn.HasValue && report.SecondFortnightSubmittedOn.Value.AddHours(48) < DateTime.UtcNow)
                 return "Editing disabled (past 48-hour window for second fortnight)";
-            return "Editing disabled (outside submission windows: 11th to 24th or 24th to next month's 11th)";
+            return "Editing disabled (outside submission windows: 11th–24th or 24th–next month's 11th)";
         }
 
         return "Edit";
@@ -638,19 +629,19 @@ else
         var report = filteredReports.FirstOrDefault(r => r.Id == reportId);
         if (report == null) return;
 
-        if (!isEditable)
+        if (!IsEditable)
         {
             Snackbar.Add("Cannot edit reports outside the submission window.", Severity.Warning);
             return;
         }
 
         bool isFirstFortnightEditable = IsFirstFortnightEditable &&
-                                       (!report.FirstFortnightSubmittedOn.HasValue ||
-                                        report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+                                        (!report.FirstFortnightSubmittedOn.HasValue ||
+                                         report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
         bool isSecondFortnightEditable = IsSecondFortnightEditable &&
-                                        (!report.SecondFortnightSubmittedOn.HasValue ||
-                                         report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+                                         (!report.SecondFortnightSubmittedOn.HasValue ||
+                                          report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
 
         if (!isFirstFortnightEditable && !isSecondFortnightEditable)
         {
@@ -687,11 +678,9 @@ else
 
     private void CancelEdit(int reportId)
     {
-        if (originalReports.ContainsKey(reportId))
+        if (originalReports.TryGetValue(reportId, out var originalReport))
         {
-            var originalReport = originalReports[reportId];
             var currentReport = filteredReports.FirstOrDefault(r => r.Id == reportId);
-
             if (currentReport != null)
             {
                 currentReport.ProjectsWorkedOn = originalReport.ProjectsWorkedOn;
@@ -705,7 +694,6 @@ else
                 currentReport.SecondFortnightSubmittedOn = originalReport.SecondFortnightSubmittedOn;
                 currentReport.CustomProjectName = originalReport.CustomProjectName;
             }
-
             originalReports.Remove(reportId);
         }
 
@@ -804,16 +792,16 @@ else
                     if (existingReport == null)
                     {
                         reports.Add(new ReportModel
-                        {
-                            MenteeId = mentee.EmployeeID,
-                            MenteeName = $"{mentee.FirstName} {mentee.LastName}",
-                            MenteeEmail = mentee.CurrentEmail,
-                            MentorId = empDetails.EmployeeID,
-                            MentorName = $"{empDetails.FirstName} {empDetails.LastName}",
-                            MentorDesignation = empDetails.Designation,
-                            MentorEmail = empDetails.CurrentEmail,
-                            SubmittedOn = new DateTime(selectedYear.Value, selectedMonth.Value, 1)
-                        });
+                            {
+                                MenteeId = mentee.EmployeeID,
+                                MenteeName = $"{mentee.FirstName} {mentee.LastName}",
+                                MenteeEmail = mentee.CurrentEmail,
+                                MentorId = empDetails.EmployeeID,
+                                MentorName = $"{empDetails.FirstName} {empDetails.LastName}",
+                                MentorDesignation = empDetails.Designation,
+                                MentorEmail = empDetails.CurrentEmail,
+                                SubmittedOn = new DateTime(selectedYear.Value, selectedMonth.Value, 1)
+                            });
                     }
 
                     if (!_menteeDetailsCache.ContainsKey(mentee.EmployeeID))
@@ -838,8 +826,18 @@ else
         }
     }
 
+    private Dictionary<string, List<ReportModel>> _filterCache = [];
+
     private void ApplyFilters()
     {
+        var cacheKey = $"{selectedYear}_{selectedMonth}_{searchQuery?.ToLower()}";
+        if (_filterCache.TryGetValue(cacheKey, out var cachedFilteredReports))
+        {
+            filteredReports = cachedFilteredReports;
+            StateHasChanged();
+            return;
+        }
+
         var query = searchQuery?.Trim().ToLower();
         filteredReports = reports.Where(r =>
             (!selectedYear.HasValue || r.SubmittedOn.Year == selectedYear.Value) &&
@@ -851,6 +849,8 @@ else
              r.MentorName?.ToLower().Contains(query) == true ||
              r.MentorEmail?.ToLower().Contains(query) == true)
         ).ToList();
+
+        _filterCache[cacheKey] = filteredReports;
         StateHasChanged();
     }
 
@@ -860,6 +860,7 @@ else
         editingRows.Clear();
         originalReports.Clear();
         savingRows.Clear();
+        _filterCache.Clear();
         await LoadReportsAndMentees();
         ApplyFilters();
     }
@@ -870,18 +871,7 @@ else
         editingRows.Clear();
         originalReports.Clear();
         savingRows.Clear();
-        await LoadReportsAndMentees();
-        ApplyFilters();
-    }
-
-    private async Task ClearFilters()
-    {
-        selectedYear = null;
-        selectedMonth = null;
-        searchQuery = string.Empty;
-        editingRows.Clear();
-        originalReports.Clear();
-        savingRows.Clear();
+        _filterCache.Clear();
         await LoadReportsAndMentees();
         ApplyFilters();
     }
@@ -898,31 +888,49 @@ else
 
     private async Task SaveReport(ReportModel report)
     {
-        if (!isEditable)
+        if (!IsEditable)
         {
             Snackbar.Add("Cannot save reports outside the submission window.", Severity.Warning);
             return;
         }
 
         // Validate first fortnight fields
-        if (IsFirstFortnightEditable && (!report.FirstFortnightSubmittedOn.HasValue ||
-                                        report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow))
+        if (IsFirstFortnightEditable &&
+            (!report.FirstFortnightSubmittedOn.HasValue ||
+             report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow))
         {
-            if (report.Performance1 == null || report.Feedback1 == null || report.CompletedStoryPoints1 == null)
+            if (string.IsNullOrEmpty(report.Performance1) ||
+                string.IsNullOrEmpty(report.Feedback1) ||
+                !report.CompletedStoryPoints1.HasValue)
             {
-                Snackbar.Add("All first fortnight fields (Performance, Feedback, Story Points) are required during the submission window (11th to 24th).", Severity.Warning);
+                Snackbar.Add("All first fortnight fields (Performance, Feedback, Story Points) are required during the submission window (11th–24th).", Severity.Warning);
                 return;
+            }
+            // Set timestamp only if not previously submitted
+            if (!report.FirstFortnightSubmittedOn.HasValue)
+            {
+                report.FirstFortnightSubmittedOn = DateTime.UtcNow;
+                Console.WriteLine($"Set FirstFortnightSubmittedOn to {report.FirstFortnightSubmittedOn}");
             }
         }
 
         // Validate second fortnight fields
-        if (IsSecondFortnightEditable && (!report.SecondFortnightSubmittedOn.HasValue ||
-                                         report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow))
+        if (IsSecondFortnightEditable &&
+            (!report.SecondFortnightSubmittedOn.HasValue ||
+             report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow))
         {
-            if (report.Performance2 == null || report.Feedback2 == null || report.CompletedStoryPoints2 == null)
+            if (string.IsNullOrEmpty(report.Performance2) ||
+                string.IsNullOrEmpty(report.Feedback2) ||
+                !report.CompletedStoryPoints2.HasValue)
             {
-                Snackbar.Add("All second fortnight fields (Performance, Feedback, Story Points) are required during the submission window (24th to next month's 11th).", Severity.Warning);
+                Snackbar.Add("All second fortnight fields (Performance, Feedback, Story Points) are required during the submission window (24th–next month's 11th).", Severity.Warning);
                 return;
+            }
+            // Set timestamp only if not previously submitted
+            if (!report.SecondFortnightSubmittedOn.HasValue)
+            {
+                report.SecondFortnightSubmittedOn = DateTime.UtcNow;
+                Console.WriteLine($"Set SecondFortnightSubmittedOn to {report.SecondFortnightSubmittedOn}");
             }
         }
 
@@ -941,7 +949,7 @@ else
 
         if (report.ProjectsWorkedOn == "Others")
         {
-            var trimmedProjectName = report.CustomProjectName.Trim();
+            var trimmedProjectName = report.CustomProjectName!.Trim();
             var predefinedProjects = GetPredefinedProjects();
             if (predefinedProjects.Contains(trimmedProjectName, StringComparer.OrdinalIgnoreCase))
             {
@@ -957,22 +965,6 @@ else
 
         savingRows.Add(report.Id);
         isSubmitting = true;
-
-        // Log before setting timestamps
-        Console.WriteLine($"Before setting timestamps: FirstFortnightSubmittedOn = {report.FirstFortnightSubmittedOn}, SecondFortnightSubmittedOn = {report.SecondFortnightSubmittedOn}");
-
-        // Set submission timestamps
-        if (IsFirstFortnightEditable && report.Performance1 != null && report.Feedback1 != null && report.CompletedStoryPoints1 != null)
-        {
-            report.FirstFortnightSubmittedOn = DateTime.UtcNow;
-            Console.WriteLine($"Set FirstFortnightSubmittedOn to {report.FirstFortnightSubmittedOn}");
-        }
-
-        if (IsSecondFortnightEditable && report.Performance2 != null && report.Feedback2 != null && report.CompletedStoryPoints2 != null)
-        {
-            report.SecondFortnightSubmittedOn = DateTime.UtcNow;
-            Console.WriteLine($"Set SecondFortnightSubmittedOn to {report.SecondFortnightSubmittedOn}");
-        }
 
         try
         {
