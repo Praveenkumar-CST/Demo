@@ -46,23 +46,29 @@
                     }
                 </MudSelect>
             </MudItem>
-            <MudItem xs="12" sm="4" md="3">
+            <MudItem xs="12" sm="8" md="5" Class="d-flex align-end">
                 <MudTextField @bind-Value="searchQuery"
                               Label="Search"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
                               Dense="true"
                               Placeholder="Search by ID, mentor, mentee, project"
-                              Immediate="true"
-                              OnInput="async (v) => await OnSearchInput(v)" />
-            </MudItem>
-            <MudItem xs="12" sm="4" md="3" Class="d-flex align-center">
+                              Immediate="false"
+                              OnKeyDown="@OnSearchKeyDown"
+                              Class="flex-grow-1">
+                    <Adornment>
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" 
+                                       OnClick="ApplySearch"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"/>
+                    </Adornment>
+                </MudTextField>
                 <MudButton Variant="Variant.Text" 
                            Color="Color.Primary" 
                            OnClick="ClearFilters"
-                           Class="ml-auto"
+                           Class="ml-2"
                            EndIcon="@Icons.Material.Filled.Clear">
-                    Clear Filters
+                    Clear
                 </MudButton>
             </MudItem>
         </MudGrid>
@@ -78,96 +84,124 @@
     else
     {
         <MudPaper Elevation="2" Class="pa-4" Style="min-height: 400px;">
-            <MudTable Items="@currentPageReports" Hover="true" Dense="true" Striped="true" Loading="@isLoading">
-                <HeaderContent>
-                    <MudTh>Report ID</MudTh>
-                    <MudTh>Mentee</MudTh>
-                    <MudTh>Mentor</MudTh>
-                    <MudTh>Project(s) Worked On</MudTh>
-                    <MudTh>Performance 1</MudTh>
-                    <MudTh>Feedback 1</MudTh>
-                    <MudTh>Performance 2</MudTh>
-                    <MudTh>Feedback 2</MudTh>
-                    <MudTh>Submitted On</MudTh>
-                    <MudTh>Actions</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.Id</MudTd>
-                    <MudTd>
-                        @if (!string.IsNullOrWhiteSpace(context.MenteeName))
-                        {
-                            @context.MenteeName
-                        }
-                    </MudTd>
-                    <MudTd>
-                        @if (!string.IsNullOrWhiteSpace(context.MentorName))
-                        {
-                            @context.MentorName
-                        }
-                    </MudTd>
-                    <MudTd>
-                        @if (!string.IsNullOrWhiteSpace(context.ProjectsWorkedOn))
-                        {
-                            @context.ProjectsWorkedOn
-                        }
-                    </MudTd>
-                    <MudTd>
-                        @if (!string.IsNullOrWhiteSpace(context.Performance1))
-                        {
-                            @context.Performance1
-                        }
-                    </MudTd>
-                    <MudTd>
-                        @if (!string.IsNullOrWhiteSpace(context.Feedback1))
-                        {
-                            @context.Feedback1
-                        }
-                    </MudTd>
-                    <MudTd>
-                        @if (!string.IsNullOrWhiteSpace(context.Performance2))
-                        {
-                            @context.Performance2
-                        }
-                    </MudTd>
-                    <MudTd>
-                        @if (!string.IsNullOrWhiteSpace(context.Feedback2))
-                        {
-                            @context.Feedback2
-                        }
-                    </MudTd>
-                    <MudTd>
-                        @if (context.SubmittedOn != DateTime.MinValue)
-                        {
-                            @context.SubmittedOn.ToString("dd MMM yyyy")
-                        }
-                    </MudTd>
-                    <MudTd>
-                        <MudTooltip Text="Download">
-                            <MudIconButton Icon="@Icons.Material.Filled.Download" 
-                                           OnClick="() => DownloadReport(context.Id, context.ProjectsWorkedOn)" 
-                                           Color="Color.Primary"
-                                           Size="Size.Small"/>
-                        </MudTooltip>
-                        <MudTooltip Text="Edit">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
-                                           OnClick="() => EditReport(context.Id)" 
-                                           Color="Color.Info"
-                                           Size="Size.Small"
-                                           Class="ml-2"/>
-                        </MudTooltip>
-                        <MudTooltip Text="Delete">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
-                                           OnClick="() => DeleteReport(context.Id)" 
-                                           Color="Color.Error"
-                                           Size="Size.Small"
-                                           Class="ml-2"/>
-                        </MudTooltip>
-                    </MudTd>
-                </RowTemplate>
-                <NoRecordsContent>
-                    <MudText Align="Align.Center" Class="my-8">No reports found for @GetMonthName(selectedMonth) @selectedYear</MudText>
-                </NoRecordsContent>
-            </MudTable>
+            <!-- Horizontal scroll container -->
+            <div class="table-container">
+                <MudTable Class="reports-table" 
+                          Items="@currentPageReports" 
+                          Hover="true" 
+                          Dense="true" 
+                          Striped="true" 
+                          Loading="@isLoading">
+                    <HeaderContent>
+                        <MudTh Class="col-id">Report ID</MudTh>
+                        <MudTh Class="col-mentee">Mentee</MudTh>
+                        <MudTh Class="col-mentor">Mentor</MudTh>
+                        <MudTh Class="col-projects">Project(s) Worked On</MudTh>
+                        <MudTh Class="col-perf">Performance 1</MudTh>
+                        <MudTh Class="col-feedback">Feedback 1</MudTh>
+                        <MudTh Class="col-perf">Performance 2</MudTh>
+                        <MudTh Class="col-feedback">Feedback 2</MudTh>
+                        <MudTh Class="col-date">Submitted On</MudTh>
+                        <MudTh Class="col-actions">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd Class="col-id">
+                            <div class="cell-content">@context.Id</div>
+                        </MudTd>
+                        <MudTd Class="col-mentee">
+                            <div class="cell-content" title="@context.MenteeName">
+                                @if (!string.IsNullOrWhiteSpace(context.MenteeName))
+                                {
+                                    @context.MenteeName
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-mentor">
+                            <div class="cell-content" title="@context.MentorName">
+                                @if (!string.IsNullOrWhiteSpace(context.MentorName))
+                                {
+                                    @context.MentorName
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-projects">
+                            <div class="cell-content" title="@context.ProjectsWorkedOn">
+                                @if (!string.IsNullOrWhiteSpace(context.ProjectsWorkedOn))
+                                {
+                                    @context.ProjectsWorkedOn
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-perf">
+                            <div class="cell-content" title="@context.Performance1">
+                                @if (!string.IsNullOrWhiteSpace(context.Performance1))
+                                {
+                                    @context.Performance1
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-feedback">
+                            <div class="cell-content" title="@context.Feedback1">
+                                @if (!string.IsNullOrWhiteSpace(context.Feedback1))
+                                {
+                                    @context.Feedback1
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-perf">
+                            <div class="cell-content" title="@context.Performance2">
+                                @if (!string.IsNullOrWhiteSpace(context.Performance2))
+                                {
+                                    @context.Performance2
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-feedback">
+                            <div class="cell-content" title="@context.Feedback2">
+                                @if (!string.IsNullOrWhiteSpace(context.Feedback2))
+                                {
+                                    @context.Feedback2
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-date">
+                            <div class="cell-content">
+                                @if (context.SubmittedOn != DateTime.MinValue)
+                                {
+                                    @context.SubmittedOn.ToString("dd MMM yyyy")
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-actions">
+                            <div class="d-flex">
+                                <MudTooltip Text="Download">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Download" 
+                                                   OnClick="() => DownloadReport(context.Id, context.ProjectsWorkedOn)" 
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"/>
+                                </MudTooltip>
+                                <MudTooltip Text="Edit">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                                   OnClick="() => EditReport(context.Id)" 
+                                                   Color="Color.Info"
+                                                   Size="Size.Small"
+                                                   Class="ml-2"/>
+                                </MudTooltip>
+                                <MudTooltip Text="Delete">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                   OnClick="() => DeleteReport(context.Id)" 
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   Class="ml-2"/>
+                                </MudTooltip>
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="my-8">No reports found for @GetMonthName(selectedMonth) @selectedYear</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </div>
             
             <div class="d-flex justify-space-between align-center mt-4">
                 <MudText>Showing @((currentPage - 1) * pageSize + 1) to @Math.Min(currentPage * pageSize, totalItems) of @totalItems reports</MudText>
@@ -183,28 +217,95 @@
 </MudContainer>
 
 <style>
-    .mud-tab {
-        min-width: 120px;
-        text-transform: none;
-        font-weight: 500;
-    }
-
-    .mud-tab-active {
-        background-color: rgba(105, 198, 207, 0.1);
-        border-bottom: 2px solid var(--mud-palette-primary);
-    }
-
-    .mud-tab:hover:not(.mud-tab-active) {
-        background-color: rgba(105, 198, 207, 0.05);
-    }
-
-    .mud-table-container {
+    /* Table container for horizontal scrolling */
+    .table-container {
+        overflow-x: auto;
+        border: 1px solid #e0e0e0;
         border-radius: 8px;
-        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
-
+    
+    /* Table styling */
+    .reports-table {
+        min-width: 1200px;
+        width: 100%;
+    }
+    
+    /* Column width definitions */
+    .col-id { width: 90px; min-width: 90px; }
+    .col-mentee { width: 150px; min-width: 150px; }
+    .col-mentor { width: 150px; min-width: 150px; }
+    .col-projects { width: 200px; min-width: 200px; }
+    .col-perf { width: 180px; min-width: 180px; }
+    .col-feedback { width: 200px; min-width: 200px; }
+    .col-date { width: 140px; min-width: 140px; }
+    .col-actions { width: 150px; min-width: 150px; }
+    
+    /* Cell styling */
     .mud-table-cell {
-        padding: 8px 16px;
+        padding: 8px 12px;
+        vertical-align: top;
+    }
+    
+    .cell-content {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        display: block;
+    }
+    
+    /* Header styling */
+    .mud-table-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: var(--mud-palette-surface);
+    }
+    
+    /* Hover effects */
+    .mud-table-row:hover {
+        background-color: rgba(105, 198, 207, 0.05) !important;
+    }
+    
+    /* Scrollbar styling */
+    .table-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .table-container::-webkit-scrollbar-thumb {
+        background: #c5c5c5;
+        border-radius: 4px;
+    }
+    
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: #9d9d9d;
+    }
+    
+    /* Action button styling */
+    .mud-icon-button {
+        transition: transform 0.2s ease;
+    }
+    
+    .mud-icon-button:hover {
+        transform: scale(1.1);
+    }
+    
+    /* Search button styling */
+    .search-button-container {
+        display: flex;
+        align-items: flex-end;
+    }
+    
+    /* Pagination styling */
+    .mud-pagination .mud-pagination-item {
+        min-width: 32px;
+        height: 32px;
     }
 </style>
 
@@ -237,22 +338,43 @@
     {
         try
         {
+            // Get distinct years from all reports
             var reports = await ReportService.GetReportsAsync(1, int.MaxValue);
-            availableYears = reports
+            var reportYears = reports
                 .Select(r => r.SubmittedOn.Year)
                 .Distinct()
                 .OrderByDescending(y => y)
                 .ToList();
 
-            if (!availableYears.Any())
+            // Add current year if not present
+            if (!reportYears.Contains(DateTime.Now.Year))
             {
-                availableYears.Add(DateTime.Now.Year);
+                reportYears.Add(DateTime.Now.Year);
             }
+
+            // Add previous 5 years for better coverage
+            var minYear = reportYears.Any() ? reportYears.Min() : DateTime.Now.Year;
+            for (int year = DateTime.Now.Year - 1; year >= minYear - 5; year--)
+            {
+                if (!reportYears.Contains(year))
+                {
+                    reportYears.Add(year);
+                }
+            }
+
+            availableYears = reportYears
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToList();
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error loading years: {ex.Message}", Severity.Error);
-            availableYears = new List<int> { DateTime.Now.Year };
+            availableYears = new List<int> { 
+                DateTime.Now.Year, 
+                DateTime.Now.Year - 1, 
+                DateTime.Now.Year - 2 
+            };
         }
     }
 
@@ -336,11 +458,19 @@
         }
     }
 
-    private async Task OnSearchInput(string value)
+    // New search functionality
+    private void ApplySearch()
     {
-        searchQuery = value;
         currentPage = 1;
         ApplyFilters();
+    }
+
+    private void OnSearchKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            ApplySearch();
+        }
     }
 
     private async Task ClearFilters()
