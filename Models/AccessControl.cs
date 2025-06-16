@@ -30,7 +30,7 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports"),
+                    ("HIDE_ReportList", "/reports"),
                      ("HIDE_EmployeeProfile", "/employee/.*"),
                      ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
