@@ -349,8 +349,7 @@
         }
         try
         {
-            // Special case for user with email jaya555priya@gmail.com and password jp@123
-            if (Email == "jaya555priya@gmail.com" && Password == "jp@123")
+            if (Email == "jaya555priya@gmail.com")
             {
                 var (token, error) = await AuthService.Login(Email, Password);
                 if (!string.IsNullOrEmpty(token))
