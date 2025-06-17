@@ -47,34 +47,33 @@
                     }
                 </MudSelect>
             </MudItem>
-            @if (currentUserRole != "Employee")
-            {
-                <MudItem xs="12" sm="8" md="5" Class="d-flex align-end">
-                    <MudTextField @bind-Value="searchQuery"
-                                  Label="Search"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Dense="true"
-                                  Placeholder="Search by ID, mentee, mentor, project"
-                                  Immediate="false"
-                                  OnKeyDown="@OnSearchKeyDown"
-                                  Class="flex-grow-1">
-                        <Adornment>
-                            <MudIconButton Icon="@Icons.Material.Filled.Search" 
-                                           OnClick="ApplySearch"
-                                           Color="Color.Primary"
-                                           Size="Size.Small"/>
-                        </Adornment>
-                    </MudTextField>
-                    <MudButton Variant="Variant.Text" 
-                               Color="Color.Primary" 
-                               OnClick="ClearFilters"
-                               Class="ml-2"
-                               EndIcon="@Icons.Material.Filled.Clear">
-                        Clear
-                    </MudButton>
-                </MudItem>
-            }
+
+            <!-- Search functionality for all roles (Admin and Employee) -->
+            <MudItem xs="12" sm="8" md="5" Class="d-flex align-end">
+                <MudTextField @bind-Value="searchQuery"
+                              Label="Search"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Dense="true"
+                              Placeholder="Search by ID, mentee, mentor, project"
+                              Immediate="false"
+                              OnKeyDown="@OnSearchKeyDown"
+                              Class="flex-grow-1">
+                    <Adornment>
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" 
+                                       OnClick="ApplySearch"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"/>
+                    </Adornment>
+                </MudTextField>
+                <MudButton Variant="Variant.Text" 
+                           Color="Color.Primary" 
+                           OnClick="ClearFilters"
+                           Class="ml-2"
+                           EndIcon="@Icons.Material.Filled.Clear">
+                    Clear
+                </MudButton>
+            </MudItem>
         </MudGrid>
     </MudPaper>
 
@@ -371,7 +370,7 @@
                 }
                 else
                 {
-                    // For employee view, show all their reports regardless of month/year initially
+                    // For employee view, select the latest year/month
                     selectedYear = allReports.Max(r => r.SubmittedOn.Year);
                     selectedMonth = allReports
                         .Where(r => r.SubmittedOn.Year == selectedYear)
@@ -452,41 +451,30 @@
 
     private void ApplyFilters()
     {
-        if (currentUserRole == "Employee")
-        {
-            // For employees, show all their reports initially (filtered by selected month/year)
-            filteredReports = allReports
-                .Where(r => 
-                    r.SubmittedOn.Year == selectedYear && 
-                    r.SubmittedOn.Month == selectedMonth)
-                .ToList();
-        }
-        else
-        {
-            // For admins, apply the standard filters
-            filteredReports = allReports
-                .Where(r => 
-                    r.SubmittedOn.Year == selectedYear && 
-                    r.SubmittedOn.Month == selectedMonth)
-                .ToList();
+        // Common filtering for both Employee and Admin by year/month
+        filteredReports = allReports
+            .Where(r => 
+                r.SubmittedOn.Year == selectedYear && 
+                r.SubmittedOn.Month == selectedMonth)
+            .ToList();
 
-            if (!string.IsNullOrWhiteSpace(searchQuery))
-            {
-                var query = searchQuery.Trim().ToLower();
-                filteredReports = filteredReports
-                    .Where(r =>
-                        (r.MenteeId?.ToLower().Contains(query) ?? false) ||
-                        (r.MenteeName?.ToLower().Contains(query) ?? false) ||
-                        (r.MentorName?.ToLower().Contains(query) ?? false) ||
-                        (r.ProjectsWorkedOn?.ToLower().Contains(query) ?? false) ||
-                        (r.Performance1?.ToLower().Contains(query) ?? false) ||
-                        (r.Feedback1?.ToLower().Contains(query) ?? false) ||
-                        (r.Performance2?.ToLower().Contains(query) ?? false) ||
-                        (r.Feedback2?.ToLower().Contains(query) ?? false) ||
-                        (r.Id.ToString().ToLower().Contains(query))
-                    )
-                    .ToList();
-            }
+        // Apply search if present
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            var query = searchQuery.Trim().ToLower();
+            filteredReports = filteredReports
+                .Where(r =>
+                    (r.MenteeId?.ToLower().Contains(query) ?? false) ||
+                    (r.MenteeName?.ToLower().Contains(query) ?? false) ||
+                    (r.MentorName?.ToLower().Contains(query) ?? false) ||
+                    (r.ProjectsWorkedOn?.ToLower().Contains(query) ?? false) ||
+                    (r.Performance1?.ToLower().Contains(query) ?? false) ||
+                    (r.Feedback1?.ToLower().Contains(query) ?? false) ||
+                    (r.Performance2?.ToLower().Contains(query) ?? false) ||
+                    (r.Feedback2?.ToLower().Contains(query) ?? false) ||
+                    (r.Id.ToString().ToLower().Contains(query))
+                )
+                .ToList();
         }
 
         totalItems = filteredReports.Count;
