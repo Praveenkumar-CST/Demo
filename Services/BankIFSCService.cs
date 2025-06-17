@@ -4,26 +4,28 @@ using WiseHR.Pages.Data;
 
 namespace WiseHR.Services
 {
-    public class BankIFSCService
-    {
-        private readonly HttpClient _httpClient;
-
-        public BankIFSCService(HttpClient httpClient)
+        public class BankIFSCService
         {
-            _httpClient = httpClient;
-        }
+            private readonly HttpClient _httpClient;
+            private readonly string _apiBaseUrl;
 
-        public async Task<BankDetails> GetBankDetailsByIFSCAsync(string ifscCode)
-        {
-            try
+            public BankIFSCService(HttpClient httpClient, IConfiguration configuration)
             {
-                var response = await _httpClient.GetFromJsonAsync<BankDetails>($"https://ifsc.razorpay.com/{ifscCode}");
-                return response;
+                _httpClient = httpClient;
+                _apiBaseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7021"; // Use your backend URL
             }
-            catch
+
+            public async Task<BankDetails> GetBankDetailsByIFSCAsync(string ifscCode)
             {
-                return null; // You can log or throw custom exception as needed
+                try
+                {
+                    var response = await _httpClient.GetFromJsonAsync<BankDetails>($"{_apiBaseUrl}/api/BankIFSC/{ifscCode}");
+                    return response;
+                }
+                catch
+                {
+                    return null;
+                }
             }
         }
     }
-}

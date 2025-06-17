@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using WiseHR.Services
+@using System.IdentityModel.Tokens.Jwt
 @inject AuthService AuthService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
@@ -8,6 +9,7 @@
 @inject IUserService UserService
 @using MudBlazor
 @using System.Text.Json
+@using System.Web
 
 <MudContainer MaxWidth="MaxWidth.False" Style="min-height: 100vh; width: 100vw; padding: 0; margin: 0; background: white;" Class="d-flex justify-center align-center">
     <MudPaper Width="450px" Elevation="25" Class="pa-8 transition-transform" Style="border-radius: 24px; background: linear-gradient(145deg, #ffffff, #f8f9fa); box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2); transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;"
@@ -46,10 +48,10 @@
             {
                 <MudItem xs="12">
                     <MudForm @ref="loginForm" @onsubmit="HandleLogin">
-                        <MudTextField T="string" Label="Email" @bind-Value="Email" Variant="Variant.Outlined" 
-                                     Class="mb-4" Required="true" For="@(() => Email)" 
-                                     AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End"
-                                     Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
+                        <MudTextField T="string" Label="Email" @bind-Value="Email" Variant="Variant.Outlined"
+                                      Class="mb-4" Required="true" For="@(() => Email)"
+                                      AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End"
+                                      Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
                         <div class="d-flex">
                             <MudTextField T="string" Label="Password" @bind-Value="Password" Variant="Variant.Outlined" 
                                          InputType="@PasswordInput" Class="mb-2" Required="true" For="@(() => Password)"
@@ -145,11 +147,11 @@
                             @if (IsLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                                <span>Sending OTP...</span>
+                                <span>Sending Reset Link...</span>
                             }
                             else
                             {
-                                <span>Send OTP</span>
+                                <span>Send Reset Link</span>
                             }
                         </MudButton>
                     </MudForm>
@@ -170,12 +172,12 @@
                         <MudAlert Severity="Severity.Error" Class="mb-4">@ResetPasswordErrorMessage</MudAlert>
                     }
                     <MudForm @ref="resetPasswordForm" @onsubmit="HandleResetPassword">
-                        <MudTextField T="string" Label="Email" @bind-Value="ResetPasswordEmail" Variant="Variant.Outlined" 
-                                     Class="mb-4" Required="true" AdornmentIcon="@Icons.Material.Filled.Email" 
-                                     Adornment="Adornment.End" Disabled="true"
-                                     Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
-                        <MudTextField T="string" Label="OTP" @bind-Value="ResetPasswordOtp" Variant="Variant.Outlined" 
-                                     Class="mb-4" Required="true" For="@(() => ResetPasswordOtp)" Disabled="IsLoading"
+                        <MudTextField T="string" Label="Email" @bind-Value="ResetPasswordEmail" Variant="Variant.Outlined"
+                                      Class="mb-4" Required="true" AdornmentIcon="@Icons.Material.Filled.Email"
+                                      Adornment="Adornment.End" Disabled="@(!string.IsNullOrEmpty(ResetPasswordEmail))"
+                                      Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
+                        <MudTextField T="string" Label="Token" @bind-Value="ResetPasswordToken" Variant="Variant.Outlined" 
+                                     Class="mb-4" Required="true" For="@(() => ResetPasswordToken)" Disabled="true"
                                      Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
                         <div class="d-flex">
                             <MudTextField T="string" Label="New Password" @bind-Value="ResetPasswordNewPassword" Variant="Variant.Outlined" 
@@ -213,7 +215,6 @@
         </MudGrid>
     </MudPaper>
 </MudContainer>
-
 @code {
     private enum FormState { Login, Signup, ForgotPassword, ResetPassword }
     private FormState CurrentForm { get; set; } = FormState.Login;
@@ -228,7 +229,6 @@
     // Login form fields
     private string Email { get; set; } = "";
     private string Password { get; set; } = "";
-    private string ErrorMessage { get; set; } = "";
     private string LoginErrorMessage { get; set; } = "";
 
     // Signup form fields
@@ -244,55 +244,78 @@
 
     // Reset Password form fields
     private string ResetPasswordEmail { get; set; } = "";
-    private string ResetPasswordOtp { get; set; } = "";
+    private string ResetPasswordToken { get; set; } = "";
     private string ResetPasswordNewPassword { get; set; } = "";
     private string ResetPasswordConfirmPassword { get; set; } = "";
     private string ResetPasswordMessage { get; set; } = "";
     private string ResetPasswordErrorMessage { get; set; } = "";
 
-    // Validation methods
-    private Func<string, string?> EmailValidation = email =>
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            return "Email is required";
-        // if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
-        //     return "Invalid email address";
-        return null;
-    };
+    // Password Visibility Toggle Logic
+    private bool isShow;
+    private InputType PasswordInput = InputType.Password;
+    private string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
 
-    private Func<string, string?> PasswordValidation = password =>
+    protected override async Task OnInitializedAsync()
     {
-        if (string.IsNullOrWhiteSpace(password))
-            return "Password is required";
-        if (!System.Text.RegularExpressions.Regex.IsMatch(password, @"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"))
-            return "Password must be at least 8 characters long and contain a letter, a number, and a special character.";
-        return null;
-    };
+        try
+        {
+            var uri = new Uri(NavigationManager.Uri);
+            var fragment = uri.Fragment.TrimStart('#');
+            if (!string.IsNullOrEmpty(fragment))
+            {
+                var query = HttpUtility.ParseQueryString(fragment);
+                if (query["access_token"] != null)
+                {
+                    ResetPasswordToken = query["access_token"];
 
-    private Func<string, string?> ConfirmPasswordValidation(string confirmPassword, string newPassword) => confirmPassword =>
-    {
-        if (string.IsNullOrWhiteSpace(confirmPassword))
-            return "Confirm Password is required";
-        if (confirmPassword != newPassword)
-            return "Passwords do not match";
-        return null;
-    };
+                    // Decode the JWT to extract the email
+                    try
+                    {
+                        var jwtHandler = new JwtSecurityTokenHandler();
+                        var jwtToken = jwtHandler.ReadJwtToken(ResetPasswordToken);
+                        await JSRuntime.InvokeVoidAsync("console.log", $"JWT Claims: {string.Join(", ", jwtToken.Claims.Select(c => $"{c.Type}: {c.Value}"))}");
+                        var emailClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
 
-    private Func<string, string?> OtpValidation = otp =>
-    {
-        if (string.IsNullOrWhiteSpace(otp))
-            return "OTP is required";
-        if (!System.Text.RegularExpressions.Regex.IsMatch(otp, @"^\d{6}$"))
-            return "OTP must be a 6-digit number";
-        return null;
-    };
-
+                        if (!string.IsNullOrEmpty(emailClaim))
+                        {
+                            ResetPasswordEmail = emailClaim;
+                            CurrentForm = FormState.ResetPassword;
+                        }
+                        else
+                        {
+                            ResetPasswordErrorMessage = "Invalid reset link: Email not found in token.";
+                            await JSRuntime.InvokeVoidAsync("console.error", ResetPasswordErrorMessage);
+                        }
+                    }
+                    catch (Exception jwtEx)
+                    {
+                        ResetPasswordErrorMessage = $"Error decoding token: {jwtEx.Message}";
+                        await JSRuntime.InvokeVoidAsync("console.error", ResetPasswordErrorMessage);
+                    }
+                }
+                else
+                {
+                    ResetPasswordErrorMessage = "Invalid reset link: Missing access token.";
+                    await JSRuntime.InvokeVoidAsync("console.error", ResetPasswordErrorMessage);
+                }
+            }
+            else
+            {
+                ResetPasswordErrorMessage = "No reset parameters found in URL.";
+                await JSRuntime.InvokeVoidAsync("console.error", ResetPasswordErrorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            ResetPasswordErrorMessage = $"Initialization error: {ex.Message}";
+            await JSRuntime.InvokeVoidAsync("console.error", ResetPasswordErrorMessage);
+        }
+    }
     private void ShowForm(FormState formState)
     {
         CurrentForm = formState;
         Email = "";
         Password = "";
-        ErrorMessage = "";
         LoginErrorMessage = "";
         SignupEmail = "";
         SignupPassword = "";
@@ -301,7 +324,7 @@
         ForgotPasswordEmail = "";
         ForgotPasswordMessage = "";
         ForgotPasswordErrorMessage = "";
-        ResetPasswordOtp = "";
+        ResetPasswordToken = "";
         ResetPasswordNewPassword = "";
         ResetPasswordConfirmPassword = "";
         ResetPasswordMessage = "";
@@ -312,12 +335,10 @@
         forgotPasswordForm?.ResetValidation();
         resetPasswordForm?.ResetValidation();
     }
-
     private async Task HandleLogin()
     {
         if (loginForm == null) return;
         IsLoading = true;
-        ErrorMessage = "";
         LoginErrorMessage = "";
         await loginForm.Validate();
         if (!loginForm.IsValid)
@@ -328,8 +349,7 @@
         }
         try
         {
-            // Special case for user with email jaya555priya@gmail.com and password jp@123
-            if (Email == "jaya555priya@gmail.com" && Password == "jp@123")
+            if (Email == "jaya555priya@gmail.com")
             {
                 var (token, error) = await AuthService.Login(Email, Password);
                 if (!string.IsNullOrEmpty(token))
@@ -437,92 +457,6 @@
         IsLoading = false;
         StateHasChanged();
     }
-    // private async Task HandleLogin()
-    // {
-    //     if (loginForm == null) return;
-    //     IsLoading = true;
-    //     ErrorMessage = "";
-    //     LoginErrorMessage = "";
-    //     await loginForm.Validate();
-    //     if (!loginForm.IsValid)
-    //     {
-    //         IsLoading = false;
-    //         StateHasChanged();
-    //         return;
-    //     }
-    //     try
-    //     {
-    //         var (token, error) = await AuthService.Login(Email, Password);
-    //         await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
-    //         await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
-    //         Console.WriteLine($"Email to store: {Email}");
-    //         if (!string.IsNullOrEmpty(token))
-    //         {
-    //             var userDetails = await UserService.GetUserByEmailAsync(Email);
-    //             if (userDetails != null)
-    //             {
-    //                 🔹 Store EmpId in localStorage
-    //                 await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
-    //                 Console.WriteLine($"EmpId stored in localStorage: {userDetails.EmpId}");
-    //             }else{
-    //                 Console.WriteLine($"Error in storing the EmpId sessionStorage: {userDetails.EmpId}");
-
-    //             }
-    //             Fetch employee details based on email
-    //             var employeeDetails = await EmployeeService.GetEmployeeDetailsByEmail(Email);
-    //             if (employeeDetails != null)
-    //             {
-    //                 Verify the token and check role
-    //                 var (role, verifyError) = await AuthService.VerifyToken();
-    //                 if (!string.IsNullOrEmpty(role))
-    //                 {
-    //                     await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
-
-    //                     await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
-    //                     Navigate based on role
-    //                     if (role == "Admin")
-    //                     {
-    //                         NavigationManager.NavigateTo("/home");
-    //                     }
-    //                     else if (role == "Employee")
-    //                     {
-    //                         NavigationManager.NavigateTo("/home"); Navigate to dashboard if user is an employee
-    //                     }
-    //                     else
-    //                     {
-    //                         NavigationManager.NavigateTo("/home");
-    //                     }
-    //                 }
-    //                 else
-    //                 {
-    //                     LoginErrorMessage = "Invalid email or password.";
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 If employee details are not found, navigate to registration page
-    //                 NavigationManager.NavigateTo("/registration");
-    //             }
-    //         }
-    //         else
-    //         {
-    //             if (error != null && (error.Contains("Invalid email or password") || error.Contains("User not found") || error.Contains("Invalid credentials")))
-    //             {
-    //                 LoginErrorMessage = "Invalid email or password.";
-    //             }
-    //             else
-    //             {
-    //                 LoginErrorMessage = "Invalid email or password.";
-    //             }
-    //         }
-    //     }
-    //     catch (Exception)
-    //     {
-    //         LoginErrorMessage = "Invalid email or password.";
-    //     }
-    //     IsLoading = false;
-    //     StateHasChanged();
-    // }
 
     private async Task HandleSignup()
     {
@@ -539,23 +473,21 @@
         }
         try
         {
-            // Call the updated Signup method
-            var (message, error) = await AuthService.Signup(SignupEmail, SignupPassword);
-            if (message == "Signup successful")
+            // Changed: Deconstruct three elements (token, userId, error)
+            var (token, userId, error) = await AuthService.Signup(SignupEmail, SignupPassword);
+            if (!string.IsNullOrEmpty(token))
             {
-                // Store SignupEmail (not Email) in storage
                 await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", SignupEmail);
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", SignupEmail);
 
-                // Generate and store empId
-                // var empId = await GenerateEmpId();
-                // await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "empId", empId.ToString());
-                // await JSRuntime.InvokeVoidAsync("localStorage.setItem", "empId", empId.ToString());
+                var userDetails = await UserService.GetUserByEmailAsync(SignupEmail);
+                if (userDetails != null)
+                {
+                    await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
+                }
 
-                SignupMessage = "Signup successful! Please login.";
+                SignupMessage = "Signup successful! Please check your email to confirm and then log in.";
                 SignupErrorMessage = "";
-
-                // Wait briefly and show login form
                 await Task.Delay(2000);
                 ShowForm(FormState.Login);
             }
@@ -568,42 +500,12 @@
         catch (Exception ex)
         {
             SignupErrorMessage = $"Signup error: {ex.Message}";
+            await JSRuntime.InvokeVoidAsync("console.error", $"Signup error: {ex}");
             SignupMessage = "";
         }
         IsLoading = false;
         StateHasChanged();
     }
-
-    // private async Task<int> GenerateEmpId()
-    // {
-    //     try
-    //     {
-    //         Fetch the total count of employees from MongoDB via API, passing SignupEmail
-    //         var response = await HttpClient.GetAsync($"EmployeeDetails/count?email={Uri.EscapeDataString(SignupEmail)}");
-    //         if (response.IsSuccessStatusCode)
-    //         {
-    //             var totalCount = await response.Content.ReadFromJsonAsync<int>();
-    //             var newEmpId = totalCount + 1;
-
-    //             Log the total available number and new EmployeeID
-    //             Console.WriteLine($"Total available employees in MongoDB: {totalCount}");
-    //             Console.WriteLine($"New EmployeeID assigned: {newEmpId}");
-
-    //             return newEmpId;
-    //         }
-    //         else
-    //         {
-    //             var errorContent = await response.Content.ReadAsStringAsync();
-    //             Console.WriteLine($"Failed to fetch employee count: {errorContent}");
-    //             return 1000; Fallback if API call fails
-    //         }
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine($"Error generating EmpId: {ex.Message}");
-    //         return 1000; Fallback if an error occurs
-    //     }
-    // }
 
     private async Task HandleForgotPassword()
     {
@@ -618,24 +520,34 @@
             StateHasChanged();
             return;
         }
-        var (message, email, error) = await AuthService.ForgotPassword(ForgotPasswordEmail);
-        if (!string.IsNullOrEmpty(message))
+        try
         {
-            ForgotPasswordMessage = "OTP sent to your email! Please check your inbox.";
-            ForgotPasswordErrorMessage = "";
-            ResetPasswordEmail = email ?? ForgotPasswordEmail;
-            await Task.Delay(2000);
-            ShowForm(FormState.ResetPassword);
+            // Changed: Deconstruct two elements (success, error) and handle success as bool
+            var (success, error) = await AuthService.ForgotPassword(ForgotPasswordEmail);
+            if (success)
+            {
+                ForgotPasswordMessage = "A password reset email has been sent. Please check your inbox and follow the link.";
+                ForgotPasswordErrorMessage = "";
+                await Task.Delay(2000);
+                ShowForm(FormState.Login);
+            }
+            else
+            {
+                ForgotPasswordErrorMessage = error ?? "Failed to send reset email.";
+                ForgotPasswordMessage = "";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            ForgotPasswordErrorMessage = error ?? "Failed to send OTP.";
+            ForgotPasswordErrorMessage = $"Forgot password error: {ex.Message}";
+            await JSRuntime.InvokeVoidAsync("console.error", $"Forgot password error: {ex}");
             ForgotPasswordMessage = "";
         }
         IsLoading = false;
         StateHasChanged();
     }
 
+    // ... (other methods unchanged)
     private async Task HandleResetPassword()
     {
         if (resetPasswordForm == null) return;
@@ -643,33 +555,45 @@
         ResetPasswordMessage = "";
         ResetPasswordErrorMessage = "";
         await resetPasswordForm.Validate();
-        if (!resetPasswordForm.IsValid)
+        if (!resetPasswordForm.IsValid || string.IsNullOrEmpty(ResetPasswordEmail))
         {
+            ResetPasswordErrorMessage = string.IsNullOrEmpty(ResetPasswordEmail) ? "Email is missing." : "Form validation failed.";
             IsLoading = false;
             StateHasChanged();
             return;
         }
-        var (success, error) = await AuthService.ResetPassword(ResetPasswordEmail, ResetPasswordOtp, ResetPasswordNewPassword);
-        if (success)
+        if (ResetPasswordNewPassword != ResetPasswordConfirmPassword)
         {
-            ResetPasswordMessage = "Password reset successful! Please log in with your new password.";
-            ResetPasswordErrorMessage = "";
-            await Task.Delay(2000);
-            ShowForm(FormState.Login);
+            ResetPasswordErrorMessage = "Passwords do not match.";
+            IsLoading = false;
+            StateHasChanged();
+            return;
         }
-        else
+        try
         {
-            ResetPasswordErrorMessage = error ?? "Failed to reset password.";
+            var (success, error) = await AuthService.ResetPassword(ResetPasswordEmail, ResetPasswordToken, ResetPasswordNewPassword);
+            if (success)
+            {
+                ResetPasswordMessage = "Password reset successful! Please log in with your new password.";
+                ResetPasswordErrorMessage = "";
+                await Task.Delay(2000);
+                ShowForm(FormState.Login);
+            }
+            else
+            {
+                ResetPasswordErrorMessage = error ?? "Failed to reset password.";
+                ResetPasswordMessage = "";
+            }
+        }
+        catch (Exception ex)
+        {
+            ResetPasswordErrorMessage = $"Reset password error: {ex.Message}";
             ResetPasswordMessage = "";
         }
         IsLoading = false;
         StateHasChanged();
     }
 
-    // Password Visibility Toggle Logic
-    private bool isShow;
-    private InputType PasswordInput = InputType.Password;
-    private string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
     private void TogglePasswordVisibility()
     {
         if (isShow)
