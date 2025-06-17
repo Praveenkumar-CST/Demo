@@ -31,8 +31,8 @@ namespace WiseHR.Models
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
                     ("ReportList", "/reports"),
-                     ("HIDE_EmployeeProfile", "/employee/.*"),
-                     ("HIDE_Analytics", "/analytics"),
+                    ("HIDE_EmployeeProfile", "/employee/.*"),
+                    ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
                     ("Asset","/asset"),   
                     ("List","/reportlist"),
@@ -44,7 +44,7 @@ namespace WiseHR.Models
             {
                 "manager", new List<(string, string)>
                 {
-                         ("Dashboard", "/home"),
+                    ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
                     //("Role Management", "/home/rolemanagement"),
                     ("HIDE_Create Employee","/home/employees"),
@@ -66,19 +66,19 @@ namespace WiseHR.Models
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
                     ("ReportList", "/reports"),
-                     ("HIDE_EmployeeProfile", "/employee/.*"),
-                     ("HIDE_Analytics", "/analytics"),
+                    ("HIDE_EmployeeProfile", "/employee/.*"),
+                    ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
                     //("Asset","/asset"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
                     ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
-
                 }
-            },    {
+            },    
+            {
                 "HR", new List<(string, string)>
                 {
-                           ("Dashboard", "/home"),
+                    ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
                     ("Role Management", "/home/rolemanagement"),
                     ("HIDE_Create Employee","/home/employees"),
@@ -100,8 +100,8 @@ namespace WiseHR.Models
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
                     ("ReportList", "/reports"),
-                     ("HIDE_EmployeeProfile", "/employee/.*"),
-                     ("HIDE_Analytics", "/analytics"),
+                    ("HIDE_EmployeeProfile", "/employee/.*"),
+                    ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
                     ("Asset","/asset"),
                     ("HIDE_product","/assets/{id:int}"),
@@ -117,6 +117,8 @@ namespace WiseHR.Models
                     ("Organizational Hierarchy", "/role-hierarchy"),
                     ("Attendance", "/UserAttendanceView"),
                     ("LeaveManagement", "/employee/leave"),
+                    // Removed "ReportList" access completely for employees
+                    ("List", "/reportlist"),  // Kept only the reportlist access
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
@@ -130,7 +132,6 @@ namespace WiseHR.Models
                 {
                     ("Dashboard", "/home"),
                     ("Fortnight Report", "/fortnight-report"),
-                 
                 }
             }
         };
@@ -141,6 +142,7 @@ namespace WiseHR.Models
             return RoleAccess.FirstOrDefault(r => r.Key.ToLowerInvariant() == normalizedRole).Value
                 ?? new List<(string, string)>();
         }
+        
         public static string GetIconForMenu(string menuName)
         {
             return menuName switch
@@ -152,9 +154,9 @@ namespace WiseHR.Models
                 "Holiday Calendar" => Icons.Material.Filled.Event,
                 "Fortnight Report" => Icons.Material.Filled.Assignment,
                 "ReportList" => Icons.Material.Filled.Assessment,
+                "List" => Icons.Material.Filled.List,
                 _ => Icons.Material.Filled.Menu
             };
         }
-
     }
 }
