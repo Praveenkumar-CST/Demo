@@ -31,7 +31,7 @@
                     else
                     {
                         <MudGrid Class="@(showAllLeaveTypes ? "" : "justify-center")">
-                            @foreach (var quota in leaveQuotas.Where(q => showAllLeaveTypes || new[] { "Privilege", "Sick", "Unpaid" }.Contains(q.LeaveType)))
+                            @foreach (var quota in leaveQuotas.Where(q => showAllLeaveTypes || new[] { "Privilege", "Sick", "WorkFromHome" }.Contains(q.LeaveType)))
                             {
                                 <MudItem xs="12" sm="6" md="3">
                                     <MudPaper Class="pa-4 text-center" Style="@GetGradientStyle(quota.LeaveType)">
@@ -273,6 +273,18 @@
                                                             <span>Sick</span>
                                                         </MudStack>
                                                     </MudSelectItem>
+                                                    <MudSelectItem Value="@("WorkFromHome")">
+                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                            <MudIcon Icon="Icons.Material.Filled.HomeWork" Size="Size.Small" />
+                                                            <span>Work From Home</span>
+                                                        </MudStack>
+                                                    </MudSelectItem>
+                                                    <MudSelectItem Value="@("Unpaid")">
+                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                            <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
+                                                            <span>Unpaid</span>
+                                                        </MudStack>
+                                                    </MudSelectItem>
                                                     <MudSelectItem Value="@("Maternity")">
                                                         <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                                                             <MudIcon Icon="Icons.Material.Filled.FamilyRestroom" Size="Size.Small" />
@@ -283,12 +295,6 @@
                                                         <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                                                             <MudIcon Icon="Icons.Material.Filled.Man" Size="Size.Small" />
                                                             <span>Paternity</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Unpaid")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
-                                                            <span>Unpaid</span>
                                                         </MudStack>
                                                     </MudSelectItem>
                                                 </MudSelect>
@@ -383,6 +389,18 @@
                                                             <span>Sick</span>
                                                         </MudStack>
                                                     </MudSelectItem>
+                                                    <MudSelectItem Value="@("WorkFromHome")">
+                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                            <MudIcon Icon="Icons.Material.Filled.HomeWork" Size="Size.Small" />
+                                                            <span>Work From Home</span>
+                                                        </MudStack>
+                                                    </MudSelectItem>
+                                                    <MudSelectItem Value="@("Unpaid")">
+                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                            <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
+                                                            <span>Unpaid</span>
+                                                        </MudStack>
+                                                    </MudSelectItem>
                                                     <MudSelectItem Value="@("Maternity")">
                                                         <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                                                             <MudIcon Icon="Icons.Material.Filled.FamilyRestroom" Size="Size.Small" />
@@ -393,12 +411,6 @@
                                                         <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                                                             <MudIcon Icon="Icons.Material.Filled.Man" Size="Size.Small" />
                                                             <span>Paternity</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Unpaid")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
-                                                            <span>Unpaid</span>
                                                         </MudStack>
                                                     </MudSelectItem>
                                                 </MudSelect>
@@ -471,6 +483,18 @@
                                     <span>Sick</span>
                                 </MudStack>
                             </MudSelectItem>
+                            <MudSelectItem Value="@("WorkFromHome")">
+                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="Icons.Material.Filled.HomeWork" Size="Size.Small" />
+                                    <span>Work From Home</span>
+                                </MudStack>
+                            </MudSelectItem>
+                            <MudSelectItem Value="@("Unpaid")">
+                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
+                                    <span>Unpaid</span>
+                                </MudStack>
+                            </MudSelectItem>
                             <MudSelectItem Value="@("Maternity")">
                                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                                     <MudIcon Icon="Icons.Material.Filled.FamilyRestroom" Size="Size.Small" />
@@ -481,12 +505,6 @@
                                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                                     <MudIcon Icon="Icons.Material.Filled.Man" Size="Size.Small" />
                                     <span>Paternity</span>
-                                </MudStack>
-                            </MudSelectItem>
-                            <MudSelectItem Value="@("Unpaid")">
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
-                                    <span>Unpaid</span>
                                 </MudStack>
                             </MudSelectItem>
                         </MudSelect>
@@ -1728,7 +1746,7 @@
     {
         try
         {
-            var leaveTypes = new[] { "Privilege", "Sick", "Maternity", "Paternity", "Unpaid" };
+            var leaveTypes = new[] { "Privilege", "Sick", "WorkFromHome", "Unpaid", "Paternity", "Maternity" };
             foreach (var leaveType in leaveTypes)
             {
                 var request = new QuotaHistoryRequestDto { LeaveType = leaveType, PageNumber = 1, PageSize = 1 };
@@ -1759,7 +1777,7 @@
                 await LoadPendingRequests();
             }
 
-            var leaveTypes = new[] { "Privilege", "Sick", "Maternity", "Paternity", "Unpaid" };
+            var leaveTypes = new[] { "Privilege", "Sick", "WorkFromHome", "Unpaid", "Paternity", "Maternity" };
 
             leaveQuotas = leaveTypes.Select(type => new LeaveQuotaDto
             {
@@ -1771,13 +1789,15 @@
         {
             Snackbar.Add($"Error loading leave request counts: {ex.Message}", MudBlazor.Severity.Error);
             leaveQuotas = new List<LeaveQuotaDto>
-            {
-                new LeaveQuotaDto { LeaveType = "Privilege", RequestCount = 0 },
-                new LeaveQuotaDto { LeaveType = "Sick", RequestCount = 0 },
-                new LeaveQuotaDto { LeaveType = "Maternity", RequestCount = 0 },
-                new LeaveQuotaDto { LeaveType = "Paternity", RequestCount = 0 },
-                new LeaveQuotaDto { LeaveType = "Unpaid", RequestCount = 0 }
-            };
+        {
+            new LeaveQuotaDto { LeaveType = "Privilege", RequestCount = 0 },
+            new LeaveQuotaDto { LeaveType = "Sick", RequestCount = 0 },
+            new LeaveQuotaDto { LeaveType = "WorkFromHome", RequestCount = 0 },
+            new LeaveQuotaDto { LeaveType = "Unpaid", RequestCount = 0 },
+            new LeaveQuotaDto { LeaveType = "Maternity", RequestCount = 0 },
+            new LeaveQuotaDto { LeaveType = "Paternity", RequestCount = 0 }
+           
+        };
         }
     }
 
@@ -2188,6 +2208,7 @@
         "Maternity" => Color.Secondary,
         "Paternity" => Color.Primary,
         "Unpaid" => Color.Error,
+        "WorkFromHome" => Color.Info,
         _ => Color.Default
     };
 
@@ -2198,18 +2219,20 @@
         "Maternity" => Icons.Material.Filled.FamilyRestroom,
         "Paternity" => Icons.Material.Filled.Man,
         "Unpaid" => Icons.Material.Filled.MoneyOff,
+        "WorkFromHome" => Icons.Material.Filled.HomeWork,
         _ => Icons.Material.Filled.EventNote
     };
 
     private string GetGradientStyle(string leaveType) => leaveType switch
-    {
-        "Privilege" => "background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); border-radius: 12px;",
-        "Sick" => "background: linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%); border-radius: 12px;",
-        "Maternity" => "background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%); border-radius: 12px;",
-        "Paternity" => "background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%); border-radius: 12px;",
-        "Unpaid" => "background: linear-gradient(135deg, #ffebee 0%, #ef9a9a 100%); border-radius: 12px;",
-        _ => "background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); border-radius: 12px;"
-    };
+{
+    "Privilege" => "background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); border-radius: 12px;",
+    "Sick" => "background: linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%); border-radius: 12px;",
+    "Maternity" => "background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%); border-radius: 12px;",
+    "Paternity" => "background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%); border-radius: 12px;",
+    "Unpaid" => "background: linear-gradient(135deg, #ffebee 0%, #ef9a9a 100%); border-radius: 12px;",
+    "WorkFromHome" => "background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-radius: 12px;",
+    _ => "background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); border-radius: 12px;"
+};
 
     private string GetColorHex(Color color) => color switch
     {
