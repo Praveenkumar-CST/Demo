@@ -30,14 +30,14 @@
                 {
                     <MudGrid Justify="Justify.Center">
                         @foreach (var balance in historyResponse.Balances
-                       .Where(b => b.LeaveType.ToLower() is "privilege" or "sick" or "unpaid")
-                       .OrderBy(b => b.LeaveType.ToLower() switch
-                       {
-                           "privilege" => 1,
-                           "sick" => 2,
-                           "unpaid" => 3,
-                           _ => 4
-                       }))
+                                        .Where(b => b.LeaveType.ToLower() is "privilege" or "sick" or "workfromhome")
+                                        .OrderBy(b => b.LeaveType.ToLower() switch
+                                        {
+                                            "privilege" => 1,
+                                            "sick" => 2,
+                                            "workfromhome" => 3,
+                                            _ => 4
+                                        }))
                         {
                             var progressAngle = balance.TotalQuota > 0 ? (360 * balance.Available / balance.TotalQuota) : 0;
                             var cssClass = GetLeaveTypeClass(balance.LeaveType);
@@ -55,7 +55,7 @@
                                     <div class="leave-details">
                                         <div><span>Available</span><span>@balance.Available D</span></div>
                                         <div><span>Consumed</span><span>@balance.Consumed D</span></div>
-                                        <div><span>Annual Quota</span><span>@balance.TotalQuota D</span></div>
+                                        <div><span>@(balance.LeaveType.ToLower() == "workfromhome" ? "Monthly Quota" : "Annual Quota")</span><span>@balance.TotalQuota D</span></div>
                                     </div>
                                     <div class="leave-actions-buttons">
                                         <button class="action-btn apply-btn" @onclick="() => OpenLeaveRequestPopup(balance.LeaveType)">
@@ -72,47 +72,46 @@
                 }
                 else
                 {
-                    <div class="horizontal-scroll-container">
-                        <div class="horizontal-scroll-content">
-                            @foreach (var balance in historyResponse.Balances
-                           .OrderBy(b => b.LeaveType.ToLower() switch
-                           {
-                               "privilege" => 1,
-                               "sick" => 2,
-                               "unpaid" => 3,
-                               "maternity" => 4,
-                               "paternity" => 5,
-                               _ => 6
-                           }))
-                            {
-                                var progressAngle = balance.TotalQuota > 0 ? (360 * balance.Available / balance.TotalQuota) : 0;
-                                var cssClass = GetLeaveTypeClass(balance.LeaveType);
-                                <div class="leave-card @cssClass">
-                                    <div class="leave-title">@balance.LeaveType Leave</div>
-                                    <div class="circular-progress">
-                                        <div class="progress-circle" style="--progress-angle: @(progressAngle)deg;">
-                                            <div class="progress-inner">
-                                                <div class="progress-value">@GetDisplayValue(balance)</div>
-                                                <div class="progress-label">Available</div>
-                                            </div>
+                    <div class="horizontal-scroll-content">
+                        @foreach (var balance in historyResponse.Balances
+                                        .OrderBy(b => b.LeaveType.ToLower() switch
+                                        {
+                                            "privilege" => 1,
+                                            "sick" => 2,
+                                            "workfromhome" => 3,
+                                            "unpaid" => 4,
+                                            "maternity" => 5,
+                                            "paternity" => 6,
+                                            _ => 7
+                                        }))
+                        {
+                            var progressAngle = balance.TotalQuota > 0 ? (360 * balance.Available / balance.TotalQuota) : 0;
+                            var cssClass = GetLeaveTypeClass(balance.LeaveType);
+                            <div class="leave-card @cssClass">
+                                <div class="leave-title">@balance.LeaveType Leave</div>
+                                <div class="circular-progress">
+                                    <div class="progress-circle" style="--progress-angle: @(progressAngle)deg;">
+                                        <div class="progress-inner">
+                                            <div class="progress-value">@GetDisplayValue(balance)</div>
+                                            <div class="progress-label">Available</div>
                                         </div>
                                     </div>
-                                    <div class="leave-details">
-                                        <div><span>Available</span><span>@balance.Available D</span></div>
-                                        <div><span>Consumed</span><span>@balance.Consumed D</span></div>
-                                        <div><span>Annual Quota</span><span>@balance.TotalQuota D</span></div>
-                                    </div>
-                                    <div class="leave-actions-buttons">
-                                        <button class="action-btn apply-btn" @onclick="() => OpenLeaveRequestPopup(balance.LeaveType)">
-                                            Apply
-                                        </button>
-                                        <button class="action-btn logs-btn" @onclick="() => OpenLeaveLogsPopup(balance.LeaveType)">
-                                            Logs
-                                        </button>
-                                    </div>
                                 </div>
-                            }
-                        </div>
+                                <div class="leave-details">
+                                    <div><span>Available</span><span>@balance.Available D</span></div>
+                                    <div><span>Consumed</span><span>@balance.Consumed D</span></div>
+                                    <div><span>@(balance.LeaveType.ToLower() == "workfromhome" ? "Monthly Quota" : "Annual Quota")</span><span>@balance.TotalQuota D</span></div>
+                                </div>
+                                <div class="leave-actions-buttons">
+                                    <button class="action-btn apply-btn" @onclick="() => OpenLeaveRequestPopup(balance.LeaveType)">
+                                        Apply
+                                    </button>
+                                    <button class="action-btn logs-btn" @onclick="() => OpenLeaveLogsPopup(balance.LeaveType)">
+                                        Logs
+                                    </button>
+                                </div>
+                            </div>
+                        }
                     </div>
                 }
             }
@@ -263,6 +262,8 @@
                             <MudSelectItem Value="@("Sick")">Sick</MudSelectItem>
                             <MudSelectItem Value="@("Maternity")">Maternity</MudSelectItem>
                             <MudSelectItem Value="@("Paternity")">Paternity</MudSelectItem>
+                            <MudSelectItem Value="@("Unpaid")">Unpaid</MudSelectItem>
+                            <MudSelectItem Value="@("WorkFromHome")">Work From Home</MudSelectItem>
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6" Class="pr-sm-2">
@@ -558,6 +559,10 @@
         --progress-bg: #f44336;
     }
 
+    .workfromhome-leave {
+        --progress-bg: #00bcd4;
+    }
+
     .leave-details {
         font-size: 11px;
         color: #666;
@@ -733,6 +738,11 @@
         .table-leave-type.unpaid {
             background: #ffebee;
             color: #d32f2f;
+        }
+
+        .table-leave-type.workfromhome {
+            background: #e0f7fa;
+            color: #006064;
         }
 
     .table-status {
@@ -1002,9 +1012,11 @@
             "paternity" => "paternity-leave",
             "privilege" => "privilege-leave",
             "unpaid" => "unpaid-leave",
+            "workfromhome" => "workfromhome-leave",
             _ => "casual-leave"
         };
     }
+
 
     private string GetDisplayValue(UserLeaveBalance balance)
     {
