@@ -5,6 +5,7 @@
 @using System.Text
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
+@using WiseHR.Services
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -313,6 +314,7 @@
                             </div>
                         </div>
                     }
+                    
                 </div>
             </div>
 
@@ -336,11 +338,20 @@
                                   Class="wisechat-send-button"/>
                 </div>
             </div>
+
+            @* Scroll to Bottom Button *@
+            @if (showScrollToBottomButton)
+            {
+                <MudFab Icon="@Icons.Material.Filled.ArrowDownward"
+                        Color="Color.Secondary"
+                        OnClick="ScrollToBottom"
+                        Size="Size.Small"
+                        Class="wisechat-scroll-to-bottom-fab" />
+            }
         </div>
     </div>
 </div>
 
-@* Styles *@
 <style>
     /* Chat Widget Container - Fixed positioning with enhanced shadow */
     .chat-widget-container {
@@ -1553,6 +1564,23 @@
             border-bottom-color: rgba(255, 255, 255, 0.1);
         }
     }
+
+    /* Scroll to Bottom Button Styles */
+    .wisechat-scroll-to-bottom-fab {
+    position: absolute;
+    bottom: 100px;
+    left: 2px;
+    z-index: 10;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0.7;
+    text-shadow: 0 0 BLACK;
+    background: mediumslateblue;
+}
+
+    .wisechat-scroll-to-bottom-fab:hover {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
 </style>
 
 @code {
@@ -1573,6 +1601,7 @@
 
     private string? EmployeeId { get; set; }
     private string? DisplayName { get; set; }
+    private bool showScrollToBottomButton = false;
 
     public class ChatSession
     {
@@ -1630,6 +1659,24 @@
         ChatService.OnConnectionStateChanged += HandleConnectionStateChanged;
         
         await ChatService.InitializeAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("setupScrollListener", messagesContainer, DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public void SetScrollToBottomButtonVisibility(bool isVisible)
+    {
+        if (showScrollToBottomButton != isVisible)
+        {
+            showScrollToBottomButton = isVisible;
+            InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task LoadChatHistory()
@@ -1710,6 +1757,7 @@
         currentMessage = string.Empty;
         statusMessage = string.Empty;
         isTyping = false;
+        await LoadChatHistory();
         StateHasChanged();
     }
 
@@ -1734,6 +1782,7 @@
         }
         await InvokeAsync(StateHasChanged);
         await ScrollToBottom();
+
     }
 
     private async void HandleStatusReceived(string status)
@@ -1806,6 +1855,7 @@
         {
             isSending = false;
             await InvokeAsync(StateHasChanged);
+            await ScrollToBottom(); 
         }
     }
 
@@ -2092,3 +2142,24 @@
         await ChatService.DisposeAsync();
     }
 }
+
+
+<script>
+    window.scrollToBottom = (element) => {
+        if (element) {
+            element.scrollTop = element.scrollHeight;
+        }
+    };
+
+    window.setupScrollListener = (element, dotNetHelper) => {
+        if (element) {
+            element.onscroll = () => {
+                const isAtBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 1; // +1 for tolerance
+                dotNetHelper.invokeMethodAsync('SetScrollToBottomButtonVisibility', !isAtBottom);
+            };
+            // Initial check
+            const initialIsAtBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 1;
+            dotNetHelper.invokeMethodAsync('SetScrollToBottomButtonVisibility', !initialIsAtBottom);
+        }
+    };
+</script>
