@@ -9,7 +9,6 @@
 @layout HomeLayout
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-6">Admin Leave Management</MudText>
 
     <AuthorizeView Roles="Admin,HR,Manager">
         <Authorized>
@@ -219,11 +218,6 @@
             <!-- Leave Quota Management Section -->
             <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
                 <MudStack Spacing="6">
-                    <MudText Typo="Typo.h4" Class="font-weight-bold mb-4">
-                        <MudIcon Icon="Icons.Material.Filled.ManageAccounts" Class="mr-2" />
-                        Leave Quota Management
-                    </MudText>
-
                     <MudGrid Spacing="4">
                         <!-- Manage Default Leave Quota Card -->
                         <MudItem xs="12" sm="6" md="6" lg="6">
@@ -232,7 +226,7 @@
                                     <CardHeaderContent>
                                         <MudText Typo="Typo.h6" Class="font-weight-bold">
                                             <MudIcon Icon="Icons.Material.Filled.AdminPanelSettings" Class="mr-2" />
-                                            Manage Default Leave Quota
+                                            Manage Default Leave Limit
                                         </MudText>
                                     </CardHeaderContent>
                                     <CardHeaderActions>
@@ -335,7 +329,7 @@
                                     <CardHeaderContent>
                                         <MudText Typo="Typo.h6" Class="font-weight-bold">
                                             <MudIcon Icon="Icons.Material.Filled.Person" Class="mr-2" />
-                                            Manage Individual Leave Quota
+                                            Manage Individual Leave Limit
                                         </MudText>
                                     </CardHeaderContent>
                                     <CardHeaderActions>
@@ -452,7 +446,7 @@
                         <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                             <MudText Typo="Typo.h6" Class="font-weight-bold">
                                 <MudIcon Icon="Icons.Material.Filled.Assignment" Class="mr-2" />
-                                Default Quota Logs
+                                Default Limit Logs
                             </MudText>
                             <MudIconButton Icon="Icons.Material.Filled.Close"
                                            Size="Size.Small"
@@ -570,7 +564,7 @@
                         <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                             <MudText Typo="Typo.h6" Class="font-weight-bold">
                                 <MudIcon Icon="Icons.Material.Filled.Assignment" Class="mr-2" />
-                                Individual Quota Logs
+                                Individual Limit Logs
                             </MudText>
                             <MudIconButton Icon="Icons.Material.Filled.Close"
                                            Size="Size.Small"
@@ -1698,7 +1692,7 @@
         set
         {
             defaultLeaveQuota.LeaveType = value;
-            OnDefaultLeaveTypeChanged(value).GetAwaiter().GetResult(); // Synchronous call for simplicity
+            OnDefaultLeaveTypeChanged(value).GetAwaiter().GetResult(); 
         }
     }
 
@@ -1708,7 +1702,7 @@
         set
         {
             individualLeaveQuota.LeaveType = value;
-            OnIndividualLeaveTypeChanged(value).GetAwaiter().GetResult(); // Synchronous call for simplicity
+            OnIndividualLeaveTypeChanged(value).GetAwaiter().GetResult(); 
         }
     }
 
