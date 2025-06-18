@@ -9,6 +9,7 @@ using FingerFrontend.AdminAttendanceViewModel;
 using Microsoft.Extensions.Caching.Memory;
 using Syncfusion.Blazor;
 using WiseHR.Models.NewFolder;
+using WiseHR.Services.ChatFormatting;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -65,6 +66,8 @@ var apiBaseUrl = "https://localhost:7021/";
 builder.Services.AddScoped<IChatService, ChatService>();
 
 builder.Services.AddScoped<IChatHistoryService, ChatHistoryService>();
+
+builder.Services.AddScoped<IChatMessageFormatter, ChatMessageFormatter>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 builder.Services.AddSingleton(new ApiConfig { BaseUrl = apiBaseUrl });

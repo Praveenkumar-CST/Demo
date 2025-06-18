@@ -1,11 +1,10 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.SignalR.Client
-@using System.Text.Json
-@using System.Text.RegularExpressions
-@using System.Text
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 @using WiseHR.Services
+@using WiseHR.Services.ChatFormatting;
+@using WiseHR.Models.Chat;
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -14,6 +13,7 @@
 @inject IChatHistoryService ChatHistoryService
 @inject WiseHR.Services.AuthService AuthService
 @inject WiseHR.Services.EmployeeService EmployeeService
+@inject IChatMessageFormatter ChatMessageFormatter
 
 <div class="wisechat-widget-container">
     @* Notification Badge *@
@@ -255,13 +255,21 @@
                             <div class="wisechat-message-content">
                                 <div class="wisechat-message-bubble">
                                     <div class="wisechat-formatted-content">
-                                        @if (message.IsTable)
+                                        @if (message.TableType == ChatMessageTableType.Asset)
                                         {
-                                            @((MarkupString)FormatTableContent(message.Content))
+                                            @((MarkupString)ChatMessageFormatter.FormatAssetTableContent(message.Content))
+                                        }
+                                        else if (message.TableType == ChatMessageTableType.Generic)
+                                        {
+                                            @((MarkupString)ChatMessageFormatter.FormatGenericTableContent(message.Content))
+                                        }
+                                        else if (message.TableType == ChatMessageTableType.Json)
+                                        {
+                                            @((MarkupString)ChatMessageFormatter.FormatJsonTableContent(message.Content))
                                         }
                                         else
                                         {
-                                            @((MarkupString)FormatGeneralMessageContent(message.Content))
+                                            @((MarkupString)ChatMessageFormatter.FormatGeneralMessageContent(message.Content))
                                         }
                                     </div>
                                 </div>
@@ -352,6 +360,7 @@
     </div>
 </div>
 
+@* Styles *@
 <style>
     /* Chat Widget Container - Fixed positioning with enhanced shadow */
     .chat-widget-container {
@@ -1170,7 +1179,7 @@
 
     /* Dark mode support */
     @@media (prefers-color-scheme: dark) {
-        .wisechat-window
+    .wisechat-window
 
     {
         background: rgba(26, 32, 44, 0.95);
@@ -1218,7 +1227,7 @@
 
     /* High contrast mode support */
     @@media (prefers-contrast: high) {
-        .wisechat-window
+    .wisechat-window
 
     {
         border: 2px solid #000;
@@ -1296,7 +1305,7 @@
 
     /* Dark mode support */
     @@media (prefers-color-scheme: dark) {
-        .wisechat-formatted-content strong {
+    .wisechat-formatted-content strong {
             color: var(--mud-palette-primary-lighten);
         }
 
@@ -1344,7 +1353,7 @@
 
     /* Dark mode table support */
     @@media (prefers-color-scheme: dark) {
-        .wisechat-table
+    .wisechat-table
 
     {
         background: #2d3748;
@@ -1370,6 +1379,13 @@
 
     /* Enhanced Asset Table Styles */
     .wisechat-asset-table-container {
+        margin: 1rem 0;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    /* New generic table container style */
+    .wisechat-table-container {
         margin: 1rem 0;
         overflow-x: auto;
         max-width: 100%;
@@ -1423,7 +1439,7 @@
 
     /* Dark mode table support */
     @@media (prefers-color-scheme: dark) {
-        .wisechat-table
+    .wisechat-table
 
     {
         background: #2d3748;
@@ -1447,140 +1463,23 @@
     }
     }
 
-    /* Text Formatting Styles */
-    .wisechat-heading {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--mud-palette-primary);
-        margin: 1.5rem 0 0.8rem 0;
-        padding-bottom: 0.3rem;
-        border-bottom: 2px solid var(--mud-palette-primary-lighten);
-    }
-
-    .wisechat-subheading {
-        font-size: 1.1rem;
-        font-weight: 500;
-        color: var(--mud-palette-primary-darken);
-        margin: 1.2rem 0 0.6rem 0;
-    }
-
-    .wisechat-bold {
-        font-weight: 600;
-        color: var(--mud-palette-primary-darken);
-    }
-
-    .wisechat-italic {
-        font-style: italic;
-        color: var(--mud-palette-text-secondary);
-    }
-
-    .wisechat-code {
-        font-family: 'Consolas', 'Monaco', monospace;
-        background: #f5f5f5;
-        padding: 0.2rem 0.4rem;
-        border-radius: 4px;
-        font-size: 0.9em;
-    }
-
-    .wisechat-highlight {
-        background: linear-gradient(120deg, rgba(var(--mud-palette-primary-rgb), 0.2) 0%, rgba(var(--mud-palette-primary-rgb), 0.2) 100%);
-        background-repeat: no-repeat;
-        background-size: 100% 0.2em;
-        background-position: 0 88%;
-        transition: background-size 0.25s ease-in;
-    }
-
-    .wisechat-highlight:hover {
-        background-size: 100% 100%;
-    }
-
-    /* Dark mode text support */
-    @@media (prefers-color-scheme: dark) {
-        .wisechat-heading
-
-    {
-        color: var(--mud-palette-primary-lighten);
-        border-bottom-color: var(--mud-palette-primary);
-    }
-
-    .wisechat-subheading {
-        color: var(--mud-palette-primary-lighten);
-    }
-
-    .wisechat-bold {
-        color: var(--mud-palette-primary-lighten);
-    }
-
-    .wisechat-italic {
-        color: var(--mud-palette-text-secondary);
-    }
-
-    .wisechat-code {
-        background: #2d3748;
-        color: #e2e8f0;
-    }
-
-    .wisechat-highlight {
-        background: linear-gradient(120deg, rgba(var(--mud-palette-primary-rgb), 0.3) 0%, rgba(var(--mud-palette-primary-rgb), 0.3) 100%);
-    }
-    }
-
-    /* Ensure MudSelect dropdown appears above everything */
-    ::deep .mud-popover {
-        z-index: 1001 !important;
-    }
-
-    ::deep .mud-select-popover {
-        z-index: 1001 !important;
-    }
-
-    /* Dark mode support */
-    @@media (prefers-color-scheme: dark) {
-        .wisechat-history-header {
-            background: rgba(26, 32, 44, 0.95);
-            border-bottom-color: rgba(255, 255, 255, 0.1);
-        }
-    }
-
-    .wisechat-history-category {
-        padding: 8px 16px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    }
-
-    .wisechat-history-category:last-child {
-        border-bottom: none;
-    }
-
-    .wisechat-history-empty {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100px;
-    }
-
-    /* Dark mode support */
-    @@media (prefers-color-scheme: dark) {
-        .wisechat-history-category {
-            border-bottom-color: rgba(255, 255, 255, 0.1);
-        }
-    }
-
     /* Scroll to Bottom Button Styles */
     .wisechat-scroll-to-bottom-fab {
-    position: absolute;
-    bottom: 100px;
-    left: 2px;
-    z-index: 10;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    opacity: 0.7;
-    text-shadow: 0 0 BLACK;
-    background: mediumslateblue;
-}
+        position: absolute;
+        bottom: 100px;
+        left: 2px;
+        z-index: 10;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        opacity: 0.7;
+        text-shadow: 0 0 BLACK;
+        background: mediumslateblue;
+    }
 
     .wisechat-scroll-to-bottom-fab:hover {
         opacity: 1;
         transform: translateY(-2px);
     }
+
 </style>
 
 @code {
@@ -1602,33 +1501,6 @@
     private string? EmployeeId { get; set; }
     private string? DisplayName { get; set; }
     private bool showScrollToBottomButton = false;
-
-    public class ChatSession
-    {
-        public string SessionId { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        public DateTime LastActivityAt { get; set; }
-        public List<ChatMessage> Messages { get; set; } = new();
-    }
-
-    public class ChatMessage
-    {
-        public string Content { get; set; } = string.Empty;
-        public bool IsFromUser { get; set; }
-        public DateTime Timestamp { get; set; }
-        public MessageStatus Status { get; set; } = MessageStatus.Sent;
-        public string SessionId { get; set; } = string.Empty;
-        public bool IsTable { get; set; } = false;
-    }
-
-    public enum MessageStatus
-    {
-        Sending,
-        Sent,
-        Read,
-        Failed
-    }
 
     private List<ChatSession> chatSessions = new();
     private bool showHistory = false;
@@ -1694,14 +1566,14 @@
                         Title = g.FirstOrDefault(m => m.IsFromUser)?.Content ?? "New Chat",
                         CreatedAt = g.Min(m => m.Timestamp),
                         LastActivityAt = g.Max(m => m.Timestamp),
-                        Messages = g.Select(m => new ChatMessage
+                        Messages = g.Select(m => new WiseHR.Models.Chat.ChatMessage
                         {
                             Content = m.Content,
                             IsFromUser = m.IsFromUser,
                             Timestamp = m.Timestamp,
-                            Status = MessageStatus.Read,
+                            Status = WiseHR.Models.Chat.MessageStatus.Read,
                             SessionId = m.SessionId,
-                            IsTable = IsContentTable(m.Content)
+                            TableType = ChatMessageFormatter.GetChatMessageTableType(m.Content)
                         }).OrderBy(m => m.Timestamp).ToList()
                     })
                     .Where(s => s.LastActivityAt >= dateRange.Start && s.LastActivityAt <= dateRange.End)
@@ -1766,7 +1638,7 @@
         if (messages.Count > 0 && !messages.Last().IsFromUser)
         {
             messages.Last().Content += chunk;
-            messages.Last().IsTable = IsContentTable(messages.Last().Content);
+            messages.Last().TableType = ChatMessageFormatter.GetChatMessageTableType(messages.Last().Content);
         }
         else
         {
@@ -1777,7 +1649,7 @@
                 Timestamp = DateTime.Now,
                 Status = MessageStatus.Read,
                 SessionId = currentSessionId,
-                IsTable = IsContentTable(chunk)
+                TableType = ChatMessageFormatter.GetChatMessageTableType(chunk)
             });
         }
         await InvokeAsync(StateHasChanged);
@@ -1901,164 +1773,7 @@
         {
             // Ignore JS interop errors
         }
-    }
-
-    private string FormatGeneralMessageContent(string content)
-    {
-        if (string.IsNullOrEmpty(content))
-            return content;
-
-        content = content.Replace("\r\n", "\n").Trim();
-
-        var boldPattern = @"\*\*(.*?)\*\*";
-        var formattedContent = Regex.Replace(content, boldPattern, "<strong>$1</strong>");
-
-        var lines = formattedContent.Split('\n');
-        var formattedLines = new List<string>();
-        var inBulletList = false;
-
-        foreach (var line in lines)
-        {
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                if (inBulletList)
-                {
-                    formattedLines.Add("</div>");
-                    inBulletList = false;
-                }
-                formattedLines.Add("<div class='wisechat-spacing'></div>");
-                continue;
-            }
-
-            var trimmedLine = line.TrimStart();
-            bool isBulletLine = trimmedLine.StartsWith("-") || trimmedLine.StartsWith("*");
-
-            if (isBulletLine)
-            {
-                string initialCleanedLine = trimmedLine.Substring(1).TrimStart();
-                var subBulletParts = Regex.Split(initialCleanedLine, @" \* ").Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
-
-                foreach (var part in subBulletParts)
-                {
-                    if (!inBulletList)
-                    {
-                        formattedLines.Add("<div class='wisechat-bullet-list'>");
-                        inBulletList = true;
-                    }
-
-                    string cleanedPart = part.TrimEnd(' ', '*');
-
-                    var isNested = line.StartsWith("    ");
-                    var bulletClass = isNested ? "wisechat-nested-bullet" : "wisechat-bullet";
-                    formattedLines.Add($"<div class='{bulletClass}'><span class='bullet'>•</span><span class='bullet-content'>{cleanedPart}</span></div>");
-                }
-            }
-            else if (Regex.IsMatch(trimmedLine, @"^\d+\."))
-            {
-                if (inBulletList)
-                {
-                    formattedLines.Add("</div>");
-                    inBulletList = false;
-                }
-                string numberedContent = trimmedLine;
-                numberedContent = numberedContent.TrimEnd(' ', '*');
-                formattedLines.Add($"<div class='wisechat-numbered-point'>{numberedContent}</div>");
-            }
-            else
-            {
-                if (inBulletList)
-                {
-                    formattedLines.Add("</div>");
-                    inBulletList = false;
-                }
-                string cleanLine = line.TrimEnd(' ', '*');
-                formattedLines.Add($"<div class='wisechat-text-line'>{cleanLine}</div>");
-            }
-        }
-
-        if (inBulletList)
-        {
-            formattedLines.Add("</div>");
-        }
-
-        return string.Join("", formattedLines);
-    }
-
-    private string FormatTableContent(string content)
-    {
-        var lines = content.Split('\n');
-        var assets = new List<Dictionary<string, string>>();
-        var currentAsset = new Dictionary<string, string>();
-        var instances = new List<string>();
-
-        foreach (var line in lines)
-        {
-            var trimmedLine = line.Trim();
-            if (string.IsNullOrWhiteSpace(trimmedLine)) continue;
-
-            if (trimmedLine.StartsWith("Successfully executed"))
-            {
-                continue;
-            }
-            else if (trimmedLine.Contains("Asset Tag Prefix:"))
-            {
-                if (currentAsset.Count > 0)
-                {
-                    currentAsset["Instances"] = string.Join("<br>", instances);
-                    assets.Add(currentAsset);
-                    instances.Clear();
-                }
-                currentAsset = new Dictionary<string, string>();
-                var parts = trimmedLine.Split(':');
-                currentAsset["Asset Type"] = parts[0].Trim();
-                currentAsset["Tag Prefix"] = parts[1].Trim();
-            }
-            else if (trimmedLine.Contains("Total Instances:"))
-            {
-                var parts = trimmedLine.Split(':');
-                currentAsset["Total Instances"] = parts[1].Trim();
-            }
-            else if (trimmedLine.StartsWith("•"))
-            {
-                instances.Add(trimmedLine.Substring(1).Trim());
-            }
-        }
-
-        if (currentAsset.Count > 0)
-        {
-            currentAsset["Instances"] = string.Join("<br>", instances);
-            assets.Add(currentAsset);
-        }
-
-        var tableHtml = new StringBuilder();
-        tableHtml.Append("<div class='wisechat-asset-table-container'>");
-        tableHtml.Append("<table class='wisechat-table'>");
-        tableHtml.Append("<thead><tr>");
-        tableHtml.Append("<th>Asset Type</th>");
-        tableHtml.Append("<th>Tag Prefix</th>");
-        tableHtml.Append("<th>Total Instances</th>");
-        tableHtml.Append("<th>Instances</th>");
-        tableHtml.Append("</tr></thead><tbody>");
-
-        foreach (var asset in assets)
-        {
-            tableHtml.Append("<tr>");
-            tableHtml.Append($"<td>{asset["Asset Type"]}</td>");
-            tableHtml.Append($"<td>{asset["Tag Prefix"]}</td>");
-            tableHtml.Append($"<td>{asset["Total Instances"]}</td>");
-            tableHtml.Append($"<td>{asset["Instances"]}</td>");
-            tableHtml.Append("</tr>");
-        }
-
-        tableHtml.Append("</tbody></table></div>");
-        return tableHtml.ToString();
-    }
-
-    private bool IsContentTable(string content)
-    {
-        return content.Contains("Successfully executed get_assets") || 
-               (content.Contains("Asset Tag Prefix:") && content.Contains("Total Instances:"));
-    }
+}
 
     private async Task LoadUserDetails()
     {
@@ -2115,16 +1830,16 @@
         StateHasChanged();
     }
 
-    private ChatMessage MapToLocalChatMessage(WiseHR.Models.ChatMessage message)
+    private ChatMessage MapToLocalChatMessage(ChatMessage message)
     {
-        return new ChatMessage
+        return new WiseHR.Models.Chat.ChatMessage
         {
             Content = message.Content,
             IsFromUser = message.IsFromUser,
             Timestamp = message.Timestamp,
             Status = (MessageStatus)message.Status,
             SessionId = message.SessionId,
-            IsTable = IsContentTable(message.Content)
+            TableType = ChatMessageFormatter.GetChatMessageTableType(message.Content)
         };
     }
 
@@ -2142,7 +1857,6 @@
         await ChatService.DisposeAsync();
     }
 }
-
 
 <script>
     window.scrollToBottom = (element) => {

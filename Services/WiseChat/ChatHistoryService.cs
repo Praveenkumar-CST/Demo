@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using WiseHR.Models;
 using System.Net.Http.Headers;
 using Microsoft.JSInterop;
 using Microsoft.Extensions.Logging;
 using System.Text.Json.Serialization;
+using WiseHR.Models.Chat;
+using WiseHR.Services.ChatFormatting;
 
 namespace WiseHR.Services
 {
@@ -23,12 +24,14 @@ namespace WiseHR.Services
         private readonly HttpClient _httpClient;
         private readonly IJSRuntime _jsRuntime;
         private readonly ILogger<ChatHistoryService> _logger;
+        private readonly IChatMessageFormatter _chatMessageFormatter;
 
-        public ChatHistoryService(HttpClient httpClient, IJSRuntime jsRuntime, ILogger<ChatHistoryService> logger)
+        public ChatHistoryService(HttpClient httpClient, IJSRuntime jsRuntime, ILogger<ChatHistoryService> logger, IChatMessageFormatter chatMessageFormatter)
         {
             _httpClient = httpClient;
             _jsRuntime = jsRuntime;
             _logger = logger;
+            _chatMessageFormatter = chatMessageFormatter;
         }
 
         private async Task<string?> GetAccessToken()
@@ -57,16 +60,10 @@ namespace WiseHR.Services
                 Content = dbMessage.Content,
                 IsFromUser = dbMessage.MessageType == "User",
                 Timestamp = dbMessage.Timestamp,
-                Status = MessageStatus.Read, // History messages are always read
+                Status = WiseHR.Models.Chat.MessageStatus.Read, // History messages are always read
                 SessionId = dbMessage.SessionId,
-                IsTable = IsContentTable(dbMessage.Content)
+                TableType = _chatMessageFormatter.GetChatMessageTableType(dbMessage.Content) // Using the new property and formatter
             };
-        }
-
-        private bool IsContentTable(string content)
-        {
-            return content.Contains("Successfully executed get_assets") || 
-                   (content.Contains("Asset Tag Prefix:") && content.Contains("Total Instances:"));
         }
 
         public async Task<List<ChatMessage>> GetUserHistoryAsync(DateTime? startDate = null, DateTime? endDate = null)

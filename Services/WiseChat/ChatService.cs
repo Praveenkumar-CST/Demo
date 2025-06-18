@@ -70,10 +70,16 @@ namespace WiseHR.Services
 
                 // Set up event handlers
                 _hubConnection.On<string>("ReceiveChunk", chunk => 
-                    InvokeOnUIThread(() => OnChunkReceived?.Invoke(chunk)));
+                {
+                    Console.WriteLine($"Raw Chunk Received: {chunk}");
+                    InvokeOnUIThread(() => OnChunkReceived?.Invoke(chunk));
+                });
                 
                 _hubConnection.On<string>("ReceiveStatus", status => 
-                    InvokeOnUIThread(() => OnStatusReceived?.Invoke(status)));
+                {
+                    Console.WriteLine($"Raw Status Received: {status}");
+                    InvokeOnUIThread(() => OnStatusReceived?.Invoke(status));
+                });
                 _hubConnection.On<string, string>("ReceiveMessage", (displayName, message) =>
           InvokeOnUIThread(() => OnMessageReceived?.Invoke(displayName, message)));
 
