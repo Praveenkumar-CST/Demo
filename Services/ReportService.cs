@@ -16,8 +16,7 @@ public class ReportService
     private readonly IMemoryCache _cache;
     private const string BaseUrl = "api/reports";
     private const string AllReportsKey = "AllReports";
-    private const string BatchKeysCacheKey = "ReportBatchKeys";
-    private const string MenteeMentorCacheKeys = "MenteeMentorCacheKeys";
+    private const string CacheKeys = "ReportCacheKeys";
 
     public ReportService(HttpClient http, IMemoryCache cache)
     {
@@ -25,15 +24,15 @@ public class ReportService
         _cache = cache;
     }
 
-    // Retry policy for HttpClient
+    // Optimized retry policy: shorter backoff for faster recovery
     private static readonly IAsyncPolicy<HttpResponseMessage> _retryPolicy = HttpPolicyExtensions
         .HandleTransientHttpError()
         .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromMilliseconds(200 * retryAttempt));
 
-    // Timeout policy
+    // Optimized timeout policy: reduced to 5 seconds for faster failure
     private static readonly IAsyncPolicy<HttpResponseMessage> _timeoutPolicy = Policy
-        .TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10));
+        .TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(5));
 
     private string ToTitleCase(string input)
     {
@@ -49,85 +48,24 @@ public class ReportService
         return input.ToUpper();
     }
 
-    // Capitalize Experience fields
-    private void CapitalizeExperience(ReportModel report)
-    {
-        // Capitalize EmployeeID
-        report.FortnightRemarks1 = ToTitleCase(report.FortnightRemarks1);
-        report.FortnightRemarks2 = ToTitleCase(report.FortnightRemarks2);
-        report.ProjectsWorkedOn = ToTitleCase(report.ProjectsWorkedOn); 
-        report.FileName = ToTitleCase(report.FileName);
-
-        //
-    }
-
     public async Task<List<ReportModel>> GetReportsAsync(int page = 1, int pageSize = 50)
     {
         string cacheKey = $"{AllReportsKey}_{page}_{pageSize}";
         if (_cache.TryGetValue(cacheKey, out List<ReportModel> cachedReports))
         {
-            Console.WriteLine($"Cache hit for {cacheKey}");
             return cachedReports;
         }
 
         try
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _http.GetAsync($"{BaseUrl}?page={page}&pageSize={pageSize}")));
 
-            Console.WriteLine($"GetReportsAsync(page={page}, pageSize={pageSize}) took {stopwatch.ElapsedMilliseconds}ms, Status: {response.StatusCode}");
-
             if (response.IsSuccessStatusCode)
             {
                 var reports = await response.Content.ReadFromJsonAsync<List<ReportModel>>() ?? new List<ReportModel>();
-                var menteeMentorKeys = _cache.TryGetValue(MenteeMentorCacheKeys, out HashSet<string> existingKeys)
-                    ? existingKeys
-                    : new HashSet<string>();
-
-                // Cache individual reports
-                foreach (var report in reports)
-                {
-                    if (report.Id > 0)
-                    {
-                        _cache.Set(ReportByIdKey(report.Id), report, new MemoryCacheEntryOptions
-                        {
-                            SlidingExpiration = TimeSpan.FromMinutes(15)
-                        });
-                    }
-                    if (!string.IsNullOrEmpty(report.MenteeId))
-                    {
-                        string menteeKey = MenteeReportsKey(report.MenteeId);
-                        _cache.Set(menteeKey, reports.Where(r => r.MenteeId == report.MenteeId).ToList(), new MemoryCacheEntryOptions
-                        {
-                            SlidingExpiration = TimeSpan.FromMinutes(15)
-                        });
-                        menteeMentorKeys.Add(menteeKey);
-                    }
-                    if (!string.IsNullOrEmpty(report.MentorId))
-                    {
-                        string mentorKey = MentorReportsKey(report.MentorId);
-                        _cache.Set(mentorKey, reports.Where(r => r.MentorId == report.MentorId).ToList(), new MemoryCacheEntryOptions
-                        {
-                            SlidingExpiration = TimeSpan.FromMinutes(15)
-                        });
-                        menteeMentorKeys.Add(mentorKey);
-                    }
-                }
-
-                // Update mentee/mentor cache keys
-                _cache.Set(MenteeMentorCacheKeys, menteeMentorKeys, new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(15)
-                });
-
-                // Cache the page
-                _cache.Set(cacheKey, reports, new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(15)
-                });
-
+                UpdateCache(reports, cacheKey);
                 return reports;
             }
 
@@ -136,6 +74,11 @@ public class ReportService
         catch (Exception ex)
         {
             Console.WriteLine($"Error in GetReportsAsync: {ex.Message}");
+            if (_cache.TryGetValue(cacheKey, out List<ReportModel> staleReports))
+            {
+                Console.WriteLine("Returning stale cached reports due to API failure.");
+                return staleReports;
+            }
             return new List<ReportModel>();
         }
     }
@@ -145,18 +88,14 @@ public class ReportService
         string cacheKey = ReportByIdKey(id);
         if (_cache.TryGetValue(cacheKey, out ReportModel cached))
         {
-            Console.WriteLine($"Cache hit for {cacheKey}");
             return cached;
         }
 
         try
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _http.GetAsync($"{BaseUrl}/{id}")));
-
-            Console.WriteLine($"GetReportByIdAsync({id}) took {stopwatch.ElapsedMilliseconds}ms, Status: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -165,13 +104,13 @@ public class ReportService
                 {
                     _cache.Set(cacheKey, report, new MemoryCacheEntryOptions
                     {
-                        SlidingExpiration = TimeSpan.FromMinutes(15)
+                        SlidingExpiration = TimeSpan.FromMinutes(10)
                     });
+                    UpdateCacheKeys(cacheKey);
                 }
                 return report;
             }
 
-            Console.WriteLine($"Report not found for ID: {id}");
             return null;
         }
         catch (Exception ex)
@@ -186,45 +125,22 @@ public class ReportService
         string cacheKey = MenteeReportsKey(menteeId);
         if (_cache.TryGetValue(cacheKey, out List<ReportModel> cached))
         {
-            Console.WriteLine($"Cache hit for {cacheKey}");
             return cached;
         }
 
         try
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _http.GetAsync($"{BaseUrl}/mentee/{menteeId}")));
 
-            Console.WriteLine($"GetReportsByMenteeIdAsync({menteeId}) took {stopwatch.ElapsedMilliseconds}ms, Status: {response.StatusCode}");
-
             if (response.IsSuccessStatusCode)
             {
                 var reports = await response.Content.ReadFromJsonAsync<List<ReportModel>>() ?? new List<ReportModel>();
-                _cache.Set(cacheKey, reports, new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(15)
-                });
-
-                // Update mentee/mentor cache keys
-                if (_cache.TryGetValue(MenteeMentorCacheKeys, out HashSet<string> menteeMentorKeys))
-                {
-                    menteeMentorKeys.Add(cacheKey);
-                }
-                else
-                {
-                    menteeMentorKeys = new HashSet<string> { cacheKey };
-                }
-                _cache.Set(MenteeMentorCacheKeys, menteeMentorKeys, new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(15)
-                });
-
+                UpdateCache(reports, cacheKey);
                 return reports;
             }
 
-            Console.WriteLine($"Reports not found for MenteeID: {menteeId}");
             return new List<ReportModel>();
         }
         catch (Exception ex)
@@ -239,45 +155,22 @@ public class ReportService
         string cacheKey = MentorReportsKey(mentorId);
         if (_cache.TryGetValue(cacheKey, out List<ReportModel> cached))
         {
-            Console.WriteLine($"Cache hit for {cacheKey}");
             return cached;
         }
 
         try
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _http.GetAsync($"{BaseUrl}/mentor/{mentorId}")));
 
-            Console.WriteLine($"GetReportsByMentorIdAsync({mentorId}) took {stopwatch.ElapsedMilliseconds}ms, Status: {response.StatusCode}");
-
             if (response.IsSuccessStatusCode)
             {
                 var reports = await response.Content.ReadFromJsonAsync<List<ReportModel>>() ?? new List<ReportModel>();
-                _cache.Set(cacheKey, reports, new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(15)
-                });
-
-                // Update mentee/mentor cache keys
-                if (_cache.TryGetValue(MenteeMentorCacheKeys, out HashSet<string> menteeMentorKeys))
-                {
-                    menteeMentorKeys.Add(cacheKey);
-                }
-                else
-                {
-                    menteeMentorKeys = new HashSet<string> { cacheKey };
-                }
-                _cache.Set(MenteeMentorCacheKeys, menteeMentorKeys, new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(15)
-                });
-
+                UpdateCache(reports, cacheKey);
                 return reports;
             }
 
-            Console.WriteLine($"Reports not found for MentorID: {mentorId}");
             return new List<ReportModel>();
         }
         catch (Exception ex)
@@ -292,113 +185,70 @@ public class ReportService
         string cacheKey = $"MenteeReportsBatch_{string.Join("_", menteeEmails.OrderBy(email => email))}";
         if (_cache.TryGetValue(cacheKey, out List<ReportModel> cachedReports))
         {
-            Console.WriteLine($"Cache hit for {cacheKey}");
             return cachedReports;
         }
 
-        try
+        // Check individual mentee caches first to avoid API call
+        var reports = new List<ReportModel>();
+        var missingEmails = new List<string>();
+        foreach (var email in menteeEmails)
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var response = await _retryPolicy.ExecuteAsync(() =>
-                _timeoutPolicy.ExecuteAsync(() =>
-                    _http.PostAsJsonAsync($"{BaseUrl}/by-mentee-emails", menteeEmails)));
-
-            Console.WriteLine($"GetReportsByMenteeEmailsAsync(count={menteeEmails.Count()}) took {stopwatch.ElapsedMilliseconds}ms, Status: {response.StatusCode}");
-
-            if (response.IsSuccessStatusCode)
+            string menteeCacheKey = MenteeReportsKey(email);
+            if (_cache.TryGetValue(menteeCacheKey, out List<ReportModel> menteeReports))
             {
-                var reports = await response.Content.ReadFromJsonAsync<List<ReportModel>>() ?? new List<ReportModel>();
-                var menteeMentorKeys = _cache.TryGetValue(MenteeMentorCacheKeys, out HashSet<string> existingKeys)
-                    ? existingKeys
-                    : new HashSet<string>();
-
-                // Store batch cache key
-                if (_cache.TryGetValue(BatchKeysCacheKey, out HashSet<string> batchKeys))
-                {
-                    batchKeys.Add(cacheKey);
-                }
-                else
-                {
-                    batchKeys = new HashSet<string> { cacheKey };
-                }
-                _cache.Set(BatchKeysCacheKey, batchKeys, new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(15)
-                });
-
-                // Cache batch result
-                _cache.Set(cacheKey, reports, new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(15)
-                });
-
-                // Cache individual reports
-                foreach (var report in reports)
-                {
-                    if (report.Id > 0)
-                    {
-                        _cache.Set(ReportByIdKey(report.Id), report, new MemoryCacheEntryOptions
-                        {
-                            SlidingExpiration = TimeSpan.FromMinutes(15)
-                        });
-                    }
-                    if (!string.IsNullOrEmpty(report.MenteeId))
-                    {
-                        string menteeKey = MenteeReportsKey(report.MenteeId);
-                        _cache.Set(menteeKey, reports.Where(r => r.MenteeId == report.MenteeId).ToList(), new MemoryCacheEntryOptions
-                        {
-                            SlidingExpiration = TimeSpan.FromMinutes(15)
-                        });
-                        menteeMentorKeys.Add(menteeKey);
-                    }
-                    if (!string.IsNullOrEmpty(report.MentorId))
-                    {
-                        string mentorKey = MentorReportsKey(report.MentorId);
-                        _cache.Set(mentorKey, reports.Where(r => r.MentorId == report.MentorId).ToList(), new MemoryCacheEntryOptions
-                        {
-                            SlidingExpiration = TimeSpan.FromMinutes(15)
-                        });
-                        menteeMentorKeys.Add(mentorKey);
-                    }
-                }
-
-                // Update mentee/mentor cache keys
-                _cache.Set(MenteeMentorCacheKeys, menteeMentorKeys, new MemoryCacheEntryOptions
-                {
-                    SlidingExpiration = TimeSpan.FromMinutes(15)
-                });
-
-                return reports;
+                reports.AddRange(menteeReports);
             }
+            else
+            {
+                missingEmails.Add(email);
+            }
+        }
 
-            throw new Exception($"Error fetching reports by mentee emails: {response.StatusCode}");
-        }
-        catch (Exception ex)
+        if (missingEmails.Any())
         {
-            Console.WriteLine($"Error in GetReportsByMenteeEmailsAsync: {ex.Message}");
-            return new List<ReportModel>();
+            try
+            {
+                var response = await _retryPolicy.ExecuteAsync(() =>
+                    _timeoutPolicy.ExecuteAsync(() =>
+                        _http.PostAsJsonAsync($"{BaseUrl}/by-mentee-emails", missingEmails)));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var newReports = await response.Content.ReadFromJsonAsync<List<ReportModel>>() ?? new List<ReportModel>();
+                    reports.AddRange(newReports);
+                    UpdateCache(newReports, cacheKey);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetReportsByMenteeEmailsAsync: {ex.Message}");
+            }
         }
+
+        // Cache the combined result
+        _cache.Set(cacheKey, reports, new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(10)
+        });
+        UpdateCacheKeys(cacheKey);
+
+        return reports;
     }
 
     public async Task<bool> SubmitReportAsync(ReportModel report)
     {
         try
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            CapitalizeExperience(report);
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _http.PostAsJsonAsync(BaseUrl, report)));
 
-            Console.WriteLine($"SubmitReportAsync took {stopwatch.ElapsedMilliseconds}ms, Status: {response.StatusCode}");
-
             if (response.IsSuccessStatusCode)
             {
-                InvalidateCache();
+                InvalidateCache(report.Id);
                 return true;
             }
 
-            Console.WriteLine($"Error submitting report for MenteeID: {report.MenteeId}, MentorID: {report.MentorId}, Status: {response.StatusCode}");
             return false;
         }
         catch (Exception ex)
@@ -412,14 +262,9 @@ public class ReportService
     {
         try
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            CapitalizeExperience(report);
-
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _http.PutAsJsonAsync($"{BaseUrl}/{id}", report)));
-
-            Console.WriteLine($"UpdateReportAsync({id}) took {stopwatch.ElapsedMilliseconds}ms, Status: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -427,7 +272,6 @@ public class ReportService
                 return true;
             }
 
-            Console.WriteLine($"Error updating report for ID: {id}, Status: {response.StatusCode}");
             return false;
         }
         catch (Exception ex)
@@ -441,12 +285,9 @@ public class ReportService
     {
         try
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var response = await _retryPolicy.ExecuteAsync(() =>
                 _timeoutPolicy.ExecuteAsync(() =>
                     _http.DeleteAsync($"{BaseUrl}/{id}")));
-
-            Console.WriteLine($"DeleteReportAsync({id}) took {stopwatch.ElapsedMilliseconds}ms, Status: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -454,7 +295,6 @@ public class ReportService
                 return true;
             }
 
-            Console.WriteLine($"Error deleting report for ID: {id}, Status: {response.StatusCode}");
             return false;
         }
         catch (Exception ex)
@@ -464,32 +304,96 @@ public class ReportService
         }
     }
 
+    private void UpdateCache(List<ReportModel> reports, string primaryCacheKey)
+    {
+        var cacheKeys = _cache.TryGetValue(CacheKeys, out HashSet<string> existingKeys)
+            ? existingKeys
+            : new HashSet<string>();
+
+        // Cache individual reports and mentee/mentor groupings
+        foreach (var report in reports)
+        {
+            if (report.Id > 0)
+            {
+                string reportKey = ReportByIdKey(report.Id);
+                _cache.Set(reportKey, report, new MemoryCacheEntryOptions
+                {
+                    SlidingExpiration = TimeSpan.FromMinutes(10)
+                });
+                cacheKeys.Add(reportKey);
+            }
+            if (!string.IsNullOrEmpty(report.MenteeId))
+            {
+                string menteeKey = MenteeReportsKey(report.MenteeId);
+                _cache.Set(menteeKey, reports.Where(r => r.MenteeId == report.MenteeId).ToList(), new MemoryCacheEntryOptions
+                {
+                    SlidingExpiration = TimeSpan.FromMinutes(10)
+                });
+                cacheKeys.Add(menteeKey);
+            }
+            if (!string.IsNullOrEmpty(report.MentorId))
+            {
+                string mentorKey = MentorReportsKey(report.MentorId);
+                _cache.Set(mentorKey, reports.Where(r => r.MentorId == report.MentorId).ToList(), new MemoryCacheEntryOptions
+                {
+                    SlidingExpiration = TimeSpan.FromMinutes(10)
+                });
+                cacheKeys.Add(mentorKey);
+            }
+        }
+
+        // Cache the primary result
+        _cache.Set(primaryCacheKey, reports, new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(10)
+        });
+        cacheKeys.Add(primaryCacheKey);
+
+        // Update cache keys
+        _cache.Set(CacheKeys, cacheKeys, new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(10)
+        });
+    }
+
+    private void UpdateCacheKeys(string cacheKey)
+    {
+        var cacheKeys = _cache.TryGetValue(CacheKeys, out HashSet<string> existingKeys)
+            ? existingKeys
+            : new HashSet<string>();
+        cacheKeys.Add(cacheKey);
+        _cache.Set(CacheKeys, cacheKeys, new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(10)
+        });
+    }
+
     private void InvalidateCache(int? id = null)
     {
-        _cache.Remove(AllReportsKey);
+        var cacheKeys = _cache.TryGetValue(CacheKeys, out HashSet<string> existingKeys)
+            ? existingKeys
+            : new HashSet<string>();
 
         if (id.HasValue)
-            _cache.Remove(ReportByIdKey(id.Value));
-
-        // Remove batch cache keys
-        if (_cache.TryGetValue(BatchKeysCacheKey, out HashSet<string> batchKeys))
         {
-            foreach (var key in batchKeys.ToList())
-            {
-                _cache.Remove(key);
-            }
-            _cache.Remove(BatchKeysCacheKey);
+            string reportKey = ReportByIdKey(id.Value);
+            _cache.Remove(reportKey);
+            cacheKeys.Remove(reportKey);
         }
 
-        // Remove mentee/mentor cache keys
-        if (_cache.TryGetValue(MenteeMentorCacheKeys, out HashSet<string> menteeMentorKeys))
+        foreach (var key in cacheKeys.ToList())
         {
-            foreach (var key in menteeMentorKeys.ToList())
+            if (id == null || key.Contains("MenteeReports_") || key.Contains("MentorReports_") || key.Contains("MenteeReportsBatch_"))
             {
                 _cache.Remove(key);
+                cacheKeys.Remove(key);
             }
-            _cache.Remove(MenteeMentorCacheKeys);
         }
+
+        _cache.Set(CacheKeys, cacheKeys, new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(10)
+        });
     }
 
     private string ReportByIdKey(int id) => $"Report_{id}";

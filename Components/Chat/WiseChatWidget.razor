@@ -891,7 +891,7 @@
 
     .wisechat-input-wrapper {
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         gap: 12px;
         background: white;
         border-radius: 16px;
@@ -901,10 +901,10 @@
         transition: all 0.3s ease;
     }
 
-    .wisechat-input-wrapper:focus-within {
-        box-shadow: 0 6px 20px rgba(var(--mud-palette-primary-rgb), 0.15), 0 0 0 3px rgba(var(--mud-palette-primary-rgb), 0.1);
-        border-color: var(--mud-palette-primary);
-    }
+        .wisechat-input-wrapper:focus-within {
+            box-shadow: 0 6px 20px rgba(var(--mud-palette-primary-rgb), 0.15), 0 0 0 3px rgba(var(--mud-palette-primary-rgb), 0.1);
+            border-color: var(--mud-palette-primary);
+        }
 
     .wisechat-input-field {
         flex: 1;
@@ -912,32 +912,29 @@
         border: none;
         border-radius: 12px;
         font-size: 14px;
-        line-height: 1.4;
         background: transparent;
         transition: all 0.3s ease;
-        resize: none;
-        max-height: 150px;
-        overflow-y: auto;
+        line-height: 1.4;
     }
 
-    .wisechat-input-field:focus {
-        outline: none;
-    }
+        .wisechat-input-field:focus {
+            outline: none;
+        }
 
-    .wisechat-input-field::placeholder {
-        color: #94a3b8;
-        transition: color 0.3s ease;
-    }
+        .wisechat-input-field::placeholder {
+            color: #94a3b8;
+            transition: color 0.3s ease;
+        }
 
-    .wisechat-input-field:focus::placeholder {
-        color: #cbd5e1;
-    }
+        .wisechat-input-field:focus::placeholder {
+            color: #cbd5e1;
+        }
 
-    .wisechat-input-field:disabled {
-        background: rgba(0, 0, 0, 0.02);
-        cursor: not-allowed;
-        color: #94a3b8;
-    }
+        .wisechat-input-field:disabled {
+            background: rgba(0, 0, 0, 0.02);
+            cursor: not-allowed;
+            color: #94a3b8;
+        }
 
     /* Enhanced send button */
     .wisechat-send-button {
@@ -948,7 +945,6 @@
         background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3);
-        margin-bottom: 4px;
     }
 
     .wisechat-send-button:hover:not(:disabled) {
@@ -1247,7 +1243,6 @@
         white-space: pre-wrap;
         word-wrap: break-word;
         line-height: 1.5;
-        font-size: 0.95rem;
     }
 
     .wisechat-bullet-list {
@@ -1496,7 +1491,6 @@
     private string currentMessage = string.Empty;
 
     private ElementReference messagesContainer;
-    private ElementReference inputRef;
 
     private string? EmployeeId { get; set; }
     private string? DisplayName { get; set; }
@@ -1661,7 +1655,6 @@
     {
         statusMessage = status;
         await InvokeAsync(StateHasChanged);
-        await ScrollToBottom();
     }
 
     private async void HandleConnectionStateChanged()
@@ -1731,9 +1724,9 @@
         }
     }
 
-    private async Task OnKeyDown(KeyboardEventArgs e)
+    private async Task OnKeyPress(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
+        if (e.Key == "Enter" && !e.ShiftKey)
         {
             if (e.ShiftKey)
             {

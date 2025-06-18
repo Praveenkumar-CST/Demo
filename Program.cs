@@ -1,5 +1,13 @@
+
+using Blazored.SessionStorage;
+using FingerFrontend.AdminAttendanceViewModel;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.JSInterop;
+using MudBlazor;
+using MudBlazor.Services;
 using WiseHR;
 using WiseHR.Services;
 using MudBlazor.Services;
@@ -10,7 +18,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Syncfusion.Blazor;
 using WiseHR.Models.NewFolder;
 using WiseHR.Services.ChatFormatting;
-
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -55,6 +62,9 @@ builder.Services.AddScoped<CountryService>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<SearchService>();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+
+builder.Services.AddScoped<LeaveManagementService>();
 
 builder.Services.AddSyncfusionBlazor();
 

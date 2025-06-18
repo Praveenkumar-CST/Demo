@@ -8,11 +8,17 @@
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
+@using Microsoft.AspNetCore.Components.Forms
+@using OfficeOpenXml
+@using System.IO
+@using System.Data
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
     <MudCard Elevation="2" Class="pa-4">
-        @if (!showBasicDetailsForm)
+
+        @if (!showBasicDetailsForm && !showBulkUploadForm && !showFixUploadForm)
         {
+            <!-- "Add Single Employee" section -->
             <MudCardHeader>
                 <MudText Typo="Typo.h5" Color="Color.Primary">Add New Employee</MudText>
             </MudCardHeader>
@@ -28,13 +34,13 @@
                             <MudTextField Label="Password" Variant="Variant.Outlined" @bind-Value="newUserPassword"
                                           Placeholder="Enter or generate password" Required="true" Margin="Margin.Dense"
                                           Validation="@(new Func<string, string>(ValidatePassword))" />
-                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GeneratePassword" Class="mt-2">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@GeneratePassword" Class="mt-2">
                                 Generate Password
                             </MudButton>
                         </MudItem>
                         <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
-                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddUser" Disabled="@isAdding">
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@Cancel">Cancel</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddUser" Disabled="@isAdding">
                                 @if (isAdding)
                                 {
                                     <MudProgressCircular Color="Color.Info" Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -45,13 +51,183 @@
                                     <span>Add Employee</span>
                                 }
                             </MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => showBulkUploadForm = true)">
+                                Bulk Upload via Excel
+                            </MudButton>
                         </MudItem>
                     </MudGrid>
                 </MudForm>
             </MudCardContent>
         }
+        else if (showBulkUploadForm && !showFixUploadForm)
+        {
+            <!-- Bulk Upload Form -->
+            <MudCardHeader>
+                <MudText Typo="Typo.h5" Color="Color.Primary">Bulk Upload Employees (Excel)</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <InputFile OnChange="OnInputFileChange" />
+                    </MudItem>
+
+                    @if (failedUploadRows.Any())
+                    {
+                        <MudItem xs="12" Class="mt-4">
+                            <MudAlert Severity="Severity.Warning" Closeable="false">
+                                Some rows could not be uploaded. Please fix the issues and reupload:
+                            </MudAlert>
+
+                            <MudTable Items="failedUploadRows" Dense="true" Hover="true" Bordered="true" Class="mt-2"
+                                     Breakpoint="Breakpoint.None"
+                                     Style="table-layout:auto; width:100%; white-space:normal; word-wrap:break-word; overflow-wrap:anywhere;">
+                                <HeaderContent>
+                                    <MudTh>Row</MudTh>
+                                    <MudTh>Provided Email</MudTh>
+                                    <MudTh>Column Errors</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Row">@context.RowNumber</MudTd>
+                                    <MudTd DataLabel="Provided Email">@context.Email</MudTd>
+                                    <MudTd DataLabel="Column Errors">
+                                        @foreach (var error in @context.ColumnErrors)
+                                        {
+                                            <div>@error.Key - @error.Value</div>
+                                        }
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="mt-2" OnClick="@PrepareFixes">
+                                Fix Failed Rows
+                            </MudButton>
+                        </MudItem>
+                    }
+
+                    <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(() => { showBulkUploadForm = false; failedUploadRows.Clear(); })">Cancel</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@HandleBulkUpload" Disabled="@isBulkUploading">
+                            @if (isBulkUploading)
+                            {
+                                <MudProgressCircular Color="Color.Info" Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>Uploading...</span>
+                            }
+                            else
+                            {
+                                <span>Upload</span>
+                            }
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        }
+        else if (showFixUploadForm)
+        {
+            <!-- Fixing Upload Form for previous failures -->
+            <MudCardHeader>
+                <MudText Typo="Typo.h5" Color="Color.Primary">Fix and Reupload Failed Rows</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudAlert Severity="Severity.Info" Closeable="false">
+                    Edit the rows below and reupload. Missing passwords will be auto-generated.
+                </MudAlert>
+                <MudTable Items="failedRowsToFix" Dense="true" Hover="true" Bordered="true" Class="mt-2"
+                          Breakpoint="Breakpoint.None"
+                          Style="table-layout:auto; width:100%; white-space:normal; word-wrap:break-word; overflow-wrap:anywhere;">
+                    <HeaderContent>
+                        <MudTh Style="min-width:80px;">Row</MudTh>
+                        <MudTh Style="min-width:180px;">Email</MudTh>
+                        <MudTh Style="min-width:180px;">Password</MudTh>
+                        <MudTh Style="min-width:150px;">Mobile</MudTh>
+                        <MudTh Style="min-width:150px;">Employment</MudTh>
+                        <MudTh Style="min-width:200px;">Designation</MudTh>
+                        <MudTh Style="min-width:200px;">Location</MudTh>
+                        <MudTh Style="min-width:150px;">DOJ</MudTh>
+                        <MudTh Style="min-width:100px;">Level</MudTh>
+                        <MudTh Style="min-width:100px;">Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.RowNumber</MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@context.Email" Variant="Variant.Outlined" 
+                                          Style="width:100%; min-width:180px;" />
+                        </MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@context.Password" Variant="Variant.Outlined"
+                                          Style="width:100%; min-width:180px;" />
+                        </MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@context.Mobile" Variant="Variant.Outlined"
+                                          Style="width:100%; min-width:150px;" />
+                        </MudTd>
+                        <MudTd>
+                            <MudSelect T="string" @bind-Value="@context.TypeOfEmployment" Variant="Variant.Outlined"
+                                      Style="width:100%; min-width:150px;">
+                                <MudSelectItem Value="@("Full-Time")">Full-Time</MudSelectItem>
+                                <MudSelectItem Value="@("Part-Time")">Part-Time</MudSelectItem>
+                                <MudSelectItem Value="@("Contract")">Contract</MudSelectItem>
+                                <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
+                            </MudSelect>
+                        </MudTd>
+                        <MudTd>
+                            <MudSelect T="string" @bind-Value="@context.Designation" Variant="Variant.Outlined"
+                                      Style="width:100%; min-width:200px;">
+                                <MudSelectItem Value="@("Software Engineer Intern")">Software Engineer Intern</MudSelectItem>
+                                <MudSelectItem Value="@("Software Engineer Trainee")">Software Engineer Trainee</MudSelectItem>
+                                <MudSelectItem Value="@("Associate Software Engineer")">Associate Software Engineer</MudSelectItem>
+                                <MudSelectItem Value="@("Software Engineer Product Manager")">Software Engineer Product Manager</MudSelectItem>
+                                <MudSelectItem Value="@("Senior Software Engineer")">Senior Software Engineer</MudSelectItem>
+                                <MudSelectItem Value="@("Vice President")">Vice President</MudSelectItem>
+                                <MudSelectItem Value="@("President")">President</MudSelectItem>
+                                <MudSelectItem Value="@("People Senior Analyst")">People Senior Analyst</MudSelectItem>
+                                <MudSelectItem Value="@("People Analyst Lead")">People Analyst Lead</MudSelectItem>
+                                <MudSelectItem Value="@("Executive Assistant")">Executive Assistant</MudSelectItem>
+                                <MudSelectItem Value="@("Business Development Lead")">Business Development Lead</MudSelectItem>
+                                <MudSelectItem Value="@("Business Development Intern")">Business Development Intern</MudSelectItem>
+                                <MudSelectItem Value="@("Content Writing Intern")">Content Writing Intern</MudSelectItem>
+                                <MudSelectItem Value="@("Social Media Intern")">Social Media Intern</MudSelectItem>
+                                <MudSelectItem Value="@("Video Creation Intern")">Video Creation Intern</MudSelectItem>
+                                <MudSelectItem Value="@("AI Content Creator")">AI Content Creator</MudSelectItem>
+                                <MudSelectItem Value="@("Content Creator Lead")">Content Creator Lead</MudSelectItem>
+                                <MudSelectItem Value="@("Software Tester")">Software Tester</MudSelectItem>
+                            </MudSelect>
+                        </MudTd>
+                        <MudTd>
+                            <MudSelect T="string" @bind-Value="@context.JoiningLocation" Variant="Variant.Outlined"
+                                      Style="width:100%; min-width:200px;">
+                                <MudSelectItem Value="@("Bangalore, India")">Bangalore, India</MudSelectItem>
+                                <MudSelectItem Value="@("Riyadh, Saudi Arabia")">Riyadh, Saudi Arabia</MudSelectItem>
+                                <MudSelectItem Value="@("Delaware, USA")">Delaware, USA</MudSelectItem>
+                            </MudSelect>
+                        </MudTd>
+                        <MudTd>
+                            <MudDatePicker T="DateTime?" @bind-Date="@context.DateOfJoining" Variant="Variant.Outlined"
+                                           Style="width:100%; min-width:150px;" />
+                        </MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@context.Level" Variant="Variant.Outlined"
+                                          Style="width:100%; min-width:100px;" />
+                        </MudTd>
+                        <MudTd>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ReuploadFixedRow(context))" Disabled="@isReuploading">
+                                Reupload
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+                <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ReuploadAllFixedRows" Disabled="@isReuploading">
+                        Reupload All Fixes
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@CancelFix">
+                        Cancel
+                    </MudButton>
+                </MudItem>
+            </MudCardContent>
+        }
         else
         {
+            <!-- "Add Basic Details" section for a single employee -->
             <MudCardHeader>
                 <MudText Typo="Typo.h5" Color="Color.Primary">Employee Basic Details</MudText>
             </MudCardHeader>
@@ -118,7 +294,8 @@
                             <ValidationMessage For="@(() => employeeBasicDetails.JoiningLocation)" />
                         </MudItem>
                         <MudItem xs="12" sm="6">
-                            <MudDatePicker Label="Date of Joining" Variant="Variant.Outlined" Margin="Margin.Dense"
+                            <MudDatePicker T="DateTime?" Label="Date of Joining" Variant="Variant.Outlined"
+                                           Margin="Margin.Dense" 
                                            Date="@employeeBasicDetails.DateOfJoining"
                                            DateChanged="@(date => employeeBasicDetails.DateOfJoining = date ?? DateTime.Now)"
                                            Required="true" />
@@ -130,7 +307,7 @@
                             <ValidationMessage For="@(() => employeeBasicDetails.Level)" />
                         </MudItem>
                         <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
-                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ResetBasicDetails">Reset</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@ResetBasicDetails">Reset</MudButton>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="@isSaving">
                                 @if (isSaving)
                                 {
@@ -154,12 +331,82 @@
     private string newUserEmail = "";
     private string newUserPassword = "";
     private bool showBasicDetailsForm = false;
+    private bool showBulkUploadForm = false;
+    private bool showFixUploadForm = false;
+
     private EmployeeBasicDetails employeeBasicDetails = new EmployeeBasicDetails();
     private MudForm addUserForm;
     private string savedUserEmail = "";
     private string savedUserPassword = "";
     private bool isAdding = false;
     private bool isSaving = false;
+
+    // Bulk upload
+    private IBrowserFile excelFile;
+    private bool isBulkUploading = false;
+    private bool isReuploading = false;
+
+    // Store data for failed uploads
+    private List<FailedUploadRow> failedUploadRows = new();
+    private List<FailedRowData> failedRowsToFix = new();
+
+    // Dropdown options
+    private readonly List<string> AvailableLocations = new()
+    {
+        "Bangalore, India",
+        "Riyadh, Saudi Arabia",
+        "Delaware, USA"
+    };
+
+    private readonly List<string> AvailableDesignations = new()
+    {
+        "Software Engineer Intern",
+        "Software Engineer Trainee",
+        "Associate Software Engineer",
+        "Software Engineer Product Manager",
+        "Senior Software Engineer",
+        "Vice President",
+        "President",
+        "People Senior Analyst",
+        "People Analyst Lead",
+        "Executive Assistant",
+        "Business Development Lead",
+        "Business Development Intern",
+        "Content Writing Intern",
+        "Social Media Intern",
+        "Video Creation Intern",
+        "AI Content Creator",
+        "Content Creator Lead",
+        "Software Tester"
+    };
+
+    private readonly List<string> AvailableEmployments = new()
+    {
+        "Full-Time",
+        "Part-Time",
+        "Contract",
+        "Internship"
+    };
+
+    private class FailedUploadRow
+    {
+        public int RowNumber { get; set; }
+        public string Email { get; set; }
+        public Dictionary<string, string> ColumnErrors { get; set; } = new();
+    }
+
+    private class FailedRowData
+    {
+        public int RowNumber { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string Mobile { get; set; }
+        public string TypeOfEmployment { get; set; }
+        public string Designation { get; set; }
+        public string JoiningLocation { get; set; }
+        public DateTime? DateOfJoining { get; set; } = DateTime.Now;
+        public string Level { get; set; }
+    }
 
     private string ValidateEmail(string email)
     {
@@ -194,13 +441,12 @@
     private async Task AddUser()
     {
         isAdding = true;
-        await InvokeAsync(StateHasChanged); // Update UI to show loader in button
+        await InvokeAsync(StateHasChanged);
         await JS.InvokeVoidAsync("console.log", $"AddUser called with Email: {newUserEmail}, Password: {newUserPassword}");
 
         await addUserForm.Validate();
         if (!addUserForm.IsValid)
         {
-            await JS.InvokeVoidAsync("console.error", $"Validation failed: Email: {newUserEmail}");
             Snackbar.Add("Please fix form errors.", Severity.Error);
             isAdding = false;
             await InvokeAsync(StateHasChanged);
@@ -211,12 +457,10 @@
         {
             await JS.InvokeVoidAsync("console.log", "Calling UserService.CreateUserAsync...");
             var newUser = await UserService.CreateUserAsync(newUserEmail, newUserPassword);
-            await JS.InvokeVoidAsync("console.log", $"User created successfully: {newUserEmail}");
 
             var user = await UserService.GetUserByEmailAsync(newUserEmail);
             if (user == null || string.IsNullOrEmpty(user.EmpId))
             {
-                await JS.InvokeVoidAsync("console.error", "Failed to retrieve Employee ID from Supabase.");
                 Snackbar.Add("Failed to retrieve Employee ID from Supabase.", Severity.Error);
                 isAdding = false;
                 await InvokeAsync(StateHasChanged);
@@ -227,63 +471,65 @@
             savedUserPassword = newUserPassword;
 
             employeeBasicDetails = new EmployeeBasicDetails
-                {
-                    EmployeeID = user.EmpId,
-                    CurrentEmail = newUserEmail,
-                    DateOfJoining = DateTime.Now
-                };
+            {
+                EmployeeID = user.EmpId,
+                CurrentEmail = newUserEmail,
+                DateOfJoining = DateTime.Now
+            };
             showBasicDetailsForm = true;
             newUserEmail = "";
             newUserPassword = "";
-            await JS.InvokeVoidAsync("console.log", "User fields cleared, showing basic details form...");
             Snackbar.Add("Employee added successfully. Please enter basic details.", Severity.Success);
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("console.error", $"Error adding employee: {ex.Message}");
             Snackbar.Add($"Error adding employee: {ex.Message}", Severity.Error);
+            await JS.InvokeVoidAsync("console.error", $"Error in AddUser: {ex.Message}");
         }
         finally
         {
             isAdding = false;
-            await InvokeAsync(StateHasChanged); // Update UI to remove loader
+            await InvokeAsync(StateHasChanged);
         }
     }
 
     private async Task SaveBasicDetails()
     {
         isSaving = true;
-        await InvokeAsync(StateHasChanged); // Update UI to show loader in button
+        await InvokeAsync(StateHasChanged);
+
         try
         {
             await JS.InvokeVoidAsync("console.log", $"Saving EmployeeBasicDetails: {System.Text.Json.JsonSerializer.Serialize(employeeBasicDetails)}");
-            var success = await EmployeeService.CreateEmployeeBasicDetails(employeeBasicDetails, savedUserEmail, savedUserPassword);
+            var success = await EmployeeService.CreateEmployeeBasicDetails(
+                employeeBasicDetails, 
+                savedUserEmail, 
+                savedUserPassword);
+
             if (success)
             {
-                await JS.InvokeVoidAsync("console.log", "Employee basic details saved successfully, email sent, navigating to /home/rolemanagement...");
                 Snackbar.Add("Employee basic details saved and credentials emailed successfully.", Severity.Success);
                 NavigationManager.NavigateTo("/home/rolemanagement");
             }
             else
             {
-                await JS.InvokeVoidAsync("console.error", "Failed to save employee basic details or send email.");
                 Snackbar.Add("Failed to save employee details or send email. Please try again.", Severity.Error);
             }
         }
         catch (HttpRequestException ex)
         {
-            await JS.InvokeVoidAsync("console.error", $"HTTP error saving employee basic details: {ex.Message}");
-            Snackbar.Add($"Error saving employee details: {ex.Message}", Severity.Error);
+            Snackbar.Add($"HTTP error saving employee details: {ex.Message}", Severity.Error);
+            await JS.InvokeVoidAsync("console.error", $"HTTP error in SaveBasicDetails: {ex.Message}");
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("console.error", $"Error saving employee basic details: {ex.Message}");
             Snackbar.Add($"Error saving employee details: {ex.Message}", Severity.Error);
+            await JS.InvokeVoidAsync("console.error", $"Error in SaveBasicDetails: {ex.Message}");
         }
         finally
         {
             isSaving = false;
-            await InvokeAsync(StateHasChanged); // Update UI to remove loader
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -292,17 +538,442 @@
         var empId = employeeBasicDetails.EmployeeID;
         var email = employeeBasicDetails.CurrentEmail;
         employeeBasicDetails = new EmployeeBasicDetails
-            {
-                EmployeeID = empId,
-                CurrentEmail = email,
-                DateOfJoining = DateTime.Now
-            };
-        await JS.InvokeVoidAsync("console.log", "Basic details form reset, preserving EmployeeID and CurrentEmail.");
+        {
+            EmployeeID = empId,
+            CurrentEmail = email,
+            DateOfJoining = DateTime.Now
+        };
         Snackbar.Add("Form reset, preserving Employee ID and Email.", Severity.Info);
+        await InvokeAsync(StateHasChanged);
     }
 
     private void Cancel()
     {
         NavigationManager.NavigateTo("/home/rolemanagement");
+    }
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        excelFile = e.File;
+    }
+
+    private string FindClosestMatch(string input, List<string> options)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return options.FirstOrDefault();
+
+        return options.FirstOrDefault(option => 
+            option.Contains(input, StringComparison.OrdinalIgnoreCase)) 
+            ?? options.FirstOrDefault();
+    }
+
+    private async Task HandleBulkUpload()
+    {
+        if (excelFile == null)
+        {
+            Snackbar.Add("Please select an Excel file before uploading.", Severity.Error);
+            return;
+        }
+
+        isBulkUploading = true;
+        failedUploadRows.Clear();
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            using var ms = new MemoryStream();
+            await excelFile.OpenReadStream().CopyToAsync(ms);
+            ms.Position = 0;
+
+            using var package = new ExcelPackage(ms);
+            var worksheet = package.Workbook.Worksheets[0];
+            if (worksheet == null)
+            {
+                Snackbar.Add("Failed to find a valid Excel worksheet.", Severity.Error);
+                return;
+            }
+
+            int rowCount = worksheet.Dimension.End.Row;
+            for (int row = 2; row <= rowCount; row++)
+            {
+                string email = worksheet.Cells[row, 1].Text?.Trim();
+                string password = worksheet.Cells[row, 2].Text?.Trim();
+                string mobile = worksheet.Cells[row, 3].Text?.Trim();
+                string typeOfEmployment = worksheet.Cells[row, 4].Text?.Trim();
+                string designation = worksheet.Cells[row, 5].Text?.Trim();
+                string joiningLocation = worksheet.Cells[row, 6].Text?.Trim();
+                string dateOfJoining = worksheet.Cells[row, 7].Text?.Trim();
+                string level = worksheet.Cells[row, 8].Text?.Trim();
+
+                var columnErrors = new Dictionary<string, string>();
+
+                // Check each column for errors
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    columnErrors["Email"] = "Email is missing or invalid.";
+                }
+                else if (!System.Text.RegularExpressions.Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    columnErrors["Email"] = "Provided email is not valid.";
+                }
+
+                // Validate dropdown fields
+                typeOfEmployment = FindClosestMatch(typeOfEmployment, AvailableEmployments);
+                if (string.IsNullOrWhiteSpace(typeOfEmployment))
+                {
+                    columnErrors["TypeOfEmployment"] = "Type of Employment is required.";
+                }
+
+                designation = FindClosestMatch(designation, AvailableDesignations);
+                if (string.IsNullOrWhiteSpace(designation))
+                {
+                    columnErrors["Designation"] = "Designation is required.";
+                }
+
+                joiningLocation = FindClosestMatch(joiningLocation, AvailableLocations);
+                if (string.IsNullOrWhiteSpace(joiningLocation))
+                {
+                    columnErrors["JoiningLocation"] = "Joining Location is required.";
+                }
+
+                // If there are column errors, mark the row as failed
+                if (columnErrors.Count > 0)
+                {
+                    failedUploadRows.Add(new FailedUploadRow
+                    {
+                        RowNumber = row,
+                        Email = email ?? "",
+                        ColumnErrors = columnErrors
+                    });
+                    continue;
+                }
+
+                // If password is missing, auto-generate
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    var username = email.Split('@')[0];
+                    var shortUsername = username.Length >= 3 ? username.Substring(0, 3) : username;
+                    password = $"EMP_{shortUsername}@123";
+                }
+
+                try
+                {
+                    // Create user
+                    await UserService.CreateUserAsync(email, password);
+
+                    // Retrieve user to get Employee ID
+                    var userInfo = await UserService.GetUserByEmailAsync(email);
+                    if (userInfo == null || string.IsNullOrEmpty(userInfo.EmpId))
+                    {
+                        var colError = new Dictionary<string, string> {
+                            { "EmployeeID", $"Could not retrieve Employee ID for {email}." }
+                        };
+                        failedUploadRows.Add(new FailedUploadRow
+                        {
+                            RowNumber = row,
+                            Email = email,
+                            ColumnErrors = colError
+                        });
+                        continue;
+                    }
+
+                    var basicDetails = new EmployeeBasicDetails
+                    {
+                        EmployeeID = userInfo.EmpId,
+                        CurrentEmail = email,
+                        CurrentMobile = mobile,
+                        TypeOfEmployment = typeOfEmployment,
+                        Designation = designation,
+                        JoiningLocation = joiningLocation,
+                        DateOfJoining = ParseDateFromCell(dateOfJoining) ?? DateTime.Now,
+                        Level = level
+                    };
+
+                    // Save details
+                    var success = await EmployeeService.CreateEmployeeBasicDetails(basicDetails, email, password);
+                    if (!success)
+                    {
+                        var colError2 = new Dictionary<string, string> {
+                            { "EmployeeBasicDetails", $"Failed to save employee details for {email}." }
+                        };
+                        failedUploadRows.Add(new FailedUploadRow
+                        {
+                            RowNumber = row,
+                            Email = email,
+                            ColumnErrors = colError2
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var colErrorEx = new Dictionary<string, string> {
+                        { "Exception", ex.Message }
+                    };
+                    failedUploadRows.Add(new FailedUploadRow
+                    {
+                        RowNumber = row,
+                        Email = email,
+                        ColumnErrors = colErrorEx
+                    });
+                }
+            }
+
+            if (failedUploadRows.Any())
+            {
+                Snackbar.Add("Bulk upload completed with errors. Please fix the failed rows and reupload.", Severity.Warning);
+            }
+            else
+            {
+                Snackbar.Add("Bulk upload completed successfully.", Severity.Success);
+                showBulkUploadForm = false;
+                excelFile = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error during bulk upload: {ex.Message}", Severity.Error);
+            await JS.InvokeVoidAsync("console.error", $"Error in HandleBulkUpload: {ex.Message}");
+        }
+        finally
+        {
+            isBulkUploading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private DateTime? ParseDateFromCell(string cellValue)
+    {
+        if (DateTime.TryParse(cellValue, out var dateResult))
+            return dateResult;
+        return null;
+    }
+
+    private void PrepareFixes()
+    {
+        failedRowsToFix.Clear();
+        foreach (var fail in failedUploadRows)
+        {
+            // Get original row data from Excel if needed
+            string email = fail.Email;
+            string typeOfEmployment = "";
+            string designation = "";
+            string joiningLocation = "";
+            string mobile = "";
+            string level = "";
+            DateTime? dateOfJoining = DateTime.Now;
+
+            // Re-read the row from the Excel file to populate missing fields
+            if (excelFile != null)
+            {
+                try
+                {
+                    using var ms = new MemoryStream();
+                    excelFile.OpenReadStream().CopyToAsync(ms).GetAwaiter().GetResult();
+                    ms.Position = 0;
+                    using var package = new ExcelPackage(ms);
+                    var worksheet = package.Workbook.Worksheets[0];
+                    if (worksheet != null)
+                    {
+                        mobile = worksheet.Cells[fail.RowNumber, 3].Text?.Trim();
+                        typeOfEmployment = worksheet.Cells[fail.RowNumber, 4].Text?.Trim();
+                        designation = worksheet.Cells[fail.RowNumber, 5].Text?.Trim();
+                        joiningLocation = worksheet.Cells[fail.RowNumber, 6].Text?.Trim();
+                        dateOfJoining = ParseDateFromCell(worksheet.Cells[fail.RowNumber, 7].Text?.Trim()) ?? DateTime.Now;
+                        level = worksheet.Cells[fail.RowNumber, 8].Text?.Trim();
+                    }
+                }
+                catch
+                {
+                    // Ignore errors, use defaults
+                }
+            }
+
+            // Apply fuzzy matching
+            typeOfEmployment = FindClosestMatch(typeOfEmployment, AvailableEmployments);
+            designation = FindClosestMatch(designation, AvailableDesignations);
+            joiningLocation = FindClosestMatch(joiningLocation, AvailableLocations);
+
+            failedRowsToFix.Add(new FailedRowData
+            {
+                RowNumber = fail.RowNumber,
+                Email = email,
+                Password = "",
+                Mobile = mobile,
+                TypeOfEmployment = typeOfEmployment,
+                Designation = designation,
+                JoiningLocation = joiningLocation,
+                DateOfJoining = dateOfJoining,
+                Level = level
+            });
+        }
+        showFixUploadForm = true;
+    }
+
+    private void CancelFix()
+    {
+        showFixUploadForm = false;
+        failedRowsToFix.Clear();
+        failedUploadRows.Clear();
+        excelFile = null;
+        showBulkUploadForm = false;
+    }
+
+    private async Task ReuploadFixedRow(FailedRowData rowData)
+    {
+        isReuploading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(rowData.Email))
+            {
+                Snackbar.Add($"Row {rowData.RowNumber}: Email is required.", Severity.Error);
+                return;
+            }
+            // If password is missing, auto-generate
+            if (string.IsNullOrWhiteSpace(rowData.Password))
+            {
+                var username = rowData.Email.Split('@')[0];
+                var shortUsername = username.Length >= 3 ? username.Substring(0, 3) : username;
+                rowData.Password = $"EMP_{shortUsername}@123";
+            }
+
+            // Apply fuzzy matching again to ensure valid dropdown values
+            rowData.TypeOfEmployment = FindClosestMatch(rowData.TypeOfEmployment, AvailableEmployments);
+            rowData.Designation = FindClosestMatch(rowData.Designation, AvailableDesignations);
+            rowData.JoiningLocation = FindClosestMatch(rowData.JoiningLocation, AvailableLocations);
+
+            // Create user again
+            await UserService.CreateUserAsync(rowData.Email, rowData.Password);
+
+            // Retrieve user to get Employee ID
+            var userInfo = await UserService.GetUserByEmailAsync(rowData.Email);
+            if (userInfo == null || string.IsNullOrEmpty(userInfo.EmpId))
+            {
+                Snackbar.Add($"Row {rowData.RowNumber}: Could not retrieve Employee ID for {rowData.Email}.", Severity.Warning);
+                return;
+            }
+
+            var basicDetails = new EmployeeBasicDetails
+            {
+                EmployeeID = userInfo.EmpId,
+                CurrentEmail = rowData.Email,
+                CurrentMobile = rowData.Mobile,
+                TypeOfEmployment = rowData.TypeOfEmployment,
+                Designation = rowData.Designation,
+                JoiningLocation = rowData.JoiningLocation,
+                DateOfJoining = rowData.DateOfJoining ?? DateTime.Now,
+                Level = rowData.Level
+            };
+
+            var success = await EmployeeService.CreateEmployeeBasicDetails(basicDetails, rowData.Email, rowData.Password);
+            if (!success)
+            {
+                Snackbar.Add($"Row {rowData.RowNumber}: Failed to save employee details for {rowData.Email}.", Severity.Warning);
+                return;
+            }
+
+            failedRowsToFix.Remove(rowData);
+            Snackbar.Add($"Row {rowData.RowNumber}: Successfully reuploaded.", Severity.Success);
+
+            if (!failedRowsToFix.Any())
+            {
+                showFixUploadForm = false;
+                excelFile = null;
+                Snackbar.Add("All failed rows have been successfully reuploaded.", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Row {rowData.RowNumber} Error: {ex.Message}", Severity.Error);
+            await JS.InvokeVoidAsync("console.error", $"Error in ReuploadFixedRow: {ex.Message}");
+        }
+        finally
+        {
+            isReuploading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ReuploadAllFixedRows()
+    {
+        isReuploading = true;
+        await InvokeAsync(StateHasChanged);
+
+        var rowsToProcess = failedRowsToFix.ToList(); // Create a copy to avoid collection modification issues
+        foreach (var rowData in rowsToProcess)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(rowData.Email))
+                {
+                    Snackbar.Add($"Row {rowData.RowNumber}: Email is required.", Severity.Error);
+                    continue;
+                }
+
+                // If password is missing, auto-generate
+                if (string.IsNullOrWhiteSpace(rowData.Password))
+                {
+                    var username = rowData.Email.Split('@')[0];
+                    var shortUsername = username.Length >= 3 ? username.Substring(0, 3) : username;
+                    rowData.Password = $"EMP_{shortUsername}@123";
+                }
+
+                // Apply fuzzy matching again
+                rowData.TypeOfEmployment = FindClosestMatch(rowData.TypeOfEmployment, AvailableEmployments);
+                rowData.Designation = FindClosestMatch(rowData.Designation, AvailableDesignations);
+                rowData.JoiningLocation = FindClosestMatch(rowData.JoiningLocation, AvailableLocations);
+
+                // Create user
+                await UserService.CreateUserAsync(rowData.Email, rowData.Password);
+
+                // Retrieve user to get Employee ID
+                var userInfo = await UserService.GetUserByEmailAsync(rowData.Email);
+                if (userInfo == null || string.IsNullOrEmpty(userInfo.EmpId))
+                {
+                    Snackbar.Add($"Row {rowData.RowNumber}: Could not retrieve Employee ID for {rowData.Email}.", Severity.Warning);
+                    continue;
+                }
+
+                var basicDetails = new EmployeeBasicDetails
+                {
+                    EmployeeID = userInfo.EmpId,
+                    CurrentEmail = rowData.Email,
+                    CurrentMobile = rowData.Mobile,
+                    TypeOfEmployment = rowData.TypeOfEmployment,
+                    Designation = rowData.Designation,
+                    JoiningLocation = rowData.JoiningLocation,
+                    DateOfJoining = rowData.DateOfJoining ?? DateTime.Now,
+                    Level = rowData.Level
+                };
+
+                var success = await EmployeeService.CreateEmployeeBasicDetails(basicDetails, rowData.Email, rowData.Password);
+                if (!success)
+                {
+                    Snackbar.Add($"Row {rowData.RowNumber}: Failed to save employee details for {rowData.Email}.", Severity.Warning);
+                    continue;
+                }
+
+                failedRowsToFix.Remove(rowData);
+                Snackbar.Add($"Row {rowData.RowNumber}: Successfully reuploaded.", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Row {rowData.RowNumber} Error: {ex.Message}", Severity.Error);
+                await JS.InvokeVoidAsync("console.error", $"Error in ReuploadAllFixedRows: {ex.Message}");
+            }
+        }
+
+        if (!failedRowsToFix.Any())
+        {
+            showFixUploadForm = false;
+            excelFile = null;
+            Snackbar.Add("All failed rows have been successfully reuploaded.", Severity.Success);
+        }
+
+        isReuploading = false;
+        await InvokeAsync(StateHasChanged);
     }
 }

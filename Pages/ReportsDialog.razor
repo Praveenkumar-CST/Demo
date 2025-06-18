@@ -1,202 +1,741 @@
 ﻿@page "/reports"
 @using WiseHR.Models
-@using WiseHR.Pages.Form
-@using Components.sidebar
 @using WiseHRServer.Models
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject ReportService ReportService
 @inject EmployeeService EmployeeService
 @inject ExperienceService ExperienceService
-@layout HomeLayout
+@inject MentorAssignmentService MentorAssignmentService
 @inject IJSRuntime JS
-
-<MudContainer MaxWidth="MaxWidth.Large" Class="m-1.5">
-    @if (isLoading)
-    {
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-            <MudText Align="Align.Center">Loading...</MudText>
-        </div>
-    }
-    else
-    {
-        @if (Role?.ToLower() != "employee")
-        {
-            <div class="d-flex mb-3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenReportDialog">
-                    Add Report
-                </MudButton>
-            </div>
-        }
-        @if (reports.Any())
-        {
-            <div style="max-width: 100%;" class="rounded-table-wrapper">
-                <MudTable Class="small-table" Items="reports" Dense="true" Hover="true" Bordered="true" Striped="true" Style="width:max-content;">
-                    <HeaderContent>
-                        <MudTh>S.NO</MudTh>
-                        <MudTh>Name</MudTh>
-                        <MudTh>Email</MudTh>
-                        <MudTh>Phone</MudTh>
-                        <MudTh>Institution</MudTh>
-                        <MudTh>Mentor</MudTh>
-                        <MudTh>Projects</MudTh>
-                        <MudTh>Pro-Stage</MudTh>
-                        <MudTh>Progress%</MudTh>
-                        <MudTh>FortnightRemark1</MudTh>
-                        <MudTh>FortnightRemark2</MudTh>
-                        @if (Role?.ToLower() != "employee")
+@layout HomeLayout
+@if (isLoading)
+{
+    <div class="loading-container">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+        <MudText Align="Align.Center" Class="mt-2" Typo="Typo.body2">Loading...</MudText>
+    </div>
+}
+else
+{
+    <MudGrid Spacing="2">
+        <!-- Filter and Search Section -->
+        <MudItem xs="12">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect T="int?"
+                               Label="Year"
+                               Value="selectedYear"
+                               ValueChanged="OnYearChanged"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="custom-dropdown">
+                        <MudSelectItem T="int?" Value="@(null)">All Years</MudSelectItem>
+                        @foreach (var year in availableYears)
                         {
-                            <MudTh>Actions</MudTh>
+                            <MudSelectItem T="int?" Value="@year">@year</MudSelectItem>
                         }
-                    </HeaderContent>
-                    <RowTemplate Context="report">
-                        <MudTd DataLabel="S.NO">@((reports.IndexOf(report) + 1))</MudTd>
-                        <MudTd DataLabel="Mentee Name">@report.MenteeName</MudTd>
-                        <MudTd DataLabel="Mentee Email">
-                            <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Color="Color.Primary" Class="mr-1" />
-                            @report.MenteeEmail
-                        </MudTd>
-                        <MudTd DataLabel="Phone">
-                            <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Color="Color.Secondary" Class="mr-1" />
-                            @(_menteeDetailsCache.TryGetValue(report.MenteeId, out var mentee) ? mentee.CurrentMobile ?? "N/A" : "N/A")
-                        </MudTd>
-                        <MudTd DataLabel="Institution">
-                            <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Color="Color.Info" Class="mr-1" />
-                            @(_menteeExperienceCache.TryGetValue(report.MenteeId, out var exp) ? GetInstitution(exp) : "N/A")
-                        </MudTd>
-                        <MudTd DataLabel="Mentor">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                @if (_mentorPhotos.TryGetValue(report.MentorId, out var photo) && !string.IsNullOrEmpty(photo.Base64Content))
-                                {
-                                    <img src="data:@photo.ContentType;base64,@photo.Base64Content" alt="Mentor Photo" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
-                                }
-                                <MudChip T="string" Color="Color.Tertiary" Variant="Variant.Filled">@report.MentorName</MudChip>
-                            </div>
-                        </MudTd>
-                        <MudTd DataLabel="Project">@report.ProjectsWorkedOn</MudTd>
-                        <MudTd DataLabel="Pro-Stage">
-                            <MudChip T="string" Color="@GetStageColor(report.ProgressStage)" Variant="Variant.Outlined">@report.ProgressStage</MudChip>
-                        </MudTd>
-                        <MudTd DataLabel="Progress%">
-                            <MudProgressLinear Value="@report.ProgressPercentage" Color="@GetProgressColor(report.ProgressPercentage)" Style="min-width:100px;" />
-                            @if (report.ProgressPercentage == 100)
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="ml-1" />
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Autorenew" Color="Color.Warning" Class="ml-1" />
-                            }
-                        </MudTd>
-                        <MudTd DataLabel="Remark1">@report.FortnightRemarks1</MudTd>
-                        <MudTd DataLabel="Remark2">@report.FortnightRemarks2</MudTd>
-                        @if (Role?.ToLower() != "employee")
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect T="int?"
+                               Label="Month"
+                               Value="selectedMonth"
+                               ValueChanged="OnMonthChanged"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="custom-dropdown">
+                        <MudSelectItem T="int?" Value="@(null)">All Months</MudSelectItem>
+                        @foreach (var month in Enumerable.Range(1, 12))
                         {
-                            <MudTd>
-                                <div style="display: flex; gap: 2px;">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditReportDialog(report))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteReport(report.Id))" />
+                            <MudSelectItem T="int?" Value="@month">
+                                @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudTextField @bind-Value="searchQuery"
+                                  Label="Search"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Dense="true"
+                                  Placeholder="Search"
+                                  DebounceInterval="300"
+                                  OnDebounceIntervalElapsed="ApplyFilters"
+                                  Class="custom-dropdown" />
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+
+        <!-- Editable Reports Table -->
+        @if (filteredReports.Any())
+        {
+            <MudItem xs="12">
+                <div class="table-scroll-container">
+                    <MudTable Items="filteredReports"
+                              Dense="true"
+                              Breakpoint="Breakpoint.Sm"
+                              Elevation="0"
+                              Class="excel-table">
+                        <HeaderContent>
+                            <MudTh Class="excel-header">S.No</MudTh>
+                            <MudTh Class="excel-header">Mentee</MudTh>
+                            <MudTh Class="excel-header">Project</MudTh>
+                            <MudTh Class="excel-header">Fortnight 1</MudTh>
+                            <MudTh Class="excel-header">Fortnight 2</MudTh>
+                            <MudTh Class="excel-header">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="report">
+                            <MudTd DataLabel="S.No" Style="width: 50px;">@((filteredReports.IndexOf(report) + 1))</MudTd>
+                            <MudTd DataLabel="Mentee" Style="min-width: 100px; white-space: normal; word-wrap: break-word;">
+                                <MudText Typo="Typo.body2">@report.MenteeName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@report.MenteeEmail</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Project" Style="min-width: 150px;">
+                                <MudSelect T="string"
+                                           @bind-Value="report.ProjectsWorkedOn"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Dense="true"
+                                           Disabled="@(!IsRowEditable(report.Id) || !IsProjectEditable(report))"
+                                           Class="@($"{GetFieldClass(report.Id)} custom-dropdown")">
+                                    @foreach (var item in GetProjects())
+                                    {
+                                        <MudSelectItem Value="@item">@item</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                @if (report.ProjectsWorkedOn == "Others" && IsRowEditable(report.Id) && IsProjectEditable(report))
+                                {
+                                    <MudTextField @bind-Value="report.CustomProjectName"
+                                                  Label="Custom Project Name"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Dense="true"
+                                                  Class="@($"{GetFieldClass(report.Id)} mt-2")"
+                                                  DebounceInterval="300"
+                                                  OnDebounceIntervalElapsed="() => StateHasChanged()" />
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Fortnight 1" Style="min-width: 300px; white-space: normal; word-wrap: break-word;">
+                                <MudText Typo="Typo.body2" Class="mb-1">Performance</MudText>
+                                <MudSelect T="string"
+                                           @bind-Value="report.Performance1"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Dense="true"
+                                           Disabled="@(!IsRowEditable(report.Id) || !IsFirstFortnightEditable || (report.FirstFortnightSubmittedOn.HasValue && report.FirstFortnightSubmittedOn.Value.AddHours(48) < DateTime.UtcNow))"
+                                           Class="@($"{GetFieldClass(report.Id)} custom-dropdown mb-2")">
+                                    <MudSelectItem Value=@("Excellent")>Excellent</MudSelectItem>
+                                    <MudSelectItem Value=@("Good")>Good</MudSelectItem>
+                                    <MudSelectItem Value=@("Average")>Average</MudSelectItem>
+                                    <MudSelectItem Value=@("Below Average")>Below Average</MudSelectItem>
+                                    <MudSelectItem Value=@("Poor")>Poor</MudSelectItem>
+                                </MudSelect>
+                                <MudText Typo="Typo.body2" Class="mb-1">Story Points</MudText>
+                                <MudTextField @bind-Value="report.CompletedStoryPoints1"
+                                              InputType="InputType.Number"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Dense="true"
+                                              Disabled="@(!IsRowEditable(report.Id) || !IsFirstFortnightEditable || (report.FirstFortnightSubmittedOn.HasValue && report.FirstFortnightSubmittedOn.Value.AddHours(48) < DateTime.UtcNow))"
+                                              Class="@($"{GetFieldClass(report.Id)} mb-2")" />
+                                <MudText Typo="Typo.body2" Class="mb-1">Feedback</MudText>
+                                <MudTextField @bind-Value="report.Feedback1"
+                                              Lines="3"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Dense="true"
+                                              Disabled="@(!IsRowEditable(report.Id) || !IsFirstFortnightEditable || (report.FirstFortnightSubmittedOn.HasValue && report.FirstFortnightSubmittedOn.Value.AddHours(48) < DateTime.UtcNow))"
+                                              Class="@($"feedback-textfield {GetFieldClass(report.Id)}")" />
+                            </MudTd>
+                            <MudTd DataLabel="Fortnight 2" Style="min-width: 300px; white-space: normal; word-wrap: break-word;">
+                                <MudText Typo="Typo.body2" Class="mb-1">Performance</MudText>
+                                <MudSelect T="string"
+                                           @bind-Value="report.Performance2"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Dense="true"
+                                           Disabled="@(!IsRowEditable(report.Id) || !IsSecondFortnightEditable || (report.SecondFortnightSubmittedOn.HasValue && report.SecondFortnightSubmittedOn.Value.AddHours(48) < DateTime.UtcNow))"
+                                           Class="@($"{GetFieldClass(report.Id)} custom-dropdown mb-2")">
+                                    <MudSelectItem Value=@("Excellent")>Excellent</MudSelectItem>
+                                    <MudSelectItem Value=@("Good")>Good</MudSelectItem>
+                                    <MudSelectItem Value=@("Average")>Average</MudSelectItem>
+                                    <MudSelectItem Value=@("Below Average")>Below Average</MudSelectItem>
+                                    <MudSelectItem Value=@("Poor")>Poor</MudSelectItem>
+                                </MudSelect>
+                                <MudText Typo="Typo.body2" Class="mb-1">Story Points</MudText>
+                                <MudTextField @bind-Value="report.CompletedStoryPoints2"
+                                              InputType="InputType.Number"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Dense="true"
+                                              Disabled="@(!IsRowEditable(report.Id) || !IsSecondFortnightEditable || (report.SecondFortnightSubmittedOn.HasValue && report.SecondFortnightSubmittedOn.Value.AddHours(48) < DateTime.UtcNow))"
+                                              Class="@($"{GetFieldClass(report.Id)} mb-2")" />
+                                <MudText Typo="Typo.body2" Class="mb-1">Feedback</MudText>
+                                <MudTextField @bind-Value="report.Feedback2"
+                                              Lines="3"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Dense="true"
+                                              Disabled="@(!IsRowEditable(report.Id) || !IsSecondFortnightEditable || (report.SecondFortnightSubmittedOn.HasValue && report.SecondFortnightSubmittedOn.Value.AddHours(48) < DateTime.UtcNow))"
+                                              Class="@($"feedback-textfield {GetFieldClass(report.Id)}")" />
+                            </MudTd>
+                            <MudTd DataLabel="Actions" Style="width: 120px;">
+                                <div class="action-buttons">
+                                    @if (IsRowInEditMode(report.Id))
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Check"
+                                                       Color="Color.Success"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => SaveReport(report))"
+                                                       Title="Save Changes"
+                                                       Class="save-button"
+                                                       Disabled="@IsRowSaving(report.Id)" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                       Color="Color.Secondary"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => CancelEdit(report.Id))"
+                                                       Title="Cancel"
+                                                       Disabled="@IsRowSaving(report.Id)" />
+                                    }
+                                    else
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => StartEdit(report.Id))"
+                                                       Title="@(IsEditDisabled(report) ? GetEditDisabledReason(report) : "Edit")"
+                                                       Disabled="@IsEditDisabled(report)" />
+                                    }
                                 </div>
                             </MudTd>
-                        }
-                    </RowTemplate>
-                </MudTable>
-            </div>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager RowsPerPage="10" />
+                        </PagerContent>
+                    </MudTable>
+                </div>
+            </MudItem>
         }
         else
         {
-            <MudText Color="Color.Secondary" Align="Align.Center" Class="mt-4">No reports found.</MudText>
+            <MudItem xs="12">
+                <MudAlert Severity="Severity.Info" Class="mt-3 pa-2">No mentees assigned for this period.</MudAlert>
+            </MudItem>
         }
-    }
-    @if (isSubmitting)
-    {
-        <MudOverlay Visible="true" DarkBackground="true" Class="d-flex justify-center align-center" ZIndex="1300">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-            <MudText Class="ml-2" Typo="Typo.h6" Color="Color.Primary">Submitting...</MudText>
-        </MudOverlay>
-    }
-</MudContainer>
-
+    </MudGrid>
+}
+@if (isSubmitting)
+{
+    <MudOverlay Visible="true" DarkBackground="true" Class="d-flex justify-center align-center" ZIndex="1300">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+        <MudText Class="ml-2" Typo="Typo.body2" Color="Color.Primary">Saving...</MudText>
+    </MudOverlay>
+}
 <style>
-    .small-table td,
-    .small-table th {
+    /* Loading container */
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 150px;
+        color: #000000; /* Black text */
+    }
+
+    /* Dropdown and text field styling with Facebook blue */
+    .custom-dropdown .mud-input-control {
+        border-radius: 6px !important;
+        border: 1px solid #1877F2 !important; /* Facebook blue border */
+        background-color: #FFFFFF !important; /* White background */
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        transition: all 0.3s ease !important;
+    }
+
+        .custom-dropdown .mud-input-control:hover {
+            border-color: #145DBF !important; /* Darker Facebook blue on hover */
+            box-shadow: 0 1px 5px rgba(24, 119, 242, 0.3) !important;
+        }
+
+        .custom-dropdown .mud-input-control:focus-within {
+            border-color: #145DBF !important;
+            box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2) !important;
+        }
+
+    .custom-dropdown .mud-input-label {
+        color: #000000 !important; /* Black text */
+        font-size: 14px !important;
+        font-weight: 500 !important;
+    }
+
+    .custom-dropdown .mud-select-outlined .mud-select-outlined-border,
+    .custom-dropdown .mud-input-outlined .mud-input-outlined-border {
+        border-width: 1px !important;
+    }
+
+    /* Table styling */
+    .excel-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        background-color: #FFFFFF !important; /* White background */
+        border-radius: 6px;
+        overflow: hidden;
+        table-layout: auto; /* Allow table to adjust based on content */
+    }
+
+    .excel-header {
+        background-color: #1877F2 !important; /* Facebook blue header */
+        font-weight: 600 !important;
+        color: #FFFFFF !important; /* White text */
+        text-transform: uppercase;
+        font-size: 11px !important;
+        padding: 8px 10px !important;
+        border-bottom: 1px solid #145DBF !important; /* Darker blue border */
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    .feedback-header {
+        min-width: 300px !important; /* Increased width for feedback headers */
+    }
+
+    .excel-table td {
+        padding: 8px 10px !important;
         font-size: 12px !important;
-        padding: 4px 8px !important;
+        vertical-align: top;
+        border-bottom: 1px solid #E0E0E0 !important;
+        color: #000000 !important; /* Black text */
     }
 
-    .small-table .mud-icon {
-        font-size: 16px !important;
+    .feedback-column {
+        min-width: 300px !important; /* Increased default width for feedback columns */
+        white-space: normal !important; /* Allow text to wrap */
+        word-wrap: break-word !important; /* Ensure text wraps within the cell */
     }
 
-    .rounded-table-wrapper {
-        border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    .excel-table tr:hover {
+        background-color: #F5F5F5 !important; /* Light grey hover effect */
+    }
+
+    .mud-table-container {
+        padding: 0 !important;
+    }
+
+    .feedback-textfield {
+        width: 100%;
+        min-height: 60px;
+        resize: vertical;
+        color: #000000 !important; /* Black text */
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .save-button {
+        background-color: #1877F2 !important; /* Facebook blue */
+        color: #FFFFFF !important; /* White text */
+        animation: pulse-blue 2s infinite;
+    }
+
+        .save-button:hover {
+            background-color: #145DBF !important; /* Darker blue on hover */
+            transform: scale(1.05);
+        }
+
+    .editable-field {
+        background-color: #E6F0FE !important; /* Light blue background */
+        border: 2px solid #1877F2 !important; /* Facebook blue border */
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+        .editable-field:focus-within {
+            border-color: #145DBF !important; /* Darker blue on focus */
+            box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2) !important;
+        }
+
+    .readonly-field {
+        background-color: #F5F5F5 !important;
+        border: 1px solid #E0E0E0 !important;
+    }
+
+    .row-in-edit {
+        background-color: #E8F0FE !important; /* Light blue for edit mode */
+    }
+
+    .mud-table-row.row-in-edit:hover {
+        background-color: #E8F0FE !important;
+    }
+
+    /* Override MudBlazor primary color to Facebook blue */
+    :root {
+        --mud-palette-primary: #1877F2 !important;
+        --mud-palette-primary-darken: #145DBF !important;
+        --mud-palette-primary-text: #FFFFFF !important;
+    }
+
+    .mud-text, .mud-typography-body2, .mud-typography-subtitle1, .mud-typography-caption {
+        color: #000000 !important; /* Black text */
+    }
+
+    .mud-alert {
+        color: #000000 !important; /* Black text */
+        background-color: #E8F0FE !important; /* Light blue background */
+        border: 1px solid #1877F2 !important; /* Facebook blue border */
+    }
+
+    .table-scroll-container {
+        max-height: 600px;
+        overflow: auto;
+        border: 1px solid #ddd;
+        scrollbar-width: none; /* Firefox */
+        position: relative; /* Ensure positioning context for sticky elements */
+    }
+
+        .table-scroll-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari */
+        }
+
+    /* Sticky first and second columns */
+    .excel-table td:first-child,
+    .excel-table th:first-child {
+        position: sticky;
+        left: 0;
+        background: white;
+        z-index: 2;
+        min-width: 50px;
+        max-width: 50px;
+    }
+
+    .excel-table td:nth-child(2),
+    .excel-table th:nth-child(2) {
+        position: sticky;
+        left: 50px;
+        background: white;
+        z-index: 2;
+        min-width: 200px;
+        max-width: 200px;
+    }
+
+    /* Ensure header stays above content */
+    .excel-table th {
+        z-index: 3;
+    }
+
+    .excel-table thead {
+        position: sticky;
+        top: 0;
+        background-color: #1877F2 !important;
+        z-index: 10; /* Higher than sticky columns */
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.2); /* Optional: subtle shadow for visual separation */
     }
 </style>
 
 @code {
-    private List<ReportModel> reports = new();
+    private List<ReportModel> reports = [];
+    private List<ReportModel> filteredReports = [];
+    private Dictionary<int, ReportModel> originalReports = [];
+    private HashSet<int> editingRows = [];
+    private HashSet<int> savingRows = [];
     private string? Role { get; set; }
     private string? Email { get; set; }
-    private Dictionary<string, EmployeeDetails> _menteeDetailsCache = new();
-    private Dictionary<string, Experience> _menteeExperienceCache = new();
-    private Dictionary<string, (string ContentType, string Base64Content)> _mentorPhotos = new();
+    private Dictionary<string, EmployeeDetails> _menteeDetailsCache = [];
+    private Dictionary<string, Experience> _menteeExperienceCache = [];
     private bool isLoading = true;
     private bool isSubmitting = false;
+    private int? selectedYear = DateTime.UtcNow.Year;
+    private int? selectedMonth = DateTime.UtcNow.Month;
+    private string searchQuery = string.Empty;
+    private List<int> availableYears = Enumerable.Range(2020, DateTime.UtcNow.Year - 2019).ToList();
 
-    private Color GetProgressColor(int percentage) => percentage switch
+    private bool IsEditable
     {
-        >= 80 => Color.Success,
-        >= 50 => Color.Warning,
-        _ => Color.Error
-    };
+        get
+        {
+            var now = DateTime.UtcNow;
+            var selectedYearValue = selectedYear ?? now.Year;
+            var selectedMonthValue = selectedMonth ?? now.Month;
 
-    private Color GetStageColor(string? stage) => stage?.ToLower() switch
+            if (!selectedYear.HasValue || !selectedMonth.HasValue)
+                return true;
+
+            bool isCurrentMonth = selectedYearValue == now.Year && selectedMonthValue == now.Month;
+            bool isNextMonth = selectedYearValue == now.AddMonths(1).Year && selectedMonthValue == now.AddMonths(1).Month;
+            bool isPreviousMonth = selectedYearValue == now.AddMonths(-1).Year && selectedMonthValue == now.AddMonths(-1).Month;
+
+            bool isFirstFortnightSubmission = isCurrentMonth && now.Day >= 11 && now.Day <= 24;
+            bool isSecondFortnightSubmission =
+                (isCurrentMonth && now.Day >= 24) ||
+                (isNextMonth && now.Day <= 11) ||
+                (isPreviousMonth && now.Day <= 11 && now.Month == selectedMonthValue + 1);
+
+            return isFirstFortnightSubmission || isSecondFortnightSubmission;
+        }
+    }
+
+    private List<string> customProjects = [];
+
+    private async Task LoadCustomProjects()
     {
-        "completed" => Color.Success,
-        "in-progress" => Color.Warning,
-        "not started" => Color.Error,
+        try
+        {
+            var allReports = await ReportService.GetReportsAsync();
+            var predefinedProjects = GetPredefinedProjects();
+            customProjects.Clear();
+            customProjects.AddRange(allReports
+                .Where(r => !string.IsNullOrEmpty(r.ProjectsWorkedOn))
+                .Select(r => r.ProjectsWorkedOn)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(p => !predefinedProjects.Contains(p, StringComparer.OrdinalIgnoreCase)));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading custom projects: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private List<string> GetPredefinedProjects()
+    {
+        return ["WiseONE", "WiseULTIMA", "WiseMASTRO", "HUE Play", "HUE Create", "BlogAPP", "Others"];
+    }
+
+    private List<string> GetProjects()
+    {
+        var projects = GetPredefinedProjects();
+        projects.AddRange(customProjects.Where(p => !p.Equals("Others", StringComparison.OrdinalIgnoreCase)));
+        var sortedProjects = projects
+            .Where(p => !p.Equals("Others", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(p => p)
+            .ToList();
+        if (projects.Contains("Others", StringComparer.OrdinalIgnoreCase))
+        {
+            sortedProjects.Add("Others");
+        }
+        return sortedProjects;
+    }
+
+    private bool IsFirstFortnightEditable
+    {
+        get
+        {
+            var now = DateTime.UtcNow;
+            return IsEditable && now.Day >= 11 && now.Day <= 24;
+        }
+    }
+
+    private bool IsSecondFortnightEditable
+    {
+        get
+        {
+            var now = DateTime.UtcNow;
+            var selectedYearValue = selectedYear ?? now.Year;
+            var selectedMonthValue = selectedMonth ?? now.Month;
+
+            bool isCurrentMonth = selectedYearValue == now.Year && selectedMonthValue == now.Month;
+            bool isNextMonth = selectedYearValue == now.AddMonths(1).Year && selectedMonthValue == now.AddMonths(1).Month;
+            bool isPreviousMonth = selectedYearValue == now.AddMonths(-1).Year && selectedMonthValue == now.AddMonths(-1).Month;
+
+            return IsEditable &&
+                   (isCurrentMonth && now.Day >= 24 ||
+                    isNextMonth && now.Day <= 11 ||
+                    isPreviousMonth && now.Day <= 11 && now.Month == selectedMonthValue + 1);
+        }
+    }
+
+    private bool IsRowInEditMode(int reportId) => editingRows.Contains(reportId);
+    private bool IsRowSaving(int reportId) => savingRows.Contains(reportId);
+
+    private bool IsRowEditable(int reportId)
+    {
+        var report = filteredReports.FirstOrDefault(r => r.Id == reportId);
+        if (report == null) return false;
+
+        bool isFirstFortnightEditable = IsFirstFortnightEditable &&
+                                        (!report.FirstFortnightSubmittedOn.HasValue ||
+                                         report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+
+        bool isSecondFortnightEditable = IsSecondFortnightEditable &&
+                                         (!report.SecondFortnightSubmittedOn.HasValue ||
+                                          report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+
+        return IsEditable && (isFirstFortnightEditable || isSecondFortnightEditable);
+    }
+
+    private bool IsEditDisabled(ReportModel report)
+    {
+        if (!IsEditable)
+            return true;
+
+        bool isFirstFortnightEditable = IsFirstFortnightEditable &&
+                                        (!report.FirstFortnightSubmittedOn.HasValue ||
+                                         report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+
+        bool isSecondFortnightEditable = IsSecondFortnightEditable &&
+                                         (!report.SecondFortnightSubmittedOn.HasValue ||
+                                          report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+
+        return !isFirstFortnightEditable && !isSecondFortnightEditable;
+    }
+
+    private string GetEditDisabledReason(ReportModel report)
+    {
+        if (!IsEditable)
+            return "Editing disabled (outside submission window)";
+
+        bool isFirstFortnightEditable = IsFirstFortnightEditable &&
+                                        (!report.FirstFortnightSubmittedOn.HasValue ||
+                                         report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+
+        bool isSecondFortnightEditable = IsSecondFortnightEditable &&
+                                         (!report.SecondFortnightSubmittedOn.HasValue ||
+                                          report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+
+        if (!isFirstFortnightEditable && !isSecondFortnightEditable)
+        {
+            if (report.FirstFortnightSubmittedOn.HasValue && report.FirstFortnightSubmittedOn.Value.AddHours(48) < DateTime.UtcNow)
+                return "Editing disabled (past 48-hour window for first fortnight)";
+            if (report.SecondFortnightSubmittedOn.HasValue && report.SecondFortnightSubmittedOn.Value.AddHours(48) < DateTime.UtcNow)
+                return "Editing disabled (past 48-hour window for second fortnight)";
+            return "Editing disabled (outside submission windows: 11th–24th or 24th–next month's 11th)";
+        }
+
+        return "Edit";
+    }
+
+    private bool IsProjectEditable(ReportModel report)
+    {
+        var latestSubmission = report.FirstFortnightSubmittedOn ?? report.SecondFortnightSubmittedOn;
+        if (!latestSubmission.HasValue)
+            return IsFirstFortnightEditable || IsSecondFortnightEditable;
+
+        return (IsFirstFortnightEditable || IsSecondFortnightEditable) &&
+               latestSubmission.Value.AddHours(48) >= DateTime.UtcNow;
+    }
+
+    private string GetFieldClass(int reportId)
+    {
+        return IsRowInEditMode(reportId) ? "editable-field" : "readonly-field";
+    }
+
+    private void StartEdit(int reportId)
+    {
+        var report = filteredReports.FirstOrDefault(r => r.Id == reportId);
+        if (report == null) return;
+
+        if (!IsEditable)
+        {
+            Snackbar.Add("Cannot edit reports outside the submission window.", Severity.Warning);
+            return;
+        }
+
+        bool isFirstFortnightEditable = IsFirstFortnightEditable &&
+                                        (!report.FirstFortnightSubmittedOn.HasValue ||
+                                         report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+
+        bool isSecondFortnightEditable = IsSecondFortnightEditable &&
+                                         (!report.SecondFortnightSubmittedOn.HasValue ||
+                                          report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow);
+
+        if (!isFirstFortnightEditable && !isSecondFortnightEditable)
+        {
+            Snackbar.Add(GetEditDisabledReason(report), Severity.Warning);
+            return;
+        }
+
+        originalReports[reportId] = new ReportModel
+            {
+                Id = report.Id,
+                MenteeId = report.MenteeId,
+                MenteeName = report.MenteeName,
+                MenteeEmail = report.MenteeEmail,
+                MentorId = report.MentorId,
+                MentorName = report.MentorName,
+                MentorEmail = report.MentorEmail,
+                MentorDesignation = report.MentorDesignation,
+                ProjectsWorkedOn = report.ProjectsWorkedOn,
+                Performance1 = report.Performance1,
+                CompletedStoryPoints1 = report.CompletedStoryPoints1,
+                Feedback1 = report.Feedback1,
+                Performance2 = report.Performance2,
+                CompletedStoryPoints2 = report.CompletedStoryPoints2,
+                Feedback2 = report.Feedback2,
+                SubmittedOn = report.SubmittedOn,
+                FirstFortnightSubmittedOn = report.FirstFortnightSubmittedOn,
+                SecondFortnightSubmittedOn = report.SecondFortnightSubmittedOn,
+                CustomProjectName = report.CustomProjectName
+            };
+
+        editingRows.Add(reportId);
+        StateHasChanged();
+    }
+
+    private void CancelEdit(int reportId)
+    {
+        if (originalReports.TryGetValue(reportId, out var originalReport))
+        {
+            var currentReport = filteredReports.FirstOrDefault(r => r.Id == reportId);
+            if (currentReport != null)
+            {
+                currentReport.ProjectsWorkedOn = originalReport.ProjectsWorkedOn;
+                currentReport.Performance1 = originalReport.Performance1;
+                currentReport.CompletedStoryPoints1 = originalReport.CompletedStoryPoints1;
+                currentReport.Feedback1 = originalReport.Feedback1;
+                currentReport.Performance2 = originalReport.Performance2;
+                currentReport.CompletedStoryPoints2 = originalReport.CompletedStoryPoints2;
+                currentReport.Feedback2 = originalReport.Feedback2;
+                currentReport.FirstFortnightSubmittedOn = originalReport.FirstFortnightSubmittedOn;
+                currentReport.SecondFortnightSubmittedOn = originalReport.SecondFortnightSubmittedOn;
+                currentReport.CustomProjectName = originalReport.CustomProjectName;
+            }
+            originalReports.Remove(reportId);
+        }
+
+        editingRows.Remove(reportId);
+        StateHasChanged();
+    }
+
+    private Color GetPerformanceColor(string? performance) => performance?.ToLower() switch
+    {
+        "excellent" => Color.Success,
+        "good" => Color.Success,
+        "average" => Color.Info,
+        "below average" => Color.Warning,
+        "poor" => Color.Error,
         _ => Color.Default
     };
-
-    private string GetInstitution(Experience? exp)
-    {
-        if (exp == null) return "N/A";
-        if (exp.WorkExperiences?.Any() == true)
-            return exp.WorkExperiences.First().Employer;
-        if (exp.EducationQualifications?.Any() == true)
-            return exp.EducationQualifications.OrderByDescending(e => e.YearOfPassing).First().University;
-        return "N/A";
-    }
 
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
         try
         {
-            Console.WriteLine("[DEBUG] Initializing reports page...");
             var roleTask = JS.InvokeAsync<string>("sessionStorage.getItem", "userRole").AsTask();
             var emailTask = JS.InvokeAsync<string>("sessionStorage.getItem", "email").AsTask();
             await Task.WhenAll(roleTask, emailTask);
 
             Role = await roleTask;
             Email = await emailTask;
-            Console.WriteLine($"[DEBUG] Role: {Role}, Email: {Email}");
 
             if (string.IsNullOrEmpty(Role) || string.IsNullOrEmpty(Email))
             {
                 Snackbar.Add("Role or Email is missing from session.", Severity.Error);
-                Console.WriteLine("[DEBUG] Missing role or email");
                 return;
             }
 
-            await LoadReportsBasedOnRole();
+            await LoadReportsAndMentees();
+            await LoadCustomProjects();
+            ApplyFilters();
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error initializing: {ex.Message}", Severity.Error);
-            Console.WriteLine($"[DEBUG] Error in OnInitializedAsync: {ex.Message}");
         }
         finally
         {
@@ -205,277 +744,258 @@
         }
     }
 
-    private async Task LoadReportsBasedOnRole()
+    private async Task LoadReportsAndMentees()
     {
-        Console.WriteLine("[DEBUG] Loading reports based on role...");
         try
         {
             var empDetailsTask = EmployeeService.GetEmployeeDetailsByEmail(Email!);
-            var reportsTask = Role!.ToLower() switch
-            {
-                "admin" => ReportService.GetReportsAsync(),
-                "manager" => empDetailsTask.ContinueWith(t => t.Result != null ? ReportService.GetReportsByMentorIdAsync(t.Result.EmployeeID) : Task.FromResult<List<ReportModel>?>(null)).Unwrap(),
-                "employee" => empDetailsTask.ContinueWith(t => t.Result != null ? ReportService.GetReportsByMenteeIdAsync(t.Result.EmployeeID) : Task.FromResult<List<ReportModel>?>(null)).Unwrap(),
-                _ => throw new InvalidOperationException("Unknown role")
-            };
+            var assignmentsTask = MentorAssignmentService.GetAllAssignmentsAsync();
+            await Task.WhenAll(empDetailsTask, assignmentsTask);
 
-            await Task.WhenAll(empDetailsTask, reportsTask);
-            var empDetails = empDetailsTask.Result;
-            reports = reportsTask.Result ?? new List<ReportModel>();
-            Console.WriteLine($"[DEBUG] Reports loaded: {reports.Count}");
-
+            var empDetails = await empDetailsTask;
             if (empDetails == null)
             {
                 Snackbar.Add("Employee details not found.", Severity.Error);
-                Console.WriteLine("[DEBUG] No employee details found");
                 return;
             }
 
-            var uniqueMentorIds = reports.Select(r => r.MentorId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToList();
-            var uniqueMenteeIds = reports.Select(r => r.MenteeId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToList();
-            Console.WriteLine($"[DEBUG] Unique Mentor IDs: {uniqueMentorIds.Count}, Mentee IDs: {uniqueMenteeIds.Count}");
+            var assignments = await assignmentsTask ?? [];
+            var assignedMenteeIds = assignments
+                .Where(a => a.MentorEmployeeID == empDetails.EmployeeID)
+                .Select(a => a.MenteeEmployeeID)
+                .Distinct()
+                .ToList();
 
-            var missingMentorIds = uniqueMentorIds.Where(id => !_mentorPhotos.ContainsKey(id)).ToList();
-            var missingMenteeIds = uniqueMenteeIds.Where(id => !_menteeDetailsCache.ContainsKey(id)).ToList();
-            var missingExperienceIds = uniqueMenteeIds.Where(id => !_menteeExperienceCache.ContainsKey(id)).ToList();
+            var menteeDetailsTasks = assignedMenteeIds.Select(id => EmployeeService.GetEmployeeDetails(id)).ToList();
+            var reportsTask = Role!.ToLower() switch
+            {
+                "admin" => ReportService.GetReportsByMentorIdAsync(empDetails.EmployeeID),
+                "manager" => ReportService.GetReportsByMentorIdAsync(empDetails.EmployeeID),
+                "employee" => ReportService.GetReportsByMenteeIdAsync(empDetails.EmployeeID),
+                _ => throw new InvalidOperationException("Unknown role")
+            };
 
-            var mentorDetailsTasks = missingMentorIds.Select(id => EmployeeService.GetEmployeeDetails(id)).ToList();
-            var menteeDetailsTasks = missingMenteeIds.Select(id => EmployeeService.GetEmployeeDetails(id)).ToList();
-            var menteeExperienceTasks = missingExperienceIds.Select(id => ExperienceService.GetExperienceDetails(id)).ToList();
-
-            await Task.WhenAll(mentorDetailsTasks);
             await Task.WhenAll(menteeDetailsTasks);
-            await Task.WhenAll(menteeExperienceTasks);
+            reports = (await reportsTask) ?? [];
 
-            foreach (var (id, task) in missingMentorIds.Zip(mentorDetailsTasks))
+            var mentees = menteeDetailsTasks.Select(t => t.Result).Where(m => m != null).ToList();
+
+            if (selectedYear.HasValue && selectedMonth.HasValue)
             {
-                var mentor = await task;
-                if (mentor != null && !string.IsNullOrEmpty(mentor.PhotoBase64Content))
+                foreach (var mentee in mentees)
                 {
-                    _mentorPhotos[id] = (mentor.PhotoContentType, mentor.PhotoBase64Content);
-                    Console.WriteLine($"[DEBUG] Cached mentor photo for ID: {id}");
-                }
-            }
+                    var existingReport = reports.FirstOrDefault(r =>
+                        r.MenteeId == mentee.EmployeeID &&
+                        r.SubmittedOn.Year == selectedYear.Value &&
+                        r.SubmittedOn.Month == selectedMonth.Value);
 
-            foreach (var (id, task) in missingMenteeIds.Zip(menteeDetailsTasks))
-            {
-                var mentee = await task;
-                if (mentee != null)
-                {
-                    _menteeDetailsCache[id] = mentee;
-                    Console.WriteLine($"[DEBUG] Cached mentee details for ID: {id}");
-                }
-            }
-
-            foreach (var (id, task) in missingExperienceIds.Zip(menteeExperienceTasks))
-            {
-                var exp = await task;
-                if (exp != null)
-                {
-                    _menteeExperienceCache[id] = exp;
-                    Console.WriteLine($"[DEBUG] Cached mentee experience for ID: {id}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error loading reports: {ex.Message}", Severity.Error);
-            Console.WriteLine($"[DEBUG] Error in LoadReportsBasedOnRole: {ex.Message}");
-        }
-    }
-
-    private async Task OpenReportDialog()
-    {
-        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true, CloseOnEscapeKey = false };
-        isSubmitting = true;
-        Console.WriteLine("[DEBUG] Opening add report dialog...");
-        var dialog = await DialogService.ShowAsync<FortnightReportForm>("Submit Fortnight Report", options);
-        var result = await dialog.Result;
-        isSubmitting = false;
-
-        if (!result.Canceled && result.Data is ReportModel newReport)
-        {
-            Snackbar.Add("Report added successfully.", Severity.Success);
-            Console.WriteLine($"[DEBUG] Report added, ID: {newReport.Id}, Mentee: {newReport.MenteeName}");
-            // Add the new report to the list instantly
-            reports.Add(newReport);
-            // Update cache for the new report
-            await UpdateCacheForReport(newReport);
-            StateHasChanged();
-        }
-        else
-        {
-            Console.WriteLine("[DEBUG] Add report dialog canceled or no report data returned");
-            // Fallback to full reload if dialog doesn't return the report
-            await LoadReportsBasedOnRole();
-            StateHasChanged();
-        }
-    }
-
-    private async Task OpenEditReportDialog(ReportModel report)
-    {
-        var parameters = new DialogParameters { { nameof(FortnightReportForm.Report), report } };
-        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true, CloseOnEscapeKey = false };
-        isSubmitting = true;
-        Console.WriteLine($"[DEBUG] Opening edit report dialog for report ID: {report.Id}");
-        var dialog = await DialogService.ShowAsync<FortnightReportForm>("Edit Fortnight Report", parameters, options);
-        var result = await dialog.Result;
-        isSubmitting = false;
-
-        if (!result.Canceled)
-        {
-            Snackbar.Add("Report updated successfully.", Severity.Success);
-            Console.WriteLine("[DEBUG] Report updated, updating table...");
-            var updatedReport = await ReportService.GetReportByIdAsync(report.Id);
-            if (updatedReport != null)
-            {
-                var index = reports.FindIndex(r => r.Id == report.Id);
-                if (index >= 0)
-                {
-                    reports[index] = updatedReport;
-                }
-                await UpdateCacheForReport(updatedReport);
-            }
-            else
-            {
-                await LoadReportsBasedOnRole();
-            }
-            StateHasChanged();
-        }
-        else
-        {
-            Console.WriteLine("[DEBUG] Edit report dialog canceled");
-        }
-    }
-
-    private async Task DeleteReport(int id)
-    {
-        Console.WriteLine($"[DEBUG] Deleting report ID: {id}");
-        try
-        {
-            bool isDeleted = await ReportService.DeleteReportAsync(id);
-            if (isDeleted)
-            {
-                Snackbar.Add("Report deleted successfully.", Severity.Success);
-                Console.WriteLine("[DEBUG] Report deleted, removing from table...");
-                reports.RemoveAll(r => r.Id == id);
-                await CleanUpCache();
-                StateHasChanged();
-            }
-            else
-            {
-                Snackbar.Add("Failed to delete report.", Severity.Error);
-                Console.WriteLine("[DEBUG] Failed to delete report");
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error deleting report: {ex.Message}", Severity.Error);
-            Console.WriteLine($"[DEBUG] Error in DeleteReport: {ex.Message}");
-        }
-    }
-
-    private async Task UpdateCacheForReport(ReportModel report)
-    {
-        Console.WriteLine($"[DEBUG] Updating cache for report ID: {report.Id}");
-        try
-        {
-            var mentorId = report.MentorId;
-            var menteeId = report.MenteeId;
-
-            if (!string.IsNullOrEmpty(mentorId) && !_mentorPhotos.ContainsKey(mentorId))
-            {
-                var mentor = await EmployeeService.GetEmployeeDetails(mentorId);
-                if (mentor != null && !string.IsNullOrEmpty(mentor.PhotoBase64Content))
-                {
-                    _mentorPhotos[mentorId] = (mentor.PhotoContentType, mentor.PhotoBase64Content);
-                    Console.WriteLine($"[DEBUG] Cached mentor photo for ID: {mentorId}");
-                }
-            }
-
-            if (!string.IsNullOrEmpty(menteeId))
-            {
-                if (!_menteeDetailsCache.ContainsKey(menteeId))
-                {
-                    var mentee = await EmployeeService.GetEmployeeDetails(menteeId);
-                    if (mentee != null)
+                    if (existingReport == null)
                     {
-                        _menteeDetailsCache[menteeId] = mentee;
-                        Console.WriteLine($"[DEBUG] Cached mentee details for ID: {menteeId}");
+                        reports.Add(new ReportModel
+                            {
+                                MenteeId = mentee.EmployeeID,
+                                MenteeName = $"{mentee.FirstName} {mentee.LastName}",
+                                MenteeEmail = mentee.CurrentEmail,
+                                MentorId = empDetails.EmployeeID,
+                                MentorName = $"{empDetails.FirstName} {empDetails.LastName}",
+                                MentorDesignation = empDetails.Designation,
+                                MentorEmail = empDetails.CurrentEmail,
+                                SubmittedOn = new DateTime(selectedYear.Value, selectedMonth.Value, 1)
+                            });
                     }
-                }
 
-                if (!_menteeExperienceCache.ContainsKey(menteeId))
-                {
-                    var exp = await ExperienceService.GetExperienceDetails(menteeId);
-                    if (exp != null)
+                    if (!_menteeDetailsCache.ContainsKey(mentee.EmployeeID))
                     {
-                        _menteeExperienceCache[menteeId] = exp;
-                        Console.WriteLine($"[DEBUG] Cached mentee experience for ID: {menteeId}");
+                        _menteeDetailsCache[mentee.EmployeeID] = mentee;
+                    }
+
+                    if (!_menteeExperienceCache.ContainsKey(mentee.EmployeeID))
+                    {
+                        var exp = await ExperienceService.GetExperienceDetails(mentee.EmployeeID);
+                        if (exp != null)
+                        {
+                            _menteeExperienceCache[mentee.EmployeeID] = exp;
+                        }
                     }
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[DEBUG] Error updating cache: {ex.Message}");
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
         }
     }
 
-    private async Task CleanUpCache()
+    private Dictionary<string, List<ReportModel>> _filterCache = [];
+
+    private void ApplyFilters()
     {
-        Console.WriteLine("[DEBUG] Cleaning up cache...");
+        var cacheKey = $"{selectedYear}_{selectedMonth}_{searchQuery?.ToLower()}";
+        if (_filterCache.TryGetValue(cacheKey, out var cachedFilteredReports))
+        {
+            filteredReports = cachedFilteredReports;
+            StateHasChanged();
+            return;
+        }
+
+        var query = searchQuery?.Trim().ToLower();
+        filteredReports = reports.Where(r =>
+            (!selectedYear.HasValue || r.SubmittedOn.Year == selectedYear.Value) &&
+            (!selectedMonth.HasValue || r.SubmittedOn.Month == selectedMonth.Value) &&
+            (string.IsNullOrEmpty(query) ||
+             r.ProjectsWorkedOn?.ToLower().Contains(query) == true ||
+             r.MenteeName?.ToLower().Contains(query) == true ||
+             r.MenteeEmail?.ToLower().Contains(query) == true ||
+             r.MentorName?.ToLower().Contains(query) == true ||
+             r.MentorEmail?.ToLower().Contains(query) == true)
+        ).ToList();
+
+        _filterCache[cacheKey] = filteredReports;
+        StateHasChanged();
+    }
+
+    private async Task OnYearChanged(int? year)
+    {
+        selectedYear = year;
+        editingRows.Clear();
+        originalReports.Clear();
+        savingRows.Clear();
+        _filterCache.Clear();
+        await LoadReportsAndMentees();
+        ApplyFilters();
+    }
+
+    private async Task OnMonthChanged(int? month)
+    {
+        selectedMonth = month;
+        editingRows.Clear();
+        originalReports.Clear();
+        savingRows.Clear();
+        _filterCache.Clear();
+        await LoadReportsAndMentees();
+        ApplyFilters();
+    }
+
+    private void OnProjectChanged(string value, ReportModel report)
+    {
+        if (value != "Others")
+        {
+            report.CustomProjectName = null;
+        }
+        report.ProjectsWorkedOn = value;
+        StateHasChanged();
+    }
+
+    private async Task SaveReport(ReportModel report)
+    {
+        if (!IsEditable)
+        {
+            Snackbar.Add("Cannot save reports outside the submission window.", Severity.Warning);
+            return;
+        }
+
+        // Validate first fortnight fields
+        if (IsFirstFortnightEditable &&
+            (!report.FirstFortnightSubmittedOn.HasValue ||
+             report.FirstFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow))
+        {
+            if (string.IsNullOrEmpty(report.Performance1) ||
+                string.IsNullOrEmpty(report.Feedback1) ||
+                !report.CompletedStoryPoints1.HasValue)
+            {
+                Snackbar.Add("All first fortnight fields (Performance, Feedback, Story Points) are required during the submission window (11th–24th).", Severity.Warning);
+                return;
+            }
+            // Set timestamp only if not previously submitted
+            if (!report.FirstFortnightSubmittedOn.HasValue)
+            {
+                report.FirstFortnightSubmittedOn = DateTime.UtcNow;
+                Console.WriteLine($"Set FirstFortnightSubmittedOn to {report.FirstFortnightSubmittedOn}");
+            }
+        }
+
+        // Validate second fortnight fields
+        if (IsSecondFortnightEditable &&
+            (!report.SecondFortnightSubmittedOn.HasValue ||
+             report.SecondFortnightSubmittedOn.Value.AddHours(48) >= DateTime.UtcNow))
+        {
+            if (string.IsNullOrEmpty(report.Performance2) ||
+                string.IsNullOrEmpty(report.Feedback2) ||
+                !report.CompletedStoryPoints2.HasValue)
+            {
+                Snackbar.Add("All second fortnight fields (Performance, Feedback, Story Points) are required during the submission window (24th–next month's 11th).", Severity.Warning);
+                return;
+            }
+            // Set timestamp only if not previously submitted
+            if (!report.SecondFortnightSubmittedOn.HasValue)
+            {
+                report.SecondFortnightSubmittedOn = DateTime.UtcNow;
+                Console.WriteLine($"Set SecondFortnightSubmittedOn to {report.SecondFortnightSubmittedOn}");
+            }
+        }
+
+        // Validate ProjectsWorkedOn
+        if (string.IsNullOrEmpty(report.ProjectsWorkedOn))
+        {
+            Snackbar.Add("Project Worked On is required.", Severity.Warning);
+            return;
+        }
+
+        if (report.ProjectsWorkedOn == "Others" && string.IsNullOrEmpty(report.CustomProjectName))
+        {
+            Snackbar.Add("Custom project name is required when selecting 'Others'.", Severity.Warning);
+            return;
+        }
+
+        if (report.ProjectsWorkedOn == "Others")
+        {
+            var trimmedProjectName = report.CustomProjectName!.Trim();
+            var predefinedProjects = GetPredefinedProjects();
+            if (predefinedProjects.Contains(trimmedProjectName, StringComparer.OrdinalIgnoreCase))
+            {
+                Snackbar.Add($"The project '{trimmedProjectName}' is already a predefined project. Please select it from the list.", Severity.Warning);
+                return;
+            }
+            report.ProjectsWorkedOn = trimmedProjectName;
+            if (!customProjects.Contains(trimmedProjectName, StringComparer.OrdinalIgnoreCase))
+            {
+                customProjects.Add(trimmedProjectName);
+            }
+        }
+
+        savingRows.Add(report.Id);
+        isSubmitting = true;
+
         try
         {
-            var activeMentorIds = reports.Select(r => r.MentorId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToHashSet();
-            var activeMenteeIds = reports.Select(r => r.MenteeId).Distinct().Where(id => !string.IsNullOrEmpty(id)).ToHashSet();
-
-            var mentorIdsToRemove = _mentorPhotos.Keys.Where(id => !activeMentorIds.Contains(id)).ToList();
-            var menteeIdsToRemove = _menteeDetailsCache.Keys.Where(id => !activeMenteeIds.Contains(id)).ToList();
-            var experienceIdsToRemove = _menteeExperienceCache.Keys.Where(id => !activeMenteeIds.Contains(id)).ToList();
-
-            foreach (var id in mentorIdsToRemove)
+            if (report.Id == 0)
             {
-                _mentorPhotos.Remove(id);
-                Console.WriteLine($"[DEBUG] Removed mentor photo cache for ID: {id}");
+                report.SubmittedOn = DateTime.UtcNow;
+                await ReportService.SubmitReportAsync(report);
+                Snackbar.Add($"Report for {report.MenteeName} created successfully.", Severity.Success);
+            }
+            else
+            {
+                await ReportService.UpdateReportAsync(report.Id, report);
+                Snackbar.Add($"Report for {report.MenteeName} updated successfully.", Severity.Success);
             }
 
-            foreach (var id in menteeIdsToRemove)
-            {
-                _menteeDetailsCache.Remove(id);
-                Console.WriteLine($"[DEBUG] Removed mentee details cache for ID: {id}");
-            }
+            editingRows.Remove(report.Id);
+            originalReports.Remove(report.Id);
 
-            foreach (var id in experienceIdsToRemove)
-            {
-                _menteeExperienceCache.Remove(id);
-                Console.WriteLine($"[DEBUG] Removed mentee experience cache for ID: {id}");
-            }
+            await LoadReportsAndMentees();
+            await LoadCustomProjects();
+            ApplyFilters();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[DEBUG] Error cleaning up cache: {ex.Message}");
+            Snackbar.Add($"Error saving report for {report.MenteeName}: {ex.Message}", Severity.Error);
         }
-    }
-
-    private async Task DownloadFile(ReportModel report)
-    {
-        Console.WriteLine($"[DEBUG] Downloading file for report ID: {report.Id}");
-        if (report.UploadedFile != null && !string.IsNullOrEmpty(report.FileName))
+        finally
         {
-            var base64 = Convert.ToBase64String(report.UploadedFile);
-            await JS.InvokeVoidAsync("downloadBase64File", "application/octet-stream", base64, report.FileName);
-            Console.WriteLine($"[DEBUG] File downloaded: {report.FileName}");
+            savingRows.Remove(report.Id);
+            isSubmitting = false;
+            StateHasChanged();
         }
-        else
-        {
-            Console.WriteLine("[DEBUG] No file to download");
-        }
-    }
-
-    public class Report
-    {
-        public string ReportName { get; set; } = string.Empty;
-        public DateTime Date { get; set; }
     }
 }
