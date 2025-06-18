@@ -332,29 +332,29 @@
                     <textarea
                            @bind="currentMessage"
                            @bind:event="oninput"
-                           @onkeydown="OnKeyDown"
+                           @onkeydown="OnKeyPress"
                            placeholder="Ask me anything about WiseONE..."
                            disabled="@(!isConnected || isSending)"
                            class="wisechat-input-field"
                            rows="1"
                            @ref="inputRef"></textarea>
 
-                    <MudIconButton Icon="Icons.Material.Filled.Send" 
-                                  Color="Color.Secondary" 
-                                  OnClick="SendMessage"
-                                  Disabled="string.IsNullOrWhiteSpace(currentMessage) || !isConnected || isSending"
-                                  Class="wisechat-send-button"/>
+                    <MudFab IconSize="Size.Small" EndIcon="@(isOpen ? Icons.Material.Filled.Send : Icons.Material.Filled.Send)"
+                            OnClick="SendMessage"
+                            Disabled="string.IsNullOrWhiteSpace(currentMessage) || !isConnected || isSending"
+                            Class="wisechat-send-button"
+                            Title="Send" />
                 </div>
             </div>
 
             @* Scroll to Bottom Button *@
             @if (showScrollToBottomButton)
             {
-                <MudFab Icon="@Icons.Material.Filled.ArrowDownward"
-                        Color="Color.Secondary"
+                
+                <MudFab IconSize="Size.Small" EndIcon="@(isOpen ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowForward)"
                         OnClick="ScrollToBottom"
-                        Size="Size.Small"
-                        Class="wisechat-scroll-to-bottom-fab" />
+                        Class="wisechat-scroll-to-bottom-fab"
+                        Title="Scroll Down" />
             }
         </div>
     </div>
@@ -670,29 +670,9 @@
     }
 
     /* Dark mode support */
-    @@media (prefers-color-scheme: dark) {
-        .wisechat-history-panel {
-            background: rgba(26, 32, 44, 0.95);
-            border-right-color: rgba(255, 255, 255, 0.1);
-        }
+   
 
-        .wisechat-history-item {
-            background: rgba(26, 32, 44, 0.95);
-            border-bottom-color: rgba(255, 255, 255, 0.1);
-        }
 
-        .wisechat-history-group-title {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .wisechat-history-item:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        .wisechat-history-item.active {
-            background: linear-gradient(90deg, var(--mud-palette-primary-darken) 0%, rgba(var(--mud-palette-primary-rgb), 0.2) 100%);
-        }
-    }
 
     /* Premium messages area */
     .wisechat-messages {
@@ -947,6 +927,10 @@
         box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3);
     }
 
+        .wisechat-send-button .mud-icon-root.mud-svg-icon {
+            fill:white;
+        }
+
     .wisechat-send-button:hover:not(:disabled) {
         transform: translateY(-2px) scale(1.05);
         box-shadow: 0 8px 20px rgba(var(--mud-palette-primary-rgb), 0.4);
@@ -972,174 +956,7 @@
     }
 
     /* Dark mode input support */
-    @@media (prefers-color-scheme: dark) {
-        .wisechat-input-area
-
-    {
-        background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
-        border-top-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .wisechat-input-wrapper {
-        background: #2d3748;
-        border-color: rgba(255, 255, 255, 0.1);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    }
-
-    .wisechat-input-field {
-        color: #e2e8f0;
-    }
-
-        .wisechat-input-field::placeholder {
-            color: #a0aec0;
-        }
-
-    .wisechat-input-field:focus::placeholder {
-        color: #cbd5e1;
-    }
-
-    .wisechat-input-field:disabled {
-        background: rgba(0, 0, 0, 0.02);
-        cursor: not-allowed;
-        color: #94a3b8;
-    }
-
-    .wisechat-status-message {
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    }
-
-    /* Animations */
-    @@keyframes pulseGlow {
-        0%, 100%
-
-    {
-        transform: scale(1);
-        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-    }
-
-    50% {
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(255, 71, 87, 0.6);
-    }
-
-    }
-
-    @@keyframes gradientShift {
-        0%, 100%
-
-    {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    }
-
-    @@keyframes shimmer {
-        0%
-
-    {
-        transform: translateX(-100%);
-    }
-
-    100% {
-        transform: translateX(100%);
-    }
-
-    }
-
-    @@keyframes statusPulse {
-        0%, 100%
-
-    {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.6;
-    }
-
-    }
-
-    @@keyframes slideInMessage {
-        0%
-
-    {
-        opacity: 0;
-        transform: translateY(20px) scale(0.9);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-
-    }
-
-    @@keyframes fadeInUp {
-        0%
-
-    {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    }
-
-    @@keyframes bounce {
-        0%, 20%, 50%, 80%, 100%
-
-    {
-        transform: translateY(0);
-    }
-
-    40% {
-        transform: translateY(-10px);
-    }
-
-    60% {
-        transform: translateY(-5px);
-    }
-
-    }
-
-    @@keyframes typingBounce {
-        0%, 60%, 100%
-
-    {
-        transform: scale(1) translateY(0);
-        opacity: 0.5;
-    }
-
-    30% {
-        transform: scale(1.3) translateY(-8px);
-        opacity: 1;
-    }
-
-    }
-
-    @@keyframes fadeIn {
-        0%
-
-    {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
-
-    }
-
+    
     /* Mobile Responsive Enhancements */
     @@media (max-width: 480px) {
         .chat-widget-container
@@ -1174,203 +991,7 @@
     }
 
     /* Dark mode support */
-    @@media (prefers-color-scheme: dark) {
-    .wisechat-window
-
-    {
-        background: rgba(26, 32, 44, 0.95);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .wisechat-messages {
-        background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
-    }
-
-    .wisechat-message-bubble {
-        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-        color: white;
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .wisechat-input-wrapper {
-        background: #2d3748;
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .wisechat-input-field {
-        color: white;
-    }
-
-        .wisechat-input-field::placeholder {
-            color: #a0aec0;
-        }
-
-    .wisechat-input-field:focus::placeholder {
-        color: #cbd5e1;
-    }
-
-    .wisechat-input-field:disabled {
-        background: rgba(0, 0, 0, 0.02);
-        cursor: not-allowed;
-        color: #94a3b8;
-    }
-
-    .wisechat-status-message {
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    }
-
-    /* High contrast mode support */
-    @@media (prefers-contrast: high) {
-    .wisechat-window
-
-    {
-        border: 2px solid #000;
-    }
-
-    .wisechat-message-bubble {
-        border: 1px solid #000;
-    }
-
-    .wisechat-input-wrapper {
-        border: 2px solid #000;
-    }
-
-    }
-
-    .wisechat-formatted-content {
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        line-height: 1.5;
-    }
-
-    .wisechat-bullet-list {
-        margin: 0.5rem 0;
-        padding-left: 0.5rem;
-    }
-
-    .wisechat-bullet,
-    .wisechat-nested-bullet {
-        display: flex;
-        align-items: flex-start;
-        margin: 0.5rem 0;
-        padding-left: 1.5rem;
-        position: relative;
-    }
-
-    .wisechat-nested-bullet {
-        padding-left: 2.5rem;
-    }
-
-    .wisechat-bullet .bullet,
-    .wisechat-nested-bullet .bullet {
-        position: absolute;
-        left: 0.5rem;
-        color: var(--mud-palette-primary);
-        font-size: 1.2rem;
-    }
-
-    .wisechat-bullet .bullet-content,
-    .wisechat-nested-bullet .bullet-content {
-        flex: 1;
-        padding-left: 0.5rem;
-    }
-
-    .wisechat-numbered-point {
-        margin: 0.5rem 0;
-        padding-left: 1.5rem;
-        position: relative;
-    }
-
-    .wisechat-text-line {
-        margin: 0.5rem 0;
-    }
-
-    .wisechat-spacing {
-        height: 0.8rem;
-    }
-
-    .wisechat-formatted-content strong {
-        font-weight: 600;
-        color: var(--mud-palette-primary);
-        display: block;
-        margin: 1rem 0 0.5rem 0;
-    }
-
-    /* Dark mode support */
-    @@media (prefers-color-scheme: dark) {
-    .wisechat-formatted-content strong {
-            color: var(--mud-palette-primary-lighten);
-        }
-
-        .wisechat-bullet .bullet,
-        .wisechat-nested-bullet .bullet {
-            color: var(--mud-palette-primary-lighten);
-        }
-    }
-
-    /* Table Styles */
-    .wisechat-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1rem 0;
-        background: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .wisechat-table th {
-        background: var(--mud-palette-primary);
-        color: white;
-        padding: 12px;
-        text-align: left;
-        font-weight: 600;
-    }
-
-    .wisechat-table td {
-        padding: 12px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .wisechat-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .wisechat-table tr:nth-child(even) {
-        background: #f8f9fa;
-    }
-
-    .wisechat-table tr:hover {
-        background: #f0f0f0;
-    }
-
-    /* Dark mode table support */
-    @@media (prefers-color-scheme: dark) {
-    .wisechat-table
-
-    {
-        background: #2d3748;
-    }
-
-    .wisechat-table th {
-        background: var(--mud-palette-primary-darken);
-    }
-
-    .wisechat-table td {
-        border-bottom-color: #4a5568;
-        color: #e2e8f0;
-    }
-
-    .wisechat-table tr:nth-child(even) {
-        background: #2d3748;
-    }
-
-    .wisechat-table tr:hover {
-        background: #4a5568;
-    }
-    }
+  
 
     /* Enhanced Asset Table Styles */
     .wisechat-asset-table-container {
@@ -1432,52 +1053,56 @@
         white-space: normal;
     }
 
-    /* Dark mode table support */
-    @@media (prefers-color-scheme: dark) {
-    .wisechat-table
-
-    {
-        background: #2d3748;
-    }
-
-    .wisechat-table th {
-        background: linear-gradient(135deg, var(--mud-palette-primary-darken) 0%, var(--mud-palette-primary) 100%);
-    }
-
-    .wisechat-table td {
-        border-bottom-color: #4a5568;
-        color: #e2e8f0;
-    }
-
-    .wisechat-table tr:nth-child(even) {
-        background: #2d3748;
-    }
-
-    .wisechat-table tr:hover {
-        background: #4a5568;
-    }
-    }
-
+    
     /* Scroll to Bottom Button Styles */
     .wisechat-scroll-to-bottom-fab {
         position: absolute;
         bottom: 100px;
-        left: 2px;
+        right: 20px;
         z-index: 10;
-        transition: opacity 0.3s ease, transform 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         opacity: 0.7;
-        text-shadow: 0 0 BLACK;
-        background: mediumslateblue;
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3);
+        border: 2px solid white;
+        animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: 40px;
+        height: 40px;
+        padding: 0 16px;
     }
 
     .wisechat-scroll-to-bottom-fab:hover {
         opacity: 1;
-        transform: translateY(-2px);
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(var(--mud-palette-primary-rgb), 0.4);
     }
 
+    .wisechat-scroll-to-bottom-fab:active {
+        transform: translateY(-2px) scale(0.98);
+    }
+
+    .wisechat-scroll-to-bottom-fab .mud-icon-root {
+        font-size: 1.2rem;
+    }
+
+    @@keyframes bounceIn {
+        0% {
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+        }
+        100% {
+            opacity: 0.7;
+            transform: translateY(0) scale(1);
+        }
+    }
 </style>
 
 @code {
+    private ElementReference inputRef;
     private bool isOpen = false;
     private bool isConnected = false;
     private bool isTyping = false;
@@ -1655,6 +1280,7 @@
     {
         statusMessage = status;
         await InvokeAsync(StateHasChanged);
+        await ScrollToBottom();
     }
 
     private async void HandleConnectionStateChanged()
@@ -1708,6 +1334,7 @@
         {
             await ChatService.SendQueryAsync(DisplayName ?? "User", messageContent, EmployeeId, currentSessionId);
             chatMessage.Status = MessageStatus.Sent;
+            await ScrollToBottom();
         }
         catch (Exception ex)
         {
@@ -1766,7 +1393,7 @@
         {
             // Ignore JS interop errors
         }
-}
+    }
 
     private async Task LoadUserDetails()
     {

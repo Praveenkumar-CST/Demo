@@ -93,86 +93,86 @@ public class ChatMessageFormatter : IChatMessageFormatter
     }
 
     public string FormatGenericTableContent(string content)
-    {
-        var lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-                           .Select(line => line.Trim())
-                           .ToList();
+{
+    var lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                       .Select(line => line.Trim())
+                       .ToList();
 
-        if (lines.Count == 1 && lines[0].Contains('|'))
-        {
-            // Single-row fallback: assume Field | Value
-            var row = lines[0].Split('|')
+    if (lines.Count == 1 && lines[0].Contains('|'))
+    {
+        // Single-row fallback: assume Field | Value
+        var row = lines[0].Split('|')
                           .Select(cell => WebUtility.HtmlEncode(cell.Trim()))
                           .ToList();
 
-            if (row.Count == 2)
-            {
-                var tableHtml = new StringBuilder();
-                tableHtml.Append("<div class='wisechat-table-container'>");
-                tableHtml.Append("<table class='wisechat-table'>");
+        if (row.Count == 2)
+        {
+            var tableHtml = new StringBuilder();
+            tableHtml.Append("<div class='wisechat-table-container'>");
+            tableHtml.Append("<table class='wisechat-table'>");
                 tableHtml.Append("<thead><tr><th>Field</th><th>Value</th></tr></thead>");
                 tableHtml.Append("<tbody>");
-                tableHtml.Append("<tr>");
+            tableHtml.Append("<tr>");
                 tableHtml.Append($"<td class='wisechat-field'>{row[0]}</td>");
                 tableHtml.Append($"<td class='wisechat-value'>{row[1]}</td>");
-                tableHtml.Append("</tr>");
-                tableHtml.Append("</tbody></table></div>");
-                return tableHtml.ToString();
-            }
+            tableHtml.Append("</tr>");
+            tableHtml.Append("</tbody></table></div>");
+            return tableHtml.ToString();
         }
+    }
 
-        // Standard case
-        if (lines.Count < 2 || lines[1].All(c => c == '-' || c == '•') == false)
-        {
-            return "<p>Invalid table format. Expected header row with separator.</p>";
-        }
+    // Standard case
+    if (lines.Count < 2 || lines[1].All(c => c == '-' || c == '•') == false)
+    {
+        return "<p>Invalid table format. Expected header row with separator.</p>";
+    }
 
-        var headers = lines[0].Split('|')
+    var headers = lines[0].Split('|')
                          .Select(h => WebUtility.HtmlEncode(h.Trim()))
                          .ToList();
 
-        var dataRows = new List<List<string>>();
-        for (int i = 2; i < lines.Count; i++)
-        {
-            var rowValues = lines[i].Split('|')
+    var dataRows = new List<List<string>>();
+    for (int i = 2; i < lines.Count; i++)
+    {
+        var rowValues = lines[i].Split('|')
                                 .Select(cell => WebUtility.HtmlEncode(cell.Trim()))
                                 .ToList();
 
-            while (rowValues.Count < headers.Count)
-            {
-                rowValues.Add("");
-            }
-            if (rowValues.Count > headers.Count)
-            {
-                rowValues = rowValues.Take(headers.Count).ToList();
-            }
-            dataRows.Add(rowValues);
+        while (rowValues.Count < headers.Count)
+        {
+            rowValues.Add("");
         }
+        if (rowValues.Count > headers.Count)
+        {
+            rowValues = rowValues.Take(headers.Count).ToList();
+        }
+        dataRows.Add(rowValues);
+    }
 
-        var fullTableHtml = new StringBuilder();
-        fullTableHtml.Append("<div class='wisechat-table-container'>");
-        fullTableHtml.Append("<table class='wisechat-table'>");
+    var fullTableHtml = new StringBuilder();
+    fullTableHtml.Append("<div class='wisechat-table-container'>");
+    fullTableHtml.Append("<table class='wisechat-table'>");
         fullTableHtml.Append("<thead><tr><th>Field</th><th>Value</th></tr></thead>");
         fullTableHtml.Append("<tbody>");
 
         // For each column, create a field-value pair
         for (int colIndex = 0; colIndex < headers.Count; colIndex++)
-        {
+    {
             fullTableHtml.Append("<tr>");
             fullTableHtml.Append($"<td class='wisechat-field'>{headers[colIndex]}</td>");
             fullTableHtml.Append("<td class='wisechat-value'>");
-            
+
             // Combine all values for this column
             var values = dataRows.Select(row => row[colIndex]).Where(v => !string.IsNullOrWhiteSpace(v));
             fullTableHtml.Append(string.Join("<br/>", values));
             
             fullTableHtml.Append("</td>");
-            fullTableHtml.Append("</tr>");
-        }
-
-        fullTableHtml.Append("</tbody></table></div>");
-        return fullTableHtml.ToString();
+        fullTableHtml.Append("</tr>");
     }
+
+    fullTableHtml.Append("</tbody></table></div>");
+    return fullTableHtml.ToString();
+}
 
     public string FormatAssetTableContent(string content)
     {
