@@ -669,10 +669,6 @@
         color: var(--mud-palette-text-secondary);
     }
 
-    /* Dark mode support */
-   
-
-
 
     /* Premium messages area */
     .wisechat-messages {
@@ -956,7 +952,138 @@
     }
 
     /* Dark mode input support */
-    
+   
+
+    /* Animations */
+    @@keyframes pulseGlow {
+        0%, 100%
+
+    {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    }
+
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(255, 71, 87, 0.6);
+    }
+
+    }
+
+    @@keyframes gradientShift {
+        0%, 100%
+
+    {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    }
+
+    @@keyframes shimmer {
+        0%
+
+    {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+
+    }
+
+    @@keyframes statusPulse {
+        0%, 100%
+
+    {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    }
+
+    @@keyframes slideInMessage {
+        0%
+
+    {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    }
+
+    @@keyframes fadeInUp {
+        0%
+
+    {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    @@keyframes bounce {
+        0%, 20%, 50%, 80%, 100%
+
+    {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-10px);
+    }
+
+    60% {
+        transform: translateY(-5px);
+    }
+
+    }
+
+    @@keyframes typingBounce {
+        0%, 60%, 100%
+
+    {
+        transform: scale(1) translateY(0);
+        opacity: 0.5;
+    }
+
+    30% {
+        transform: scale(1.3) translateY(-8px);
+        opacity: 1;
+    }
+
+    }
+
+    @@keyframes fadeIn {
+        0%
+
+    {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+
+    }
+
     /* Mobile Responsive Enhancements */
     @@media (max-width: 480px) {
         .chat-widget-container
@@ -991,6 +1118,108 @@
     }
 
     /* Dark mode support */
+   
+
+    /* High contrast mode support */
+   
+
+    .wisechat-formatted-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        line-height: 1.5;
+    }
+
+    .wisechat-bullet-list {
+        margin: 0.5rem 0;
+        padding-left: 0.5rem;
+    }
+
+    .wisechat-bullet,
+    .wisechat-nested-bullet {
+        display: flex;
+        align-items: flex-start;
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .wisechat-nested-bullet {
+        padding-left: 2.5rem;
+    }
+
+    .wisechat-bullet .bullet,
+    .wisechat-nested-bullet .bullet {
+        position: absolute;
+        left: 0.5rem;
+        color: var(--mud-palette-primary);
+        font-size: 1.2rem;
+    }
+
+    .wisechat-bullet .bullet-content,
+    .wisechat-nested-bullet .bullet-content {
+        flex: 1;
+        padding-left: 0.5rem;
+    }
+
+    .wisechat-numbered-point {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .wisechat-text-line {
+        margin: 0.5rem 0;
+    }
+
+    .wisechat-spacing {
+        height: 0.8rem;
+    }
+
+    .wisechat-formatted-content strong {
+        font-weight: 600;
+        color: var(--mud-palette-primary);
+        display: block;
+        margin: 1rem 0 0.5rem 0;
+    }
+
+ 
+    /* Table Styles */
+    .wisechat-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .wisechat-table th {
+        background: var(--mud-palette-primary);
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .wisechat-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .wisechat-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .wisechat-table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .wisechat-table tr:hover {
+        background: #f0f0f0;
+    }
+
+    /* Dark mode table support */
   
 
     /* Enhanced Asset Table Styles */
@@ -1053,7 +1282,8 @@
         white-space: normal;
     }
 
-    
+
+
     /* Scroll to Bottom Button Styles */
     .wisechat-scroll-to-bottom-fab {
         position: absolute;
