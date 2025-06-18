@@ -7,140 +7,297 @@
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@implements IDisposable
 
-@if (isLoading)
-{
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-        <MudText Align="Align.Center">Loading...</MudText>
-    </div>
-}
-else if (isFiltering)
-{
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Filtering...</span>
-    </div>
-}
-else if (hasError)
-{
-    <div class="alert alert-danger custom-alert">Failed to load employee data.</div>
-}
-else if (pagedEmployees.Any())
-{
-    <MudItem xs="12" sm="6" md="2">
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.PersonAdd"
-                   OnClick='() => NavigationManager.NavigateTo("/home/employees")'
-                   Class="w-70" >
-            Employee
-        </MudButton>
-    </MudItem>
-    <br/>
-    <!-- Search and Filter Row --> 
-     <div class="d-flex justify-content-between align-items-center mb-3"> 
-        <input type="text" 
-               class="form-control w-50" 
-                placeholder="Search Employee" 
-               @bind="searchQuery" 
-               @oninput="HandleSearchInput" /> 
-   
-         <select class="form-select w-auto ms-2" 
-                 @bind="SelectedDesignation"> 
-             <option value="">All Designations</option> 
-             @foreach (var designation in designations) 
-             { 
-              <option value="@designation">@designation</option> 
-           } 
-       </select> 
-    </div>
- 
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Employee ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Designation</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var emp in pagedEmployees)
-                {
-                    <tr @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
-                        <td>@emp.EmployeeID</td>
+<PageTitle>Employee Management</PageTitle>
 
-                        <td>
-                            <span>
-                                @if (!string.IsNullOrEmpty(emp.PhotoBase64Content) && !string.IsNullOrEmpty(emp.PhotoContentType))
-                                {
-                                    <img src="data:@emp.PhotoContentType;base64,@emp.PhotoBase64Content"
-                                         class="rounded-circle"
-                                         alt="Employee Photo"
-                                         style="width: 30px; height: 30px; object-fit: cover;" />
-                                }
-                                else
-                                {
-                                    <img src="/images/default-avatar.jpg"
-                                         class="rounded-circle"
-                                         alt="Loading..."
-                                         style="width: 30px; height: 30px; object-fit: cover;"
-                                         @onload="() => LoadPhotoAsync(emp)" />
-                                }
-                            </span>
-                            @($" {emp.FirstName} {emp.LastName}")
-                        </td>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+    <!-- Header Section -->
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudGrid AlignItems="Center">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h4" Color="Color.Primary">
+                    <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" />
+                    Employee Management
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Manage your organization's workforce efficiently
+                </MudText>
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex justify-end">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PersonAdd"
+                           OnClick='() => NavigationManager.NavigateTo("/home/employees")'
+                           Size="Size.Large">
+                    Add New Employee
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
 
-                        <td>@emp.CurrentEmail</td>
-                        <td>@emp.Designation</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary"
-                                    style="padding: 2px 6px; font-size: 0.75rem;"
-                                    @onclick:stopPropagation="true"
-                                    @onclick="() => ShowEmployeeDetails(emp.EmployeeID)">
-                                View
-                            </button>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                           Color="Color.Error"
-                                           Size="Size.Small"
-                                           @onclick="() => ShowDeleteConfirmation(emp.EmployeeID)" />
+    @if (isLoading)
+    {
+        <MudPaper Class="pa-8 text-center" Elevation="1">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <MudText Typo="Typo.h6" Class="mt-4">Loading employee data...</MudText>
+        </MudPaper>
+    }
+    else if (hasError)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">
+            <MudText>Failed to load employee data. Please try refreshing the page.</MudText>
+            <MudButton Color="Color.Error" Variant="Variant.Text" OnClick="RefreshData" Class="mt-2">
+                <MudIcon Icon="@Icons.Material.Filled.Refresh" Class="mr-1" />
+                Retry
+            </MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        <!-- Statistics Cards -->
+        <MudGrid Class="mb-4">
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="2">
+                    <MudCardContent Class="text-center">
+                        <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Large" Color="Color.Primary" />
+                        <MudText Typo="Typo.h4" Color="Color.Primary">@employees.Count</MudText>
+                        <MudText Typo="Typo.body2">Total Employees</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="2">
+                    <MudCardContent Class="text-center">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h4" Color="Color.Secondary">@designations.Count</MudText>
+                        <MudText Typo="Typo.body2">Designations</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="2">
+                    <MudCardContent Class="text-center">
+                        <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Large" Color="Color.Info" />
+                        <MudText Typo="Typo.h4" Color="Color.Info">@filteredEmployees.Count</MudText>
+                        <MudText Typo="Typo.body2">Filtered Results</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="2">
+                    <MudCardContent Class="text-center">
+                        <MudIcon Icon="@Icons.Material.Filled.ViewList" Size="Size.Large" Color="Color.Success" />
+                        <MudText Typo="Typo.h4" Color="Color.Success">@totalPages</MudText>
+                        <MudText Typo="Typo.body2">Total Pages</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
 
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+        <!-- Search and Filter Section -->
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <MudGrid AlignItems="Center" Spacing="3">
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="searchQuery"
+                                  @oninput="HandleSearchInput"
+                                  Placeholder="Search by name, email, ID, or designation..."
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium"
+                                  Variant="Variant.Outlined"
+                                  Clearable="true"
+                                  Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudSelect T="string" @bind-Value="SelectedDesignation"
+                               Label="Filter by Designation"
+                               Variant="Variant.Outlined"
+                               AnchorOrigin="Origin.BottomCenter"
+                               Clearable="true">
+                        @foreach (var designation in designations.OrderBy(d => d))
+                        {
+                            <MudSelectItem Value="@designation">@designation</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudSelect T="int" @bind-Value="itemsPerPage"
+                               Label="Items per page"
+                               Variant="Variant.Outlined"
+                               @onchange="OnItemsPerPageChanged">
+                        <MudSelectItem Value="5">5</MudSelectItem>
+                        <MudSelectItem Value="10">10</MudSelectItem>
+                        <MudSelectItem Value="15">15</MudSelectItem>
+                        <MudSelectItem Value="25">25</MudSelectItem>
+                        <MudSelectItem Value="50">50</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="1">
+                    <MudTooltip Text="Export to Excel">
+                        <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                                       Color="Color.Success"
+                                       Size="Size.Large"
+                                       OnClick="ExportToExcel" />
+                    </MudTooltip>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
 
-    <!-- Pagination Controls -->
-    <nav aria-label="Employee pagination">
-        <ul class="pagination justify-content-center">
-            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                <button class="page-link" @onclick="() => ChangePage(currentPage - 1)">Previous</button>
-            </li>
-            @for (int i = 1; i <= totalPages; i++)
-            {
-                var pageNum = i;
-                <li class="page-item @(currentPage == pageNum ? "active" : "")">
-                    <button class="page-link" @onclick="() => ChangePage(pageNum)">@pageNum</button>
-                </li>
-            }
-            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                <button class="page-link" @onclick="() => ChangePage(currentPage + 1)">Next</button>
-            </li>
-        </ul>
-    </nav>
-}
-else
-{
-    <div class="alert alert-info custom-alert">No employees found.</div>
-}
+        @if (isFiltering)
+        {
+            <MudPaper Class="pa-4 text-center" Elevation="1">
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                <MudText Class="mt-2">Filtering employees...</MudText>
+            </MudPaper>
+        }
+        else if (pagedEmployees.Any())
+        {
+            <!-- Employee Table -->
+            <MudPaper Elevation="2" Class="mb-4">
+                <MudDataGrid T="EmployeeDetails" Items="@pagedEmployees"
+                             ReadOnly="true"
+                             Dense="true"
+                             Hover="true"
+                             Striped="true"
+                             FixedHeader="true"
+                             Height="600px"
+                             Class="employee-grid">
+                    <Columns>
+                        <PropertyColumn Property="x => x.EmployeeID" Title="Employee ID">
+                            <CellTemplate>
+                                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Text">
+                                    @context.Item.EmployeeID
+                                </MudChip>
+                            </CellTemplate>
+                        </PropertyColumn>
+                        <TemplateColumn T="EmployeeDetails" Title="Employee" Sortable="false">
+                            <CellTemplate>
+                                <div class="d-flex align-center">
+                                    <MudAvatar Size="Size.Medium" Class="mr-3">
+                                        @if (!string.IsNullOrEmpty(context.Item.PhotoBase64Content))
+                                        {
+                                            <MudImage Src="@($"data:{context.Item.PhotoContentType};base64,{context.Item.PhotoBase64Content}")" 
+                                                      Alt="Employee Photo" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.Person" />
+                                        }
+                                    </MudAvatar>
+                                    <div>
+                                        <MudText Typo="Typo.body1">
+                                            @($"{context.Item.FirstName} {context.Item.LastName}")
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                            @context.Item.CurrentEmail
+                                        </MudText>
+                                    </div>
+                                </div>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.Designation" Title="Designation">
+                            <CellTemplate>
+                                <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Variant="Variant.Outlined">
+                                    @context.Item.Designation
+                                </MudChip>
+                            </CellTemplate>
+                        </PropertyColumn>
+                        <TemplateColumn T="EmployeeDetails" Title="Status" Sortable="false">
+                            <CellTemplate>
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">
+                                    Active
+                                </MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn T="EmployeeDetails" Title="Actions" Sortable="false">
+                            <CellTemplate>
+                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                                    <MudTooltip Text="View Details">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       OnClick="() => ShowEmployeeDetails(context.Item.EmployeeID)" />
+                                    </MudTooltip>
+                                    <MudTooltip Text="Edit Employee">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Color="Color.Info"
+                                                       Size="Size.Small"
+                                                       OnClick="() => EditEmployee(context.Item.EmployeeID)" />
+                                    </MudTooltip>
+                                    <MudTooltip Text="Delete Employee">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       OnClick="() => ShowDeleteConfirmation(context.Item.EmployeeID)" />
+                                    </MudTooltip>
+                                </MudButtonGroup>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                </MudDataGrid>
+            </MudPaper>
+
+            <!-- Pagination -->
+            <MudGrid AlignItems="Center" Class="mt-4">
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Showing @((currentPage - 1) * itemsPerPage + 1) to @Math.Min(currentPage * itemsPerPage, filteredEmployees.Count) 
+                        of @filteredEmployees.Count employees
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" md="6" Class="d-flex justify-end">
+                    <MudPagination Count="totalPages" 
+                                   @bind-Selected="currentPage" 
+                                   ShowFirstButton="true" 
+                                   ShowLastButton="true"
+                                   ShowPreviousButton="true" 
+                                   ShowNextButton="true"
+                                   BoundaryCount="2"
+                                   MiddleCount="3"
+                                   Size="Size.Large"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <MudPaper Class="pa-8 text-center" Elevation="1">
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                <MudText Typo="Typo.h6" Class="mt-2">No employees found</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Try adjusting your search criteria or filters
+                </MudText>
+                <MudButton StartIcon="@Icons.Material.Filled.Clear" 
+                           OnClick="ClearFilters" 
+                           Class="mt-3"
+                           Variant="Variant.Outlined">
+                    Clear Filters
+                </MudButton>
+            </MudPaper>
+        }
+    }
+</MudContainer>
+
+<style>
+    .employee-grid .mud-table-cell {
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+    }
+    
+    .employee-grid .mud-table-row:hover {
+        background-color: var(--mud-palette-action-hover);
+    }
+    
+    .mud-avatar img {
+        object-fit: cover;
+    }
+</style>
 
 @code {
     private List<EmployeeDetails> employees = new();
     private List<EmployeeDetails> pagedEmployees = new();
+    private List<EmployeeDetails> filteredEmployees = new();
     private bool isLoading = true;
     private bool isFiltering = false;
     private bool hasError = false;
@@ -150,25 +307,105 @@ else
     private string _selectedDesignation = string.Empty;
     private HashSet<string> designations = new();
     private CancellationTokenSource? debounceCts;
+    private HashSet<string> loadingPhotos = new();
 
     private int totalPages => (int)Math.Ceiling((double)filteredEmployees.Count / itemsPerPage);
-    private List<EmployeeDetails> filteredEmployees = new();
-    private Dictionary<string, string> employeePhotos = new();
-    private HashSet<string> loadingPhotos = new();
+
+    private string SelectedDesignation
+    {
+        get => _selectedDesignation;
+        set
+        {
+            if (_selectedDesignation != value)
+            {
+                _selectedDesignation = value;
+                currentPage = 1;
+                _ = UpdateFilteredEmployeesAsync();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployeesAsync();
+    }
+
+    private async Task LoadEmployeesAsync()
+    {
+        try
+        {
+            isLoading = true;
+            hasError = false;
+            StateHasChanged();
+
+            // Load data in parallel where possible
+            var employeesTask = EmployeeService.GetAllEmployees();
+            
+            employees = await employeesTask;
+            if (employees == null || !employees.Any())
+            {
+                Console.WriteLine("No employees returned from EmployeeService.");
+                return;
+            }
+
+            // Process designations first since they're needed for UI
+            designations = employees
+                .Select(e => e.Designation)
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .Distinct()
+                .ToHashSet();
+
+            // Start loading photos in background
+            _ = LoadAllPhotosAsync();
+
+            await UpdateFilteredEmployeesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employees: {ex.Message}");
+            hasError = true;
+            Snackbar.Add($"Error loading employees: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadAllPhotosAsync()
+    {
+        // Process photos in batches to avoid overwhelming the UI
+        const int batchSize = 5;
+        var employeesWithoutPhotos = employees
+            .Where(emp => !string.IsNullOrEmpty(emp.EmployeeID) && string.IsNullOrEmpty(emp.PhotoBase64Content))
+            .ToList();
+
+        for (int i = 0; i < employeesWithoutPhotos.Count; i += batchSize)
+        {
+            var batch = employeesWithoutPhotos.Skip(i).Take(batchSize);
+            await Task.WhenAll(batch.Select(LoadPhotoAsync));
+            
+            // Update UI after each batch
+            StateHasChanged();
+            await Task.Delay(1); // Small yield to keep UI responsive
+        }
+    }
 
     private async Task LoadPhotoAsync(EmployeeDetails emp)
     {
-        if (string.IsNullOrEmpty(emp.EmployeeID) || !string.IsNullOrEmpty(emp.PhotoBase64Content) || loadingPhotos.Contains(emp.EmployeeID))
+        if (string.IsNullOrEmpty(emp.EmployeeID) || loadingPhotos.Contains(emp.EmployeeID))
             return;
 
         loadingPhotos.Add(emp.EmployeeID);
         try
         {
             var (photoBytes, contentType) = await EmployeeService.GetEmployeePhoto(emp.EmployeeID);
-            emp.PhotoBase64Content = Convert.ToBase64String(photoBytes);
-            emp.PhotoContentType = contentType;
-
-            StateHasChanged();
+            if (photoBytes?.Length > 0)
+            {
+                emp.PhotoBase64Content = Convert.ToBase64String(photoBytes);
+                emp.PhotoContentType = contentType;
+            }
         }
         catch (Exception ex)
         {
@@ -180,75 +417,40 @@ else
         }
     }
 
-
-    private string SelectedDesignation
-    {
-        get => _selectedDesignation;
-        set
-        {
-            if (_selectedDesignation != value)
-            {
-                _selectedDesignation = value;
-                _ = UpdateFilteredEmployeesAsync();
-            }
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            employees = await EmployeeService.GetAllEmployees();
-            if (employees == null || !employees.Any())
-            {
-                Console.WriteLine("No employees returned from EmployeeService.");
-                hasError = true;
-                return;
-            }
-
-            designations = employees
-                .Select(e => e.Designation)
-                .Where(d => !string.IsNullOrWhiteSpace(d))
-                .Distinct()
-                .ToHashSet();
-            await UpdateFilteredEmployeesAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading employees: {ex.Message}");
-            hasError = true;
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
-        }
-    }
-
     private async Task UpdateFilteredEmployeesAsync()
     {
+        if (isFiltering) return;
+        
         isFiltering = true;
-        StateHasChanged();
-
         try
         {
-            filteredEmployees = await Task.Run(() => employees
-                .Where(emp => emp != null && // Ensure emp is not null
-                    (string.IsNullOrWhiteSpace(searchQuery) ||
-                     (emp.FirstName?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
-                     (emp.LastName?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
-                     (emp.CurrentEmail?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
-                     (emp.EmployeeID?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
-                     (emp.Designation?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true)) &&
-                    (string.IsNullOrEmpty(_selectedDesignation) || emp.Designation == _selectedDesignation))
-                .ToList());
+            // Use local variables to avoid closure issues
+            var localSearchQuery = searchQuery;
+            var localSelectedDesignation = _selectedDesignation;
+            
+            // Process filtering in background to keep UI responsive
+            await Task.Run(() =>
+            {
+                filteredEmployees = employees
+                    .Where(emp => emp != null &&
+                        (string.IsNullOrWhiteSpace(localSearchQuery) ||
+                        (emp.FirstName?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
+                        (emp.LastName?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
+                        (emp.CurrentEmail?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
+                        (emp.EmployeeID?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
+                        (emp.Designation?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true)) &&
+                        (string.IsNullOrEmpty(localSelectedDesignation) || emp.Designation == localSelectedDesignation))
+                    .OrderBy(emp => emp.FirstName)
+                    .ToList();
 
-            UpdatePagedEmployees();
+                UpdatePagedEmployees();
+            });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error filtering employees: {ex.Message}");
             hasError = true;
+            Snackbar.Add($"Error filtering employees: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -261,24 +463,6 @@ else
     {
         var skip = (currentPage - 1) * itemsPerPage;
         pagedEmployees = filteredEmployees.Skip(skip).Take(itemsPerPage).ToList();
-    }
-
-    private void ChangePage(int page)
-    {
-        if (page >= 1 && page <= totalPages)
-        {
-            currentPage = page;
-            UpdatePagedEmployees();
-            StateHasChanged();
-        }
-    }
-
-    private void ShowEmployeeDetails(string employeeId)
-    {
-        if (!string.IsNullOrEmpty(employeeId))
-        {
-            NavigationManager.NavigateTo($"employeeDetailsData/{employeeId}");
-        }
     }
 
     private async Task HandleSearchInput(ChangeEventArgs e)
@@ -300,25 +484,51 @@ else
         }
     }
 
-    protected override void OnParametersSet()
+    private void OnItemsPerPageChanged(object value)
     {
-        UpdatePagedEmployees();
-    }
-
-    private string ItemsPerPage
-    {
-        get => itemsPerPage.ToString();
-        set
+        if (value is int newValue)
         {
-            if (int.TryParse(value, out int newVal) && itemsPerPage != newVal)
-            {
-                itemsPerPage = newVal;
-                currentPage = 1;
-                UpdatePagedEmployees();
-                StateHasChanged();
-            }
+            itemsPerPage = newValue;
+            currentPage = 1;
+            UpdatePagedEmployees();
+            StateHasChanged();
         }
     }
+
+    private void ShowEmployeeDetails(string employeeId)
+    {
+        if (!string.IsNullOrEmpty(employeeId))
+        {
+            NavigationManager.NavigateTo($"employeeDetailsData/{employeeId}");
+        }
+    }
+
+    private void EditEmployee(string employeeId)
+    {
+        if (!string.IsNullOrEmpty(employeeId))
+        {
+            NavigationManager.NavigateTo($"/personalEditForm/{employeeId}");
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadEmployeesAsync();
+    }
+
+    private void ClearFilters()
+    {
+        searchQuery = string.Empty;
+        _selectedDesignation = string.Empty;
+        currentPage = 1;
+        _ = UpdateFilteredEmployeesAsync();
+    }
+
+    private void ExportToExcel()
+    {
+        Snackbar.Add("Export functionality will be implemented soon", Severity.Info);
+    }
+
     private async Task ShowDeleteConfirmation(string employeeId)
     {
         if (string.IsNullOrEmpty(employeeId))
@@ -327,15 +537,18 @@ else
         var employee = employees.FirstOrDefault(e => e.EmployeeID == employeeId);
         var employeeName = employee != null ? $"{employee.FirstName} {employee.LastName}" : employeeId;
 
-        bool? confirmed = await DialogService.ShowMessageBox(
-            title: "Confirm Delete",
-            message: $"Are you sure you want to delete employee {employeeName} (ID: {employeeId})? This action cannot be undone.",
-            yesText: "Delete",
-            cancelText: "Cancel",
-            options: new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }
-        );
+        var parameters = new DialogParameters
+        {
+            ["ContentText"] = $"Are you sure you want to delete {employeeName} (ID: {employeeId})? This action cannot be undone and will remove all associated data.",
+            ["ButtonText"] = "Delete",
+            ["Color"] = Color.Error
+        };
 
-        if (confirmed == true)
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = DialogService.Show<MudDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
         {
             await DeleteEmployeeAsync(employeeId);
         }
@@ -348,49 +561,35 @@ else
 
         try
         {
-            // Execute all delete operations
-            var deleteBankingTask = BankingService.DeleteBankingInfo(employeeId);
-            var deleteEmployeeTask = EmployeeService.DeleteEmployee(employeeId);
-            var deleteExperienceTask = ExperienceService.DeleteExperienceAsync(employeeId);
+            var employee = employees.FirstOrDefault(e => e.EmployeeID == employeeId);
+            var employeeName = employee != null ? $"{employee.FirstName} {employee.LastName}" : employeeId;
 
-            var results = await Task.WhenAll(deleteBankingTask, deleteEmployeeTask, deleteExperienceTask);
-
-            bool allSuccessful = results.All(r => r);
-
-            if (allSuccessful)
+            // Execute all delete operations in parallel
+            var deleteTasks = new[]
             {
-                // Log success to console
-                Console.WriteLine($"Successfully deleted all data for EmployeeID: {employeeId}");
+                BankingService.DeleteBankingInfo(employeeId),
+                EmployeeService.DeleteEmployee(employeeId),
+                ExperienceService.DeleteExperienceAsync(employeeId)
+            };
 
-                // Show success snackbar
-                var employee = employees.FirstOrDefault(e => e.EmployeeID == employeeId);
-                var employeeName = employee != null ? $"{employee.FirstName} {employee.LastName}" : employeeId;
-                Snackbar.Add($"Employee {employeeName} (ID: {employeeId}) and associated data deleted successfully", Severity.Success);
-
-                // Remove from local lists
-                employees.RemoveAll(e => e.EmployeeID == employeeId);
-                filteredEmployees.RemoveAll(e => e.EmployeeID == employeeId);
-                UpdatePagedEmployees();
-                StateHasChanged();
-            }
-            else
-            {
-                // Log partial failure to console
-                Console.WriteLine($"Partial failure deleting data for EmployeeID: {employeeId}");
-                Snackbar.Add($"Failed to delete some data for Employee {employeeId}", Severity.Error);
-            }
+            await Task.WhenAll(deleteTasks);
+            
+            // Remove from local lists
+            employees.RemoveAll(e => e.EmployeeID == employeeId);
+            await UpdateFilteredEmployeesAsync();
+            
+            Snackbar.Add($"Employee {employeeName} deleted successfully", Severity.Success);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error deleting employee data for {employeeId}: {ex.Message}");
-            Snackbar.Add($"Error deleting employee {employeeId}: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error deleting employee: {ex.Message}", Severity.Error);
         }
     }
 
-
-
     public void Dispose()
     {
+        debounceCts?.Cancel();
         debounceCts?.Dispose();
     }
 }
