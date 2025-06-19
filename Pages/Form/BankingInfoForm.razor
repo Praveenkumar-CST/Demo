@@ -156,7 +156,7 @@
                                       ErrorText="@GetValidationError(nameof(bankingInfo.AadhaarNumber))" />
                     </MudItem>
 
-                    <!-- Aadhaar File Upload UI -->
+                    <!-- Aadhaar File Upload UI (MudFileUpload) -->
                     <MudItem xs="12">
                         <div class="aadhaar-rectangle-upload align-center-rectangle">
                             <div class="aadhaar-rectangle-content">
@@ -166,11 +166,13 @@
                                     </MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Primary">(PDF/JPG/PNG, max 20MB)</MudText>
                                 </div>
-                                <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png"
-                                           class="aadhaar-input-rectangle"
-                                           @onblur="@(() => ValidateField(nameof(bankingInfo.AadhaarBase64Content)))"
-                                           Error="@HasValidationError(nameof(bankingInfo.AadhaarBase64Content))"
-                                           ErrorText="@GetValidationError(nameof(bankingInfo.AadhaarBase64Content))" />
+                                <MudFileUpload T="IBrowserFile" FilesChanged="HandleAadharMudUpload">
+                                    <ActivatorContent>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                            Upload Aadhaar
+                                        </MudButton>
+                                    </ActivatorContent>
+                                </MudFileUpload>
                                 <MudText Typo="Typo.caption" Class="mt-1">
                                     @(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content)
                                         ? "No file selected"
@@ -213,7 +215,7 @@
                         </div>
                     </MudItem>
 
-                    <!-- PAN File Upload UI -->
+                    <!-- PAN File Upload UI (MudFileUpload) -->
                     <MudItem xs="12">
                         <div class="aadhaar-rectangle-upload align-center-rectangle">
                             <div class="aadhaar-rectangle-content">
@@ -223,11 +225,13 @@
                                     </MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Primary">(PDF/JPG/PNG, max 20MB)</MudText>
                                 </div>
-                                <InputFile OnChange="HandlePanFileChange" accept=".pdf,.jpg,.jpeg,.png"
-                                           class="aadhaar-input-rectangle"
-                                           @onblur="@(() => ValidateField(nameof(bankingInfo.PanBase64Content)))"
-                                           Error="@HasValidationError(nameof(bankingInfo.PanBase64Content))"
-                                           ErrorText="@GetValidationError(nameof(bankingInfo.PanBase64Content))" />
+                                <MudFileUpload T="IBrowserFile" FilesChanged="HandlePanMudUpload">
+                                    <ActivatorContent>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                            Upload PAN
+                                        </MudButton>
+                                    </ActivatorContent>
+                                </MudFileUpload>
                                 <MudText Typo="Typo.caption" Class="mt-1">
                                     @(string.IsNullOrEmpty(bankingInfo.PanBase64Content)
                                         ? "No file selected"
@@ -270,7 +274,7 @@
                         </div>
                     </MudItem>
 
-                    <!-- Passbook File Upload UI -->
+                    <!-- Passbook File Upload UI (MudFileUpload) -->
                     <MudItem xs="12">
                         <div class="aadhaar-rectangle-upload align-center-rectangle">
                             <div class="aadhaar-rectangle-content">
@@ -280,11 +284,13 @@
                                     </MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Primary">(PDF/JPG/PNG, max 20MB)</MudText>
                                 </div>
-                                <InputFile OnChange="OnPassbookFileChanged" accept=".pdf,.jpg,.jpeg,.png"
-                                           class="aadhaar-input-rectangle"
-                                           @onblur="@(() => ValidateField(nameof(bankingInfo.PassbookBase64Content)))"
-                                           Error="@HasValidationError(nameof(bankingInfo.PassbookBase64Content))"
-                                           ErrorText="@GetValidationError(nameof(bankingInfo.PassbookBase64Content))" />
+                                <MudFileUpload T="IBrowserFile" FilesChanged="HandlePassbookMudUpload">
+                                    <ActivatorContent>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                            Upload Passbook
+                                        </MudButton>
+                                    </ActivatorContent>
+                                </MudFileUpload>
                                 <MudText Typo="Typo.caption" Class="mt-1">
                                     @(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content)
                                         ? "No file selected"
@@ -579,9 +585,16 @@
         StateHasChanged();
     }
 
-    private async Task HandleFileSelected(InputFileChangeEventArgs e, string fileType)
+    // New MudFileUpload handlers
+    private async Task HandleAadharMudUpload(IBrowserFile file)
+        => await HandleFileSelectedMud(file, "aadhar");
+    private async Task HandlePanMudUpload(IBrowserFile file)
+        => await HandleFileSelectedMud(file, "pan");
+    private async Task HandlePassbookMudUpload(IBrowserFile file)
+        => await HandleFileSelectedMud(file, "passbook");
+
+    private async Task HandleFileSelectedMud(IBrowserFile file, string fileType)
     {
-        var file = e.File;
         var fileName = file?.Name;
         if (file != null)
         {
@@ -631,10 +644,6 @@
             SetUploadError(fileType, "File is required.");
         }
     }
-
-    private async Task OnPassbookFileChanged(InputFileChangeEventArgs e) => await HandleFileSelected(e, "passbook");
-    private async Task HandlePanFileChange(InputFileChangeEventArgs e) => await HandleFileSelected(e, "pan");
-    private async Task HandleAadharFileChange(InputFileChangeEventArgs e) => await HandleFileSelected(e, "aadhar");
 
     private void SetUploadError(string fileType, string message)
     {
