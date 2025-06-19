@@ -14,6 +14,10 @@
     <link rel="stylesheet" href="css/StyleSheet.css">
     <link rel="stylesheet" href="css/site.css">
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="scripts/hierarchyTree.js"></script>
+
+
 
     <style>
         /* ===== WISEONE LOADER STYLES ===== */
@@ -71,6 +75,7 @@
             0% {
                 background-position: 0% center;
             }
+
             100% {
                 background-position: 200% center;
             }
@@ -99,21 +104,22 @@
             overflow: hidden;
         }
 
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            animation: progressShine 2s infinite;
-        }
+            .progress-bar::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+                animation: progressShine 2s infinite;
+            }
 
         @keyframes progressShine {
             0% {
                 transform: translateX(-100%);
             }
+
             100% {
                 transform: translateX(100%);
             }
@@ -137,9 +143,11 @@
             0% {
                 opacity: 0.7;
             }
+
             50% {
                 opacity: 1;
             }
+
             100% {
                 opacity: 0.7;
             }
@@ -167,12 +175,15 @@
                 transform: translateY(0) rotate(0deg);
                 opacity: 0;
             }
+
             10% {
                 opacity: 1;
             }
+
             90% {
                 opacity: 1;
             }
+
             100% {
                 transform: translateY(-500px) rotate(360deg);
                 opacity: 0;
@@ -198,12 +209,12 @@
             z-index: 1000;
         }
 
-        #blazor-error-ui .dismiss {
-            cursor: pointer;
-            position: absolute;
-            right: 0.75rem;
-            top: 0.5rem;
-        }
+            #blazor-error-ui .dismiss {
+                cursor: pointer;
+                position: absolute;
+                right: 0.75rem;
+                top: 0.5rem;
+            }
 
         .loading-progress,
         .loading-progress-text {

@@ -151,70 +151,68 @@
     }
 
     private async Task HandleLogin()
+{
+    if (loginForm == null) return;
+    IsLoading = true;
+    LoginErrorMessage = "";
+    await loginForm.Validate();
+    if (!loginForm.IsValid)
     {
-        if (loginForm == null) return;
-        IsLoading = true;
-        LoginErrorMessage = "";
-        await loginForm.Validate();
-        if (!loginForm.IsValid)
+        IsLoading = false;
+        StateHasChanged();
+        return;
+    }
+    try
+    {
+        var (token, error) = await AuthService.Login(Email, Password);
+        await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
+        Console.WriteLine($"Email to store: {Email}");
+        if (!string.IsNullOrEmpty(token))
         {
-            IsLoading = false;
-            StateHasChanged();
-            return;
-        }
-        try
-        {
-            var (token, error) = await AuthService.Login(Email, Password);
-            await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
-            await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
-            Console.WriteLine($"Email to store: {Email}");
-            if (!string.IsNullOrEmpty(token))
+            var userDetails = await UserService.GetUserByEmailAsync(Email);
+            if (userDetails != null)
             {
-                var userDetails = await UserService.GetUserByEmailAsync(Email);
-                if (userDetails != null)
-                {
-                    await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
-                    Console.WriteLine($"EmpId stored in sessionStorage: {userDetails.EmpId}");
-                }
-                else
-                {
-                    Console.WriteLine($"Error in storing the EmpId sessionStorage: {userDetails?.EmpId}");
-                }
+                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
+                Console.WriteLine($"EmpId stored in sessionStorage: {userDetails.EmpId}");
+            }
+            else
+            {
+                Console.WriteLine($"Error in storing the EmpId sessionStorage: {userDetails?.EmpId}");
+            }
 
-                var employeeDetails = await EmployeeService.GetEmployeeDetailsByEmail(Email);
-                if (employeeDetails != null)
+            var employeeDetails = await EmployeeService.GetEmployeeDetailsByEmail(Email);
+            if (employeeDetails != null)
+            {
+                var (role, verifyError) = await AuthService.VerifyToken();
+                if (!string.IsNullOrEmpty(role))
                 {
-                    var (role, verifyError) = await AuthService.VerifyToken();
-                    if (!string.IsNullOrEmpty(role))
-                    {
-                        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
-                        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
-                        NavigationManager.NavigateTo("/home");
-                    }
-                    else
-                    {
-                        LoginErrorMessage = "Invalid email or password.";
-                    }
+                    await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
+                    NavigationManager.NavigateTo("/home");
                 }
                 else
                 {
-                    NavigationManager.NavigateTo("/registration");
+                    LoginErrorMessage = "Invalid";
                 }
             }
             else
             {
-                LoginErrorMessage = error != null && (error.Contains("Invalid email or password") || error.Contains("User not found") || error.Contains("Invalid credentials"))
-                    ? "Invalid email or password."
-                    : error ?? "Invalid login credentials.";
+                NavigationManager.NavigateTo("/registration");
             }
         }
-        catch (Exception)
+        else
         {
-            LoginErrorMessage = "Invalid email or password.";
+                LoginErrorMessage = "Invalid email or password.";
         }
-        IsLoading = false;
-        StateHasChanged();
     }
+    catch (Exception)
+    {
+            LoginErrorMessage = "Invalid login credentials";
+    }
+    IsLoading = false;
+    StateHasChanged();
+}
     private async Task HandleSignup()
     {
         if (signupForm == null) return;
