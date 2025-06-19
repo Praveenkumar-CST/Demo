@@ -1,0 +1,21 @@
+@using MudBlazor
+@code {
+    [Parameter] public string HtmlContent { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    void Close() => MudDialog?.Close(DialogResult.Cancel());
+}
+<MudDialog class="table-popup-dialog">
+    <DialogContent>
+        <div style="max-width:90vw;overflow-x:auto;">
+            @((MarkupString)HtmlContent)
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+<style>
+.table-popup-dialog {
+    z-index: 20000 !important;
+}
+</style> 

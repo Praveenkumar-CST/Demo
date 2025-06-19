@@ -110,20 +110,10 @@ public class ChatMessageFormatter : IChatMessageFormatter
                 var tableHtml = new StringBuilder();
                 tableHtml.Append("<div class='wisechat-table-container'>");
                 tableHtml.Append("<table class='wisechat-table'>");
-                tableHtml.Append("<thead><tr><th>Field</th><th>Value</th></tr></thead>");
-                tableHtml.Append("<tbody>");
-                tableHtml.Append("<tr>");
-                tableHtml.Append($"<td class='wisechat-field'>{row[0]}</td>");
-                if (row[0] == "PhotoBase64Content")
-                {
-                    tableHtml.Append($"<td class='wisechat-value'><img src='data:image/png;base64,{row[1]}' alt='Photo' style='max-width:120px; max-height:120px;'/></td>");
-                }
-                else
-                {
-                    tableHtml.Append($"<td class='wisechat-value'>{row[1]}</td>");
-                }
-                tableHtml.Append("</tr>");
-                tableHtml.Append("</tbody></table></div>");
+                tableHtml.Append("<thead><tr>");
+                tableHtml.Append("<th>" + row[0] + "</th><th>" + row[1] + "</th>");
+                tableHtml.Append("</tr></thead>");
+                tableHtml.Append("</table></div>");
                 return tableHtml.ToString();
             }
         }
@@ -156,41 +146,38 @@ public class ChatMessageFormatter : IChatMessageFormatter
             dataRows.Add(rowValues);
         }
 
-        var fullTableHtml = new StringBuilder();
-        fullTableHtml.Append("<div class='wisechat-table-container'>");
-        fullTableHtml.Append("<table class='wisechat-table'>");
-        fullTableHtml.Append("<thead><tr><th>Field</th><th>Value</th></tr></thead>");
-        fullTableHtml.Append("<tbody>");
+        var tableHtmlHorizontal = new StringBuilder();
+        tableHtmlHorizontal.Append("<div class='wisechat-table-container'>");
+        tableHtmlHorizontal.Append("<table class='wisechat-table'>");
 
-        // For each column, create a field-value pair
-        for (int colIndex = 0; colIndex < headers.Count; colIndex++)
+        // Render headers
+        tableHtmlHorizontal.Append("<thead><tr>");
+        foreach (var header in headers)
         {
-            fullTableHtml.Append("<tr>");
-            fullTableHtml.Append($"<td class='wisechat-field'>{headers[colIndex]}</td>");
-            fullTableHtml.Append("<td class='wisechat-value'>");
+            tableHtmlHorizontal.Append($"<th>{header}</th>");
+        }
+        tableHtmlHorizontal.Append("</tr></thead>");
 
-            // Combine all values for this column
-            var values = dataRows.Select(row => row[colIndex]).Where(v => !string.IsNullOrWhiteSpace(v));
-            if (headers[colIndex] == "PhotoBase64Content")
+        // Render data rows
+        tableHtmlHorizontal.Append("<tbody>");
+        foreach (var row in dataRows)
+        {
+            tableHtmlHorizontal.Append("<tr>");
+            for (int colIndex = 0; colIndex < headers.Count; colIndex++)
             {
-                foreach (var base64 in values)
+                if (headers[colIndex] == "PhotoBase64Content" && !string.IsNullOrWhiteSpace(row[colIndex]))
                 {
-                    if (!string.IsNullOrWhiteSpace(base64))
-                    {
-                        fullTableHtml.Append($"<img src='data:image/png;base64,{base64}' alt='Photo' style='max-width:120px; max-height:120px; margin-bottom:4px;'/><br/>");
-                    }
+                    tableHtmlHorizontal.Append($"<td><img src='data:image/png;base64,{row[colIndex]}' alt='Photo' style='max-width:120px; max-height:120px;'/></td>");
+                }
+                else
+                {
+                    tableHtmlHorizontal.Append($"<td>{row[colIndex]}</td>");
                 }
             }
-            else
-            {
-                fullTableHtml.Append(string.Join("<br/>", values));
-            }
-            fullTableHtml.Append("</td>");
-            fullTableHtml.Append("</tr>");
+            tableHtmlHorizontal.Append("</tr>");
         }
-
-        fullTableHtml.Append("</tbody></table></div>");
-        return fullTableHtml.ToString();
+        tableHtmlHorizontal.Append("</tbody></table></div>");
+        return tableHtmlHorizontal.ToString();
     }
 
     public string FormatAssetTableContent(string content)

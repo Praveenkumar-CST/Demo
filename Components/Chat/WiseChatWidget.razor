@@ -5,6 +5,7 @@
 @using WiseHR.Services
 @using WiseHR.Services.ChatFormatting;
 @using WiseHR.Models.Chat;
+@using WiseHR.Components.Dialogs
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -14,6 +15,7 @@
 @inject WiseHR.Services.AuthService AuthService
 @inject WiseHR.Services.EmployeeService EmployeeService
 @inject IChatMessageFormatter ChatMessageFormatter
+@inject IDialogService DialogService
 
 <div class="wisechat-widget-container">
     @* Notification Badge *@
@@ -28,9 +30,18 @@
            OnClick="ToggleChat"
            Class="@($"wisechat-fab {(isOpen ? "open" : "")}")"/>
 
+    @* Expand/Collapse Button *@
+    @if (isOpen)
+    {
+        <MudFab IconSize="Size.Small" EndIcon="@(isExpanded ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)"
+                OnClick="ToggleExpand"
+                Class="wisechat-expand-fab"
+                Title="@(isExpanded ? "Collapse" : "Expand")" />
+    }
+
     @* Chat Window *@
     <div class="absolute-position-wrapper">
-        <div class="@($"wisechat-window {(isOpen ? "open" : "")}")">
+        <div class="@($"wisechat-window {(isOpen ? "open" : "")} {(isExpanded ? "expanded" : "")}")">
             @* Header *@
             <div class="wisechat-header">
                 <div class="wisechat-header-content">
@@ -254,24 +265,34 @@
                             
                             <div class="wisechat-message-content">
                                 <div class="wisechat-message-bubble">
-                                    <div class="wisechat-formatted-content">
-                                        @if (message.TableType == ChatMessageTableType.Asset)
-                                        {
-                                            @((MarkupString)ChatMessageFormatter.FormatAssetTableContent(message.Content))
-                                        }
-                                        else if (message.TableType == ChatMessageTableType.Generic)
-                                        {
-                                            @((MarkupString)ChatMessageFormatter.FormatGenericTableContent(message.Content))
-                                        }
-                                        else if (message.TableType == ChatMessageTableType.Json)
-                                        {
-                                            @((MarkupString)ChatMessageFormatter.FormatJsonTableContent(message.Content))
-                                        }
-                                        else
-                                        {
-                                            @((MarkupString)ChatMessageFormatter.FormatGeneralMessageContent(message.Content))
-                                        }
-                                    </div>
+                                    @if (message.TableType == ChatMessageTableType.Asset)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                                       Class="wisechat-popout-btn"
+                                                       Title="Pop out table"
+                                                       OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatAssetTableContent(message.Content)))" />
+                                        @((MarkupString)ChatMessageFormatter.FormatAssetTableContent(message.Content))
+                                    }
+                                    else if (message.TableType == ChatMessageTableType.Generic)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                                       Class="wisechat-popout-btn"
+                                                       Title="Pop out table"
+                                                       OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatGenericTableContent(message.Content)))" />
+                                        @((MarkupString)ChatMessageFormatter.FormatGenericTableContent(message.Content))
+                                    }
+                                    else if (message.TableType == ChatMessageTableType.Json)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                                       Class="wisechat-popout-btn"
+                                                       Title="Pop out table"
+                                                       OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatJsonTableContent(message.Content)))" />
+                                        @((MarkupString)ChatMessageFormatter.FormatJsonTableContent(message.Content))
+                                    }
+                                    else
+                                    {
+                                        @((MarkupString)ChatMessageFormatter.FormatGeneralMessageContent(message.Content))
+                                    }
                                 </div>
                                 <MudText Typo="Typo.caption" Class="wisechat-timestamp">
                                     @message.Timestamp.ToString("HH:mm")
@@ -1329,6 +1350,73 @@
             transform: translateY(0) scale(1);
         }
     }
+
+    .wisechat-window.expanded {
+        width: 800px;
+        height: 80vh;
+        max-width: 98vw;
+        max-height: 98vh;
+    }
+
+    /* Give more space to messages area in expanded mode */
+    .wisechat-window.expanded .wisechat-messages {
+        padding: 32px 32px 24px 32px;
+        font-size: 1.05rem;
+        min-height: 60vh;
+        max-height: calc(80vh - 120px); /* leave room for header and input */
+        height: auto;
+    }
+
+    .wisechat-window.expanded .wisechat-header {
+        padding: 14px 20px;
+    }
+
+    .wisechat-window.expanded .wisechat-input-area {
+        padding: 12px 20px;
+    }
+
+    .wisechat-expand-fab {
+        position: absolute;
+        top: 16px;
+        right: 80px;
+        z-index: 10000;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3);
+        border: 2px solid white;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .wisechat-expand-fab:hover {
+        opacity: 1;
+        transform: scale(1.08);
+    }
+
+    .wisechat-window.expanded .wisechat-message-bubble:has(table) {
+        width: 680px;
+    }
+
+    .wisechat-popout-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 2;
+        background: white;
+        border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    .wisechat-popout-btn:hover {
+        opacity: 1;
+    }
+    .wisechat-message-bubble {
+        position: relative;
+    }
 </style>
 
 @code {
@@ -1353,6 +1441,8 @@
 
     private List<ChatSession> chatSessions = new();
     private bool showHistory = false;
+
+    private bool isExpanded = false;
 
     private ILookup<string, ChatSession> groupedSessions => chatSessions
         .GroupBy(s => GetTimeGroup(s.LastActivityAt))
@@ -1462,6 +1552,7 @@
             currentSessionId = sessionId;
             messages = apiMessages.Select(MapToLocalChatMessage).OrderBy(m => m.Timestamp).ToList();
             showHistory = false;
+            AutoExpandIfTablePresent();
             await ScrollToBottom();
             StateHasChanged();
         }
@@ -1478,8 +1569,22 @@
         currentMessage = string.Empty;
         statusMessage = string.Empty;
         isTyping = false;
+        AutoExpandIfTablePresent();
         await LoadChatHistory();
         StateHasChanged();
+    }
+
+    private void AutoExpandIfTablePresent()
+    {
+        // Check if any message contains a table type
+        if (messages.Any(m => m.TableType == ChatMessageTableType.Generic || m.TableType == ChatMessageTableType.Asset || m.TableType == ChatMessageTableType.Json))
+        {
+            isExpanded = true;
+        }
+        else
+        {
+            isExpanded = false;
+        }
     }
 
     private async void HandleChunkReceived(string chunk)
@@ -1501,9 +1606,9 @@
                 TableType = ChatMessageFormatter.GetChatMessageTableType(chunk)
             });
         }
+        AutoExpandIfTablePresent();
         await InvokeAsync(StateHasChanged);
         await ScrollToBottom();
-
     }
 
     private async void HandleStatusReceived(string status)
@@ -1533,6 +1638,11 @@
         }
     }
 
+    private void ToggleExpand()
+    {
+        isExpanded = !isExpanded;
+    }
+
     private void MinimizeChat()
     {
         isOpen = false;
@@ -1557,6 +1667,7 @@
         };
         
         messages.Add(chatMessage);
+        AutoExpandIfTablePresent();
         await InvokeAsync(StateHasChanged);
         await ScrollToBottom();
 
@@ -1697,6 +1808,12 @@
     {
         dateRange = range;
         await LoadChatHistory();
+    }
+
+    private void ShowTablePopup(string htmlContent)
+    {
+        var parameters = new DialogParameters { ["HtmlContent"] = htmlContent };
+        DialogService.Show<TablePopupDialog>("Table View", parameters, new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true });
     }
 
     public async ValueTask DisposeAsync()
