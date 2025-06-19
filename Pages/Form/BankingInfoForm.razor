@@ -150,58 +150,157 @@
                     </MudItem>
 
                     <!-- Aadhaar File Upload -->
-                    <MudItem xs="12" sm="6">
-                        <MudText Typo="Typo.body1">Aadhaar Document*</MudText>
-                        <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" />
-                        <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
-                        <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) ? "No file selected" : $"File selected: {bankingInfo.AadhaarFileName}")</MudText>
-                        @if (!string.IsNullOrEmpty(AadhaarUploadError))
-                        {
-                            <MudText Color="Color.Error">@AadhaarUploadError</MudText>
-                        }
-                        @if (HasValidationError(nameof(bankingInfo.AadhaarBase64Content)))
-                        {
-                            <MudText Color="Color.Error">@GetValidationError(nameof(bankingInfo.AadhaarBase64Content))</MudText>
-                        }
-                        <ValidationMessage For="@(() => bankingInfo.AadhaarBase64Content)" />
+<MudItem xs="12" sm="6">
+    <MudText Typo="Typo.body1">Aadhaar Document*</MudText>
+    <InputFile OnChange="HandleAadharFileChange" accept=".pdf,.jpg,.jpeg,.png" 
+               @onblur="@(() => ValidateField(nameof(bankingInfo.AadhaarBase64Content)))"
+               Error="@HasValidationError(nameof(bankingInfo.AadhaarBase64Content))"
+               ErrorText="@GetValidationError(nameof(bankingInfo.AadhaarBase64Content))" />
+    
+    <MudText Typo="Typo.body2" Color="Color.Primary">
+        Max 20MB. Ensure clarity. (Supports PDF, JPG, PNG)
+    </MudText>
+    
+    <MudText Typo="Typo.caption" Class="mt-1">
+        @(string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content) 
+            ? "No file selected" 
+            : $"File selected: {bankingInfo.AadhaarFileName}")
+    </MudText>
 
-                    </MudItem>
+    @if (!string.IsNullOrEmpty(bankingInfo.AadhaarBase64Content))
+    {
+        <div class="mt-2">
+            <MudText Typo="Typo.subtitle2" Class="mb-1">Document Preview:</MudText>
+            <MudPaper Elevation="1" Class="pa-2" Style="max-width: 300px;">
+                @if (bankingInfo.AadhaarFileName?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) ?? false)
+                {
+                    <iframe src="@($"data:application/pdf;base64,{bankingInfo.AadhaarBase64Content}")" 
+                            style="width: 100%; height: 300px; border: none;"></iframe>
+                }
+                else
+                {
+                    <img src="@($"data:image/jpeg;base64,{bankingInfo.AadhaarBase64Content}")" 
+                         alt="Aadhaar document preview" 
+                         style="max-width: 100%; max-height: 300px; display: block;" />
+                }
+            </MudPaper>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(AadhaarUploadError))
+    {
+        <MudText Color="Color.Error">@AadhaarUploadError</MudText>
+    }
+    
+    @if (HasValidationError(nameof(bankingInfo.AadhaarBase64Content)))
+    {
+        <MudText Color="Color.Error">@GetValidationError(nameof(bankingInfo.AadhaarBase64Content))</MudText>
+    }
+    
+    <ValidationMessage For="@(() => bankingInfo.AadhaarBase64Content)" />
+</MudItem>
 
                     <!-- PAN File Upload -->
-                    <MudItem xs="12" sm="6">
-                        <MudText Typo="Typo.body1">PAN Document*</MudText>
-                        <InputFile OnChange="HandlePanFileChange" accept=".pdf,.jpg,.jpeg,.png" />
-                        <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
-                        <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PanBase64Content) ? "No file selected" : $"File selected: {bankingInfo.PanFileName}")</MudText>
-                        @if (!string.IsNullOrEmpty(PanUploadError))
-                        {
-                            <MudText Color="Color.Error">@PanUploadError</MudText>
-                        }
-                        @if (HasValidationError(nameof(bankingInfo.PanBase64Content)))
-                        {
-                            <MudText Color="Color.Error">@GetValidationError(nameof(bankingInfo.PanBase64Content))</MudText>
-                        }
-                        <ValidationMessage For="@(() => bankingInfo.PanBase64Content)" />
+<MudItem xs="12" sm="6">
+    <MudText Typo="Typo.body1">PAN Document*</MudText>
+    <InputFile OnChange="HandlePanFileChange" accept=".pdf,.jpg,.jpeg,.png"
+               @onblur="@(() => ValidateField(nameof(bankingInfo.PanBase64Content)))"
+               Error="@HasValidationError(nameof(bankingInfo.PanBase64Content))"
+               ErrorText="@GetValidationError(nameof(bankingInfo.PanBase64Content))" />
+    
+    <MudText Typo="Typo.body2" Color="Color.Primary">
+        Max 20MB. Ensure clarity. (Supports PDF, JPG, PNG)
+    </MudText>
+    
+    <MudText Typo="Typo.caption" Class="mt-1">
+        @(string.IsNullOrEmpty(bankingInfo.PanBase64Content) 
+            ? "No file selected" 
+            : $"File selected: {bankingInfo.PanFileName}")
+    </MudText>
 
-                    </MudItem>
+    @if (!string.IsNullOrEmpty(bankingInfo.PanBase64Content))
+    {
+        <div class="mt-2">
+            <MudText Typo="Typo.subtitle2" Class="mb-1">Document Preview:</MudText>
+            <MudPaper Elevation="1" Class="pa-2" Style="max-width: 300px;">
+                @if (bankingInfo.PanFileName?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) ?? false)
+                {
+                    <iframe src="@($"data:application/pdf;base64,{bankingInfo.PanBase64Content}")" 
+                            style="width: 100%; height: 300px; border: none;"></iframe>
+                }
+                else
+                {
+                    <img src="@($"data:image/jpeg;base64,{bankingInfo.PanBase64Content}")" 
+                         alt="PAN document preview" 
+                         style="max-width: 100%; max-height: 300px; display: block;" />
+                }
+            </MudPaper>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(PanUploadError))
+    {
+        <MudText Color="Color.Error">@PanUploadError</MudText>
+    }
+    
+    @if (HasValidationError(nameof(bankingInfo.PanBase64Content)))
+    {
+        <MudText Color="Color.Error">@GetValidationError(nameof(bankingInfo.PanBase64Content))</MudText>
+    }
+    
+    <ValidationMessage For="@(() => bankingInfo.PanBase64Content)" />
+</MudItem>
 
                     <!-- Passbook File Upload -->
-                    <MudItem xs="12" sm="6">
-                        <MudText Typo="Typo.body1">Passbook Document</MudText>
-                        <InputFile OnChange="OnPassbookFileChanged" accept=".pdf,.jpg,.jpeg,.png" />
-                        <MudText Typo="Typo.body2" Color="Color.Primary">Max 20MB. Ensure clarity.</MudText>
-                        <MudText Typo="Typo.caption">@(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) ? "No file selected" : $"File selected: {bankingInfo.PassbookFileName}")</MudText>
-                        @if (!string.IsNullOrEmpty(PassbookUploadError))
-                        {
-                            <MudText Color="Color.Error">@PassbookUploadError</MudText>
-                        }
-                        @if (HasValidationError(nameof(bankingInfo.PassbookBase64Content)))
-                        {
-                            <MudText Color="Color.Error">@GetValidationError(nameof(bankingInfo.PassbookBase64Content))</MudText>
-                        }
-                        <ValidationMessage For="@(() => bankingInfo.PassbookBase64Content)" />
+<MudItem xs="12" sm="6">
+    <MudText Typo="Typo.body1">Passbook Document</MudText>
+    <InputFile OnChange="OnPassbookFileChanged" accept=".pdf,.jpg,.jpeg,.png"
+               @onblur="@(() => ValidateField(nameof(bankingInfo.PassbookBase64Content)))"
+               Error="@HasValidationError(nameof(bankingInfo.PassbookBase64Content))"
+               ErrorText="@GetValidationError(nameof(bankingInfo.PassbookBase64Content))" />
+    
+    <MudText Typo="Typo.body2" Color="Color.Primary">
+        Max 20MB. Ensure clarity. (Supports PDF, JPG, PNG)
+    </MudText>
+    
+    <MudText Typo="Typo.caption" Class="mt-1">
+        @(string.IsNullOrEmpty(bankingInfo.PassbookBase64Content) 
+            ? "No file selected" 
+            : $"File selected: {bankingInfo.PassbookFileName}")
+    </MudText>
 
-                    </MudItem>
+    @if (!string.IsNullOrEmpty(bankingInfo.PassbookBase64Content))
+    {
+        <div class="mt-2">
+            <MudText Typo="Typo.subtitle2" Class="mb-1">Document Preview:</MudText>
+            <MudPaper Elevation="1" Class="pa-2" Style="max-width: 300px;">
+                @if (bankingInfo.PassbookFileName?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) ?? false)
+                {
+                    <iframe src="@($"data:application/pdf;base64,{bankingInfo.PassbookBase64Content}")" 
+                            style="width: 100%; height: 300px; border: none;"></iframe>
+                }
+                else
+                {
+                    <img src="@($"data:image/jpeg;base64,{bankingInfo.PassbookBase64Content}")" 
+                         alt="Passbook document preview" 
+                         style="max-width: 100%; max-height: 300px; display: block;" />
+                }
+            </MudPaper>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(PassbookUploadError))
+    {
+        <MudText Color="Color.Error">@PassbookUploadError</MudText>
+    }
+    
+    @if (HasValidationError(nameof(bankingInfo.PassbookBase64Content)))
+    {
+        <MudText Color="Color.Error">@GetValidationError(nameof(bankingInfo.PassbookBase64Content))</MudText>
+    }
+    
+    <ValidationMessage For="@(() => bankingInfo.PassbookBase64Content)" />
+</MudItem>
 
                     <!-- Action Buttons -->
                     <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
