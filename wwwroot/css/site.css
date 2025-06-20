@@ -41,10 +41,10 @@
 /* Role Management Page Styling for WiseHR */
 
 /* Container styles */
-.mud-container {
+/*.mud-container {
     padding: var(--container-padding);
     margin-top: 14px;
-}
+}*/
 
 /* Page heading */
 .mud-typography-h3 {
@@ -210,10 +210,10 @@
 /* Role Management Page Styling for WiseHR */
 
 /* Container styles */
-.mud-container {
+/*.mud-container {
     padding: var(--container-padding);
     margin-top: 24px;
-}
+}*/
 
 /* Page heading */
 .mud-typography-h3 {

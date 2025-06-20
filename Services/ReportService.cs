@@ -253,7 +253,7 @@ public class ReportService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error submitting report for MenteeID: {report.MenteeId}, MentorID: {report.MentorId}, Message: {ex.Message}");
+            Console.WriteLine($"Error submitting report for MenteeID: {report.MenteeEmployeeID}, MentorID: {report.MentorEmployeeID}, Message: {ex.Message}");
             return false;
         }
     }
@@ -322,19 +322,19 @@ public class ReportService
                 });
                 cacheKeys.Add(reportKey);
             }
-            if (!string.IsNullOrEmpty(report.MenteeId))
+            if (!string.IsNullOrEmpty(report.MenteeEmployeeID))
             {
-                string menteeKey = MenteeReportsKey(report.MenteeId);
-                _cache.Set(menteeKey, reports.Where(r => r.MenteeId == report.MenteeId).ToList(), new MemoryCacheEntryOptions
+                string menteeKey = MenteeReportsKey(report.MenteeEmployeeID);
+                _cache.Set(menteeKey, reports.Where(r => r.MenteeEmployeeID == report.MenteeEmployeeID).ToList(), new MemoryCacheEntryOptions
                 {
                     SlidingExpiration = TimeSpan.FromMinutes(10)
                 });
                 cacheKeys.Add(menteeKey);
             }
-            if (!string.IsNullOrEmpty(report.MentorId))
+            if (!string.IsNullOrEmpty(report.MentorEmployeeID))
             {
-                string mentorKey = MentorReportsKey(report.MentorId);
-                _cache.Set(mentorKey, reports.Where(r => r.MentorId == report.MentorId).ToList(), new MemoryCacheEntryOptions
+                string mentorKey = MentorReportsKey(report.MentorEmployeeID);
+                _cache.Set(mentorKey, reports.Where(r => r.MentorEmployeeID == report.MentorEmployeeID).ToList(), new MemoryCacheEntryOptions
                 {
                     SlidingExpiration = TimeSpan.FromMinutes(10)
                 });

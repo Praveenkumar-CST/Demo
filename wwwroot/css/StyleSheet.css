@@ -480,7 +480,7 @@ input, select, textarea {
 }
 
 .mt-4 {
-    margin-top: 2rem;
+    margin-top: .5rem;
 }
 
 /* Dynamic Field Removal */
