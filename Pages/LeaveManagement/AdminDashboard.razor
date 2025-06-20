@@ -3,885 +3,1012 @@
 @using WiseHR.Services
 @using FluentValidation
 @using Components.sidebar
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject CustomAuthStateProvider AuthStateProvider
 @inject LeaveManagementService LeaveService
 @inject MudBlazor.ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 @layout HomeLayout
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-
-    <AuthorizeView Roles="Admin,HR,Manager">
-        <Authorized>
-            <!-- Leave Request Overview -->
-            <MudCard Class="mb-6" Elevation="3">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6" Class="font-weight-bold">Leave Request Overview</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    @if (isLoading)
-                    {
-                        <MudStack AlignItems="AlignItems.Center" Class="pa-4">
-                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="100px" Class="mb-4" />
-                            <MudSkeleton SkeletonType="SkeletonType.Text" Width="200px" />
-                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="150px" />
-                        </MudStack>
-                    }
-                    else
-                    {
-                        <MudGrid Class="@(showAllLeaveTypes ? "" : "justify-center")">
-                            @foreach (var quota in leaveQuotas.Where(q => showAllLeaveTypes || new[] { "Privilege", "Sick", "WorkFromHome" }.Contains(q.LeaveType)))
-                            {
-                                <MudItem xs="12" sm="6" md="3">
-                                    <MudPaper Class="pa-4 text-center" Style="@GetGradientStyle(quota.LeaveType)">
-                                        <MudIcon Icon="@GetLeaveTypeIcon(quota.LeaveType)" Size="Size.Large" Color="@GetLeaveTypeColor(quota.LeaveType)" Class="mb-2" />
-                                        <MudText Typo="Typo.h4" Class="font-weight-bold" Style="@($"color: {GetColorHex(GetLeaveTypeColor(quota.LeaveType))}")">@quota.RequestCount</MudText>
-                                        <MudText Typo="Typo.body2" Style="@($"color: {GetColorHex(GetLeaveTypeColor(quota.LeaveType))}")">@quota.LeaveType Leave Requests</MudText>
-                                    </MudPaper>
-                                </MudItem>
-                            }
-                        </MudGrid>
-                        <MudStack AlignItems="AlignItems.Center" Class="mt-4">
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@(showAllLeaveTypes ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
-                                       OnClick="ToggleShowMore">
-                                @(showAllLeaveTypes ? "Show Less" : "Show More")
-                            </MudButton>
-                        </MudStack>
-                    }
-                </MudCardContent>
-            </MudCard>
-
-            <!-- Pending Leave Requests -->
-            <MudCard Class="mb-6" Elevation="3">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6" Class="font-weight-bold">
-                            <MudIcon Icon="Icons.Material.Filled.PendingActions" Class="mr-2" />
-                            All Pending Leave Requests
-                        </MudText>
-                    </CardHeaderContent>
-                    <CardHeaderActions>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   OnClick="RefreshPendingRequests"
-                                   Disabled="@isLoading">
-                            Refresh
-                        </MudButton>
-                    </CardHeaderActions>
-                </MudCardHeader>
-                <MudCardContent>
-                    @if (isLoading)
-                    {
-                        <MudStack AlignItems="AlignItems.Center" Class="pa-4">
-                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="50px" Class="mb-2" />
-                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="50px" Class="mb-2" />
-                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="50px" />
-                            <MudSkeleton SkeletonType="SkeletonType.Text" Width="150px" Class="mt-2" />
-                        </MudStack>
-                    }
-                    else
-                    {
-                        @if (pendingRequests == null || !pendingRequests.Any())
+    <!-- Leave Request Overview -->
+    <MudCard Class="mb-6" Elevation="3" id="leave-overview">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6" Class="font-weight-bold">Leave Request Overview</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (isLoadingOverview && leaveQuotas.Count == 0)
+            {
+                <MudStack AlignItems="AlignItems.Center" Class="py-8">
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Height="40px" Width="40px" Class="mb-3" />
+                    <MudText Typo="Typo.body2" Class="text-muted">Loading overview...</MudText>
+                    <MudGrid Class="mt-4 w-100">
+                        @for (int i = 0; i < 4; i++)
                         {
-                            <MudPaper Class="pa-8 text-center" Style="background-color: #f5f5f5;">
-                                <MudIcon Icon="Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Success" />
-                                <MudText Typo="Typo.h6" Class="mt-2">No pending leave requests found</MudText>
-                                <MudText Typo="Typo.body2" Class="text-muted">All requests have been processed</MudText>
-                            </MudPaper>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" Class="rounded" />
+                            </MudItem>
                         }
-                        else
-                        {
-                            <div style="overflow-x: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <MudTable Items="@pendingRequests"
-                                          Hover="true"
-                                          Breakpoint="Breakpoint.None"
-                                          Dense="false"
-                                          Elevation="0"
-                                          Class="modern-table"
-                                          Style="min-width: 1200px;">
-                                    <HeaderContent>
-                                        <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: left; padding: 16px; min-width: 180px; position: sticky; left: 0; z-index: 10;">
-                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
-                                                <MudIcon Icon="Icons.Material.Filled.Person" Size="Size.Small" />
-                                                <MudText Typo="Typo.subtitle2">Employee</MudText>
-                                            </MudStack>
-                                        </MudTh>
-                                        <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 120px;">
-                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
-                                                <MudIcon Icon="Icons.Material.Filled.Category" Size="Size.Small" />
-                                                <MudText Typo="Typo.subtitle2">Leave Type</MudText>
-                                            </MudStack>
-                                        </MudTh>
-                                        <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 160px;">
-                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
-                                                <MudIcon Icon="Icons.Material.Filled.DateRange" Size="Size.Small" />
-                                                <MudText Typo="Typo.subtitle2">Duration</MudText>
-                                            </MudStack>
-                                        </MudTh>
-                                        <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 200px;">
-                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
-                                                <MudIcon Icon="Icons.Material.Filled.Description" Size="Size.Small" />
-                                                <MudText Typo="Typo.subtitle2">Reason</MudText>
-                                            </MudStack>
-                                        </MudTh>
-                                        <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 180px;">
-                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
-                                                <MudIcon Icon="Icons.Material.Filled.SupervisorAccount" Size="Size.Small" />
-                                                <MudText Typo="Typo.subtitle2">Mentor</MudText>
-                                            </MudStack>
-                                        </MudTh>
-                                        <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 200px;">
-                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
-                                                <MudIcon Icon="Icons.Material.Filled.Settings" Size="Size.Small" />
-                                                <MudText Typo="Typo.subtitle2">Actions</MudText>
-                                            </MudStack>
-                                        </MudTh>
-                                    </HeaderContent>
-                                    <RowTemplate>
-                                        <MudTd DataLabel="Employee" Style="text-align: left; padding: 16px; vertical-align: middle; background-color: white; position: sticky; left: 0; z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
-                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                <MudAvatar Size="Size.Small" Color="Color.Primary">
-                                                    @context.Name.Substring(0, 1).ToUpper()
-                                                </MudAvatar>
-                                                <MudText Typo="Typo.body2" Style="font-weight: 500;">@context.Name</MudText>
-                                            </MudStack>
-                                        </MudTd>
-                                        <MudTd DataLabel="Leave Type" Style="text-align: center; padding: 16px; vertical-align: middle;">
-                                            <MudStack AlignItems="AlignItems.Center">
-                                                <MudChip T="string" Label="true"
-                                                         Color="@GetLeaveTypeColor(context.LeaveType)"
-                                                         Size="Size.Small"
-                                                         Icon="@GetLeaveTypeIcon(context.LeaveType)">
-                                                    @context.LeaveType
-                                                </MudChip>
-                                            </MudStack>
-                                        </MudTd>
-                                        <MudTd DataLabel="Duration" Style="text-align: center; padding: 16px; vertical-align: middle;">
-                                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
-                                                <MudText Typo="Typo.body2" Style="font-weight: 500;">
-                                                    @context.StartDate.ToString("MMM dd") - @context.EndDate.ToString("MMM dd, yyyy")
-                                                </MudText>
-                                                <MudText Typo="Typo.caption" Class="text-muted">
-                                                    @((context.EndDate - context.StartDate).Days + 1) Days
-                                                </MudText>
-                                            </MudStack>
-                                        </MudTd>
-                                        <MudTd DataLabel="Reason" Style="text-align: center; padding: 16px; vertical-align: middle;">
-                                            <MudStack AlignItems="AlignItems.Center">
-                                                <MudTooltip Text="@context.Reason">
-                                                    <MudText Typo="Typo.body2"
-                                                             Style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;">
-                                                        @context.Reason
-                                                    </MudText>
-                                                </MudTooltip>
-                                            </MudStack>
-                                        </MudTd>
-                                        <MudTd DataLabel="Mentor" Style="text-align: center; padding: 16px; vertical-align: middle;">
-                                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
-                                                <MudText Typo="Typo.body2" Style="font-weight: 500;">@context.MentorName</MudText>
-                                                <MudText Typo="Typo.caption" Class="text-muted">@context.MentorEmail</MudText>
-                                            </MudStack>
-                                        </MudTd>
-                                        <MudTd DataLabel="Actions" Style="text-align: center; padding: 16px; vertical-align: middle;">
-                                            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2">
-                                                <MudTooltip Text="Approve this leave request">
-                                                    <MudButton Variant="Variant.Filled"
-                                                               Color="Color.Success"
-                                                               Size="Size.Small"
-                                                               OnClick="@(async () => await OnApprove(context.Id))"
-                                                               Style="min-width: 80px; text-transform: none;">
-                                                        Approve
-                                                    </MudButton>
-                                                </MudTooltip>
-                                                <MudTooltip Text="Reject this leave request">
-                                                    <MudButton Variant="Variant.Filled"
-                                                               Color="Color.Error"
-                                                               Size="Size.Small"
-                                                               OnClick="@(async () => await OnReject(context.Id))"
-                                                               Style="min-width: 80px; text-transform: none;">
-                                                        Reject
-                                                    </MudButton>
-                                                </MudTooltip>
-                                            </MudStack>
-                                        </MudTd>
-                                    </RowTemplate>
-                                </MudTable>
-                            </div>
-                        }
-                    }
-                </MudCardContent>
-            </MudCard>
-
-            <!-- Leave Quota Management Section -->
-            <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
-                <MudStack Spacing="6">
-                    <MudGrid Spacing="4">
-                        <!-- Manage Default Leave Quota Card -->
-                        <MudItem xs="12" sm="6" md="6" lg="6">
-                            <MudCard Class="quota-card" Elevation="3">
-                                <MudCardHeader Class="header-centered">
-                                    <CardHeaderContent>
-                                        <MudText Typo="Typo.h6" Class="font-weight-bold">
-                                            <MudIcon Icon="Icons.Material.Filled.AdminPanelSettings" Class="mr-2" />
-                                            Manage Default Leave Limit
-                                        </MudText>
-                                    </CardHeaderContent>
-                                    <CardHeaderActions>
-                                        <MudTooltip Text="View default quota logs">
-                                            <MudButton Variant="Variant.Text"
-                                                       Color="Color.Secondary"
-                                                       Size="Size.Small"
-                                                       Class="logs-button"
-                                                       OnClick="@(async () => await ToggleDefaultQuotaHistory())">
-                                                Logs
-                                            </MudButton>
-                                        </MudTooltip>
-                                    </CardHeaderActions>
-                                </MudCardHeader>
-                                <MudCardContent>
-                                    @if (isLoading)
-                                    {
-                                        <MudStack Spacing="3">
-                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                        </MudStack>
-                                    }
-                                    else
-                                    {
-                                        <MudForm @ref="defaultQuotaForm" Model="defaultLeaveQuota" Validation="@(new DefaultLeaveQuotaDtoValidator())">
-                                            <MudStack Spacing="3">
-                                                <MudSelect Label="Leave Type"
-                                                           @bind-Value="DefaultLeaveType"
-                                                           Required="true"
-                                                           Variant="Variant.Outlined"
-                                                           AnchorOrigin="Origin.BottomCenter"
-                                                           Class="compact-input">
-                                                    <MudSelectItem Value="@("Privilege")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.BeachAccess" Size="Size.Small" />
-                                                            <span>Privilege</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Sick")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.LocalHospital" Size="Size.Small" />
-                                                            <span>Sick</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("WorkFromHome")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.HomeWork" Size="Size.Small" />
-                                                            <span>Work From Home</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Unpaid")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
-                                                            <span>Unpaid</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Maternity")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.FamilyRestroom" Size="Size.Small" />
-                                                            <span>Maternity</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Paternity")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.Man" Size="Size.Small" />
-                                                            <span>Paternity</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                </MudSelect>
-
-                                                <MudTextField Label="Quota (Number of Leaves)"
-                                                              @bind-Value="defaultLeaveQuota.Quota"
-                                                              Required="true"
-                                                              InputType="InputType.Number"
-                                                              Variant="Variant.Outlined"
-                                                              Class="compact-input" />
-
-                                                <MudTextField Label="Description"
-                                                              @bind-Value="defaultLeaveQuota.Description"
-                                                              Variant="Variant.Outlined"
-                                                              Class="compact-input" />
-
-                                                <MudStack Row Spacing="2" Class="mt-3">
-                                                    <MudTooltip Text="Update the default leave quota for all employees">
-                                                        <MudButton Variant="Variant.Filled"
-                                                                   Color="Color.Primary"
-                                                                   FullWidth="true"
-                                                                   OnClick="ManageDefaultQuota">
-                                                            Update Quota
-                                                        </MudButton>
-                                                    </MudTooltip>
-                                                </MudStack>
-                                            </MudStack>
-                                        </MudForm>
-                                    }
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-
-                        <!-- Manage Individual Leave Quota Card -->
-                        <MudItem xs="12" sm="6" md="6" lg="6">
-                            <MudCard Class="quota-card" Elevation="3">
-                                <MudCardHeader Class="header-centered">
-                                    <CardHeaderContent>
-                                        <MudText Typo="Typo.h6" Class="font-weight-bold">
-                                            <MudIcon Icon="Icons.Material.Filled.Person" Class="mr-2" />
-                                            Manage Individual Leave Limit
-                                        </MudText>
-                                    </CardHeaderContent>
-                                    <CardHeaderActions>
-                                        <MudTooltip Text="View individual quota logs">
-                                            <MudButton Variant="Variant.Text"
-                                                       Color="Color.Secondary"
-                                                       Size="Size.Small"
-                                                       Class="logs-button"
-                                                       OnClick="@(() => ShowIndividualQuotaHistory = !ShowIndividualQuotaHistory)">
-                                                Logs
-                                            </MudButton>
-                                        </MudTooltip>
-                                    </CardHeaderActions>
-                                </MudCardHeader>
-                                <MudCardContent>
-                                    @if (isLoading)
-                                    {
-                                        <MudStack Spacing="3">
-                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-
-                                        </MudStack>
-                                    }
-                                    else
-                                    {
-                                        <MudForm @ref="individualQuotaForm" Model="individualLeaveQuota" Validation="@(new IndividualLeaveQuotaDtoValidator())">
-                                            <MudStack Spacing="3">
-                                                <MudTextField Label="Employee ID"
-                                                              @bind-Value="individualLeaveQuota.EmployeeID"
-                                                              Required="true"
-                                                              Variant="Variant.Outlined"
-                                                              Class ="compact-input" />
-
-                                                <MudSelect Label="Leave Type"
-                                                           @bind-Value="IndividualLeaveType"
-                                                           Required="true"
-                                                           Variant="Variant.Outlined"
-                                                           AnchorOrigin="Origin.BottomCenter"
-                                                           Class="compact-input">
-                                                    <MudSelectItem Value="@("Privilege")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.BeachAccess" Size="Size.Small" />
-                                                            <span>Privilege</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Sick")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.LocalHospital" Size="Size.Small" />
-                                                            <span>Sick</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("WorkFromHome")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.HomeWork" Size="Size.Small" />
-                                                            <span>Work From Home</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Unpaid")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
-                                                            <span>Unpaid</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Maternity")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.FamilyRestroom" Size="Size.Small" />
-                                                            <span>Maternity</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                    <MudSelectItem Value="@("Paternity")">
-                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                            <MudIcon Icon="Icons.Material.Filled.Man" Size="Size.Small" />
-                                                            <span>Paternity</span>
-                                                        </MudStack>
-                                                    </MudSelectItem>
-                                                </MudSelect>
-
-                                                <MudTextField Label="Quota (Number of Leaves)"
-                                                              @bind-Value="individualLeaveQuota.Quota"
-                                                              Required="true"
-                                                              InputType="InputType.Number"
-                                                              Variant="Variant.Outlined"
-                                                              Class="compact-input" />
-
-                                                <MudTextField Label="Description"
-                                                              @bind-Value="individualLeaveQuota.Description"
-                                                              Variant="Variant.Outlined"
-                                                              Class="compact-input" />
-
-                                                <MudStack Row Spacing="2" Class="mt-3">
-                                                    <MudTooltip Text="Update the individual leave quota for this employee">
-                                                        <MudButton Variant="Variant.Filled"
-                                                                   Color="Color.Primary"
-                                                                   FullWidth="true"
-                                                                   OnClick="ManageIndividualQuota">
-                                                            Update Quota
-                                                        </MudButton>
-                                                    </MudTooltip>
-                                                </MudStack>
-                                            </MudStack>
-                                        </MudForm>
-                                    }
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
                     </MudGrid>
                 </MudStack>
-            </MudContainer>
-
-            <!-- Default Quota History Overlay -->
-            <MudOverlay Visible="@ShowDefaultQuotaHistory"
-                        DarkBackground="true"
-                        ZIndex="1000"
-                        AutoClose="false"
-                        Class="fixed-overlay">
-                <MudPaper Elevation="5" Class="centered-overlay">
-                    <MudStack Spacing="4" Class="pa-6">
-                        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                            <MudText Typo="Typo.h6" Class="font-weight-bold">
-                                <MudIcon Icon="Icons.Material.Filled.Assignment" Class="mr-2" />
-                                Default Limit Logs
-                            </MudText>
-                            <MudIconButton Icon="Icons.Material.Filled.Close"
-                                           Size="Size.Small"
-                                           OnClick="@(() => ShowDefaultQuotaHistory = false)" />
-                        </MudStack>
-
-                        <MudSelect Label="Select Leave Type"
-                                   @bind-Value="selectedLeaveType"
-                                   Variant="Variant.Outlined"
-                                   AnchorOrigin="Origin.BottomCenter"
-                                   Class="compact-input"
-                                   T="string">
-                            <MudSelectItem Value="@("Privilege")">
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudIcon Icon="Icons.Material.Filled.BeachAccess" Size="Size.Small" />
-                                    <span>Privilege</span>
-                                </MudStack>
-                            </MudSelectItem>
-                            <MudSelectItem Value="@("Sick")">
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudIcon Icon="Icons.Material.Filled.LocalHospital" Size="Size.Small" />
-                                    <span>Sick</span>
-                                </MudStack>
-                            </MudSelectItem>
-                            <MudSelectItem Value="@("WorkFromHome")">
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudIcon Icon="Icons.Material.Filled.HomeWork" Size="Size.Small" />
-                                    <span>Work From Home</span>
-                                </MudStack>
-                            </MudSelectItem>
-                            <MudSelectItem Value="@("Unpaid")">
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
-                                    <span>Unpaid</span>
-                                </MudStack>
-                            </MudSelectItem>
-                            <MudSelectItem Value="@("Maternity")">
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudIcon Icon="Icons.Material.Filled.FamilyRestroom" Size="Size.Small" />
-                                    <span>Maternity</span>
-                                </MudStack>
-                            </MudSelectItem>
-                            <MudSelectItem Value="@("Paternity")">
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudIcon Icon="Icons.Material.Filled.Man" Size="Size.Small" />
-                                    <span>Paternity</span>
-                                </MudStack>
-                            </MudSelectItem>
-                        </MudSelect>
-
-                        @if (isLoadingQuotaHistory)
-                        {
-                            <MudStack AlignItems="AlignItems.Center" Class="pa-4">
-                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
-                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
-                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                <MudSkeleton SkeletonType="SkeletonType.Text" Width="100px" Class="mt-2" />
-                            </MudStack>
-                        }
-                        else if (defaultQuotaHistory != null && defaultQuotaHistory.History.Any())
-                        {
-                            <MudTable Items="@defaultQuotaHistory.History"
-                                      Hover="true"
-                                      Breakpoint="Breakpoint.Sm"
-                                      Dense="true"
-                                      Elevation="0"
-                                      Class="modern-table">
-                                <HeaderContent>
-                                    <MudTh Style="font-weight: 600;">Leave Type</MudTh>
-                                    <MudTh Style="font-weight: 600;">Previous Quota</MudTh>
-                                    <MudTh Style="font-weight: 600;">New Quota</MudTh>
-                                    <MudTh Style="font-weight: 600;">Description</MudTh>
-                                    <MudTh Style="font-weight: 600;">Updated By</MudTh>
-                                    <MudTh Style="font-weight: 600;">Updated At</MudTh>
-                                </HeaderContent>
-                                <RowTemplate>
-                                    <MudTd DataLabel="Leave Type">@context.LeaveType</MudTd>
-                                    <MudTd DataLabel="Previous Quota">@context.PreviousQuota</MudTd>
-                                    <MudTd DataLabel="New Quota">@context.NewQuota</MudTd>
-                                    <MudTd DataLabel="Description">@context.Description</MudTd>
-                                    <MudTd DataLabel="Updated By">@context.UpdatedByName (@context.UpdatedByEmail)</MudTd>
-                                    <MudTd DataLabel="Updated At">@context.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</MudTd>
-                                </RowTemplate>
-                                <PagerContent>
-                                    <MudTablePager />
-                                </PagerContent>
-                            </MudTable>
-                        }
-                        else
-                        {
-                            <MudPaper Class="pa-4 text-center" Elevation="0">
-                                <MudIcon Icon="Icons.Material.Filled.Info" Size="Size.Medium" Color="Color.Info" />
-                                <MudText Typo="Typo.body2" Class="mt-2">No logs found for this leave type</MudText>
+            }
+            else
+            {
+                <MudGrid Class="@(showAllLeaveTypes ? "" : "justify-center")">
+                    @foreach (var quota in leaveQuotas.Where(q => showAllLeaveTypes || new[] { "Privilege", "Sick", "WorkFromHome" }.Contains(q.LeaveType)))
+                    {
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Class="pa-4 text-center" Style="@GetGradientStyle(quota.LeaveType)">
+                                <MudIcon Icon="@GetLeaveTypeIcon(quota.LeaveType)" Size="Size.Large" Color="@GetLeaveTypeColor(quota.LeaveType)" Class="mb-2" />
+                                <MudText Typo="Typo.h4" Class="font-weight-bold" Style="@($"color: {GetColorHex(GetLeaveTypeColor(quota.LeaveType))}")">@quota.RequestCount</MudText>
+                                <MudText Typo="Typo.body2" Style="@($"color: {GetColorHex(GetLeaveTypeColor(quota.LeaveType))}")">@quota.LeaveType Leave Requests</MudText>
                             </MudPaper>
-                        }
+                        </MudItem>
+                    }
+                </MudGrid>
+                <MudStack AlignItems="AlignItems.Center" Class="mt-4">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@(showAllLeaveTypes ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                               OnClick="ToggleShowMore"
+                               Class="uniform-button">
+                        @(showAllLeaveTypes ? "Show Less" : "Show More")
+                    </MudButton>
+                </MudStack>
+            }
+        </MudCardContent>
+    </MudCard>
 
-                        <MudStack Row Spacing="2" Justify="Justify.FlexEnd">
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Primary"
-                                       OnClick="@(async () => await LoadDefaultQuotaHistory(selectedLeaveType))">
-                                Search
-                            </MudButton>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Secondary"
-                                       OnClick="@(() => ShowDefaultQuotaHistory = false)">
-                                Close
-                            </MudButton>
+    <!-- Pending Leave Requests -->
+    <MudCard Class="mb-6" Elevation="3" id="pending-requests">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6" Class="font-weight-bold">
+                    <MudIcon Icon="Icons.Material.Filled.PendingActions" Class="mr-2" />
+                    All Pending Leave Requests
+                </MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="RefreshPendingRequests"
+                           Disabled="@isLoadingPending"
+                           Class="uniform-button">
+                    @if (isLoadingPending)
+                    {
+                    }
+                    Refresh
+                </MudButton>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (isLoadingPending)
+            {
+                <MudStack Class="py-6" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="min-height: 200px;">
+                   
+                    <!-- Table skeleton -->
+                    <div style="overflow-x: auto; border-radius: 8px; border: 1px solid #e0e0e0; width: 100%;">
+                        @for (int row = 0; row < 4; row++)
+                        {
+                            <div style="display: flex; border-bottom: 1px solid #f0f0f0; padding: 16px; @(row == 0 ? "background-color: #f8f9fa; font-weight: 600;" : "")">
+                                <div style="min-width: 180px; padding-right: 16px;">
+                                    @if (row == 0)
+                                    {
+                                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="20px" />
+                                    }
+                                    else
+                                    {
+                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
+                                            <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="16px" />
+                                        </MudStack>
+                                    }
+                                </div>
+                                <div style="min-width: 120px; padding-right: 16px; text-align: center;">
+                                    @if (row == 0)
+                                    {
+                                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="80px" Height="20px" />
+                                    }
+                                    else
+                                    {
+                                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="80px" Height="24px" Class="rounded-pill mx-auto" />
+                                    }
+                                </div>
+                                <div style="min-width: 160px; padding-right: 16px; text-align: center;">
+                                    @if (row == 0)
+                                    {
+                                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="100px" Height="20px" />
+                                    }
+                                    else
+                                    {
+                                        <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                            <MudSkeleton SkeletonType="SkeletonType.Text" Width="140px" Height="16px" />
+                                            <MudSkeleton SkeletonType="SkeletonType.Text" Width="60px" Height="12px" />
+                                        </MudStack>
+                                    }
+                                </div>
+                                <div style="min-width: 200px; padding-right: 16px; text-align: center;">
+                                    @if (row == 0)
+                                    {
+                                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="60px" Height="20px" />
+                                    }
+                                    else
+                                    {
+                                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="150px" Height="16px" Class="mx-auto" />
+                                    }
+                                </div>
+                                <div style="min-width: 180px; padding-right: 16px; text-align: center;">
+                                    @if (row == 0)
+                                    {
+                                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="80px" Height="20px" />
+                                    }
+                                    else
+                                    {
+                                        <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100px" Height="16px" />
+                                            <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="12px" />
+                                        </MudStack>
+                                    }
+                                </div>
+                                <div style="min-width: 200px; text-align: center;">
+                                    @if (row == 0)
+                                    {
+                                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="70px" Height="20px" />
+                                    }
+                                    else
+                                    {
+                                        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2">
+                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="70px" Height="32px" Class="rounded" />
+                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="60px" Height="32px" Class="rounded" />
+                                        </MudStack>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </MudStack>
+            }
+            else
+            {
+                @if (pendingRequests == null || !pendingRequests.Any())
+                {
+                    <MudPaper Class="pa-8 text-center" Style="background-color: #f5f5f5;">
+                        <MudIcon Icon="Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Success" />
+                        <MudText Typo="Typo.h6" Class="mt-2">No pending leave requests found</MudText>
+                        <MudText Typo="Typo.body2" Class="text-muted">All requests have been processed</MudText>
+                    </MudPaper>
+                }
+                else
+                {
+                    <div style="overflow-x: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative;">
+                        <MudTable Items="@pendingRequests"
+                                  Hover="true"
+                                  Breakpoint="Breakpoint.None"
+                                  Dense="false"
+                                  Elevation="0"
+                                  Class="modern-table"
+                                  Style="min-width: 1200px;">
+                            <HeaderContent>
+                                <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: left; padding: 16px; min-width: 180px; position: sticky; left: 0; z-index: 10;">
+                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudIcon Icon="Icons.Material.Filled.Person" Size="Size.Small" />
+                                        <MudText Typo="Typo.subtitle2">Employee</MudText>
+                                    </MudStack>
+                                </MudTh>
+                                <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 120px;">
+                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
+                                        <MudIcon Icon="Icons.Material.Filled.Category" Size="Size.Small" />
+                                        <MudText Typo="Typo.subtitle2">Leave Type</MudText>
+                                    </MudStack>
+                                </MudTh>
+                                <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 160px;">
+                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
+                                        <MudIcon Icon="Icons.Material.Filled.DateRange" Size="Size.Small" />
+                                        <MudText Typo="Typo.subtitle2">Duration</MudText>
+                                    </MudStack>
+                                </MudTh>
+                                <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 200px;">
+                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
+                                        <MudIcon Icon="Icons.Material.Filled.Description" Size="Size.Small" />
+                                        <MudText Typo="Typo.subtitle2">Reason</MudText>
+                                    </MudStack>
+                                </MudTh>
+                                <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 180px;">
+                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
+                                        <MudIcon Icon="Icons.Material.Filled.SupervisorAccount" Size="Size.Small" />
+                                        <MudText Typo="Typo.subtitle2">Mentor</MudText>
+                                    </MudStack>
+                                </MudTh>
+                                <MudTh Style="font-weight: 600; background-color: #f8f9fa; text-align: center; padding: 16px; min-width: 200px;">
+                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.Center">
+                                        <MudIcon Icon="Icons.Material.Filled.Settings" Size="Size.Small" />
+                                        <MudText Typo="Typo.subtitle2">Actions</MudText>
+                                    </MudStack>
+                                </MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="pendingContext">
+                                <MudTd DataLabel="Employee" Style="text-align: left; padding: 16px; vertical-align: middle; background-color: white; position: sticky; left: 0; z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
+                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudAvatar Size="Size.Small" Color="Color.Primary">
+                                            @pendingContext.Name.Substring(0, 1).ToUpper()
+                                        </MudAvatar>
+                                        <MudText Typo="Typo.body2" Style="font-weight: 500;">@pendingContext.Name</MudText>
+                                    </MudStack>
+                                </MudTd>
+                                <MudTd DataLabel="Leave Type" Style="text-align: center; padding: 16px; vertical-align: middle;">
+                                    <MudStack AlignItems="AlignItems.Center">
+                                        <MudChip T="string" Label="true"
+                                                 Color="@GetLeaveTypeColor(pendingContext.LeaveType)"
+                                                 Size="Size.Small"
+                                                 Icon="@GetLeaveTypeIcon(pendingContext.LeaveType)">
+                                            @pendingContext.LeaveType
+                                        </MudChip>
+                                    </MudStack>
+                                </MudTd>
+                                <MudTd DataLabel="Duration" Style="text-align: center; padding: 16px; vertical-align: middle;">
+                                    <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudText Typo="Typo.body2" Style="font-weight: 500;">
+                                            @pendingContext.StartDate.ToString("MMM dd") - @pendingContext.EndDate.ToString("MMM dd, yyyy")
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Class="text-muted">
+                                            @CalculateWorkingDays(pendingContext.StartDate, pendingContext.EndDate) Days
+                                        </MudText>
+                                    </MudStack>
+                                </MudTd>
+                                <MudTd DataLabel="Reason" Style="text-align: center; padding: 16px; vertical-align: middle;">
+                                    <MudStack AlignItems="AlignItems.Center">
+                                        <MudTooltip Text="@pendingContext.Reason">
+                                            <MudText Typo="Typo.body2"
+                                                     Style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;">
+                                                @pendingContext.Reason
+                                            </MudText>
+                                        </MudTooltip>
+                                    </MudStack>
+                                </MudTd>
+                                <MudTd DataLabel="Mentor" Style="text-align: center; padding: 16px; vertical-align: middle;">
+                                    <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudText Typo="Typo.body2" Style="font-weight: 500;">@pendingContext.MentorName</MudText>
+                                        <MudText Typo="Typo.caption" Class="text-muted">@pendingContext.MentorEmail</MudText>
+                                    </MudStack>
+                                </MudTd>
+                                <MudTd DataLabel="Actions" Style="text-align: center; padding: 16px; vertical-align: middle;">
+                                    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2">
+                                        <MudTooltip Text="Approve this leave request">
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Success"
+                                                       Size="Size.Small"
+                                                       OnClick="@(async () => await OnApprove(pendingContext.Id))"
+                                                       Disabled="@isProcessingRequest"
+                                                       Class="uniform-button">
+                                                Approve
+                                            </MudButton>
+                                        </MudTooltip>
+                                        <MudTooltip Text="Reject this leave request">
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       OnClick="@(async () => await OnReject(pendingContext.Id))"
+                                                       Disabled="@isProcessingRequest"
+                                                       Class="uniform-button">
+                                                Reject
+                                            </MudButton>
+                                        </MudTooltip>
+                                    </MudStack>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                        <!-- Processing overlay with subtle design -->
+                        @if (isProcessingRequest)
+                        {
+                            <MudOverlay Visible="true" DarkBackground="false" ZIndex="1000" Absolute="true"
+                                        Style="background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(2px);">
+                                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                                    <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText Typo="Typo.body2" Class="text-muted">Processing request...</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudOverlay>
+                        }
+                    </div>
+                }
+            }
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Leave Quota Management Section -->
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+        <MudStack Spacing="6">
+            <MudGrid Spacing="4" Class="quota-grid">
+                <!-- Manage Default Leave Quota Card -->
+                <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudCard Class="quota-card" Elevation="3">
+                        <MudCardHeader Class="header-centered">
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Class="font-weight-bold">
+                                    <MudIcon Icon="Icons.Material.Filled.AdminPanelSettings" Class="mr-2" />
+                                    Manage Default Leave Limit
+                                </MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudTooltip Text="View default quota logs">
+                                    <MudButton Variant="Variant.Text"
+                                               Color="Color.Secondary"
+                                               Size="Size.Small"
+                                               Class="logs-button uniform-button"
+                                               OnClick="@(async () => await ToggleDefaultQuotaHistory())">
+                                        Logs
+                                    </MudButton>
+                                </MudTooltip>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @if (isLoading)
+                            {
+                                <MudStack Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="min-height: 200px;">
+                                    <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true" />
+                                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
+                                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
+                                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
+                                </MudStack>
+                            }
+                            else
+                            {
+                                <MudForm @ref="defaultQuotaForm" Model="defaultLeaveQuota" Validation="@(new DefaultLeaveQuotaDtoValidator())" @onkeypress="@HandleDefaultQuotaEnterKey">
+                                    <MudStack Spacing="3">
+                                        <MudSelect Label="Leave Type"
+                                                   @bind-Value="DefaultLeaveType"
+                                                   Required="true"
+                                                   Variant="Variant.Outlined"
+                                                   AnchorOrigin="Origin.BottomCenter"
+                                                   Class="compact-input">
+                                            <MudSelectItem Value="@("Privilege")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.BeachAccess" Size="Size.Small" />
+                                                    <span>Privilege</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("Sick")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.LocalHospital" Size="Size.Small" />
+                                                    <span>Sick</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("WorkFromHome")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.HomeWork" Size="Size.Small" />
+                                                    <span>Work From Home</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("Unpaid")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
+                                                    <span>Unpaid</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("Maternity")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.FamilyRestroom" Size="Size.Small" />
+                                                    <span>Maternity</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("Paternity")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.Man" Size="Size.Small" />
+                                                    <span>Paternity</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                        </MudSelect>
+
+                                        <MudTextField Label="Quota (Number of Leaves)"
+                                                      @bind-Value="defaultLeaveQuota.Quota"
+                                                      Required="true"
+                                                      InputType="InputType.Number"
+                                                      Variant="Variant.Outlined"
+                                                      Class="compact-input" />
+
+                                        <MudTextField Label="Description"
+                                                      @bind-Value="defaultLeaveQuota.Description"
+                                                      Variant="Variant.Outlined"
+                                                      Class="compact-input" />
+
+                                        <MudStack Row Spacing="2" Class="mt-3">
+                                            <MudTooltip Text="Update the default leave quota for all employees">
+                                                <MudButton Variant="Variant.Filled"
+                                                           Color="Color.Primary"
+                                                           FullWidth="true"
+                                                           OnClick="ManageDefaultQuota"
+                                                           Disabled="@isProcessingDefaultQuota"
+                                                           Class="uniform-button">
+                                                    @if (isProcessingDefaultQuota)
+                                                    {
+                                                        <MudProgressCircular Color="Color.Transparent" Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                                                        <span>Processing...</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>Update Quota</span>
+                                                    }
+                                                </MudButton>
+                                            </MudTooltip>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudForm>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Manage Individual Leave Quota Card -->
+                <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudCard Class="quota-card" Elevation="3">
+                        <MudCardHeader Class="header-centered">
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Class="font-weight-bold">
+                                    <MudIcon Icon="Icons.Material.Filled.Person" Class="mr-2" />
+                                    Manage Individual Leave Limit
+                                </MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudTooltip Text="View individual quota logs">
+                                    <MudButton Variant="Variant.Text"
+                                               Color="Color.Secondary"
+                                               Size="Size.Small"
+                                               Class="logs-button uniform-button"
+                                               OnClick="@(() => ShowIndividualQuotaHistory = !ShowIndividualQuotaHistory)">
+                                        Logs
+                                    </MudButton>
+                                </MudTooltip>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @if (isLoading)
+                            {
+                                <MudStack Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="min-height: 200px;">
+                                    <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true" />
+                                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
+                                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
+                                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
+                                </MudStack>
+                            }
+                            else
+                            {
+                                <MudForm @ref="individualQuotaForm" Model="individualLeaveQuota" Validation="@(new IndividualLeaveQuotaDtoValidator())" @onkeypress="@HandleIndividualQuota">
+                                    <MudStack Spacing="3">
+                                        <MudTextField Label="Employee ID"
+                                                      @bind-Value="individualLeaveQuota.EmployeeID"
+                                                      Required="true"
+                                                      Variant="Variant.Outlined"
+                                                      Class="compact-input" />
+
+                                        <MudSelect Label="Leave Type"
+                                                   @bind-Value="IndividualLeaveType"
+                                                   Required="true"
+                                                   Variant="Variant.Outlined"
+                                                   AnchorOrigin="Origin.BottomCenter"
+                                                   Class="compact-input">
+                                            <MudSelectItem Value="@("Privilege")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.BeachAccess" Size="Size.Small" />
+                                                    <span>Privilege</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("Sick")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.LocalHospital" Size="Size.Small" />
+                                                    <span>Sick</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("WorkFromHome")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.HomeWork" Size="Size.Small" />
+                                                    <span>Work From Home</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("Unpaid")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
+                                                    <span>Unpaid</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("Maternity")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.FamilyRestroom" Size="Size.Small" />
+                                                    <span>Maternity</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                            <MudSelectItem Value="@("Paternity")">
+                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudIcon Icon="Icons.Material.Filled.Man" Size="Size.Small" />
+                                                    <span>Paternity</span>
+                                                </MudStack>
+                                            </MudSelectItem>
+                                        </MudSelect>
+
+                                        <MudTextField Label="Quota (Number of Leaves)"
+                                                      @bind-Value="individualLeaveQuota.Quota"
+                                                      Required="true"
+                                                      InputType="InputType.Number"
+                                                      Variant="Variant.Outlined"
+                                                      Class="compact-input" />
+
+                                        <MudTextField Label="Description"
+                                                      @bind-Value="individualLeaveQuota.Description"
+                                                      Variant="Variant.Outlined"
+                                                      Class="compact-input" />
+
+                                        <MudStack Row Spacing="2" Class="mt-3">
+                                            <MudTooltip Text="Update the individual leave quota for this employee">
+                                                <MudButton Variant="Variant.Filled"
+                                                           Color="Color.Primary"
+                                                           FullWidth="true"
+                                                           OnClick="ManageIndividualQuota"
+                                                           Disabled="@isProcessingIndividualQuota"
+                                                           Class="uniform-button">
+                                                    @if (isProcessingIndividualQuota)
+                                                    {
+                                                        <MudProgressCircular Color="Color.Transparent" Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                                                        <span>Processing...</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>Update Quota</span>
+                                                    }
+                                                </MudButton>
+                                            </MudTooltip>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudForm>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+    </MudContainer>
+
+    <!-- Default Quota History Overlay -->
+    <MudOverlay Visible="@ShowDefaultQuotaHistory"
+                DarkBackground="true"
+                ZIndex="1000"
+                AutoClose="false"
+                Class="fixed-overlay">
+        <MudPaper Elevation="5" Class="centered-overlay">
+            <MudStack Spacing="4" Class="pa-6">
+                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">
+                        <MudIcon Icon="Icons.Material.Filled.Assignment" Class="mr-2" />
+                        Default Limit Logs
+                    </MudText>
+                    <MudIconButton Icon="Icons.Material.Filled.Close"
+                                   Size="Size.Small"
+                                   OnClick="@(() => ShowDefaultQuotaHistory = false)" />
+                </MudStack>
+
+                <MudSelect Label="Select Leave Type"
+                           @bind-Value="selectedLeaveType"
+                           Variant="Variant.Outlined"
+                           AnchorOrigin="Origin.BottomCenter"
+                           Class="compact-input"
+                           T="string">
+                    <MudSelectItem Value="@("Privilege")">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="Icons.Material.Filled.BeachAccess" Size="Size.Small" />
+                            <span>Privilege</span>
                         </MudStack>
+                    </MudSelectItem>
+                    <MudSelectItem Value="@("Sick")">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="Icons.Material.Filled.LocalHospital" Size="Size.Small" />
+                            <span>Sick</span>
+                        </MudStack>
+                    </MudSelectItem>
+                    <MudSelectItem Value="@("WorkFromHome")">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="Icons.Material.Filled.HomeWork" Size="Size.Small" />
+                            <span>Work From Home</span>
+                        </MudStack>
+                    </MudSelectItem>
+                    <MudSelectItem Value="@("Unpaid")">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="Icons.Material.Filled.MoneyOff" Size="Size.Small" />
+                            <span>Unpaid</span>
+                        </MudStack>
+                    </MudSelectItem>
+                    <MudSelectItem Value="@("Maternity")">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="Icons.Material.Filled.FamilyRestroom" Size="Size.Small" />
+                            <span>Maternity</span>
+                        </MudStack>
+                    </MudSelectItem>
+                    <MudSelectItem Value="@("Paternity")">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="Icons.Material.Filled.Man" Size="Size.Small" />
+                            <span>Paternity</span>
+                        </MudStack>
+                    </MudSelectItem>
+                </MudSelect>
+
+                @if (isLoadingQuotaHistory)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="pa-4" Style="min-height: 200px;">
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
                     </MudStack>
-                </MudPaper>
-            </MudOverlay>
+                }
+                else if (defaultQuotaHistory != null && defaultQuotaHistory.History.Any())
+                {
+                    <MudTable Items="@defaultQuotaHistory.History"
+                              Hover="true"
+                              Breakpoint="Breakpoint.None"
+                              Dense="false"
+                              Elevation="0"
+                              Class="modern-table"
+                              Style="min-width: 1000px;">
+                        <HeaderContent>
+                            <MudTh Style="font-weight: 600;">Leave Type</MudTh>
+                            <MudTh Style="font-weight: 600;">Previous Quota</MudTh>
+                            <MudTh Style="font-weight: 600;">New Quota</MudTh>
+                            <MudTh Style="font-weight: 600;">Description</MudTh>
+                            <MudTh Style="font-weight: 600;">Updated By</MudTh>
+                            <MudTh Style="font-weight: 600;">Updated At</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="defaultQuotaContext">
+                            <MudTd DataLabel="Leave Type">@defaultQuotaContext.LeaveType</MudTd>
+                            <MudTd DataLabel="Previous Quota">@defaultQuotaContext.PreviousQuota</MudTd>
+                            <MudTd DataLabel="New Quota">@defaultQuotaContext.NewQuota</MudTd>
+                            <MudTd DataLabel="Description">@defaultQuotaContext.Description</MudTd>
+                            <MudTd DataLabel="Updated By">@defaultQuotaContext.UpdatedByName (@defaultQuotaContext.UpdatedByEmail)</MudTd>
+                            <MudTd DataLabel="Updated At">@defaultQuotaContext.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+                }
+                else
+                {
+                    <MudPaper Class="pa-4 text-center" Elevation="0">
+                        <MudIcon Icon="Icons.Material.Filled.Info" Size="Size.Medium" Color="Color.Info" />
+                        <MudText Typo="Typo.body2" Class="mt-2">No logs found for this leave type</MudText>
+                    </MudPaper>
+                }
 
-            <!-- Individual Quota History Overlay -->
-            <MudOverlay Visible="@ShowIndividualQuotaHistory"
-                        DarkBackground="true"
-                        ZIndex="1000"
-                        AutoClose="false"
-                        Class="fixed-overlay">
-                <MudPaper Elevation="5" Class="centered-overlay">
-                    <MudStack Spacing="4" Class="pa-6">
-                        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                            <MudText Typo="Typo.h6" Class="font-weight-bold">
-                                <MudIcon Icon="Icons.Material.Filled.Assignment" Class="mr-2" />
-                                Individual Limit Logs
-                            </MudText>
-                            <MudIconButton Icon="Icons.Material.Filled.Close"
-                                           Size="Size.Small"
-                                           OnClick="@(() => ShowIndividualQuotaHistory = false)" />
-                        </MudStack>
+                <MudStack Row Spacing="2" Justify="Justify.FlexEnd">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               OnClick="@(async () => await LoadDefaultQuotaHistory(selectedLeaveType))"
+                               Class="uniform-button">
+                        Search
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               OnClick="@(() => ShowDefaultQuotaHistory = false)"
+                               Class="uniform-button">
+                        Close
+                    </MudButton>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+    </MudOverlay>
 
-                        <MudForm @ref="individualQuotaHistoryForm" Model="quotaHistoryRequest" Validation="@(new QuotaHistoryRequestDtoValidator())">
-                            <MudStack Row Spacing="2" AlignItems="AlignItems.Center">
-                                <MudTextField Label="Employee ID"
-                                              @bind-Value="quotaHistoryRequest.EmployeeId"
-                                              Variant="Variant.Outlined"
-                                              Class="compact-input flex-grow-1"
-                                              Immediate="true"
-                                              OnKeyPress="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await LoadIndividualQuotaHistory(); })" />
-                                <MudButton Variant="Variant.Filled"
-                                           Color="Color.Primary"
-                                           OnClick="LoadIndividualQuotaHistory">
-                                    Search
-                                </MudButton>
-                            </MudStack>
-                        </MudForm>
+    <!-- Individual Quota History Overlay -->
+    <MudOverlay Visible="@ShowIndividualQuotaHistory"
+                DarkBackground="true"
+                ZIndex="1000"
+                AutoClose="false"
+                Class="fixed-overlay">
+        <MudPaper Elevation="5" Class="centered-overlay">
+            <MudStack Spacing="4" Class="pa-6">
+                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">
+                        <MudIcon Icon="Icons.Material.Filled.Assignment" Class="mr-2" />
+                        Individual Limit Logs
+                    </MudText>
+                    <MudIconButton Icon="Icons.Material.Filled.Close"
+                                   Size="Size.Small"
+                                   OnClick="@(() => ShowIndividualQuotaHistory = false)" />
+                </MudStack>
 
-                        @if (isLoadingQuotaHistory)
-                        {
-                            <MudStack AlignItems="AlignItems.Center" Class="pa-4">
-                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
-                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
-                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                <MudSkeleton SkeletonType="SkeletonType.Text" Width="100px" Class="mt-2" />
-                            </MudStack>
-                        }
-                        else if (individualQuotaHistory != null && individualQuotaHistory.History.Any())
-                        {
-                            <MudTable Items="@individualQuotaHistory.History"
-                                      Hover="true"
-                                      Breakpoint="Breakpoint.Sm"
-                                      Dense="true"
-                                      Elevation="0"
-                                      Class="modern-table">
-                                <HeaderContent>
-                                    <MudTh Style="font-weight: 600;">Leave Type</MudTh>
-                                    <MudTh Style="font-weight: 600;">Previous Quota</MudTh>
-                                    <MudTh Style="font-weight: 600;">New Quota</MudTh>
-                                    <MudTh Style="font-weight: 600;">Description</MudTh>
-                                    <MudTh Style="font-weight: 600;">Updated By</MudTh>
-                                    <MudTh Style="font-weight: 600;">Updated At</MudTh>
-                                </HeaderContent>
-                                <RowTemplate>
-                                    <MudTd DataLabel="Leave Type">@context.LeaveType</MudTd>
-                                    <MudTd DataLabel="Previous Quota">@context.PreviousQuota</MudTd>
-                                    <MudTd DataLabel="New Quota">@context.NewQuota</MudTd>
-                                    <MudTd DataLabel="Description">@context.Description</MudTd>
-                                    <MudTd DataLabel="Updated By">@context.UpdatedByName (@context.UpdatedByEmail)</MudTd>
-                                    <MudTd DataLabel="Updated At">@context.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</MudTd>
-                                </RowTemplate>
-                                <PagerContent>
-                                    <MudTablePager />
-                                </PagerContent>
-                            </MudTable>
-                        }
-                        else
-                        {
-                            <MudPaper Class="pa-4 text-center" Elevation="0">
-                                <MudIcon Icon="Icons.Material.Filled.Info" Size="Size.Medium" Color="Color.Info" />
-                                <MudText Typo="Typo.body2" Class="mt-2">No logs found for this employee</MudText>
-                            </MudPaper>
-                        }
-
-                        <MudStack Row Spacing="2" Justify="Justify.FlexEnd">
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Primary"
-                                       OnClick="LoadIndividualQuotaHistory">
-                                Refresh
-                            </MudButton>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Secondary"
-                                       OnClick="@(() => ShowIndividualQuotaHistory = false)">
-                                Close
-                            </MudButton>
-                        </MudStack>
+                <MudForm @ref="individualQuotaHistoryForm" Model="quotaHistoryRequest" Validation="@(new QuotaHistoryRequestDtoValidator())" @onkeypress="@HandleIndividualQuota">
+                    <MudStack Row Spacing="2" AlignItems="AlignItems.Center">
+                        <MudTextField Label="Employee ID"
+                                      @bind-Value="quotaHistoryRequest.EmployeeId"
+                                      Variant="Variant.Outlined"
+                                      Class="compact-input flex-grow-1"
+                                      Immediate="true" />
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   OnClick="LoadIndividualQuotaHistory"
+                                   Class="uniform-button">
+                            Search
+                        </MudButton>
                     </MudStack>
-                </MudPaper>
-            </MudOverlay>
+                </MudForm>
 
-            <!-- User Leave History Search -->
-            <MudItem xs="12">
-                <MudCard Class="mb-6" Elevation="4" Style="border-radius: 16px;">
+                @if (isLoadingQuotaHistory)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="pa-4" Style="min-height: 200px;">
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
+                    </MudStack>
+                }
+                else if (individualQuotaHistory != null && individualQuotaHistory.History.Any())
+                {
+                    <MudTable Items="@individualQuotaHistory.History"
+                              Hover="true"
+                              Breakpoint="Breakpoint.None"
+                              Dense="false"
+                              Elevation="0"
+                              Class="modern-table"
+                              Style="min-width: 1000px;">
+                        <HeaderContent>
+                            <MudTh Style="font-weight: 600;">Leave Type</MudTh>
+                            <MudTh Style="font-weight: 600;">Previous Quota</MudTh>
+                            <MudTh Style="font-weight: 600;">New Quota</MudTh>
+                            <MudTh Style="font-weight: 600;">Description</MudTh>
+                            <MudTh Style="font-weight: 600;">Updated By</MudTh>
+                            <MudTh Style="font-weight: 600;">Updated At</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="individualQuotaContext">
+                            <MudTd DataLabel="Leave Type">@individualQuotaContext.LeaveType</MudTd>
+                            <MudTd DataLabel="Previous Quota">@individualQuotaContext.PreviousQuota</MudTd>
+                            <MudTd DataLabel="New Quota">@individualQuotaContext.NewQuota</MudTd>
+                            <MudTd DataLabel="Description">@individualQuotaContext.Description</MudTd>
+                            <MudTd DataLabel="Updated By">@individualQuotaContext.UpdatedByName (@individualQuotaContext.UpdatedByEmail)</MudTd>
+                            <MudTd DataLabel="Updated At">@individualQuotaContext.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+                }
+                else
+                {
+                    <MudPaper Class="pa-4 text-center" Elevation="0">
+                        <MudIcon Icon="Icons.Material.Filled.Info" Size="Size.Medium" Color="Color.Info" />
+                        <MudText Typo="Typo.body2" Class="mt-2">No logs found for this employee</MudText>
+                    </MudPaper>
+                }
+
+                <MudStack Row Spacing="2" Justify="Justify.FlexEnd">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               OnClick="LoadIndividualQuotaHistory"
+                               Class="uniform-button">
+                        Refresh
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               OnClick="@(() => ShowIndividualQuotaHistory = false)"
+                               Class="uniform-button">
+                        Close
+                    </MudButton>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+    </MudOverlay>
+
+    <!-- User Leave History Search -->
+    <MudItem xs="12">
+        <MudCard Class="mb-6" Elevation="4" Style="border-radius: 16px;">
+            <MudCardHeader Class="py-4">
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5" Class="font-weight-bold">
+                        <MudIcon Icon="Icons.Material.Filled.History" Class="mr-2" Size="Size.Medium" />
+                        Search User Leave History
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="pa-6">
+                <MudForm @ref="historyForm" Model="historyRequest" Validation="@(new UserHistoryRequestDtoValidator())" @onkeypress="@HandleHistoryEnterKey">
+                    <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Class="search-container mb-4">
+                        <MudTextField Label="Employee ID or Email"
+                                      @bind-Value="historyRequest.SearchTerm"
+                                      Variant="Variant.Outlined"
+                                      Class="compact-input flex-grow-1"
+                                      Immediate="true"
+                                      Margin="Margin.Dense" />
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   OnClick="SearchHistory"
+                                   Class="search-button px-6"
+                                   Size="Size.Large">
+                            Search
+                        </MudButton>
+                    </MudStack>
+                </MudForm>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    @if (historyResponse != null)
+    {
+        <MudGrid Class="px-4" Spacing="4">
+            <MudItem xs="12" sm="12" md="6" lg="8">
+                <MudCard Elevation="4" Class="mb-6" Style="border-radius: 16px;">
                     <MudCardHeader Class="py-4">
                         <CardHeaderContent>
                             <MudText Typo="Typo.h5" Class="font-weight-bold">
-                                <MudIcon Icon="Icons.Material.Filled.History" Class="mr-2" Size="Size.Medium" />
-                                Search User Leave History
+                                <MudIcon Icon="Icons.Material.Filled.TableChart" Class="mr-2" Size="Size.Medium" />
+                                Leave History Results
                             </MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
-                    <MudCardContent Class="pa-6">
-                        <MudForm @ref="historyForm" Model="historyRequest" Validation="@(new UserHistoryRequestDtoValidator())">
-                            <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Class="search-container mb-4">
-                                <MudTextField Label="Employee ID or Email"
-                                              @bind-Value="historyRequest.SearchTerm"
-                                              Variant="Variant.Outlined"
-                                              Class="compact-input flex-grow-1"
-                                              Immediate="true"
-                                              Margin="Margin.Dense"
-                                              OnKeyPress="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") await SearchHistory(); })" />
-                                <MudButton Variant="Variant.Filled"
-                                           Color="Color.Primary"
-                                           OnClick="SearchHistory"
-                                           Class="search-button px-6"
-                                           Size="Size.Large">
-                                    Search
-                                </MudButton>
+                    <MudCardContent Class="pa-0">
+                        @if (isLoading)
+                        {
+                            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="pa-4" Style="min-height: 200px;">
+                                <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true" />
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="50px" Class="mb-2" />
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="50px" Class="mb-2" />
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="50px" />
                             </MudStack>
-                        </MudForm>
+                        }
+                        else if (historyResponse.History != null && historyResponse.History.Any())
+                        {
+                            <MudTable @ref="historyTable" Hover="true" Breakpoint="Breakpoint.None" Dense="false" Elevation="0" Class="enhanced-table" ServerData="@LoadServerData">
+                                <HeaderContent>
+                                    <MudTh Class="table-header">Employee</MudTh>
+                                    <MudTh Class="table-header">Email</MudTh>
+                                    <MudTh Class="table-header">Leave Type</MudTh>
+                                    <MudTh Class="table-header">Duration</MudTh>
+                                    <MudTh Class="table-header">Reason</MudTh>
+                                    <MudTh Class="table-header">Mentor</MudTh>
+                                    <MudTh Class="table-header">Approver</MudTh>
+                                    <MudTh Class="table-header">Status</MudTh>
+                                    <MudTh Class="table-header">Approved At</MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="historyContext">
+                                    <MudTd DataLabel="Employee" Class="table-cell">
+                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudAvatar Size="Size.Medium" Color="Color.Primary">
+                                                @(historyContext.Name?.Substring(0, 1).ToUpper() ?? "U")
+                                            </MudAvatar>
+                                            <MudText Typo="Typo.body1">@historyContext.Name</MudText>
+                                        </MudStack>
+                                    </MudTd>
+                                    <MudTd DataLabel="Email" Class="table-cell">
+                                        <MudText Typo="Typo.body2">@historyContext.Email</MudText>
+                                    </MudTd>
+                                    <MudTd DataLabel="Leave Type" Class="table-cell">
+                                        <MudChip T="string" Label="true" Color="@GetLeaveTypeColor(historyContext.LeaveType)" Size="Size.Medium" Icon="@GetLeaveTypeIcon(historyContext.LeaveType)">
+                                            @historyContext.LeaveType
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd DataLabel="Duration" Class="table-cell">
+                                        <MudStack Spacing="4">
+                                            <MudText Typo="Typo.body2">
+                                                @historyContext.StartDate.ToString("MMM dd") - @historyContext.EndDate.ToString("MMM dd, yyyy")
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @CalculateWorkingDays(historyContext.StartDate, historyContext.EndDate) day(s)
+                                            </MudText>
+                                        </MudStack>
+                                    </MudTd>
+                                    <MudTd DataLabel="Reason" Class="table-cell">
+                                        <MudText Typo="Typo.body2" Style="max-width: 400px; white-space: normal;">
+                                            @historyContext.Reason
+                                        </MudText>
+                                    </MudTd>
+                                    <MudTd DataLabel="Mentor" Class="table-cell">
+                                        <MudStack Spacing="1">
+                                            <MudText Typo="Typo.body2">@historyContext.MentorName</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@historyContext.MentorEmail</MudText>
+                                        </MudStack>
+                                    </MudTd>
+                                    <MudTd DataLabel="Approver" Class="table-cell">
+                                        <MudStack Spacing="1">
+                                            <MudText Typo="Typo.body2">@historyContext.ApproverName</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@historyContext.ApproverEmail</MudText>
+                                        </MudStack>
+                                    </MudTd>
+                                    <MudTd DataLabel="Status" Class="table-cell">
+                                        <MudChip T="string" Label="true" Color="@GetStatusColor(historyContext.Status)" Size="Size.Medium" Icon="@GetStatusIcon(historyContext.Status)">
+                                            @historyContext.Status
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd DataLabel="Approved At" Class="table-cell">
+                                        <MudText Typo="Typo.body2">
+                                            @(historyContext.ApprovedAt.HasValue? historyContext.ApprovedAt.Value.ToString("MMM dd, yyyy") : "N/A")
+                                        </MudText>
+                                    </MudTd>
+                                </RowTemplate>
+                                <PagerContent>
+                                    <MudTablePager Class="px-4 py-3" />
+                                </PagerContent>
+                            </MudTable>
+                        }
+                        else
+                        {
+                            <MudPaper Class="pa-8 text-center" Elevation="0">
+                                <MudIcon Icon="Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                                <MudText Typo="Typo.h6" Class="mt-4 mb-2">No leave history found</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Try searching with different criteria</MudText>
+                            </MudPaper>
+                        }
                     </MudCardContent>
                 </MudCard>
             </MudItem>
 
-            @if (historyResponse != null)
-            {
-                <MudGrid Class="px-4" Spacing="4">
-                    <MudItem xs="12" sm="12" md="6" lg="8">
-                        <MudCard Elevation="4" Class="mb-6" Style="border-radius: 16px;">
-                            <MudCardHeader Class="py-4">
-                                <CardHeaderContent>
-                                    <MudText Typo="Typo.h5" Class="font-weight-bold">
-                                        <MudIcon Icon="Icons.Material.Filled.TableChart" Class="mr-2" Size="Size.Medium" />
-                                        Leave History Results
-                                    </MudText>
-                                </CardHeaderContent>
-                            </MudCardHeader>
-                            <MudCardContent Class="pa-0">
-                                @if (isLoading)
-                                {
-                                    <MudStack AlignItems="AlignItems.Center" Class="pa-4">
-                                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="50px" Class="mb-2" />
-                                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="50px" Class="mb-2" />
-                                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="50px" />
-                                    </MudStack>
-                                }
-                                else if (historyResponse.History != null && historyResponse.History.Any())
-                                {
-                                    <MudTable @ref="historyTable" Hover="true" Breakpoint="Breakpoint.None" Dense="false" Elevation="0" Class="enhanced-table" ServerData="@LoadServerData">
-                                        <HeaderContent>
-                                            <MudTh Class="table-header">Employee</MudTh>
-                                            <MudTh Class="table-header">Email</MudTh>
-                                            <MudTh Class="table-header">Leave Type</MudTh>
-                                            <MudTh Class="table-header">Duration</MudTh>
-                                            <MudTh Class="table-header">Reason</MudTh>
-                                            <MudTh Class="table-header">Mentor</MudTh>
-                                            <MudTh Class="table-header">Approver</MudTh>
-                                            <MudTh Class="table-header">Status</MudTh>
-                                            <MudTh Class="table-header">Approved At</MudTh>
-                                        </HeaderContent>
-                                        <RowTemplate>
-                                            <MudTd DataLabel="Employee" Class="table-cell">
-                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                                    <MudAvatar Size="Size.Medium" Color="Color.Primary">
-                                                        @(context.Name?.Substring(0, 1).ToUpper() ?? "U")
-                                                    </MudAvatar>
-                                                    <MudText Typo="Typo.body1">@context.Name</MudText>
-                                                </MudStack>
-                                            </MudTd>
-                                            <MudTd DataLabel="Email" Class="table-cell">
-                                                <MudText Typo="Typo.body2">@context.Email</MudText>
-                                            </MudTd>
-                                            <MudTd DataLabel="Leave Type" Class="table-cell">
-                                                <MudChip T="string" Label="true" Color="@GetLeaveTypeColor(context.LeaveType)" Size="Size.Medium" Icon="@GetLeaveTypeIcon(context.LeaveType)">
-                                                    @context.LeaveType
-                                                </MudChip>
-                                            </MudTd>
-                                            <MudTd DataLabel="Duration" Class="table-cell">
-                                                <MudStack Spacing="4">
-                                                    <MudText Typo="Typo.body2">
-                                                        @context.StartDate.ToString("MMM dd") - @context.EndDate.ToString("MMM dd, yyyy")
-                                                    </MudText>
-                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                                        @((context.EndDate - context.StartDate).Days + 1) day(s)
-                                                    </MudText>
-                                                </MudStack>
-                                            </MudTd>
-                                            <MudTd DataLabel="Reason" Class="table-cell">
-                                                <MudText Typo="Typo.body2" Style="max-width: 400px; white-space: normal;">
-                                                    @context.Reason
-                                                </MudText>
-                                            </MudTd>
-                                            <MudTd DataLabel="Mentor" Class="table-cell">
-                                                <MudStack Spacing="1">
-                                                    <MudText Typo="Typo.body2">@context.MentorName</MudText>
-                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.MentorEmail</MudText>
-                                                </MudStack>
-                                            </MudTd>
-                                            <MudTd DataLabel="Approver" Class="table-cell">
-                                                <MudStack Spacing="1">
-                                                    <MudText Typo="Typo.body2">@context.ApproverName</MudText>
-                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ApproverEmail</MudText>
-                                                </MudStack>
-                                            </MudTd>
-                                            <MudTd DataLabel="Status" Class="table-cell">
-                                                <MudChip T="string" Label="true" Color="@GetStatusColor(context.Status)" Size="Size.Medium" Icon="@GetStatusIcon(context.Status)">
-                                                    @context.Status
-                                                </MudChip>
-                                            </MudTd>
-                                            <MudTd DataLabel="Approved At" Class="table-cell">
-                                                <MudText Typo="Typo.body2">
-                                                    @(context.ApprovedAt.HasValue ? context.ApprovedAt.Value.ToString("MMM dd, yyyy") : "N/A")
-                                                </MudText>
-                                            </MudTd>
-                                        </RowTemplate>
-                                        <PagerContent>
-                                            <MudTablePager Class="px-4 py-3" />
-                                        </PagerContent>
-                                    </MudTable>
-                                }
-                                else
-                                {
-                                    <MudPaper Class="pa-8 text-center" Elevation="0">
-                                        <MudIcon Icon="Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
-                                        <MudText Typo="Typo.h6" Class="mt-4 mb-2">No leave history found</MudText>
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Try searching with different criteria</MudText>
-                                    </MudPaper>
-                                }
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" sm="12" md="6" lg="4">
-                        <MudCard Elevation="3" Class="mb-4" Style="border-radius: 16px;">
-                            <MudCardHeader Class="py-4">
-                                <CardHeaderContent>
-                                    <MudText Typo="Typo.h5" Class="font-weight-bold">
-                                        <MudIcon Icon="Icons.Material.Filled.Balance" Class="mr-2" Size="Size.Medium" />
-                                        Leave Balances
-                                    </MudText>
-                                </CardHeaderContent>
-                            </MudCardHeader>
-                            <MudCardContent Class="pa-0">
-                                @if (isLoading)
-                                {
-                                    <MudStack AlignItems="AlignItems.Center" Class="pa-4">
-                                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
-                                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
-                                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                                    </MudStack>
-                                }
-                                else if (historyResponse.Balances != null && historyResponse.Balances.Any())
-                                {
-                                    <MudTable Items="@historyResponse.Balances"
-                                              Hover="true"
-                                              Breakpoint="Breakpoint.None"
-                                              Dense="true"
-                                              Elevation="0"
-                                              Class="enhanced-table"
-                                              Style="table-layout: fixed; width: 100%;">
-                                        <HeaderContent>
-                                            <MudTh Class="table-header" Style="width: 35%;">Leave Type</MudTh>
-                                            <MudTh Class="table-header" Style="width: 20%; text-align: center;">Total</MudTh>
-                                            <MudTh Class="table-header" Style="width: 20%; text-align: center;">Used</MudTh>
-                                            <MudTh Class="table-header" Style="width: 25%; text-align: center;">Available</MudTh>
-                                        </HeaderContent>
-                                        <RowTemplate>
-                                            <MudTd DataLabel="Leave Type" Class="table-cell" Style="width: 35%; word-wrap: break-word;">
-                                                <div style="display: flex; align-items: center; gap: 4px;">
-                                                    <MudIcon Icon="@GetLeaveTypeIcon(context.LeaveType)"
-                                                             Color="@GetLeaveTypeColor(context.LeaveType)"
-                                                             Size="Size.Small" />
-                                                    <span style="font-size: 0.875rem; font-weight: 500;">@context.LeaveType</span>
-                                                </div>
-                                            </MudTd>
-                                            <MudTd DataLabel="Total" Class="table-cell" Style="width: 20%; text-align: center;">@context.TotalQuota</MudTd>
-                                            <MudTd DataLabel="Used" Class="table-cell" Style="width: 20%; text-align: center;">@context.Consumed</MudTd>
-                                            <MudTd DataLabel="Available" Class="table-cell" Style="width: 25%; text-align: center;">@context.Available</MudTd>
-                                        </RowTemplate>
-                                    </MudTable>
-                                }
-                                else
-                                {
-                                    <MudPaper Class="pa-8 text-center" Elevation="0">
-                                        <MudIcon Icon="Icons.Material.Filled.Info" Size="Size.Large" Color="Color.Info" />
-                                        <MudText Typo="Typo.h6" Class="mt-4 mb-2">No leave balances available</MudText>
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary">No quota information found for this employee</MudText>
-                                    </MudPaper>
-                                }
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                </MudGrid>
-            }
-        </Authorized>
-    </AuthorizeView>
+            <MudItem xs="12" sm="12" md="6" lg="4">
+                <MudCard Elevation="3" Class="mb-4" Style="border-radius: 16px;">
+                    <MudCardHeader Class="py-4">
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h5" Class="font-weight-bold">
+                                <MudIcon Icon="Icons.Material.Filled.Balance" Class="mr-2" Size="Size.Medium" />
+                                Leave Balances
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="pa-0">
+                        @if (isLoading)
+                        {
+                            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="pa-4" Style="min-height: 200px;">
+                                <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true" />
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" Class="mb-2" />
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
+                            </MudStack>
+                        }
+                        else if (historyResponse.Balances != null && historyResponse.Balances.Any())
+                        {
+                            <MudTable Items="@historyResponse.Balances"
+                                      Hover="true"
+                                      Breakpoint="Breakpoint.None"
+                                      Dense="true"
+                                      Elevation="0"
+                                      Class="enhanced-table"
+                                      Style="table-layout: fixed; width: 100%;">
+                                <HeaderContent>
+                                    <MudTh Class="table-header" Style="width: 35%;">Leave Type</MudTh>
+                                    <MudTh Class="table-header" Style="width: 20%; text-align: center;">Total</MudTh>
+                                    <MudTh Class="table-header" Style="width: 20%; text-align: center;">Used</MudTh>
+                                    <MudTh Class="table-header" Style="width: 25%; text-align: center;">Available</MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="balanceContext">
+                                    <MudTd DataLabel="Leave Type" Class="table-cell" Style="width: 35%; word-wrap: break-word;">
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <MudIcon Icon="@GetLeaveTypeIcon(balanceContext.LeaveType)"
+                                                     Color="@GetLeaveTypeColor(balanceContext.LeaveType)"
+                                                     Size="Size.Small" />
+                                            <span style="font-size: 0.875rem; font-weight: 500;">@balanceContext.LeaveType</span>
+                                        </div>
+                                    </MudTd>
+                                    <MudTd DataLabel="Total" Class="table-cell" Style="width: 20%; text-align: center;">@balanceContext.TotalQuota</MudTd>
+                                    <MudTd DataLabel="Used" Class="table-cell" Style="width: 20%; text-align: center;">@balanceContext.Consumed</MudTd>
+                                    <MudTd DataLabel="Available" Class="table-cell" Style="width: 25%; text-align: center;">@balanceContext.Available</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                        else
+                        {
+                            <MudPaper Class="pa-8 text-center" Elevation="0">
+                                <MudIcon Icon="Icons.Material.Filled.Info" Size="Size.Large" Color="Color.Info" />
+                                <MudText Typo="Typo.h6" Class="mt-4 mb-2">No leave balances available</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No quota information found for this employee</MudText>
+                            </MudPaper>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
 </MudContainer>
 
 <style>
-    .modern-table, .enhanced-table {
+    .modern-table {
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
         background: #ffffff;
-        border-radius: 8px;
+        border: 1px solid #e0e0e0;
         overflow: hidden;
     }
 
@@ -892,7 +1019,7 @@
             font-size: 1rem;
         }
 
-        .modern-table .mud-table-row:hover, .enhanced-table .mud-table-row:hover {
+        .modern-table .mud-table-row:hover {
             background-color: #f8fafc;
             transition: background-color 0.2s ease;
         }
@@ -909,19 +1036,6 @@
 
     .flex-grow-1 {
         flex-grow: 1;
-    }
-
-    .modern-table .mud-table-row:hover {
-        background-color: #f8f9fa !important;
-        transition: background-color 0.2s ease;
-    }
-
-    .modern-table .mud-table-cell {
-        border-bottom: 1px solid #e9ecef;
-    }
-
-    .modern-table .mud-table-head .mud-table-cell {
-        border-bottom: 2px solid #dee2e6;
     }
 
     div[style*="overflow-x: auto"]::-webkit-scrollbar {
@@ -942,33 +1056,7 @@
             background: #a8a8a8;
         }
 
-    .leave-quota-container {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        min-height: 100vh;
-        padding: 0;
-    }
-
-    .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 24px;
-        margin-bottom: 32px;
-        border-radius: 0 0 24px 24px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-
-        .page-header .mud-text {
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .page-header .mud-icon {
-            color: white;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-
     .quota-card {
-        border-radius: 16px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         background: #ffffff;
         overflow: hidden;
@@ -977,27 +1065,11 @@
         position: relative;
     }
 
-        .quota-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
         .quota-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 12px 32px rgba(0,0,0,0.15) !important;
             border-color: #bbdefb;
         }
-
-            .quota-card:hover::before {
-                opacity: 1;
-            }
 
     .mud-card-header {
         background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
@@ -1032,52 +1104,35 @@
         background: #ffffff;
     }
 
-    .uniform-input {
-        width: 100%;
-        max-width: 100%;
-        margin-bottom: 4px;
-    }
-
     .compact-input {
         width: 100%;
         max-width: 100%;
         margin-bottom: 4px;
     }
 
-        .uniform-input .mud-input-root,
         .compact-input .mud-input-root {
-            width: 100%;
-            border-radius: 12px;
+            font-size: 0.875rem;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
             transition: all 0.2s ease;
         }
 
-            .uniform-input .mud-input-root:hover,
             .compact-input .mud-input-root:hover {
                 border-color: #667eea;
             }
 
-            .uniform-input .mud-input-root.mud-input-outlined,
-            .compact-input .mud-input-root.mud-input-outlined {
-                border: 2px solid #e0e0e0;
+            .compact-input .mud-input-root.mud-input-outlined:focus-within {
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             }
-
-                .uniform-input .mud-input-root.mud-input-outlined:focus-within,
-                .compact-input .mud-input-root.mud-input-outlined:focus-within {
-                    border-color: #667eea;
-                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-                }
-
-        .compact-input .mud-input-root {
-            font-size: 0.875rem;
-            padding: 8px 12px;
-        }
 
         .compact-input .mud-input-label {
             font-size: 0.75rem;
         }
 
     .mud-select .mud-input-root {
-        border-radius: 12px;
+        border-radius: 8px;
     }
 
     .mud-select-item {
@@ -1089,57 +1144,74 @@
             background-color: #f3e5f5;
         }
 
-        .mud-select-item .mud-stack {
-            align-items: center;
-        }
-
-        .mud-select-item .mud-icon {
-            color: #667eea;
-        }
-
-    .mud-button {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 12px;
-        font-weight: 600;
+    .uniform-button {
+        min-width: 120px;
+        min-height: 40px;
+        padding: 8px 16px;
+        font-size: 0.875rem;
+        border-radius: 8px;
         text-transform: none;
-        letter-spacing: 0.5px;
-        min-height: 44px;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-        .mud-button.mud-button-filled.mud-button-color-primary {
+        .uniform-button.mud-button-filled.mud-button-color-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
-            .mud-button.mud-button-filled.mud-button-color-primary:hover {
+            .uniform-button.mud-button-filled.mud-button-color-primary:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
                 background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
             }
 
-        .mud-button.mud-button-outlined {
+        .uniform-button.mud-button-filled.mud-button-color-success {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+            .uniform-button.mud-button-filled.mud-button-color-success:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+                background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            }
+
+        .uniform-button.mud-button-filled.mud-button-color-error {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+        }
+
+            .uniform-button.mud-button-filled.mud-button-color-error:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+                background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+            }
+
+        .uniform-button.mud-button-outlined {
             border: 2px solid #667eea;
             color: #667eea;
         }
 
-            .mud-button.mud-button-outlined:hover {
+            .uniform-button.mud-button-outlined:hover {
                 background-color: rgba(102, 126, 234, 0.04);
                 border-color: #5a6fd8;
                 transform: translateY(-1px);
             }
 
-        .mud-button.mud-button-filled.mud-button-color-secondary {
+        .uniform-button.mud-button-filled.mud-button-color-secondary {
             background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
         }
 
+
     .logs-button {
-        border-radius: 10px;
-        padding: 10px 18px;
-        font-weight: 500;
-        text-transform: none;
+        min-width: 80px;
+        min-height: 36px;
+        padding: 8px 12px;
         font-size: 0.875rem;
-        min-width: 70px;
+        border-radius: 8px;
+        text-transform: none;
+        font-weight: 500;
         border: 2px solid #e3f2fd;
         background: #ffffff;
         color: #667eea;
@@ -1156,11 +1228,13 @@
     .mud-grid.quota-grid {
         align-items: stretch;
         gap: 24px;
+        justify-content: space-between;
     }
 
         .mud-grid.quota-grid .mud-grid-item {
             display: flex;
             flex-direction: column;
+            flex: 1;
         }
 
             .mud-grid.quota-grid .mud-grid-item > .quota-card {
@@ -1176,27 +1250,120 @@
                     justify-content: space-between;
                 }
 
-    .mud-grid.history-grid {
-        align-items: stretch;
-        gap: 24px;
+    .fixed-overlay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
     }
 
-        .mud-grid.history-grid .mud-grid-item {
-            display: flex;
-            flex-direction: column;
+    .centered-overlay {
+        width: 90vw;
+        max-width: 1000px;
+        max-height: 90vh;
+        background: #ffffff;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+        .centered-overlay .pa-6 {
+            padding: 32px;
+            height: 100%;
+            overflow-y: auto;
         }
 
-            .mud-grid.history-grid .mud-grid-item > .mud-card {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
+    @@keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .modern-table .mud-table-head {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+        .modern-table .mud-table-head .mud-table-cell {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+    .modern-table .mud-table-cell {
+        padding: 16px;
+        border-bottom: 1px solid #f1f3f4;
+        font-size: 0.9rem;
+        vertical-align: middle;
+    }
+
+    .modern-table .mud-table-row {
+        transition: background-color 0.2s ease;
+    }
+
+        .modern-table .mud-table-row:hover {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+        }
+
+        .modern-table .mud-table-row:nth-child(even) {
+            background-color: #fafbfc;
+        }
+
+            .modern-table .mud-table-row:nth-child(even):hover {
+                background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
             }
 
-                .mud-grid.history-grid .mud-grid-item > .mud-card .mud-card-content {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                }
+    @@media (max-width: 1200px) {
+        .mud-grid.quota-grid .mud-grid-item {
+            width: 50% !important;
+            max-width: 50% !important;
+        }
+    }
+
+    @@media (max-width: 960px) {
+        .mud-grid.quota-grid .mud-grid-item {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-bottom: 24px;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .header-centered {
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+            align-items: center;
+        }
+
+        .logs-button {
+            min-width: 100px;
+            padding: 8px 16px;
+        }
+
+        .mud-grid.quota-grid .mud-grid-item {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+    }
 
     .fixed-overlay {
         display: flex;
@@ -1236,6 +1403,7 @@
             opacity: 0;
             transform: scale(0.9) translateY(-20px);
         }
+
         to {
             opacity: 1;
             transform: scale(1) translateY(0);
@@ -1308,6 +1476,7 @@
         0%, 100% {
             opacity: 1;
         }
+
         50% {
             opacity: 0.6;
         }
@@ -1444,9 +1613,9 @@
             margin: 16px;
         }
 
-        .centered-overlay .pa-6 {
-            padding: 24px;
-        }
+            .centered-overlay .pa-6 {
+                padding: 24px;
+            }
 
         .mud-card-content {
             padding: 20px;
@@ -1502,9 +1671,9 @@
             font-size: 0.75rem;
         }
 
-        .modern-table .mud-table-cell {
-            padding: 8px 4px;
-        }
+            .modern-table .mud-table-cell {
+                padding: 8px 4px;
+            }
 
         .mud-grid.quota-grid .mud-grid-item {
             width: 100% !important;
@@ -1643,6 +1812,7 @@
         from {
             opacity: 0;
         }
+
         to {
             opacity: 1;
         }
@@ -1657,6 +1827,7 @@
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -1679,6 +1850,7 @@
     }
 </style>
 
+
 @code {
     private MudForm? defaultQuotaForm;
     private MudForm? individualQuotaForm;
@@ -1695,6 +1867,11 @@
     private List<LeaveQuotaDto> leaveQuotas = new();
     private bool isLoading;
     private bool isLoadingQuotaHistory;
+    private bool isLoadingOverview;
+    private bool isLoadingPending;
+    private bool isProcessingRequest;
+    private bool isProcessingDefaultQuota;
+    private bool isProcessingIndividualQuota;
     private MudTable<LeaveHistory>? historyTable;
     private int currentSearchId;
     private int lastSearchId;
@@ -1704,6 +1881,8 @@
     private string selectedLeaveType = "Privilege";
     private Dictionary<string, int> defaultQuotaCache = new();
     private Dictionary<(string, string), int> individualQuotaCache = new();
+    [Inject] IJSRuntime JSRuntime { get; set; } = default!;
+
     private string DefaultLeaveType
     {
         get => defaultLeaveQuota.LeaveType;
@@ -1728,6 +1907,14 @@
     {
         try
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (!user.Identity.IsAuthenticated || !user.IsInRole("Admin") && !user.IsInRole("HR") && !user.IsInRole("Manager"))
+            {
+                NavigationManager.NavigateTo("/home");
+                return;
+            }
+
             await LoadPendingRequests();
             await LoadLeaveQuotas();
             await InitializeDefaultQuotaCache();
@@ -1741,6 +1928,7 @@
             Snackbar.Add($"Unexpected error during initialization: {ex.Message}", MudBlazor.Severity.Error);
         }
     }
+
 
     private async Task InitializeDefaultQuotaCache()
     {
@@ -1770,6 +1958,8 @@
 
     private async Task LoadLeaveQuotas()
     {
+        isLoadingOverview = true;
+        StateHasChanged();
         try
         {
             if (pendingRequests == null)
@@ -1789,21 +1979,25 @@
         {
             Snackbar.Add($"Error loading leave request counts: {ex.Message}", MudBlazor.Severity.Error);
             leaveQuotas = new List<LeaveQuotaDto>
+    {
+    new LeaveQuotaDto { LeaveType = "Privilege", RequestCount = 0 },
+    new LeaveQuotaDto { LeaveType = "Sick", RequestCount = 0 },
+    new LeaveQuotaDto { LeaveType = "WorkFromHome", RequestCount = 0 },
+    new LeaveQuotaDto { LeaveType = "Unpaid", RequestCount = 0 },
+    new LeaveQuotaDto { LeaveType = "Maternity", RequestCount = 0 },
+    new LeaveQuotaDto { LeaveType = "Paternity", RequestCount = 0 }
+    };
+        }
+        finally
         {
-            new LeaveQuotaDto { LeaveType = "Privilege", RequestCount = 0 },
-            new LeaveQuotaDto { LeaveType = "Sick", RequestCount = 0 },
-            new LeaveQuotaDto { LeaveType = "WorkFromHome", RequestCount = 0 },
-            new LeaveQuotaDto { LeaveType = "Unpaid", RequestCount = 0 },
-            new LeaveQuotaDto { LeaveType = "Maternity", RequestCount = 0 },
-            new LeaveQuotaDto { LeaveType = "Paternity", RequestCount = 0 }
-           
-        };
+            isLoadingOverview = false;
+            StateHasChanged();
         }
     }
 
     private async Task LoadPendingRequests()
     {
-        isLoading = true;
+        isLoadingPending = true;
         StateHasChanged();
         try
         {
@@ -1821,7 +2015,7 @@
         }
         finally
         {
-            isLoading = false;
+            isLoadingPending = false;
             StateHasChanged();
         }
     }
@@ -1995,6 +2189,10 @@
 
     private async Task HandleApproveReject(int requestId, bool isApproved)
     {
+        isProcessingRequest = true;
+        isLoadingPending = true;
+        isLoadingOverview = true;
+        StateHasChanged();
         try
         {
             var request = new ApproveRejectDto { LeaveRequestId = requestId, IsApproved = isApproved };
@@ -2011,6 +2209,13 @@
         {
             Snackbar.Add($"Unexpected error processing request: {ex.Message}", MudBlazor.Severity.Error);
         }
+        finally
+        {
+            isProcessingRequest = false;
+            isLoadingPending = false;
+            isLoadingOverview = false;
+            StateHasChanged();
+        }
     }
 
     private async Task OnApprove(int id) => await HandleApproveReject(id, true);
@@ -2023,6 +2228,8 @@
             await defaultQuotaForm.Validate();
             if (defaultQuotaForm.IsValid)
             {
+                isProcessingDefaultQuota = true;
+                StateHasChanged();
                 try
                 {
                     var response = await LeaveService.ManageDefaultLeaveQuotaAsync(defaultLeaveQuota);
@@ -2039,6 +2246,11 @@
                 {
                     Snackbar.Add($"Unexpected error updating quota: {ex.Message}", MudBlazor.Severity.Error);
                 }
+                finally
+                {
+                    isProcessingDefaultQuota = false;
+                    StateHasChanged();
+                }
             }
         }
     }
@@ -2050,6 +2262,8 @@
             await individualQuotaForm.Validate();
             if (individualQuotaForm.IsValid)
             {
+                isProcessingIndividualQuota = true;
+                StateHasChanged();
                 try
                 {
                     var response = await LeaveService.ManageIndividualLeaveQuotaAsync(individualLeaveQuota);
@@ -2067,9 +2281,14 @@
                 {
                     Snackbar.Add($"Unexpected error updating quota: {ex.Message}", MudBlazor.Severity.Error);
                 }
+                finally
+                {
+                    isProcessingIndividualQuota = false;
+                    StateHasChanged();
+                }
             }
         }
-    }
+     }
 
     private async Task SearchHistory()
 {
@@ -2131,12 +2350,49 @@
         }
     }
 }
+    private int CalculateWorkingDays(DateTime startDate, DateTime endDate)
+    {
+        int totalDays = 0;
+        for (var date = startDate; date <= endDate; date = date.AddDays(1))
+        {
+            if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+            {
+                totalDays++;
+            }
+        }
+        return totalDays;
+    }
 
     private void ToggleShowMore()
     {
         showAllLeaveTypes = !showAllLeaveTypes;
         StateHasChanged();
     }
+    
+    
+    private async Task HandleDefaultQuotaEnterKey(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await ManageDefaultQuota();
+        }
+    }
+    private async Task HandleIndividualQuota(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await LoadIndividualQuotaHistory();
+        }
+    }
+    private async Task HandleHistoryEnterKey(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await SearchHistory();
+        }
+    }
+
+
 
     private async Task<TableData<LeaveHistory>> LoadServerData(TableState state, CancellationToken cancellationToken)
     {

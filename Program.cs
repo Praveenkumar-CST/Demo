@@ -1,4 +1,5 @@
 
+using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using FingerFrontend.AdminAttendanceViewModel;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -59,11 +60,13 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<SearchService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<CustomAuthStateProvider>();
 
 builder.Services.AddScoped<LeaveManagementService>();
 
 builder.Services.AddSyncfusionBlazor();
-
+builder.Services.AddAuthorizationCore();
+builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddScoped<IUserService, UserService>();
 var apiBaseUrl = "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net";

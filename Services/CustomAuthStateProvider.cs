@@ -20,6 +20,7 @@ namespace WiseHR.Services
             try
             {
                 var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+                var role = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "userRole");
                 var identity = new ClaimsIdentity();
 
                 if (!string.IsNullOrWhiteSpace(token))
@@ -30,8 +31,17 @@ namespace WiseHR.Services
                     if (jsonToken != null)
                     {
                         var claims = jsonToken.Claims.Select(c => new Claim(c.Type, c.Value)).ToList();
+                        if (!string.IsNullOrWhiteSpace(role))
+                        {
+                            claims.Add(new Claim(ClaimTypes.Role, role));
+                        }
                         identity = new ClaimsIdentity(claims, "jwt");
                     }
+                }
+                else if (!string.IsNullOrWhiteSpace(role))
+                {
+                    var claims = new List<Claim> { new Claim(ClaimTypes.Role, role) };
+                    identity = new ClaimsIdentity(claims, "session");
                 }
 
                 var user = new ClaimsPrincipal(identity);
