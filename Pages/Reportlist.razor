@@ -117,8 +117,8 @@
                         @if (currentUserRole != "Employee")
                         {
                             <MudTd Class="col-mentee-id">
-                                <div class="cell-content" title="@context.MenteeId">
-                                    @context.MenteeId
+                                <div class="cell-content" title="@context.MenteeEmployeeID">
+                                    @context.MenteeEmployeeID
                                 </div>
                             </MudTd>
                         }
@@ -360,8 +360,8 @@
             {
                 // Filter reports where MenteeID matches current user's EmpID
                 allReports = reports
-                    .Where(r => !string.IsNullOrEmpty(r.MenteeId) && 
-                               r.MenteeId.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase))
+                    .Where(r => !string.IsNullOrEmpty(r.MenteeEmployeeID) &&
+                               r.MenteeEmployeeID.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
                 if (!allReports.Any())
@@ -400,7 +400,7 @@
         if (currentUserRole != "Employee") return true;
         
         // Employees can only edit their own reports (where they are the mentee)
-        return report.MenteeId?.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase) ?? false;
+        return report.MenteeEmployeeID?.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase) ?? false;
     }
 
     private bool CanDeleteReport()
@@ -464,7 +464,7 @@
             var query = searchQuery.Trim().ToLower();
             filteredReports = filteredReports
                 .Where(r =>
-                    (r.MenteeId?.ToLower().Contains(query) ?? false) ||
+                    (r.MenteeEmployeeID?.ToLower().Contains(query) ?? false) ||
                     (r.MenteeName?.ToLower().Contains(query) ?? false) ||
                     (r.MentorName?.ToLower().Contains(query) ?? false) ||
                     (r.ProjectsWorkedOn?.ToLower().Contains(query) ?? false) ||
@@ -566,7 +566,7 @@
         if (currentUserRole == "Employee")
         {
             var report = allReports.FirstOrDefault(r => r.Id == reportId);
-            if (report == null || !(report.MenteeId?.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase) ?? false))
+            if (report == null || !(report.MenteeEmployeeID?.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase) ?? false))
             {
                 Snackbar.Add("You can only edit your own reports", Severity.Error);
                 return;

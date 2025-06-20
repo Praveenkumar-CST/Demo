@@ -11,14 +11,13 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.JSInterop;
 using MudBlazor;
-using MudBlazor;
-using MudBlazor.Services;
 using MudBlazor.Services;
 using Syncfusion.Blazor;
 using WiseHR;
 using WiseHR.Models.NewFolder;
 using WiseHR.Services;
 using WiseHR_Frontend.Services;
+using Syncfusion.Licensing;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -73,12 +72,12 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddScoped<IUserService, UserService>();
-//var apiBaseUrl = "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net";
-var apiBaseUrl = "https://localhost:7021/";
+var apiBaseUrl = "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net";
+//var apiBaseUrl = "https://localhost:7021/";
 
 // Register ChatService
 builder.Services.AddScoped<IChatService, ChatService>();
-
+SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NNaF1cWWhPYVFwWmFZfVtgdl9GaFZVRWYuP1ZhSXxWdkNiUH9ccHxRR2JZWEF9XUs=");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 builder.Services.AddSingleton(new ApiConfig { BaseUrl = apiBaseUrl });
