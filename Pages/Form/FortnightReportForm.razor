@@ -210,13 +210,13 @@
                     report.MentorName = $"{mentor.FirstName} {mentor.LastName}";
                     report.MentorEmail = mentor.CurrentEmail;
                     report.MentorDesignation = mentor.Designation;
-                    report.MentorId = mentor.EmployeeID;
+                    report.MentorEmployeeID = mentor.EmployeeID;
                 }
             }
 
             var assignments = await MentorAssignmentService.GetAllAssignmentsAsync();
             var assignedMenteeIds = assignments
-                .Where(a => a.MentorEmployeeID == report.MentorId)
+                .Where(a => a.MentorEmployeeID == report.MentorEmployeeID)
                 .Select(a => a.MenteeEmployeeID)
                 .Distinct()
                 .ToList();
@@ -261,7 +261,7 @@
             {
                 report.MenteeName = $"{mentee.FirstName} {mentee.LastName}";
                 report.MenteeEmail = mentee.CurrentEmail;
-                report.MenteeId = mentee.EmployeeID;
+                report.MenteeEmployeeID = mentee.EmployeeID;
             }
         }
     }

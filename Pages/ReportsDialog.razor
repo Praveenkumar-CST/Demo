@@ -652,10 +652,10 @@ else
         originalReports[reportId] = new ReportModel
             {
                 Id = report.Id,
-                MenteeId = report.MenteeId,
+                MenteeEmployeeID = report.MenteeEmployeeID,
                 MenteeName = report.MenteeName,
                 MenteeEmail = report.MenteeEmail,
-                MentorId = report.MentorId,
+                MentorEmployeeID = report.MentorEmployeeID,
                 MentorName = report.MentorName,
                 MentorEmail = report.MentorEmail,
                 MentorDesignation = report.MentorDesignation,
@@ -785,7 +785,7 @@ else
                 foreach (var mentee in mentees)
                 {
                     var existingReport = reports.FirstOrDefault(r =>
-                        r.MenteeId == mentee.EmployeeID &&
+                        r.MenteeEmployeeID == mentee.EmployeeID &&
                         r.SubmittedOn.Year == selectedYear.Value &&
                         r.SubmittedOn.Month == selectedMonth.Value);
 
@@ -793,10 +793,10 @@ else
                     {
                         reports.Add(new ReportModel
                             {
-                                MenteeId = mentee.EmployeeID,
+                                MenteeEmployeeID = mentee.EmployeeID,
                                 MenteeName = $"{mentee.FirstName} {mentee.LastName}",
                                 MenteeEmail = mentee.CurrentEmail,
-                                MentorId = empDetails.EmployeeID,
+                                MentorEmployeeID = empDetails.EmployeeID,
                                 MentorName = $"{empDetails.FirstName} {empDetails.LastName}",
                                 MentorDesignation = empDetails.Designation,
                                 MentorEmail = empDetails.CurrentEmail,

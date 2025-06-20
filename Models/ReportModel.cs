@@ -54,8 +54,8 @@ namespace WiseHR.Models
         [Required(ErrorMessage = "MenteeEmail is required")]
         public string? MenteeEmail { get; set; }
 
-        public string MenteeId { get; set; }
-        public string MentorId { get; set; }
+        public string MenteeEmployeeID { get; set; }
+        public string MentorEmployeeID { get; set; }
 
         // Mentor Info
         public string? MentorEmail { get; set; }
