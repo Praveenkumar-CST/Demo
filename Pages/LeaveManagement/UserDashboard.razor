@@ -12,66 +12,67 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <!-- Leave Balance Cards and Actions -->
     <MudGrid Justify="Justify.Center">
-        <MudItem xs="12">
-            @if (historyResponse?.Balances == null)
+    <MudItem xs="12">
+        @if (historyResponse?.Balances == null)
+        {
+            <MudGrid Justify="Justify.Center">
+                @for (int i = 0; i < 3; i++)
+                {
+                    <MudItem xs="12" sm="6" md="4" Class="d-flex justify-center">
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="300px" Width="100%" Class="leave-card-skeleton" />
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+        else
+        {
+            @if (!showAllLeaves)
             {
                 <MudGrid Justify="Justify.Center">
-                    @for (int i = 0; i < 3; i++)
+                    @foreach (var balance in historyResponse.Balances
+                                    .Where(b => b.LeaveType.ToLower() is "privilege" or "sick" or "workfromhome")
+                                    .OrderBy(b => b.LeaveType.ToLower() switch
+                                    {
+                                        "privilege" => 1,
+                                        "sick" => 2,
+                                        "workfromhome" => 3,
+                                        _ => 4
+                                    }))
                     {
-                        <MudItem xs="12" sm="6" md="4" Class="d-flex justify-center">
-                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="300px" Width="100%" Class="leave-card-skeleton" />
+                        var progressAngle = balance.TotalQuota > 0 ? (360 * balance.Available / balance.TotalQuota) : 0;
+                        var cssClass = GetLeaveTypeClass(balance.LeaveType);
+                        <MudItem xs="12" sm="3" md="3" Class="d-flex justify-center">
+                            <div class="leave-card @cssClass">
+                                <div class="leave-title">@balance.LeaveType Leave</div>
+                                <div class="circular-progress">
+                                    <div class="progress-circle" style="--progress-angle: @(progressAngle)deg;">
+                                        <div class="progress-inner">
+                                            <div class="progress-value">@GetDisplayValue(balance)</div>
+                                            <div class="progress-label">Available</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="leave-details">
+                                    <div><span>Available</span><span>@balance.Available D</span></div>
+                                    <div><span>Consumed</span><span>@balance.Consumed D</span></div>
+                                    <div><span>@(balance.LeaveType.ToLower() == "workfromhome" ? "Monthly Quota" : "Annual Quota")</span><span>@balance.TotalQuota D</span></div>
+                                </div>
+                                <div class="leave-actions-buttons">
+                                    <button class="action-btn apply-btn" @onclick="() => OpenLeaveRequestPopup(balance.LeaveType)">
+                                        Apply
+                                    </button>
+                                    <button class="action-btn logs-btn" @onclick="() => OpenLeaveLogsPopup(balance.LeaveType)">
+                                        Logs
+                                    </button>
+                                </div>
+                            </div>
                         </MudItem>
                     }
                 </MudGrid>
             }
             else
             {
-                @if (!showAllLeaves)
-                {
-                    <MudGrid Justify="Justify.Center">
-                        @foreach (var balance in historyResponse.Balances
-                                        .Where(b => b.LeaveType.ToLower() is "privilege" or "sick" or "workfromhome")
-                                        .OrderBy(b => b.LeaveType.ToLower() switch
-                                        {
-                                            "privilege" => 1,
-                                            "sick" => 2,
-                                            "workfromhome" => 3,
-                                            _ => 4
-                                        }))
-                        {
-                            var progressAngle = balance.TotalQuota > 0 ? (360 * balance.Available / balance.TotalQuota) : 0;
-                            var cssClass = GetLeaveTypeClass(balance.LeaveType);
-                            <MudItem xs="12" sm="3" md="3" Class="d-flex justify-center">
-                                <div class="leave-card @cssClass">
-                                    <div class="leave-title">@balance.LeaveType Leave</div>
-                                    <div class="circular-progress">
-                                        <div class="progress-circle" style="--progress-angle: @(progressAngle)deg;">
-                                            <div class="progress-inner">
-                                                <div class="progress-value">@GetDisplayValue(balance)</div>
-                                                <div class="progress-label">Available</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="leave-details">
-                                        <div><span>Available</span><span>@balance.Available D</span></div>
-                                        <div><span>Consumed</span><span>@balance.Consumed D</span></div>
-                                        <div><span>@(balance.LeaveType.ToLower() == "workfromhome" ? "Monthly Quota" : "Annual Quota")</span><span>@balance.TotalQuota D</span></div>
-                                    </div>
-                                    <div class="leave-actions-buttons">
-                                        <button class="action-btn apply-btn" @onclick="() => OpenLeaveRequestPopup(balance.LeaveType)">
-                                            Apply
-                                        </button>
-                                        <button class="action-btn logs-btn" @onclick="() => OpenLeaveLogsPopup(balance.LeaveType)">
-                                            Logs
-                                        </button>
-                                    </div>
-                                </div>
-                            </MudItem>
-                        }
-                    </MudGrid>
-                }
-                else
-                {
+                <div class="horizontal-scroll-container">
                     <div class="horizontal-scroll-content">
                         @foreach (var balance in historyResponse.Balances
                                         .OrderBy(b => b.LeaveType.ToLower() switch
@@ -113,19 +114,20 @@
                             </div>
                         }
                     </div>
-                }
+                </div>
             }
-        </MudItem>
-    </MudGrid>
-    @if (historyResponse?.Balances != null)
-    {
-        <div class="show-more-container">
-            <div class="show-more-btn" @onclick="ToggleShowAllLeaves">
-                <span class="expand-icon">@(showAllLeaves ? "−" : "+")</span>
-                <span class="expand-text">@(showAllLeaves ? "Show Less" : $"Show More ({(historyResponse.Balances.Count() > 3 ? historyResponse.Balances.Count() - 3 : 0)} more)")</span>
-            </div>
+        }
+    </MudItem>
+</MudGrid>
+@if (historyResponse?.Balances != null)
+{
+    <div class="show-more-container">
+        <div class="show-more-btn" @onclick="ToggleShowAllLeaves">
+            <span class="expand-icon">@(showAllLeaves ? "−" : "+")</span>
+            <span class="expand-text">@(showAllLeaves ? "Show Less" : $"Show More ({(historyResponse.Balances.Count() > 3 ? historyResponse.Balances.Count() - 3 : 0)} more)")</span>
         </div>
-    }
+    </div>
+}
 
     <!-- Request Status Section - Table Format -->
     <MudGrid>
@@ -150,7 +152,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var request in requestStatus.Take(5))
+                            @foreach (var request in requestStatus)
                             {
                                 var leaveTypeClass = request.LeaveType.ToLower();
                                 var statusClass = request.Status.ToLower();
@@ -249,57 +251,78 @@
 {
     <div class="popup-overlay" @onclick="CloseLeaveRequestPopup">
         <div class="popup-content" @onclick:stopPropagation="true">
-            <div class="popup-header">
-                <div class="popup-title">Submit Leave Request - @selectedLeaveType</div>
-                <button class="close-btn" @onclick="CloseLeaveRequestPopup">×</button>
+            <div class="form-background @(isSubmitting ? "blurred-content" : "")">
+                <div class="popup-header">
+                    <div class="popup-title">Submit Leave Request - @selectedLeaveType</div>
+                    <button class="close-btn" @onclick="CloseLeaveRequestPopup">×</button>
+                </div>
+                <MudForm @ref="form" Model="leaveRequest" Validation="@(new LeaveRequestDtoValidator())">
+                    <MudGrid>
+                        <MudItem xs="12" sm="6" Style="display: none;">
+                            <MudSelect Label="Leave Type" @bind-Value="leaveRequest.LeaveType" Required="true" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("Privilege")">Privilege</MudSelectItem>
+                                <MudSelectItem Value="@("Sick")">Sick</MudSelectItem>
+                                <MudSelectItem Value="@("Maternity")">Maternity</MudSelectItem>
+                                <MudSelectItem Value="@("Paternity")">Paternity</MudSelectItem>
+                                <MudSelectItem Value="@("Unpaid")">Unpaid</MudSelectItem>
+                                <MudSelectItem Value="@("WorkFromHome")">Work From Home</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" Class="pr-sm-2">
+                            <MudDatePicker Label="Start Date"
+                                           @bind-Date="leaveRequest.StartDate"
+                                           Required="true"
+                                           DateFormat="MMM dd, yyyy"
+                                           Variant="Variant.Outlined"
+                                           MinDate="DateTime.Today"
+                                           AnchorOrigin="Origin.TopLeft"
+                                           TransformOrigin="Origin.TopRight"/>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" Class="pl-sm-2">
+                            <MudDatePicker Label="End Date"
+                                           @bind-Date="leaveRequest.EndDate"
+                                           Required="true"
+                                           DateFormat="MMM dd, yyyy"
+                                           Variant="Variant.Outlined"
+                                           MinDate="DateTime.Today"
+                                           AnchorOrigin="Origin.TopLeft"
+                                           TransformOrigin="Origin.TopRight"/>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="Reason"
+                                          @bind-Value="leaveRequest.Reason"
+                                          Required="true"
+                                          Lines="3"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" Class="d-flex justify-end gap-4">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="CloseLeaveRequestPopup">Cancel</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitLeaveRequestAsync" Disabled="@isSubmitting">Submit</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
             </div>
 
-            <MudForm @ref="form" Model="leaveRequest" Validation="@(new LeaveRequestDtoValidator())">
-                <MudGrid>
-                    <MudItem xs="12" sm="6" Style="display: none;">
-                        <MudSelect Label="Leave Type" @bind-Value="leaveRequest.LeaveType" Required="true" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@("Privilege")">Privilege</MudSelectItem>
-                            <MudSelectItem Value="@("Sick")">Sick</MudSelectItem>
-                            <MudSelectItem Value="@("Maternity")">Maternity</MudSelectItem>
-                            <MudSelectItem Value="@("Paternity")">Paternity</MudSelectItem>
-                            <MudSelectItem Value="@("Unpaid")">Unpaid</MudSelectItem>
-                            <MudSelectItem Value="@("WorkFromHome")">Work From Home</MudSelectItem>
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="6" Class="pr-sm-2">
-                        <MudDatePicker Label="Start Date"
-                                       @bind-Date="leaveRequest.StartDate"
-                                       Required="true"
-                                       DateFormat="MMM dd, yyyy"
-                                       Variant="Variant.Outlined"
-                                       MinDate="DateTime.Today"
-                                       AnchorOrigin="Origin.TopLeft"
-                                       TransformOrigin="Origin.TopRight" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6" Class="pl-sm-2">
-                        <MudDatePicker Label="End Date"
-                                       @bind-Date="leaveRequest.EndDate"
-                                       Required="true"
-                                       DateFormat="MMM dd, yyyy"
-                                       Variant="Variant.Outlined"
-                                       MinDate="DateTime.Today"
-                                       AnchorOrigin="Origin.TopLeft"
-                                       TransformOrigin="Origin.TopRight" />
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudTextField Label="Reason"
-                                      @bind-Value="leaveRequest.Reason"
-                                      Required="true"
-                                      Lines="3"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-
-                    <MudItem xs="12" Class="d-flex justify-end gap-4">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="CloseLeaveRequestPopup">Cancel</MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitLeaveRequestAsync">Submit</MudButton>
-                    </MudItem>
-                </MudGrid>
-            </MudForm>
+            @if (isSubmitting)
+            {
+                <div class="loader-overlay">
+                    <div class="outlook-loader">
+                        <div class="envelope-container">
+                            <div class="envelope">
+                                <div class="envelope-flap"></div>
+                                <div class="envelope-body">
+                                    <div class="letter">
+                                        <div class="letter-line"></div>
+                                        <div class="letter-line"></div>
+                                        <div class="letter-line"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="loading-text">Submitting your leave request...</div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 }
@@ -388,16 +411,19 @@
 
     .horizontal-scroll-container {
         overflow-x: auto;
+        overflow-y: hidden;
         width: 100%;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
         scrollbar-color: #ccc transparent;
         margin: 16px 0;
         padding-bottom: 8px;
+        max-height: 320px; /* Adjust based on leave card height */
     }
 
     .horizontal-scroll-content {
         display: flex;
+        flex-wrap: nowrap;
         gap: 16px;
         padding: 0 16px;
     }
@@ -410,10 +436,14 @@
         background: transparent;
     }
 
-    .horizontal-scroll-container::-webkit-scrollbar {
+    .horizontal-scroll-container::-webkit-scrollbar-thumb {
         background: #ccc;
         border-radius: 4px;
     }
+
+        .horizontal-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
 
     .show-more-container {
         display: flex;
@@ -924,6 +954,277 @@
             padding-left: 16px !important;
         }
     }
+
+    .popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .popup-content {
+        position: relative;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        transition: filter 0.3s ease;
+    }
+
+    .form-background {
+        transition: filter 0.3s ease;
+    }
+
+    .blurred-content {
+        filter: blur(3px);
+        pointer-events: none;
+    }
+
+    .popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .popup-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.2s;
+    }
+
+        .close-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+    .loader-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        border-radius: 8px;
+    }
+
+    .outlook-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+    }
+
+    .envelope-container {
+        position: relative;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .envelope {
+        position: relative;
+        width: 120px;
+        height: 80px;
+        background: transparent;
+        border: 2px solid #0078d4;
+        border-radius: 4px;
+        animation: envelopeFloat 2s ease-in-out infinite;
+        box-shadow: 0 4px 15px rgba(0, 120, 212, 0.2);
+        z-index: 2;
+    }
+
+    .envelope-flap {
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        height: 40px;
+        background: transparent;
+        border: 2px solid #0078d4;
+        border-bottom: none;
+        transform-origin: bottom;
+        animation: flapClose 3s ease-in-out infinite;
+        clip-path: polygon(0 0, 40px 70%, 100% 0);
+        z-index: 3;
+    }
+
+    .envelope-body {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .letter {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 2px;
+        padding: 6px;
+        animation: letterFold 3s ease-in-out infinite;
+        transform-origin: top center;
+    }
+
+    .letter-line {
+        height: 2px;
+        background: #0078d4;
+        margin: 3px 0;
+        border-radius: 1px;
+        opacity: 0.6;
+    }
+
+        .letter-line:nth-child(1) {
+            width: 80%;
+        }
+
+        .letter-line:nth-child(2) {
+            width: 60%;
+        }
+
+        .letter-line:nth-child(3) {
+            width: 90%;
+        }
+
+    .loading-text {
+        color: #0078d4;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        animation: textPulse 1.5s ease-in-out infinite;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+    }
+
+    .envelope-container::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 160px;
+        height: 160px;
+        border: 2px solid rgba(0, 120, 212, 0.1);
+        border-top: 2px solid #0078d4;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        z-index: 1;
+    }
+
+    @@keyframes envelopeFloat {
+        0%, 100%
+
+    {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-8px) rotate(1deg);
+    }
+
+    }
+
+    @@keyframes flapClose {
+        0%
+
+    {
+        transform: rotateX(0deg);
+    }
+
+    50% {
+        transform: rotateX(-180deg);
+    }
+
+    100% {
+        transform: rotateX(-180deg);
+    }
+
+    }
+
+    @@keyframes letterFold {
+        0%
+
+    {
+        transform: scaleY(1) translateY(0px);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scaleY(0.5) translateY(3px);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scaleY(0) translateY(6px);
+        opacity: 0;
+    }
+
+    }
+
+    @@keyframes textPulse {
+        0%, 100%
+
+    {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+
+    }
+
+    @@keyframes spin {
+        0%
+
+    {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+
+    }
 </style>
 
 @code {
@@ -937,6 +1238,7 @@
     private bool showAllLeaves = false;
     private string? selectedLeaveType = "";
     private List<HistoryItem>? filteredLeaveHistory;
+    private bool isSubmitting = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1068,6 +1370,9 @@
         await form.Validate();
         if (form.IsValid)
         {
+            isSubmitting = true;
+            StateHasChanged();
+
             try
             {
                 var response = await LeaveService.SubmitLeaveRequestAsync(leaveRequest);
@@ -1086,8 +1391,14 @@
             {
                 Snackbar.Add($"Unexpected error: {ex.Message}", MudBlazor.Severity.Error);
             }
+            finally
+            {
+                isSubmitting = false;
+                StateHasChanged();
+            }
         }
     }
+
 
     public class LeaveRequestDtoValidator : AbstractValidator<LeaveRequestDto>
     {
