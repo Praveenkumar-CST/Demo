@@ -6,8 +6,9 @@ using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using System.Net.Http.Json;
+using Microsoft.JSInterop;
 
-namespace WiseHR_Frontend.Services
+namespace WiseHR.Services
 {
     public interface IChatService : IAsyncDisposable
     {
@@ -16,7 +17,7 @@ namespace WiseHR_Frontend.Services
         event Action<string> OnStatusReceived;
         event Action OnConnectionStateChanged;
         Task InitializeAsync();
-        Task SendQueryAsync(string user, string message, string? userId);
+        Task SendQueryAsync(string user, string message, string? jwtToken, string sessionId);
     }
 
     public class ChatService : IChatService
@@ -26,6 +27,7 @@ namespace WiseHR_Frontend.Services
         private HubConnection? _hubConnection;
         private bool _isConnected;
         private readonly SynchronizationContext? _synchronizationContext;
+        private readonly IJSRuntime _jsRuntime;
 
         public bool IsConnected => _isConnected;
 
@@ -34,10 +36,11 @@ namespace WiseHR_Frontend.Services
         public event Action? OnConnectionStateChanged;
         public event Action<string, string>? OnMessageReceived;
 
-        public ChatService(NavigationManager navigationManager, HttpClient httpClient)
+        public ChatService(NavigationManager navigationManager, HttpClient httpClient, IJSRuntime jsRuntime)
         {
             _navigationManager = navigationManager;
             _httpClient = httpClient;
+            _jsRuntime = jsRuntime;
             _synchronizationContext = SynchronizationContext.Current;
         }
 
@@ -67,10 +70,16 @@ namespace WiseHR_Frontend.Services
 
                 // Set up event handlers
                 _hubConnection.On<string>("ReceiveChunk", chunk => 
-                    InvokeOnUIThread(() => OnChunkReceived?.Invoke(chunk)));
+                {
+                    Console.WriteLine($"Raw Chunk Received: {chunk}");
+                    InvokeOnUIThread(() => OnChunkReceived?.Invoke(chunk));
+                });
                 
                 _hubConnection.On<string>("ReceiveStatus", status => 
-                    InvokeOnUIThread(() => OnStatusReceived?.Invoke(status)));
+                {
+                    Console.WriteLine($"Raw Status Received: {status}");
+                    InvokeOnUIThread(() => OnStatusReceived?.Invoke(status));
+                });
                 _hubConnection.On<string, string>("ReceiveMessage", (displayName, message) =>
           InvokeOnUIThread(() => OnMessageReceived?.Invoke(displayName, message)));
 
@@ -118,7 +127,7 @@ namespace WiseHR_Frontend.Services
             }
         }
 
-        public async Task SendQueryAsync(string user, string message, string? userId)
+        public async Task SendQueryAsync(string user, string message, string? jwtToken, string sessionId)
         {
             if (_hubConnection is null || _hubConnection.State != HubConnectionState.Connected)
             {
@@ -126,10 +135,17 @@ namespace WiseHR_Frontend.Services
                 throw new InvalidOperationException("Chat service is not connected");
             }
 
-            Console.WriteLine($"Sending query - User: {user}, Message: {message}, UserId: {userId}");
+            var fetchedToken = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+            if (string.IsNullOrEmpty(fetchedToken))
+            {
+                Console.WriteLine("No auth token found in localStorage.");
+                throw new InvalidOperationException("Authentication token not found.");
+            }
+
+            Console.WriteLine($"Sending query - User: {user}, Message: {message}, SessionId: {sessionId}");
             try
             {
-                await _hubConnection.SendAsync("SendQuery", user, message, userId);
+                await _hubConnection.SendAsync("SendQuery", user, message, fetchedToken, sessionId);
                 Console.WriteLine("Query sent successfully");
             }
             catch (Exception ex)

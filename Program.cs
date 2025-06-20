@@ -1,23 +1,20 @@
 
 using Blazored.LocalStorage;
 using Blazored.SessionStorage;
-using Blazored.SessionStorage;
-using FingerFrontend.AdminAttendanceViewModel;
 using FingerFrontend.AdminAttendanceViewModel;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.JSInterop;
 using MudBlazor;
 using MudBlazor.Services;
-using Syncfusion.Blazor;
 using WiseHR;
-using WiseHR.Models.NewFolder;
 using WiseHR.Services;
-using WiseHR_Frontend.Services;
+using Syncfusion.Blazor;
+using WiseHR.Models.NewFolder;
 using Syncfusion.Licensing;
+using WiseHR.Services.ChatFormatting;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -78,6 +75,10 @@ var apiBaseUrl = "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.n
 // Register ChatService
 builder.Services.AddScoped<IChatService, ChatService>();
 SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NNaF1cWWhPYVFwWmFZfVtgdl9GaFZVRWYuP1ZhSXxWdkNiUH9ccHxRR2JZWEF9XUs=");
+
+builder.Services.AddScoped<IChatHistoryService, ChatHistoryService>();
+
+builder.Services.AddScoped<IChatMessageFormatter, ChatMessageFormatter>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 builder.Services.AddSingleton(new ApiConfig { BaseUrl = apiBaseUrl });
