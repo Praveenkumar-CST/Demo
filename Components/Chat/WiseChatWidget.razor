@@ -6,6 +6,9 @@
 @using WiseHR.Services.ChatFormatting;
 @using WiseHR.Models.Chat;
 @using WiseHR.Components.Dialogs
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using System.Text
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -109,7 +112,14 @@
                                                                OnClick="@(async () => await DeleteSession(session.SessionId))"
                                                                Size="Size.Small"
                                                                Color="Color.Error"
-                                                               Class="wisechat-delete-button" />
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
                                             </div>
                                         </div>
                                     }
@@ -132,7 +142,14 @@
                                                                OnClick="@(async () => await DeleteSession(session.SessionId))"
                                                                Size="Size.Small"
                                                                Color="Color.Error"
-                                                               Class="wisechat-delete-button" />
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
                                             </div>
                                         </div>
                                     }
@@ -155,7 +172,14 @@
                                                                OnClick="@(async () => await DeleteSession(session.SessionId))"
                                                                Size="Size.Small"
                                                                Color="Color.Error"
-                                                               Class="wisechat-delete-button" />
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
                                             </div>
                                         </div>
                                     }
@@ -178,7 +202,14 @@
                                                                OnClick="@(async () => await DeleteSession(session.SessionId))"
                                                                Size="Size.Small"
                                                                Color="Color.Error"
-                                                               Class="wisechat-delete-button" />
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
                                             </div>
                                         </div>
                                     }
@@ -201,7 +232,14 @@
                                                                OnClick="@(async () => await DeleteSession(session.SessionId))"
                                                                Size="Size.Small"
                                                                Color="Color.Error"
-                                                               Class="wisechat-delete-button" />
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
                                             </div>
                                         </div>
                                     }
@@ -224,7 +262,14 @@
                                                                OnClick="@(async () => await DeleteSession(session.SessionId))"
                                                                Size="Size.Small"
                                                                Color="Color.Error"
-                                                               Class="wisechat-delete-button" />
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
                                             </div>
                                         </div>
                                     }
@@ -267,30 +312,67 @@
                                 <div class="wisechat-message-bubble">
                                     @if (message.TableType == ChatMessageTableType.Asset)
                                     {
-                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
-                                                       Class="wisechat-popout-btn"
-                                                       Title="Pop out table"
-                                                       OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatAssetTableContent(message.Content)))" />
+                                        @if (showCopyFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        @if (showExportFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        <div class="wisechat-icon-group">
+                                            <MudTooltip Text="Expand Table" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Class="wisechat-popout-btn" OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatAssetTableContent(message.Content)))" /></MudTooltip>
+                                            <MudTooltip Text="Export as CSV" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.Download" Class="wisechat-export-btn" OnClick="(() => ExportTable(message.Content, message.TableType))" /></MudTooltip>
+                                            <MudTooltip Text="Copy" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="wisechat-copy-btn" OnClick="@(async () => await CopyToClipboard(message.Content))" /></MudTooltip>
+                                        </div>
                                         @((MarkupString)ChatMessageFormatter.FormatAssetTableContent(message.Content))
                                     }
                                     else if (message.TableType == ChatMessageTableType.Generic)
                                     {
-                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
-                                                       Class="wisechat-popout-btn"
-                                                       Title="Pop out table"
-                                                       OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatGenericTableContent(message.Content)))" />
+                                        @if (showCopyFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        @if (showExportFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        <div class="wisechat-icon-group">
+                                            <MudTooltip Text="Expand Table" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Class="wisechat-popout-btn" OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatGenericTableContent(message.Content)))" /></MudTooltip>
+                                            <MudTooltip Text="Export as CSV" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.Download" Class="wisechat-export-btn" OnClick="(() => ExportTable(message.Content, message.TableType))" /></MudTooltip>
+                                            <MudTooltip Text="Copy" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="wisechat-copy-btn" OnClick="@(async () => await CopyToClipboard(message.Content))" /></MudTooltip>
+                                        </div>
                                         @((MarkupString)ChatMessageFormatter.FormatGenericTableContent(message.Content))
                                     }
                                     else if (message.TableType == ChatMessageTableType.Json)
                                     {
-                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
-                                                       Class="wisechat-popout-btn"
-                                                       Title="Pop out table"
-                                                       OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatJsonTableContent(message.Content)))" />
+                                        @if (showCopyFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        @if (showExportFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        <div class="wisechat-icon-group">
+                                            <MudTooltip Text="Expand Table" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Class="wisechat-popout-btn" OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatJsonTableContent(message.Content)))" /></MudTooltip>
+                                            <MudTooltip Text="Export as CSV" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.Download" Class="wisechat-export-btn" OnClick="(() => ExportTable(message.Content, message.TableType))" /></MudTooltip>
+                                            <MudTooltip Text="Copy" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="wisechat-copy-btn" OnClick="@(async () => await CopyToClipboard(message.Content))" /></MudTooltip>
+                                        </div>
                                         @((MarkupString)ChatMessageFormatter.FormatJsonTableContent(message.Content))
                                     }
                                     else
                                     {
+                                        @if (!message.IsFromUser)
+                                        {
+                                            <div class="wisechat-icon-group">
+                                                <MudTooltip Text="Copy" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="wisechat-copy-btn" OnClick="@(async () => await CopyToClipboard(message.Content))" /></MudTooltip>
+                                            </div>
+                                            @if (showCopyFeedback)
+                                            {
+                                                <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                            }
+                                        }
                                         @((MarkupString)ChatMessageFormatter.FormatGeneralMessageContent(message.Content))
                                     }
                                 </div>
@@ -645,7 +727,18 @@
         justify-content: space-between;
         padding: 8px 16px;
         border-radius: 8px;
-        transition: all 0.2s ease;
+        transition: all 0.2s ease, box-shadow 0.2s;
+        background: transparent;
+    }
+
+    .wisechat-history-item-content:hover {
+        background: linear-gradient(90deg, #f3f4f8 0%, #e9eaf3 100%);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
+    }
+
+    .wisechat-history-item.active .wisechat-history-item-content {
+        background: linear-gradient(90deg, var(--mud-palette-primary-lighten) 0%, rgba(var(--mud-palette-primary-rgb), 0.1) 100%);
+        box-shadow: 0 4px 16px rgba(var(--mud-palette-primary-rgb), 0.10);
     }
 
     .wisechat-history-item-main {
@@ -672,11 +765,24 @@
         margin-left: 16px;
         flex-shrink: 0;
         opacity: 0.7;
-        transition: opacity 0.2s;
+        transition: opacity 0.2s, color 0.2s, background 0.2s;
+        background: transparent;
+        border-radius: 50%;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .wisechat-history-item-content:hover .wisechat-delete-button {
+    .wisechat-delete-button:hover:not(:disabled) {
         opacity: 1;
+        background: #ffeaea;
+        color: #d32f2f;
+    }
+
+    .wisechat-delete-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
     }
 
     .wisechat-history-item.active {
@@ -784,19 +890,21 @@
 
     /* Stunning message bubbles */
     .wisechat-message-bubble {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        position: relative;
+        padding-top: 44px;
         padding: 14px 18px;
         border-radius: 20px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
-        position: relative;
         transition: all 0.3s ease;
         border: 1px solid rgba(0, 0, 0, 0.04);
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     }
-
-        .wisechat-message-bubble:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
-        }
+    .wisechat-message.user .wisechat-message-bubble {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+        padding-top: 14px !important;
+        padding-bottom: 14px !important;
+    }
 
     .wisechat-message.user .wisechat-message-bubble {
         background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
@@ -1400,22 +1508,57 @@
         width: 680px;
     }
 
-    .wisechat-popout-btn {
+    /* Icon group: default to flex above bubble, absolute only in expanded mode */
+    .wisechat-icon-group {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+        position: static;
+        z-index: 2;
+        background: transparent;
+        pointer-events: auto;
+    }
+    .wisechat-window.expanded .wisechat-icon-group {
         position: absolute;
         top: 8px;
         right: 8px;
-        z-index: 2;
-        background: white;
-        border-radius: 50%;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        opacity: 0.7;
-        transition: opacity 0.2s;
-    }
-    .wisechat-popout-btn:hover {
-        opacity: 1;
+        margin-bottom: 0;
     }
     .wisechat-message-bubble {
         position: relative;
+        padding-top: 0;
+    }
+    .wisechat-window.expanded .wisechat-message-bubble {
+        padding-top: 44px;
+    }
+
+    .wisechat-icon-feedback {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 3;
+        background: #e8f5e9;
+        color: #43a047;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 2px 8px rgba(67,160,71,0.12);
+        animation: popFade 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    @@keyframes popFade {
+        0% { opacity: 0; transform: scale(0.7); }
+        20% { opacity: 1; transform: scale(1.15); }
+        60% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.7); }
+    }
+
+    /* ... existing styles ... */
+    .mud-tooltip-popper.wisechat-tooltip-pop {
+        z-index: 20001 !important;
     }
 </style>
 
@@ -1443,6 +1586,8 @@
     private bool showHistory = false;
 
     private bool isExpanded = false;
+
+    private HashSet<string> deletingSessionIds = new();
 
     private ILookup<string, ChatSession> groupedSessions => chatSessions
         .GroupBy(s => GetTimeGroup(s.LastActivityAt))
@@ -1531,6 +1676,9 @@
     {
         try
         {
+            deletingSessionIds.Add(sessionId);
+            chatSessions = chatSessions.Where(s => s.SessionId != sessionId).ToList(); // Optimistic UI
+            StateHasChanged();
             await ChatHistoryService.DeleteSessionAsync(Guid.Parse(sessionId));
             if (sessionId == currentSessionId)
             {
@@ -1541,6 +1689,11 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error deleting session: {ex.Message}");
+        }
+        finally
+        {
+            deletingSessionIds.Remove(sessionId);
+            StateHasChanged();
         }
     }
 
@@ -1812,8 +1965,176 @@
 
     private void ShowTablePopup(string htmlContent)
     {
-        var parameters = new DialogParameters { ["HtmlContent"] = htmlContent };
+        var parameters = new DialogParameters {
+            ["HtmlContent"] = htmlContent,
+            ["RawContent"] = messages.LastOrDefault(m => ChatMessageFormatter.FormatAssetTableContent(m.Content) == htmlContent || ChatMessageFormatter.FormatGenericTableContent(m.Content) == htmlContent || ChatMessageFormatter.FormatJsonTableContent(m.Content) == htmlContent)?.Content ?? string.Empty,
+            ["TableType"] = messages.LastOrDefault(m => ChatMessageFormatter.FormatAssetTableContent(m.Content) == htmlContent || ChatMessageFormatter.FormatGenericTableContent(m.Content) == htmlContent || ChatMessageFormatter.FormatJsonTableContent(m.Content) == htmlContent)?.TableType ?? ChatMessageTableType.None
+        };
         DialogService.Show<TablePopupDialog>("Table View", parameters, new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true });
+    }
+
+    private bool showCopyFeedback = false;
+    private bool showExportFeedback = false;
+    private async Task CopyToClipboard(string text)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        showCopyFeedback = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(1200);
+        showCopyFeedback = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ExportTable(string content, ChatMessageTableType tableType)
+    {
+        try
+        {
+            byte[] csvData;
+            switch (tableType)
+            {
+                case ChatMessageTableType.Json:
+                    csvData = ParseJsonTableToCsv(content);
+                    break;
+                case ChatMessageTableType.Generic:
+                    csvData = ParseMarkdownTableToCsv(content);
+                    break;
+                case ChatMessageTableType.Asset:
+                    csvData = ParseAssetTableToCsv(content);
+                    break;
+                default:
+                    throw new Exception("Unsupported table type for export.");
+            }
+            using var streamRef = new DotNetStreamReference(new MemoryStream(csvData));
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", "table-export.csv", streamRef);
+            showExportFeedback = true;
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(1200);
+            showExportFeedback = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error exporting table: {ex.Message}");
+        }
+    }
+
+    private byte[] ParseJsonTableToCsv(string content)
+    {
+        var json = JObject.Parse(content);
+        var data = json["data"];
+        if (data == null) return Array.Empty<byte>();
+        var sb = new StringBuilder();
+        var headers = (data.FirstOrDefault() as JObject)?.Properties().Select(p => p.Name).ToList();
+        if (headers != null)
+        {
+            sb.AppendLine(string.Join(",", headers.Select(h => $"\"{h}\"")));
+        }
+        foreach (var row in data)
+        {
+            var line = new List<string>();
+            foreach (var header in headers)
+            {
+                var value = row[header]?.ToString().Replace("\"", "\"\"") ?? "";
+                line.Add($"\"{value}\"");
+            }
+            sb.AppendLine(string.Join(",", line));
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private byte[] ParseMarkdownTableToCsv(string content)
+    {
+        // Split lines, remove empty, trim
+        var lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                           .Select(l => l.Trim()).ToList();
+        if (lines.Count < 2) return Array.Empty<byte>();
+        // Header row
+        var headers = lines[0].Split('|').Select(h => h.Trim()).ToList();
+        var sb = new StringBuilder();
+        sb.AppendLine(string.Join(",", headers.Select(h => $"\"{h}\"")));
+        // Data rows start from line 2
+        for (int i = 2; i < lines.Count; i++)
+        {
+            var row = lines[i].Split('|').Select(cell => cell.Trim().Replace("\"", "\"\"")).ToList();
+            while (row.Count < headers.Count) row.Add("");
+            if (row.Count > headers.Count) row = row.Take(headers.Count).ToList();
+            sb.AppendLine(string.Join(",", row.Select(cell => $"\"{cell}\"")));
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private byte[] ParseAssetTableToCsv(string content)
+    {
+        // Parse asset table as per FormatAssetTableContent
+        var lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                           .Select(line => line.Trim()).ToList();
+        var assets = new List<Dictionary<string, object?>>();
+        Dictionary<string, object?>? currentAsset = null;
+        List<string> instances = new List<string>();
+        string? currentAssetType = null;
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            if (line.StartsWith("Successfully executed")) continue;
+            if (System.Text.RegularExpressions.Regex.IsMatch(line, @"^[A-Za-z\s]+\s*\([\w\s-]+\)$"))
+            {
+                if (currentAsset != null)
+                {
+                    if (instances.Any())
+                        currentAsset["Instances"] = string.Join(", ", instances);
+                    assets.Add(currentAsset);
+                    instances = new List<string>();
+                }
+                currentAssetType = line.Trim();
+                currentAsset = new Dictionary<string, object?>
+                {
+                    { "Asset Type", currentAssetType },
+                    { "Tag Prefix", null },
+                    { "Total Instances", null },
+                    { "Instances", null }
+                };
+            }
+            else if (line.StartsWith("Asset Tag Prefix:"))
+            {
+                var parts = line.Split(':');
+                if (parts.Length >= 2 && currentAsset != null)
+                {
+                    currentAsset["Tag Prefix"] = parts[1].Trim();
+                }
+            }
+            else if (line.StartsWith("Total Instances:"))
+            {
+                var parts = line.Split(':');
+                if (parts.Length >= 2 && currentAsset != null)
+                {
+                    currentAsset["Total Instances"] = parts[1].Trim();
+                }
+            }
+            else if (line.StartsWith("Instances:"))
+            {
+                // Just a marker, do nothing
+            }
+            else if (line.StartsWith("- ") && currentAsset != null)
+            {
+                instances.Add(line.Substring(2).Trim());
+            }
+        }
+        if (currentAsset != null)
+        {
+            if (instances.Any())
+                currentAsset["Instances"] = string.Join(", ", instances);
+            assets.Add(currentAsset);
+        }
+        if (!assets.Any()) return Array.Empty<byte>();
+        var sb = new StringBuilder();
+        var headers = new[] { "Asset Type", "Tag Prefix", "Total Instances", "Instances" };
+        sb.AppendLine(string.Join(",", headers.Select(h => $"\"{h}\"")));
+        foreach (var asset in assets)
+        {
+            var row = headers.Select(h => asset.ContainsKey(h) && asset[h] != null ? asset[h]!.ToString()!.Replace("\"", "\"\"") : "").ToList();
+            sb.AppendLine(string.Join(",", row.Select(cell => $"\"{cell}\"")));
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
     public async ValueTask DisposeAsync()

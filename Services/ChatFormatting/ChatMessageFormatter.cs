@@ -406,20 +406,8 @@ public class ChatMessageFormatter : IChatMessageFormatter
 
         string trimmedContent = content.Trim();
 
-        int firstBrace = trimmedContent.IndexOf('{');
-        int firstBracket = trimmedContent.IndexOf('[');
-        
-        int startIndex = -1;
-        if (firstBrace != -1 && (firstBracket == -1 || firstBrace < firstBracket))
-        {
-            startIndex = firstBrace;
-        }
-        else if (firstBracket != -1)
-        {
-            startIndex = firstBracket;
-        }
-
-        if (startIndex != -1)
+        // Only treat as JSON if it starts with { or [
+        if (trimmedContent.StartsWith("{") || trimmedContent.StartsWith("["))
         {
             return ChatMessageTableType.Json;
         }
