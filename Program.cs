@@ -1,23 +1,22 @@
 
+using Blazored.LocalStorage;
 using Blazored.SessionStorage;
+using Blazored.SessionStorage;
+using FingerFrontend.AdminAttendanceViewModel;
 using FingerFrontend.AdminAttendanceViewModel;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.JSInterop;
 using MudBlazor;
 using MudBlazor.Services;
+using Syncfusion.Blazor;
 using WiseHR;
+using WiseHR.Models.NewFolder;
 using WiseHR.Services;
 using WiseHR_Frontend.Services;
-using MudBlazor.Services;
-using MudBlazor;
-using Blazored.SessionStorage;
-using FingerFrontend.AdminAttendanceViewModel;
-using Microsoft.Extensions.Caching.Memory;
-using Syncfusion.Blazor;
-using WiseHR.Models.NewFolder;
 using Syncfusion.Licensing;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -64,11 +63,13 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<SearchService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<CustomAuthStateProvider>();
 
 builder.Services.AddScoped<LeaveManagementService>();
 
 builder.Services.AddSyncfusionBlazor();
-
+builder.Services.AddAuthorizationCore();
+builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddScoped<IUserService, UserService>();
 var apiBaseUrl = "https://wisehr-main-dce8e0bbg4f6djbs.eastus-01.azurewebsites.net";
