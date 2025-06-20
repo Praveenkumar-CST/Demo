@@ -5,12 +5,13 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 @inject ReportService ReportService
+@inject IJSRuntime JSRuntime
 @layout WiseHR.Components.sidebar.HomeLayout
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
     <MudText Typo="Typo.h5" Class="mb-2 d-flex align-center">
         <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-2" />
-        Monthly Reports (Admin View)
+        @pageTitle
     </MudText>
 
     <!-- Filter Controls -->
@@ -46,13 +47,15 @@
                     }
                 </MudSelect>
             </MudItem>
+
+            <!-- Search functionality for all roles (Admin and Employee) -->
             <MudItem xs="12" sm="8" md="5" Class="d-flex align-end">
                 <MudTextField @bind-Value="searchQuery"
                               Label="Search"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
                               Dense="true"
-                              Placeholder="Search by ID, mentor, mentee, project"
+                              Placeholder="Search by ID, mentee, mentor, project"
                               Immediate="false"
                               OnKeyDown="@OnSearchKeyDown"
                               Class="flex-grow-1">
@@ -84,7 +87,6 @@
     else
     {
         <MudPaper Elevation="2" Class="pa-4" Style="min-height: 400px;">
-            <!-- Horizontal scroll container -->
             <div class="table-container">
                 <MudTable Class="reports-table" 
                           Items="@currentPageReports" 
@@ -94,6 +96,10 @@
                           Loading="@isLoading">
                     <HeaderContent>
                         <MudTh Class="col-id">Report ID</MudTh>
+                        @if (currentUserRole != "Employee")
+                        {
+                            <MudTh Class="col-mentee-id">Mentee ID</MudTh>
+                        }
                         <MudTh Class="col-mentee">Mentee</MudTh>
                         <MudTh Class="col-mentor">Mentor</MudTh>
                         <MudTh Class="col-projects">Project(s) Worked On</MudTh>
@@ -108,68 +114,52 @@
                         <MudTd Class="col-id">
                             <div class="cell-content">@context.Id</div>
                         </MudTd>
+                        @if (currentUserRole != "Employee")
+                        {
+                            <MudTd Class="col-mentee-id">
+                                <div class="cell-content" title="@context.MenteeId">
+                                    @context.MenteeId
+                                </div>
+                            </MudTd>
+                        }
                         <MudTd Class="col-mentee">
                             <div class="cell-content" title="@context.MenteeName">
-                                @if (!string.IsNullOrWhiteSpace(context.MenteeName))
-                                {
-                                    @context.MenteeName
-                                }
+                                @context.MenteeName
                             </div>
                         </MudTd>
                         <MudTd Class="col-mentor">
                             <div class="cell-content" title="@context.MentorName">
-                                @if (!string.IsNullOrWhiteSpace(context.MentorName))
-                                {
-                                    @context.MentorName
-                                }
+                                @context.MentorName
                             </div>
                         </MudTd>
                         <MudTd Class="col-projects">
                             <div class="cell-content" title="@context.ProjectsWorkedOn">
-                                @if (!string.IsNullOrWhiteSpace(context.ProjectsWorkedOn))
-                                {
-                                    @context.ProjectsWorkedOn
-                                }
+                                @(!string.IsNullOrEmpty(context.ProjectsWorkedOn) ? context.ProjectsWorkedOn : "-")
                             </div>
                         </MudTd>
                         <MudTd Class="col-perf">
                             <div class="cell-content" title="@context.Performance1">
-                                @if (!string.IsNullOrWhiteSpace(context.Performance1))
-                                {
-                                    @context.Performance1
-                                }
+                                @(!string.IsNullOrEmpty(context.Performance1) ? context.Performance1 : "-")
                             </div>
                         </MudTd>
                         <MudTd Class="col-feedback">
                             <div class="cell-content" title="@context.Feedback1">
-                                @if (!string.IsNullOrWhiteSpace(context.Feedback1))
-                                {
-                                    @context.Feedback1
-                                }
+                                @(!string.IsNullOrEmpty(context.Feedback1) ? context.Feedback1 : "-")
                             </div>
                         </MudTd>
                         <MudTd Class="col-perf">
                             <div class="cell-content" title="@context.Performance2">
-                                @if (!string.IsNullOrWhiteSpace(context.Performance2))
-                                {
-                                    @context.Performance2
-                                }
+                                @(!string.IsNullOrEmpty(context.Performance2) ? context.Performance2 : "-")
                             </div>
                         </MudTd>
                         <MudTd Class="col-feedback">
                             <div class="cell-content" title="@context.Feedback2">
-                                @if (!string.IsNullOrWhiteSpace(context.Feedback2))
-                                {
-                                    @context.Feedback2
-                                }
+                                @(!string.IsNullOrEmpty(context.Feedback2) ? context.Feedback2 : "-")
                             </div>
                         </MudTd>
                         <MudTd Class="col-date">
                             <div class="cell-content">
-                                @if (context.SubmittedOn != DateTime.MinValue)
-                                {
-                                    @context.SubmittedOn.ToString("dd MMM yyyy")
-                                }
+                                @context.SubmittedOn.ToString("dd MMM yyyy")
                             </div>
                         </MudTd>
                         <MudTd Class="col-actions">
@@ -180,20 +170,26 @@
                                                    Color="Color.Primary"
                                                    Size="Size.Small"/>
                                 </MudTooltip>
-                                <MudTooltip Text="Edit">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" 
-                                                   OnClick="() => EditReport(context.Id)" 
-                                                   Color="Color.Info"
-                                                   Size="Size.Small"
-                                                   Class="ml-2"/>
-                                </MudTooltip>
-                                <MudTooltip Text="Delete">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" 
-                                                   OnClick="() => DeleteReport(context.Id)" 
-                                                   Color="Color.Error"
-                                                   Size="Size.Small"
-                                                   Class="ml-2"/>
-                                </MudTooltip>
+                                @if (CanEditReport(context))
+                                {
+                                    <MudTooltip Text="Edit">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                                       OnClick="() => EditReport(context.Id)" 
+                                                       Color="Color.Info"
+                                                       Size="Size.Small"
+                                                       Class="ml-2"/>
+                                    </MudTooltip>
+                                }
+                                @if (CanDeleteReport())
+                                {
+                                    <MudTooltip Text="Delete">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                       OnClick="() => DeleteReport(context.Id)" 
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       Class="ml-2"/>
+                                    </MudTooltip>
+                                }
                             </div>
                         </MudTd>
                     </RowTemplate>
@@ -217,7 +213,6 @@
 </MudContainer>
 
 <style>
-    /* Table container for horizontal scrolling */
     .table-container {
         overflow-x: auto;
         border: 1px solid #e0e0e0;
@@ -225,14 +220,13 @@
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
     
-    /* Table styling */
     .reports-table {
-        min-width: 1200px;
+        min-width: @(currentUserRole != "Employee" ? "1300px" : "1100px");
         width: 100%;
     }
     
-    /* Column width definitions */
     .col-id { width: 90px; min-width: 90px; }
+    .col-mentee-id { width: 120px; min-width: 120px; }
     .col-mentee { width: 150px; min-width: 150px; }
     .col-mentor { width: 150px; min-width: 150px; }
     .col-projects { width: 200px; min-width: 200px; }
@@ -241,7 +235,6 @@
     .col-date { width: 140px; min-width: 140px; }
     .col-actions { width: 150px; min-width: 150px; }
     
-    /* Cell styling */
     .mud-table-cell {
         padding: 8px 12px;
         vertical-align: top;
@@ -255,7 +248,6 @@
         display: block;
     }
     
-    /* Header styling */
     .mud-table-header {
         position: sticky;
         top: 0;
@@ -263,12 +255,10 @@
         background-color: var(--mud-palette-surface);
     }
     
-    /* Hover effects */
     .mud-table-row:hover {
         background-color: rgba(105, 198, 207, 0.05) !important;
     }
     
-    /* Scrollbar styling */
     .table-container::-webkit-scrollbar {
         height: 8px;
     }
@@ -287,25 +277,12 @@
         background: #9d9d9d;
     }
     
-    /* Action button styling */
     .mud-icon-button {
         transition: transform 0.2s ease;
     }
     
     .mud-icon-button:hover {
         transform: scale(1.1);
-    }
-    
-    /* Search button styling */
-    .search-button-container {
-        display: flex;
-        align-items: flex-end;
-    }
-    
-    /* Pagination styling */
-    .mud-pagination .mud-pagination-item {
-        min-width: 32px;
-        height: 32px;
     }
 </style>
 
@@ -327,32 +304,126 @@
     private List<ReportModel> filteredReports = new();
     private List<ReportModel> currentPageReports = new();
 
+    // User info
+    private string pageTitle = "Monthly Reports";
+    private string currentUserRole = "";
+    private string currentUserEmpId = "";
+    private string currentUserName = "";
+
     protected override async Task OnInitializedAsync()
     {
-        await InitializeAvailableYears();
+        await GetCurrentUserInfo();
         await LoadAllReports();
+        await InitializeAvailableYears();
         ApplyFilters();
+    }
+
+    private async Task GetCurrentUserInfo()
+    {
+        try
+        {
+            currentUserRole = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "role") ?? "";
+            currentUserEmpId = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "EmpId") ?? "";
+            currentUserName = await JSRuntime.InvokeAsync<string>("sessionStorageHelper.getItem", "email") ?? "";
+
+            if (string.IsNullOrEmpty(currentUserEmpId))
+            {
+                Snackbar.Add("Employee ID not found in session", Severity.Error);
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+
+            pageTitle = currentUserRole == "Employee" 
+                ? $"My Reports ({currentUserName})" 
+                : "Monthly Reports (Admin View)";
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading user info: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task LoadAllReports()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // First get all reports from the service
+            var reports = (await ReportService.GetReportsAsync(1, int.MaxValue))
+                .OrderByDescending(r => r.SubmittedOn)
+                .ToList();
+
+            if (currentUserRole == "Employee")
+            {
+                // Filter reports where MenteeID matches current user's EmpID
+                allReports = reports
+                    .Where(r => !string.IsNullOrEmpty(r.MenteeId) && 
+                               r.MenteeId.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (!allReports.Any())
+                {
+                    Snackbar.Add("No reports found for your account", Severity.Info);
+                }
+                else
+                {
+                    // For employee view, select the latest year/month
+                    selectedYear = allReports.Max(r => r.SubmittedOn.Year);
+                    selectedMonth = allReports
+                        .Where(r => r.SubmittedOn.Year == selectedYear)
+                        .Max(r => r.SubmittedOn.Month);
+                }
+            }
+            else
+            {
+                // Admin sees all reports
+                allReports = reports;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading reports: {ex.Message}", Severity.Error);
+            allReports = new List<ReportModel>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool CanEditReport(ReportModel report)
+    {
+        // Admins can edit any report
+        if (currentUserRole != "Employee") return true;
+        
+        // Employees can only edit their own reports (where they are the mentee)
+        return report.MenteeId?.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase) ?? false;
+    }
+
+    private bool CanDeleteReport()
+    {
+        // Only admins can delete reports
+        return currentUserRole != "Employee";
     }
 
     private async Task InitializeAvailableYears()
     {
         try
         {
-            // Get distinct years from all reports
-            var reports = await ReportService.GetReportsAsync(1, int.MaxValue);
-            var reportYears = reports
+            var reportYears = allReports
                 .Select(r => r.SubmittedOn.Year)
                 .Distinct()
                 .OrderByDescending(y => y)
                 .ToList();
 
-            // Add current year if not present
             if (!reportYears.Contains(DateTime.Now.Year))
             {
                 reportYears.Add(DateTime.Now.Year);
             }
 
-            // Add previous 5 years for better coverage
             var minYear = reportYears.Any() ? reportYears.Min() : DateTime.Now.Year;
             for (int year = DateTime.Now.Year - 1; year >= minYear - 5; year--)
             {
@@ -378,41 +449,22 @@
         }
     }
 
-    private async Task LoadAllReports()
-    {
-        isLoading = true;
-        StateHasChanged();
-
-        try
-        {
-            allReports = (await ReportService.GetReportsAsync(1, int.MaxValue))
-                .OrderByDescending(r => r.SubmittedOn)
-                .ToList();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error loading reports: {ex.Message}", Severity.Error);
-            allReports = new List<ReportModel>();
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
     private void ApplyFilters()
     {
+        // Common filtering for both Employee and Admin by year/month
         filteredReports = allReports
             .Where(r => 
                 r.SubmittedOn.Year == selectedYear && 
                 r.SubmittedOn.Month == selectedMonth)
             .ToList();
 
+        // Apply search if present
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {
             var query = searchQuery.Trim().ToLower();
             filteredReports = filteredReports
                 .Where(r =>
+                    (r.MenteeId?.ToLower().Contains(query) ?? false) ||
                     (r.MenteeName?.ToLower().Contains(query) ?? false) ||
                     (r.MentorName?.ToLower().Contains(query) ?? false) ||
                     (r.ProjectsWorkedOn?.ToLower().Contains(query) ?? false) ||
@@ -458,7 +510,6 @@
         }
     }
 
-    // New search functionality
     private void ApplySearch()
     {
         currentPage = 1;
@@ -494,7 +545,7 @@
         {
             var report = await ReportService.GetReportByIdAsync(reportId);
             
-            if (report?.ProjectsWorkedOn != null)
+            if (report != null)
             {
                 Snackbar.Add($"Downloading {fileName}", Severity.Info);
                 // Implement actual file download logic here
@@ -510,18 +561,28 @@
         }
     }
 
-    private void ViewReport(int reportId)
-    {
-        NavigationManager.NavigateTo($"/report-details/{reportId}");
-    }
-
     private void EditReport(int reportId)
     {
+        if (currentUserRole == "Employee")
+        {
+            var report = allReports.FirstOrDefault(r => r.Id == reportId);
+            if (report == null || !(report.MenteeId?.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase) ?? false))
+            {
+                Snackbar.Add("You can only edit your own reports", Severity.Error);
+                return;
+            }
+        }
         NavigationManager.NavigateTo($"/report-edit/{reportId}");
     }
 
     private async Task DeleteReport(int reportId)
     {
+        if (currentUserRole == "Employee")
+        {
+            Snackbar.Add("You don't have permission to delete reports", Severity.Error);
+            return;
+        }
+
         try
         {
             var success = await ReportService.DeleteReportAsync(reportId);
