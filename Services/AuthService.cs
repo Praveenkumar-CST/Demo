@@ -107,8 +107,8 @@ namespace WiseHR.Services
                 return (false, ex.Message);
             }
         }
-    
-        
+
+
         public async Task<(string? Role, string? Error)> VerifyToken()
         {
             try
