@@ -1,13 +1,24 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.SignalR.Client
-@using System.Text.Json
-@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using WiseHR.Services
+@using WiseHR.Services.ChatFormatting;
+@using WiseHR.Models.Chat;
+@using WiseHR.Components.Dialogs
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using System.Text
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @using Microsoft.AspNetCore.Components
-@using WiseHR_Frontend.Services
 @inject IChatService ChatService
+@inject IChatHistoryService ChatHistoryService
+@inject WiseHR.Services.AuthService AuthService
+@inject WiseHR.Services.EmployeeService EmployeeService
+@inject IChatMessageFormatter ChatMessageFormatter
+@inject IDialogService DialogService
 
 <div class="wisechat-widget-container">
     @* Notification Badge *@
@@ -22,129 +33,432 @@
            OnClick="ToggleChat"
            Class="@($"wisechat-fab {(isOpen ? "open" : "")}")"/>
 
+    @* Expand/Collapse Button *@
+    @if (isOpen)
+    {
+        <MudFab IconSize="Size.Small" EndIcon="@(isExpanded ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)"
+                OnClick="ToggleExpand"
+                Class="wisechat-expand-fab"
+                Title="@(isExpanded ? "Collapse" : "Expand")" />
+    }
+
     @* Chat Window *@
-    <div class="@($"wisechat-window {(isOpen ? "open" : "")}")">
-        @* Header *@
-        <div class="wisechat-header">
-            <div class="wisechat-header-content">
-                <MudFab IconSize="Size.Large" EndIcon="@(isOpen ? Icons.Material.Filled.SupportAgent : Icons.Material.Filled.SupportAgent)"
-                        Color="Color.Primary"
-                        OnClick="ToggleChat"
-                        Class="@($"wisechat-fab {(isOpen ? "open" : "")}")" />
-                <div class="wisechat-header-text">
-                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">WiseONE Assistant</MudText>
-                    <div class="wisechat-status">
-                        <div class="wisechat-status-dot @(isConnected ? "online" : "offline")"></div>
-                        <MudText Typo="Typo.subtitle2">@(isConnected ? "Online" : "Connecting...")</MudText>
+    <div class="absolute-position-wrapper">
+        <div class="@($"wisechat-window {(isOpen ? "open" : "")} {(isExpanded ? "expanded" : "")}")">
+            @* Header *@
+            <div class="wisechat-header">
+                <div class="wisechat-header-content">
+                    <MudFab IconSize="Size.Large" EndIcon="@(isOpen ? Icons.Material.Filled.SupportAgent : Icons.Material.Filled.SupportAgent)"
+                            Color="Color.Primary"
+                            OnClick="ToggleChat"
+                            Class="@($"wisechat-fab {(isOpen ? "open" : "")}")" />
+                    <div class="wisechat-header-text">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold">WiseONE Assistant</MudText>
+                        <div class="wisechat-status">
+                            <div class="wisechat-status-dot @(isConnected ? "online" : "offline")"></div>
+                            <MudText Typo="Typo.subtitle2">@(isConnected ? "Online" : "Connecting...")</MudText>
+                        </div>
+                    </div>
+                    <MudIconButton Icon="@(showHistory ? Icons.Material.Filled.Chat : Icons.Material.Filled.History)"
+                                  OnClick="ToggleHistory"
+                                  Class="wisechat-history-button"
+                                  Title="Toggle Chat History"/>
+                    <MudFab IconSize="Size.Small" EndIcon="@(isOpen ? Icons.Material.Filled.Add : Icons.Material.Filled.Add)"
+                            OnClick="StartNewChat"
+                            Class="wisechat-new-chat-button"
+                            Title="Start New Chat"/>
+                </div>
+            </div>
+
+            <div class="wisechat-content">
+                @* History Panel *@
+                <div class="@($"wisechat-history-panel {(showHistory ? "show" : "")}")">
+                    <div class="wisechat-history-header">
+                        <div class="d-flex align-center justify-space-between">
+                            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="ToggleHistory" />
+                            <MudText Typo="Typo.h6">Chat History</MudText>
+                        </div>
+                    </div>
+                    <div class="wisechat-history-list">
+                        @if (chatSessions.Any())
+                        {
+                            var now = DateTime.Now;
+                            var lastHour = now.AddHours(-1);
+                            var yesterday = now.AddDays(-1);
+                            var lastWeek = now.AddDays(-7);
+                            var lastMonth = now.AddMonths(-1);
+                            var lastYear = now.AddYears(-1);
+
+                            var lastHourSessions = chatSessions.Where(s => s.LastActivityAt >= lastHour).ToList();
+                            var yesterdaySessions = chatSessions.Where(s => s.LastActivityAt >= yesterday && s.LastActivityAt < lastHour).ToList();
+                            var lastWeekSessions = chatSessions.Where(s => s.LastActivityAt >= lastWeek && s.LastActivityAt < yesterday).ToList();
+                            var lastMonthSessions = chatSessions.Where(s => s.LastActivityAt >= lastMonth && s.LastActivityAt < lastWeek).ToList();
+                            var lastYearSessions = chatSessions.Where(s => s.LastActivityAt >= lastYear && s.LastActivityAt < lastMonth).ToList();
+                            var olderSessions = chatSessions.Where(s => s.LastActivityAt < lastYear).ToList();
+
+                            @if (lastHourSessions.Any())
+                            {
+                                <div class="wisechat-history-category">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2">Last Hour</MudText>
+                                    @foreach (var session in lastHourSessions)
+                                    {
+                                        <div class="wisechat-history-item @(session.SessionId == currentSessionId ? "active" : "")">
+                                            <div class="wisechat-history-item-content">
+                                                <div class="wisechat-history-item-main" @onclick="() => SwitchToSession(session.SessionId)">
+                                                    <div class="wisechat-history-item-title">@session.Title</div>
+                                                    <div class="wisechat-history-item-time">@session.LastActivityAt.ToString("HH:mm")</div>
+                                                </div>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               OnClick="@(async () => await DeleteSession(session.SessionId))"
+                                                               Size="Size.Small"
+                                                               Color="Color.Error"
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @if (yesterdaySessions.Any())
+                            {
+                                <div class="wisechat-history-category">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2">Yesterday</MudText>
+                                    @foreach (var session in yesterdaySessions)
+                                    {
+                                        <div class="wisechat-history-item @(session.SessionId == currentSessionId ? "active" : "")">
+                                            <div class="wisechat-history-item-content">
+                                                <div class="wisechat-history-item-main" @onclick="() => SwitchToSession(session.SessionId)">
+                                                    <div class="wisechat-history-item-title">@session.Title</div>
+                                                    <div class="wisechat-history-item-time">@session.LastActivityAt.ToString("HH:mm")</div>
+                                                </div>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               OnClick="@(async () => await DeleteSession(session.SessionId))"
+                                                               Size="Size.Small"
+                                                               Color="Color.Error"
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @if (lastWeekSessions.Any())
+                            {
+                                <div class="wisechat-history-category">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2">Last 7 Days</MudText>
+                                    @foreach (var session in lastWeekSessions)
+                                    {
+                                        <div class="wisechat-history-item @(session.SessionId == currentSessionId ? "active" : "")">
+                                            <div class="wisechat-history-item-content">
+                                                <div class="wisechat-history-item-main" @onclick="() => SwitchToSession(session.SessionId)">
+                                                    <div class="wisechat-history-item-title">@session.Title</div>
+                                                    <div class="wisechat-history-item-time">@session.LastActivityAt.ToString("ddd, HH:mm")</div>
+                                                </div>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               OnClick="@(async () => await DeleteSession(session.SessionId))"
+                                                               Size="Size.Small"
+                                                               Color="Color.Error"
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @if (lastMonthSessions.Any())
+                            {
+                                <div class="wisechat-history-category">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2">Last 30 Days</MudText>
+                                    @foreach (var session in lastMonthSessions)
+                                    {
+                                        <div class="wisechat-history-item @(session.SessionId == currentSessionId ? "active" : "")">
+                                            <div class="wisechat-history-item-content">
+                                                <div class="wisechat-history-item-main" @onclick="() => SwitchToSession(session.SessionId)">
+                                                    <div class="wisechat-history-item-title">@session.Title</div>
+                                                    <div class="wisechat-history-item-time">@session.LastActivityAt.ToString("MMM dd, HH:mm")</div>
+                                                </div>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               OnClick="@(async () => await DeleteSession(session.SessionId))"
+                                                               Size="Size.Small"
+                                                               Color="Color.Error"
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @if (lastYearSessions.Any())
+                            {
+                                <div class="wisechat-history-category">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2">Last Year</MudText>
+                                    @foreach (var session in lastYearSessions)
+                                    {
+                                        <div class="wisechat-history-item @(session.SessionId == currentSessionId ? "active" : "")">
+                                            <div class="wisechat-history-item-content">
+                                                <div class="wisechat-history-item-main" @onclick="() => SwitchToSession(session.SessionId)">
+                                                    <div class="wisechat-history-item-title">@session.Title</div>
+                                                    <div class="wisechat-history-item-time">@session.LastActivityAt.ToString("MMM dd, yyyy")</div>
+                                                </div>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               OnClick="@(async () => await DeleteSession(session.SessionId))"
+                                                               Size="Size.Small"
+                                                               Color="Color.Error"
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @if (olderSessions.Any())
+                            {
+                                <div class="wisechat-history-category">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2">Older</MudText>
+                                    @foreach (var session in olderSessions)
+                                    {
+                                        <div class="wisechat-history-item @(session.SessionId == currentSessionId ? "active" : "")">
+                                            <div class="wisechat-history-item-content">
+                                                <div class="wisechat-history-item-main" @onclick="() => SwitchToSession(session.SessionId)">
+                                                    <div class="wisechat-history-item-title">@session.Title</div>
+                                                    <div class="wisechat-history-item-time">@session.LastActivityAt.ToString("MMM dd, yyyy")</div>
+                                                </div>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               OnClick="@(async () => await DeleteSession(session.SessionId))"
+                                                               Size="Size.Small"
+                                                               Color="Color.Error"
+                                                               Class="wisechat-delete-button"
+                                                               Disabled="@deletingSessionIds.Contains(session.SessionId)"
+                                                               Title="Delete Session">
+                                                    @if (deletingSessionIds.Contains(session.SessionId))
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Error" />
+                                                    }
+                                                </MudIconButton>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="wisechat-history-empty">
+                                <MudText Typo="Typo.body1" Color="Color.Secondary">No chat history found</MudText>
+                            </div>
+                        }
                     </div>
                 </div>
-                <MudFab IconSize="Size.Small" EndIcon="@(isOpen ? Icons.Material.Filled.Add : Icons.Material.Filled.Add)"
-                      
-                              OnClick="StartNewChat"
-                              Class="wisechat-new-chat-button"
-                              Title="Start New Chat"/>
-            </div>
-        </div>
 
-        @* Messages Area *@
-        <div class="wisechat-messages" @ref="messagesContainer">
-            @if (messages.Count == 0)
-            {
-                <div class="wisechat-welcome">
-                    <MudIcon Icon="Icons.Material.Filled.Waving" Color="Color.Primary" Style="font-size: 3rem;"/>
-                    <MudText Typo="Typo.h6" Color="Color.Primary">Welcome to WiseONE!</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        How can I help you today?
-                    </MudText>
-                </div>
-            }
-
-            @foreach (var message in messages)
-            {
-                <div class="@($"wisechat-message {(message.IsFromUser ? "user" : "agent")}")">
-                    @if (!message.IsFromUser)
+                @* Messages Area *@
+                <div class="wisechat-messages" @ref="messagesContainer">
+                    @if (messages.Count == 0)
                     {
-                        <MudAvatar Color="Color.Primary" Size="Size.Small" Class="wisechat-avatar">
-                            <MudIcon Icon="Icons.Material.Filled.SupportAgent"/>
-                        </MudAvatar>
+                        <div class="wisechat-welcome">
+                            <MudIcon Icon="Icons.Material.Filled.Waving" Color="Color.Primary" Style="font-size: 3rem;"/>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">Welcome @(DisplayName ?? "User")!</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                How can I help you today?
+                            </MudText>
+                        </div>
                     }
-                    
-                    <div class="wisechat-message-content">
-                        <div class="wisechat-message-bubble">
-                            <div class="wisechat-formatted-content">
-                                @((MarkupString)FormatMessageContent(message.Content))
+
+                    @foreach (var message in messages)
+                    {
+                        <div class="@($"wisechat-message {(message.IsFromUser ? "user" : "agent")}")">
+                            @if (!message.IsFromUser)
+                            {
+                                <MudAvatar Color="Color.Primary" Size="Size.Small" Class="wisechat-avatar">
+                                    <MudIcon Icon="Icons.Material.Filled.SupportAgent"/> 
+                                </MudAvatar>
+                            }
+                            
+                            <div class="wisechat-message-content">
+                                <div class="wisechat-message-bubble">
+                                    @if (message.TableType == ChatMessageTableType.Asset)
+                                    {
+                                        @if (showCopyFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        @if (showExportFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        <div class="wisechat-icon-group">
+                                            <MudTooltip Text="Expand Table" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Class="wisechat-popout-btn" OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatAssetTableContent(message.Content)))" /></MudTooltip>
+                                            <MudTooltip Text="Export as CSV" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.Download" Class="wisechat-export-btn" OnClick="(() => ExportTable(message.Content, message.TableType))" /></MudTooltip>
+                                            <MudTooltip Text="Copy" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="wisechat-copy-btn" OnClick="@(async () => await CopyToClipboard(message.Content))" /></MudTooltip>
+                                        </div>
+                                        @((MarkupString)ChatMessageFormatter.FormatAssetTableContent(message.Content))
+                                    }
+                                    else if (message.TableType == ChatMessageTableType.Generic)
+                                    {
+                                        @if (showCopyFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        @if (showExportFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        <div class="wisechat-icon-group">
+                                            <MudTooltip Text="Expand Table" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Class="wisechat-popout-btn" OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatGenericTableContent(message.Content)))" /></MudTooltip>
+                                            <MudTooltip Text="Export as CSV" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.Download" Class="wisechat-export-btn" OnClick="(() => ExportTable(message.Content, message.TableType))" /></MudTooltip>
+                                            <MudTooltip Text="Copy" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="wisechat-copy-btn" OnClick="@(async () => await CopyToClipboard(message.Content))" /></MudTooltip>
+                                        </div>
+                                        @((MarkupString)ChatMessageFormatter.FormatGenericTableContent(message.Content))
+                                    }
+                                    else if (message.TableType == ChatMessageTableType.Json)
+                                    {
+                                        @if (showCopyFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        @if (showExportFeedback)
+                                        {
+                                            <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                        }
+                                        <div class="wisechat-icon-group">
+                                            <MudTooltip Text="Expand Table" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Class="wisechat-popout-btn" OnClick="(() => ShowTablePopup(ChatMessageFormatter.FormatJsonTableContent(message.Content)))" /></MudTooltip>
+                                            <MudTooltip Text="Export as CSV" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.Download" Class="wisechat-export-btn" OnClick="(() => ExportTable(message.Content, message.TableType))" /></MudTooltip>
+                                            <MudTooltip Text="Copy" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="wisechat-copy-btn" OnClick="@(async () => await CopyToClipboard(message.Content))" /></MudTooltip>
+                                        </div>
+                                        @((MarkupString)ChatMessageFormatter.FormatJsonTableContent(message.Content))
+                                    }
+                                    else
+                                    {
+                                        @if (!message.IsFromUser)
+                                        {
+                                            <div class="wisechat-icon-group">
+                                                <MudTooltip Text="Copy" PopperClass="wisechat-tooltip-pop"><MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="wisechat-copy-btn" OnClick="@(async () => await CopyToClipboard(message.Content))" /></MudTooltip>
+                                            </div>
+                                            @if (showCopyFeedback)
+                                            {
+                                                <div class="wisechat-icon-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+                                            }
+                                        }
+                                        @((MarkupString)ChatMessageFormatter.FormatGeneralMessageContent(message.Content))
+                                    }
+                                </div>
+                                <MudText Typo="Typo.caption" Class="wisechat-timestamp">
+                                    @message.Timestamp.ToString("HH:mm")
+                                </MudText>
+                            </div>
+
+                            @if (message.IsFromUser)
+                            {
+                                <div class="wisechat-message-status">
+                                    @if (message.Status == MessageStatus.Sending)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+                                    }
+                                    else if (message.Status == MessageStatus.Sent)
+                                    {
+                                        <MudIcon Icon="Icons.Material.Filled.Check" Size="Size.Small"/>
+                                    }
+                                    else if (message.Status == MessageStatus.Read)
+                                    {
+                                        <MudIcon Icon="Icons.Material.Filled.DoneAll" Size="Size.Small" Color="Color.Primary"/>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @* Status Message *@
+                    @if (!string.IsNullOrEmpty(statusMessage))
+                    {
+                        <div class="wisechat-status-message">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@statusMessage</MudText>
+                        </div>
+                    }
+
+                    @* Typing Indicator *@
+                    @if (isTyping)
+                    {
+                        <div class="wisechat-message agent">
+                            <MudAvatar Color="Color.Primary" Size="Size.Small" Class="wisechat-avatar">
+                                <MudIcon Icon="Icons.Material.Filled.SupportAgent"/>
+                            </MudAvatar>
+                            <div class="wisechat-typing-indicator">
+                                <div class="wisechat-typing-dots">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
                             </div>
                         </div>
-                        <MudText Typo="Typo.caption" Class="wisechat-timestamp">
-                            @message.Timestamp.ToString("HH:mm")
-                        </MudText>
-                    </div>
-
-                    @if (message.IsFromUser)
-                    {
-                        <div class="wisechat-message-status">
-                            @if (message.Status == MessageStatus.Sending)
-                            {
-                                <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
-                            }
-                            else if (message.Status == MessageStatus.Sent)
-                            {
-                                <MudIcon Icon="Icons.Material.Filled.Check" Size="Size.Small"/>
-                            }
-                            else if (message.Status == MessageStatus.Read)
-                            {
-                                <MudIcon Icon="Icons.Material.Filled.DoneAll" Size="Size.Small" Color="Color.Primary"/>
-                            }
-                        </div>
                     }
-                </div>
-            }
-
-            @* Status Message *@
-            @if (!string.IsNullOrEmpty(statusMessage))
-            {
-                <div class="wisechat-status-message">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@statusMessage</MudText>
-                </div>
-            }
-
-            @* Typing Indicator *@
-            @if (isTyping)
-            {
-                <div class="wisechat-message agent">
-                    <MudAvatar Color="Color.Primary" Size="Size.Small" Class="wisechat-avatar">
-                        <MudIcon Icon="Icons.Material.Filled.SupportAgent"/>
-                    </MudAvatar>
-                    <div class="wisechat-typing-indicator">
-                        <div class="wisechat-typing-dots">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-
-        @* Input Area *@
-        <div class="wisechat-input-area">
-            <div class="wisechat-input">
-                <div class="wisechat-input-wrapper">
-                    <input type="text"
-                           @bind="currentMessage"
-                           @bind:event="oninput"
-                           @onkeypress="OnKeyPress"
-                           placeholder="Ask me anything about WiseHR..."
-                           disabled="@(!isConnected || isSending)"
-                           class="wisechat-input-field" />
-
-                    <MudIconButton Icon="Icons.Material.Filled.Send" 
-                                  Color="Color.Secondary" 
-                                  OnClick="SendMessage"
-                                  Disabled="string.IsNullOrWhiteSpace(currentMessage) || !isConnected || isSending"
-                                  Class="wisechat-send-button"/>
+                    
                 </div>
             </div>
+
+            @* Input Area *@
+            <div class="wisechat-input-area">
+                <div class="wisechat-input-wrapper">
+                    <textarea
+                           @bind="currentMessage"
+                           @bind:event="oninput"
+                           @onkeydown="OnKeyPress"
+                           placeholder="Ask me anything about WiseONE..."
+                           disabled="@(!isConnected || isSending)"
+                           class="wisechat-input-field"
+                           rows="1"
+                           @ref="inputRef"></textarea>
+
+                    <MudFab IconSize="Size.Small" EndIcon="@(isOpen ? Icons.Material.Filled.Send : Icons.Material.Filled.Send)"
+                            OnClick="SendMessage"
+                            Disabled="string.IsNullOrWhiteSpace(currentMessage) || !isConnected || isSending"
+                            Class="wisechat-send-button"
+                            Title="Send" />
+                </div>
+            </div>
+
+            @* Scroll to Bottom Button *@
+            @if (showScrollToBottomButton)
+            {
+                
+                <MudFab IconSize="Size.Small" EndIcon="@(isOpen ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowForward)"
+                        OnClick="ScrollToBottom"
+                        Class="wisechat-scroll-to-bottom-fab"
+                        Title="Scroll Down" />
+            }
         </div>
     </div>
 </div>
@@ -158,6 +472,16 @@
         right: 20px;
         z-index: 9999;
         filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.15));
+    }
+
+    /* Absolute position wrapper to prevent UI encroachment */
+    .absolute-position-wrapper {
+        position: absolute; /* Changed to absolute */
+        bottom: 0;
+        right: 0;
+        width: 100%; /* Take full width of parent container */
+        height: 100%; /* Take full height of parent container */
+        pointer-events: none; /* Allow clicks to pass through */
     }
 
     /* Enhanced Widget Container with premium effects */
@@ -340,6 +664,139 @@
             box-shadow: 0 0 0 3px rgba(255, 159, 67, 0.3);
         }
 
+    /* Content Area for history panel and messages */
+    .wisechat-content {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+        width: 100%;
+    }
+
+    /* History Panel */
+    .wisechat-history-panel {
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        transition: all 0.4s ease-in-out;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid rgba(0, 0, 0, 0.1);
+        overflow: visible;
+    }
+
+        .wisechat-history-panel.show {
+            left: 0;
+        }
+
+    .wisechat-history-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.95);
+        text-align: center;
+        font-weight: bold;
+        color: var(--mud-palette-primary);
+        position: relative;
+        z-index: 1000;
+    }
+
+    .wisechat-history-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .wisechat-history-item {
+        padding: 8px 0;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        position: relative;
+    }
+
+    .wisechat-history-item-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.2s ease, box-shadow 0.2s;
+        background: transparent;
+    }
+
+    .wisechat-history-item-content:hover {
+        background: linear-gradient(90deg, #f3f4f8 0%, #e9eaf3 100%);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
+    }
+
+    .wisechat-history-item.active .wisechat-history-item-content {
+        background: linear-gradient(90deg, var(--mud-palette-primary-lighten) 0%, rgba(var(--mud-palette-primary-rgb), 0.1) 100%);
+        box-shadow: 0 4px 16px rgba(var(--mud-palette-primary-rgb), 0.10);
+    }
+
+    .wisechat-history-item-main {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .wisechat-history-item-title {
+        font-weight: 500;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .wisechat-history-item-time {
+        font-size: 0.8rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .wisechat-delete-button {
+        margin-left: 16px;
+        flex-shrink: 0;
+        opacity: 0.7;
+        transition: opacity 0.2s, color 0.2s, background 0.2s;
+        background: transparent;
+        border-radius: 50%;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .wisechat-delete-button:hover:not(:disabled) {
+        opacity: 1;
+        background: #ffeaea;
+        color: #d32f2f;
+    }
+
+    .wisechat-delete-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .wisechat-history-item.active {
+        background: linear-gradient(90deg, var(--mud-palette-primary-lighten) 0%, rgba(var(--mud-palette-primary-rgb), 0.1) 100%);
+        z-index: 2;
+    }
+
+    .wisechat-no-history {
+        padding: 2rem;
+        text-align: center;
+        color: var(--mud-palette-text-secondary);
+    }
+
+
     /* Premium messages area */
     .wisechat-messages {
         flex: 1;
@@ -348,6 +805,8 @@
         background: linear-gradient(180deg, #fafbfc 0%, #f8f9fa 100%);
         scroll-behavior: smooth;
         position: relative;
+        width: 100%;
+        z-index: 1;
     }
 
         .wisechat-messages::before {
@@ -431,19 +890,21 @@
 
     /* Stunning message bubbles */
     .wisechat-message-bubble {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        position: relative;
+        padding-top: 44px;
         padding: 14px 18px;
         border-radius: 20px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
-        position: relative;
         transition: all 0.3s ease;
         border: 1px solid rgba(0, 0, 0, 0.04);
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     }
-
-        .wisechat-message-bubble:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
-        }
+    .wisechat-message.user .wisechat-message-bubble {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+        padding-top: 14px !important;
+        padding-bottom: 14px !important;
+    }
 
     .wisechat-message.user .wisechat-message-bubble {
         background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
@@ -591,20 +1052,24 @@
         box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3);
     }
 
-        .wisechat-send-button:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(var(--mud-palette-primary-rgb), 0.4);
+        .wisechat-send-button .mud-icon-root.mud-svg-icon {
+            fill:white;
         }
 
-        .wisechat-send-button:active {
-            transform: translateY(0) scale(0.98);
-        }
+    .wisechat-send-button:hover:not(:disabled) {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(var(--mud-palette-primary-rgb), 0.4);
+    }
 
-        .wisechat-send-button:disabled {
-            opacity: 0.5;
-            transform: none;
-            box-shadow: none;
-        }
+    .wisechat-send-button:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    .wisechat-send-button:disabled {
+        opacity: 0.5;
+        transform: none;
+        box-shadow: none;
+    }
 
     .wisechat-status-message {
         text-align: center;
@@ -614,6 +1079,9 @@
         border-radius: 12px;
         animation: fadeIn 0.3s ease;
     }
+
+    /* Dark mode input support */
+   
 
     /* Animations */
     @@keyframes pulseGlow {
@@ -779,56 +1247,10 @@
     }
 
     /* Dark mode support */
-    @@media (prefers-color-scheme: dark) {
-        .wisechat-window
-
-    {
-        background: rgba(26, 32, 44, 0.95);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .wisechat-messages {
-        background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
-    }
-
-    .wisechat-message-bubble {
-        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-        color: white;
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .wisechat-input-wrapper {
-        background: #2d3748;
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .wisechat-input-field {
-        color: white;
-    }
-
-        .wisechat-input-field::placeholder {
-            color: #a0aec0;
-        }
-
-    }
+   
 
     /* High contrast mode support */
-    @@media (prefers-contrast: high) {
-        .wisechat-window
-
-    {
-        border: 2px solid #000;
-    }
-
-    .wisechat-message-bubble {
-        border: 1px solid #000;
-    }
-
-    .wisechat-input-wrapper {
-        border: 2px solid #000;
-    }
-
-    }
+   
 
     .wisechat-formatted-content {
         white-space: pre-wrap;
@@ -889,56 +1311,305 @@
         margin: 1rem 0 0.5rem 0;
     }
 
-    /* Dark mode support */
-    @@media (prefers-color-scheme: dark) {
-        .wisechat-formatted-content strong {
-            color: var(--mud-palette-primary-lighten);
-        }
+ 
+    /* Table Styles */
+    .wisechat-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
 
-        .wisechat-bullet .bullet,
-        .wisechat-nested-bullet .bullet {
-            color: var(--mud-palette-primary-lighten);
+    .wisechat-table th {
+        background: var(--mud-palette-primary);
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .wisechat-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .wisechat-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .wisechat-table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .wisechat-table tr:hover {
+        background: #f0f0f0;
+    }
+
+    /* Dark mode table support */
+  
+
+    /* Enhanced Asset Table Styles */
+    .wisechat-asset-table-container {
+        margin: 1rem 0;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    /* New generic table container style */
+    .wisechat-table-container {
+        margin: 1rem 0;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    .wisechat-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        font-size: 0.9rem;
+    }
+
+    .wisechat-table th {
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        color: white;
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .wisechat-table td {
+        padding: 16px;
+        border-bottom: 1px solid #eee;
+        vertical-align: top;
+    }
+
+    .wisechat-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .wisechat-table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .wisechat-table tr:hover {
+        background: #f0f0f0;
+        transition: background-color 0.2s ease;
+    }
+
+    .wisechat-table td:nth-child(4) {
+        max-width: 300px;
+        white-space: normal;
+    }
+
+
+
+    /* Scroll to Bottom Button Styles */
+    .wisechat-scroll-to-bottom-fab {
+        position: absolute;
+        bottom: 100px;
+        right: 20px;
+        z-index: 10;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 0.7;
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3);
+        border: 2px solid white;
+        animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: 40px;
+        height: 40px;
+        padding: 0 16px;
+    }
+
+    .wisechat-scroll-to-bottom-fab:hover {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(var(--mud-palette-primary-rgb), 0.4);
+    }
+
+    .wisechat-scroll-to-bottom-fab:active {
+        transform: translateY(-2px) scale(0.98);
+    }
+
+    .wisechat-scroll-to-bottom-fab .mud-icon-root {
+        font-size: 1.2rem;
+    }
+
+    @@keyframes bounceIn {
+        0% {
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
         }
+        100% {
+            opacity: 0.7;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .wisechat-window.expanded {
+        width: 800px;
+        height: 80vh;
+        max-width: 98vw;
+        max-height: 98vh;
+    }
+
+    /* Give more space to messages area in expanded mode */
+    .wisechat-window.expanded .wisechat-messages {
+        padding: 32px 32px 24px 32px;
+        font-size: 1.05rem;
+        min-height: 60vh;
+        max-height: calc(80vh - 120px); /* leave room for header and input */
+        height: auto;
+    }
+
+    .wisechat-window.expanded .wisechat-header {
+        padding: 14px 20px;
+    }
+
+    .wisechat-window.expanded .wisechat-input-area {
+        padding: 12px 20px;
+    }
+
+    .wisechat-expand-fab {
+        position: absolute;
+        top: 16px;
+        right: 80px;
+        z-index: 10000;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%);
+        box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.3);
+        border: 2px solid white;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .wisechat-expand-fab:hover {
+        opacity: 1;
+        transform: scale(1.08);
+    }
+
+    .wisechat-window.expanded .wisechat-message-bubble:has(table) {
+        width: 680px;
+    }
+
+    /* Icon group: default to flex above bubble, absolute only in expanded mode */
+    .wisechat-icon-group {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+        position: static;
+        z-index: 2;
+        background: transparent;
+        pointer-events: auto;
+    }
+    .wisechat-window.expanded .wisechat-icon-group {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        margin-bottom: 0;
+    }
+    .wisechat-message-bubble {
+        position: relative;
+        padding-top: 0;
+    }
+    .wisechat-window.expanded .wisechat-message-bubble {
+        padding-top: 44px;
+    }
+
+    .wisechat-icon-feedback {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 3;
+        background: #e8f5e9;
+        color: #43a047;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 2px 8px rgba(67,160,71,0.12);
+        animation: popFade 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    @@keyframes popFade {
+        0% { opacity: 0; transform: scale(0.7); }
+        20% { opacity: 1; transform: scale(1.15); }
+        60% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.7); }
+    }
+
+    /* ... existing styles ... */
+    .mud-tooltip-popper.wisechat-tooltip-pop {
+        z-index: 20001 !important;
     }
 </style>
 
 @code {
-    // Connection and State
+    private ElementReference inputRef;
     private bool isOpen = false;
     private bool isConnected = false;
     private bool isTyping = false;
     private bool isSending = false;
     private int unreadCount = 0;
     private string statusMessage = string.Empty;
+    private string currentSessionId = Guid.NewGuid().ToString();
+    private DateRange dateRange = new DateRange(DateTime.Now.AddMonths(-1), DateTime.Now);
 
-    // Messages
     private List<ChatMessage> messages = new();
     private string currentMessage = string.Empty;
 
-    // UI References
     private ElementReference messagesContainer;
 
-    // Data Models
-    [Parameter] public string? EmployeeId { get; set; }
+    private string? EmployeeId { get; set; }
+    private string? DisplayName { get; set; }
+    private bool showScrollToBottomButton = false;
 
-    public class ChatMessage
-    {
-        public string Content { get; set; } = string.Empty;
-        public bool IsFromUser { get; set; }
-        public DateTime Timestamp { get; set; }
-        public MessageStatus Status { get; set; } = MessageStatus.Sent;
-    }
+    private List<ChatSession> chatSessions = new();
+    private bool showHistory = false;
 
-    public enum MessageStatus
+    private bool isExpanded = false;
+
+    private HashSet<string> deletingSessionIds = new();
+
+    private ILookup<string, ChatSession> groupedSessions => chatSessions
+        .GroupBy(s => GetTimeGroup(s.LastActivityAt))
+        .ToLookup(g => g.Key, g => g.First());
+
+    private string GetTimeGroup(DateTime date)
     {
-        Sending,
-        Sent,
-        Read,
-        Failed
+        var now = DateTime.Now;
+        if (date >= now.AddDays(-7))
+            return "Last Week";
+        if (date >= now.AddMonths(-1))
+            return "Last Month";
+        if (date >= now.AddYears(-1))
+            return "Last Year";
+        return "Older";
     }
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadUserDetails();
+        await LoadChatHistory();
+        
         ChatService.OnChunkReceived += HandleChunkReceived;
         ChatService.OnStatusReceived += HandleStatusReceived;
         ChatService.OnConnectionStateChanged += HandleConnectionStateChanged;
@@ -946,11 +1617,135 @@
         await ChatService.InitializeAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("setupScrollListener", messagesContainer, DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public void SetScrollToBottomButtonVisibility(bool isVisible)
+    {
+        if (showScrollToBottomButton != isVisible)
+        {
+            showScrollToBottomButton = isVisible;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadChatHistory()
+    {
+        try
+        {
+            var history = await ChatHistoryService.GetUserHistoryAsync();
+            if (history != null)
+            {
+                chatSessions = history
+                    .GroupBy(m => m.SessionId)
+                    .Select(g => new ChatSession
+                    {
+                        SessionId = g.Key,
+                        Title = g.FirstOrDefault(m => m.IsFromUser)?.Content ?? "New Chat",
+                        CreatedAt = g.Min(m => m.Timestamp),
+                        LastActivityAt = g.Max(m => m.Timestamp),
+                        Messages = g.Select(m => new WiseHR.Models.Chat.ChatMessage
+                        {
+                            Content = m.Content,
+                            IsFromUser = m.IsFromUser,
+                            Timestamp = m.Timestamp,
+                            Status = WiseHR.Models.Chat.MessageStatus.Read,
+                            SessionId = m.SessionId,
+                            TableType = ChatMessageFormatter.GetChatMessageTableType(m.Content)
+                        }).OrderBy(m => m.Timestamp).ToList()
+                    })
+                    .Where(s => s.LastActivityAt >= dateRange.Start && s.LastActivityAt <= dateRange.End)
+                    .OrderByDescending(s => s.LastActivityAt)
+                    .ToList();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading chat history: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteSession(string sessionId)
+    {
+        try
+        {
+            deletingSessionIds.Add(sessionId);
+            chatSessions = chatSessions.Where(s => s.SessionId != sessionId).ToList(); // Optimistic UI
+            StateHasChanged();
+            await ChatHistoryService.DeleteSessionAsync(Guid.Parse(sessionId));
+            if (sessionId == currentSessionId)
+            {
+                await StartNewChat();
+            }
+            await LoadChatHistory();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting session: {ex.Message}");
+        }
+        finally
+        {
+            deletingSessionIds.Remove(sessionId);
+            StateHasChanged();
+        }
+    }
+
+    private async Task SwitchToSession(string sessionId)
+    {
+        try
+        {
+            var apiMessages = await ChatHistoryService.GetSessionHistoryAsync(Guid.Parse(sessionId));
+            currentSessionId = sessionId;
+            messages = apiMessages.Select(MapToLocalChatMessage).OrderBy(m => m.Timestamp).ToList();
+            showHistory = false;
+            AutoExpandIfTablePresent();
+            await ScrollToBottom();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error switching to session: {ex.Message}");
+        }
+    }
+
+    private async Task StartNewChat()
+    {
+        currentSessionId = Guid.NewGuid().ToString();
+        messages.Clear();
+        currentMessage = string.Empty;
+        statusMessage = string.Empty;
+        isTyping = false;
+        AutoExpandIfTablePresent();
+        await LoadChatHistory();
+        StateHasChanged();
+    }
+
+    private void AutoExpandIfTablePresent()
+    {
+        // Check if any message contains a table type
+        if (messages.Any(m => m.TableType == ChatMessageTableType.Generic || m.TableType == ChatMessageTableType.Asset || m.TableType == ChatMessageTableType.Json))
+        {
+            isExpanded = true;
+        }
+        else
+        {
+            isExpanded = false;
+        }
+    }
+
     private async void HandleChunkReceived(string chunk)
     {
         if (messages.Count > 0 && !messages.Last().IsFromUser)
         {
             messages.Last().Content += chunk;
+            messages.Last().TableType = ChatMessageFormatter.GetChatMessageTableType(messages.Last().Content);
         }
         else
         {
@@ -959,9 +1754,12 @@
                 Content = chunk,
                 IsFromUser = false,
                 Timestamp = DateTime.Now,
-                Status = MessageStatus.Read
+                Status = MessageStatus.Read,
+                SessionId = currentSessionId,
+                TableType = ChatMessageFormatter.GetChatMessageTableType(chunk)
             });
         }
+        AutoExpandIfTablePresent();
         await InvokeAsync(StateHasChanged);
         await ScrollToBottom();
     }
@@ -970,6 +1768,7 @@
     {
         statusMessage = status;
         await InvokeAsync(StateHasChanged);
+        await ScrollToBottom();
     }
 
     private async void HandleConnectionStateChanged()
@@ -977,6 +1776,7 @@
         isConnected = ChatService.IsConnected;
         statusMessage = isConnected ? string.Empty : "Connecting...";
         await InvokeAsync(StateHasChanged);
+        await ScrollToBottom();
     }
 
     private async Task ToggleChat()
@@ -989,6 +1789,11 @@
             await Task.Delay(100);
             await ScrollToBottom();
         }
+    }
+
+    private void ToggleExpand()
+    {
+        isExpanded = !isExpanded;
     }
 
     private void MinimizeChat()
@@ -1010,28 +1815,33 @@
             Content = messageContent,
             IsFromUser = true,
             Timestamp = DateTime.Now,
-            Status = MessageStatus.Sending
+            Status = MessageStatus.Sending,
+            SessionId = currentSessionId
         };
         
         messages.Add(chatMessage);
+        AutoExpandIfTablePresent();
         await InvokeAsync(StateHasChanged);
         await ScrollToBottom();
 
         try
         {
-            await ChatService.SendQueryAsync("User", messageContent, EmployeeId);
+            await ChatService.SendQueryAsync(DisplayName ?? "User", messageContent, EmployeeId, currentSessionId);
             chatMessage.Status = MessageStatus.Sent;
+            await ScrollToBottom();
         }
         catch (Exception ex)
         {
             chatMessage.Status = MessageStatus.Failed;
             statusMessage = "Failed to send message. Please try again.";
             Console.WriteLine($"Failed to send message: {ex.Message}");
+            await ScrollToBottom();
         }
         finally
         {
             isSending = false;
             await InvokeAsync(StateHasChanged);
+            await ScrollToBottom(); 
         }
     }
 
@@ -1039,7 +1849,16 @@
     {
         if (e.Key == "Enter" && !e.ShiftKey)
         {
-            await InvokeAsync(async () => await SendMessage());
+            if (e.ShiftKey)
+            {
+                var currentPosition = await JSRuntime.InvokeAsync<int>("getCursorPosition", inputRef);
+                currentMessage = currentMessage.Insert(currentPosition, "\n");
+                StateHasChanged();
+            }
+            else
+            {
+                await SendMessage();
+            }
         }
     }
 
@@ -1070,85 +1889,252 @@
         }
     }
 
-    private string FormatMessageContent(string content)
+    private async Task LoadUserDetails()
     {
-        if (string.IsNullOrEmpty(content))
-            return content;
-
-        // First, normalize line endings and remove any extra spaces
-        content = content.Replace("\r\n", "\n").Trim();
-
-        // Handle bold text (text between **)
-        var boldPattern = @"\*\*(.*?)\*\*";
-        var formattedContent = Regex.Replace(content, boldPattern, "<strong>$1</strong>");
-
-        // Split into lines and process
-        var lines = formattedContent.Split('\n');
-        var formattedLines = new List<string>();
-        var inBulletList = false;
-
-        foreach (var line in lines)
+        try
         {
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                formattedLines.Add("<div class='wisechat-spacing'></div>");
-                inBulletList = false;
-                continue;
-            }
+            var (role, authError) = await AuthService.VerifyToken();
+            
+            var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
 
-            // Handle bullet points (lines starting with - or *)
-            if (line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+            if (!string.IsNullOrWhiteSpace(email))
             {
-                if (!inBulletList)
-                {
-                    formattedLines.Add("<div class='wisechat-bullet-list'>");
-                    inBulletList = true;
-                }
+                var employee = await EmployeeService.GetEmployeeDetailsByEmail(email);
 
-                var bulletContent = line.TrimStart().Substring(1).TrimStart();
-                var isNested = line.StartsWith("    ");
-                var bulletClass = isNested ? "wisechat-nested-bullet" : "wisechat-bullet";
-                formattedLines.Add($"<div class='{bulletClass}'><span class='bullet'>•</span><span class='bullet-content'>{bulletContent}</span></div>");
-            }
-            // Handle numbered lists
-            else if (Regex.IsMatch(line.TrimStart(), @"^\d+\."))
-            {
-                if (inBulletList)
+                if (employee != null)
                 {
-                    formattedLines.Add("</div>");
-                    inBulletList = false;
+                    if (!string.IsNullOrWhiteSpace(employee.FirstName))
+                    {
+                        DisplayName = employee.FirstName;
+                    }
+                    else
+                    {
+                        DisplayName = GetInitialFromEmail(email);
+                    }
+                    EmployeeId = employee.EmployeeID;
                 }
-                var numberedContent = line.TrimStart();
-                formattedLines.Add($"<div class='wisechat-numbered-point'>{numberedContent}</div>");
+                else
+                {
+                    DisplayName = GetInitialFromEmail(email);
+                    EmployeeId = null;
+                }
             }
-            // Regular text
             else
             {
-                if (inBulletList)
-                {
-                    formattedLines.Add("</div>");
-                    inBulletList = false;
-                }
-                formattedLines.Add($"<div class='wisechat-text-line'>{line}</div>");
+                DisplayName = "Guest";
+                EmployeeId = null;
             }
         }
-
-        // Close any open bullet list
-        if (inBulletList)
+        catch (Exception ex)
         {
-            formattedLines.Add("</div>");
+            Console.WriteLine($"Error loading user details for chat widget: {ex.Message}");
+            DisplayName = "Guest";
+            EmployeeId = null;
         }
-
-        return string.Join("", formattedLines);
     }
 
-    private async Task StartNewChat()
+    private string GetInitialFromEmail(string email)
     {
-        messages.Clear();
-        currentMessage = string.Empty;
-        statusMessage = string.Empty;
-        isTyping = false;
+        return !string.IsNullOrWhiteSpace(email) ? email.Substring(0, 1).ToUpper() : "G";
+    }
+
+    private void ToggleHistory()
+    {
+        showHistory = !showHistory;
         StateHasChanged();
+    }
+
+    private ChatMessage MapToLocalChatMessage(ChatMessage message)
+    {
+        return new WiseHR.Models.Chat.ChatMessage
+        {
+            Content = message.Content,
+            IsFromUser = message.IsFromUser,
+            Timestamp = message.Timestamp,
+            Status = (MessageStatus)message.Status,
+            SessionId = message.SessionId,
+            TableType = ChatMessageFormatter.GetChatMessageTableType(message.Content)
+        };
+    }
+
+    private async Task OnDateRangeChanged(DateRange range)
+    {
+        dateRange = range;
+        await LoadChatHistory();
+    }
+
+    private void ShowTablePopup(string htmlContent)
+    {
+        var parameters = new DialogParameters {
+            ["HtmlContent"] = htmlContent,
+            ["RawContent"] = messages.LastOrDefault(m => ChatMessageFormatter.FormatAssetTableContent(m.Content) == htmlContent || ChatMessageFormatter.FormatGenericTableContent(m.Content) == htmlContent || ChatMessageFormatter.FormatJsonTableContent(m.Content) == htmlContent)?.Content ?? string.Empty,
+            ["TableType"] = messages.LastOrDefault(m => ChatMessageFormatter.FormatAssetTableContent(m.Content) == htmlContent || ChatMessageFormatter.FormatGenericTableContent(m.Content) == htmlContent || ChatMessageFormatter.FormatJsonTableContent(m.Content) == htmlContent)?.TableType ?? ChatMessageTableType.None
+        };
+        DialogService.Show<TablePopupDialog>("Table View", parameters, new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true });
+    }
+
+    private bool showCopyFeedback = false;
+    private bool showExportFeedback = false;
+    private async Task CopyToClipboard(string text)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        showCopyFeedback = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(1200);
+        showCopyFeedback = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ExportTable(string content, ChatMessageTableType tableType)
+    {
+        try
+        {
+            byte[] csvData;
+            switch (tableType)
+            {
+                case ChatMessageTableType.Json:
+                    csvData = ParseJsonTableToCsv(content);
+                    break;
+                case ChatMessageTableType.Generic:
+                    csvData = ParseMarkdownTableToCsv(content);
+                    break;
+                case ChatMessageTableType.Asset:
+                    csvData = ParseAssetTableToCsv(content);
+                    break;
+                default:
+                    throw new Exception("Unsupported table type for export.");
+            }
+            using var streamRef = new DotNetStreamReference(new MemoryStream(csvData));
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", "table-export.csv", streamRef);
+            showExportFeedback = true;
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(1200);
+            showExportFeedback = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error exporting table: {ex.Message}");
+        }
+    }
+
+    private byte[] ParseJsonTableToCsv(string content)
+    {
+        var json = JObject.Parse(content);
+        var data = json["data"];
+        if (data == null) return Array.Empty<byte>();
+        var sb = new StringBuilder();
+        var headers = (data.FirstOrDefault() as JObject)?.Properties().Select(p => p.Name).ToList();
+        if (headers != null)
+        {
+            sb.AppendLine(string.Join(",", headers.Select(h => $"\"{h}\"")));
+        }
+        foreach (var row in data)
+        {
+            var line = new List<string>();
+            foreach (var header in headers)
+            {
+                var value = row[header]?.ToString().Replace("\"", "\"\"") ?? "";
+                line.Add($"\"{value}\"");
+            }
+            sb.AppendLine(string.Join(",", line));
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private byte[] ParseMarkdownTableToCsv(string content)
+    {
+        // Split lines, remove empty, trim
+        var lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                           .Select(l => l.Trim()).ToList();
+        if (lines.Count < 2) return Array.Empty<byte>();
+        // Header row
+        var headers = lines[0].Split('|').Select(h => h.Trim()).ToList();
+        var sb = new StringBuilder();
+        sb.AppendLine(string.Join(",", headers.Select(h => $"\"{h}\"")));
+        // Data rows start from line 2
+        for (int i = 2; i < lines.Count; i++)
+        {
+            var row = lines[i].Split('|').Select(cell => cell.Trim().Replace("\"", "\"\"")).ToList();
+            while (row.Count < headers.Count) row.Add("");
+            if (row.Count > headers.Count) row = row.Take(headers.Count).ToList();
+            sb.AppendLine(string.Join(",", row.Select(cell => $"\"{cell}\"")));
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private byte[] ParseAssetTableToCsv(string content)
+    {
+        // Parse asset table as per FormatAssetTableContent
+        var lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                           .Select(line => line.Trim()).ToList();
+        var assets = new List<Dictionary<string, object?>>();
+        Dictionary<string, object?>? currentAsset = null;
+        List<string> instances = new List<string>();
+        string? currentAssetType = null;
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            if (line.StartsWith("Successfully executed")) continue;
+            if (System.Text.RegularExpressions.Regex.IsMatch(line, @"^[A-Za-z\s]+\s*\([\w\s-]+\)$"))
+            {
+                if (currentAsset != null)
+                {
+                    if (instances.Any())
+                        currentAsset["Instances"] = string.Join(", ", instances);
+                    assets.Add(currentAsset);
+                    instances = new List<string>();
+                }
+                currentAssetType = line.Trim();
+                currentAsset = new Dictionary<string, object?>
+                {
+                    { "Asset Type", currentAssetType },
+                    { "Tag Prefix", null },
+                    { "Total Instances", null },
+                    { "Instances", null }
+                };
+            }
+            else if (line.StartsWith("Asset Tag Prefix:"))
+            {
+                var parts = line.Split(':');
+                if (parts.Length >= 2 && currentAsset != null)
+                {
+                    currentAsset["Tag Prefix"] = parts[1].Trim();
+                }
+            }
+            else if (line.StartsWith("Total Instances:"))
+            {
+                var parts = line.Split(':');
+                if (parts.Length >= 2 && currentAsset != null)
+                {
+                    currentAsset["Total Instances"] = parts[1].Trim();
+                }
+            }
+            else if (line.StartsWith("Instances:"))
+            {
+                // Just a marker, do nothing
+            }
+            else if (line.StartsWith("- ") && currentAsset != null)
+            {
+                instances.Add(line.Substring(2).Trim());
+            }
+        }
+        if (currentAsset != null)
+        {
+            if (instances.Any())
+                currentAsset["Instances"] = string.Join(", ", instances);
+            assets.Add(currentAsset);
+        }
+        if (!assets.Any()) return Array.Empty<byte>();
+        var sb = new StringBuilder();
+        var headers = new[] { "Asset Type", "Tag Prefix", "Total Instances", "Instances" };
+        sb.AppendLine(string.Join(",", headers.Select(h => $"\"{h}\"")));
+        foreach (var asset in assets)
+        {
+            var row = headers.Select(h => asset.ContainsKey(h) && asset[h] != null ? asset[h]!.ToString()!.Replace("\"", "\"\"") : "").ToList();
+            sb.AppendLine(string.Join(",", row.Select(cell => $"\"{cell}\"")));
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
     public async ValueTask DisposeAsync()
@@ -1164,6 +2150,18 @@
     window.scrollToBottom = (element) => {
         if (element) {
             element.scrollTop = element.scrollHeight;
+        }
+    };
+
+    window.setupScrollListener = (element, dotNetHelper) => {
+        if (element) {
+            element.onscroll = () => {
+                const isAtBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 1; // +1 for tolerance
+                dotNetHelper.invokeMethodAsync('SetScrollToBottomButtonVisibility', !isAtBottom);
+            };
+            // Initial check
+            const initialIsAtBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 1;
+            dotNetHelper.invokeMethodAsync('SetScrollToBottomButtonVisibility', !initialIsAtBottom);
         }
     };
 </script>
