@@ -1,30 +1,3 @@
-import pyodbc
-from zk import ZK
-from datetime import datetime
-import urllib3
-import time
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-zk = ZK('10.10.21.150', port=4370, timeout=825, password="1515")
-
-CONNECTION_STRING = (
-1234
-)
-
-def get_existing_log(cursor, user_id, timestamp):
-    try:
-        query = """
-        SELECT COUNT(*) 
-        FROM AttendanceLogs
-        WHERE UserId = ? AND Timestamp = ?
-        """
-        cursor.execute(query, (user_id, timestamp))
-        count = cursor.fetchone()[0]
-        return count > 0
-    except pyodbc.Error as e:
-        print(f"❌ Error checking existing log: {e}")
-        return False
 
 def get_last_status(cursor, user_id, date):
     try:
