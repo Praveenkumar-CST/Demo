@@ -33,21 +33,7 @@ def send_all_logs(conn, cursor, user_map):
 
     print("📦 Preloading existing logs from DB...")
     try:
-        cursor.execute("SELECT UserId, Timestamp FROM AttendanceLogs")
-        existing_set = set((str(row.UserId), row.Timestamp.isoformat()) for row in cursor.fetchall())
-    except Exception as e:
-        print(f"❌ Failed to preload logs: {e}")
-        existing_set = set()
-
-    for log in logs:
-        user_id = str(log.user_id)
-        timestamp = log.timestamp
-        timestamp_str = timestamp.isoformat()
-        date_str = timestamp.date().isoformat()
-        name = user_map.get(log.user_id, "Unknown")
-
-        if (user_id, timestamp_str) in existing_set:
-            skipped_count += 1
+        cursor.execute("SELECT UserId, Timestamp FROM AttendanceLogs"
             continue
 
         last_status = get_last_status(cursor, user_id, date_str)
