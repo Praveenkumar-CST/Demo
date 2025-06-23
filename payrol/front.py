@@ -9,14 +9,3 @@ headers = {
     "Authorization": f"Bearer {access_token}",
     "Content-Type": "application/json"
 }
-                    "address": recipient_email
-                }
-            }
-        ]
-    }
-}
-
-response = requests.post(url, headers=headers, json=email_msg)
-
-print(f"Status Code: {response.status_code}")
-print(f"Response: {response.text}")
