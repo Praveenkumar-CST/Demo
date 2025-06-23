@@ -7,19 +7,6 @@ import time
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 zk = ZK('10.10.21.150', port=4370, timeout=825, password="1515")
-
-CONNECTION_STRING = (
-1234
-)
-
-def get_existing_log(cursor, user_id, timestamp):
-    try:
-        query = """
-
-        ))
-        cursor.connection.commit()
-        print(f"➕ Created log for user {data['userId']} at {data['timestamp']} as {data['status']}")
-        return True
     except pyodbc.Error as e:
         print(f"❌ Failed to create log: {e}")
         return False
