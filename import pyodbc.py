@@ -9,14 +9,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 zk = ZK('10.10.21.150', port=4370, timeout=825, password="1515")
 
 CONNECTION_STRING = (
-    "DRIVER=ODBC Driver 18 for SQL Server;"
-    "SERVER=40.81.241.23;"
-    "DATABASE=WiseHr;"
-    "UID=wiseuser;"
-    "PWD=Wise@User2025;"
-    "Encrypt=yes;"
-    "TrustServerCertificate=yes;"
-    "MultipleActiveResultSets=True;"
+1234
 )
 
 def get_existing_log(cursor, user_id, timestamp):
