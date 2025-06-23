@@ -1,73 +1,276 @@
 ﻿@page "/experience/{EmployeeId}"
 @using WiseHR.Models
 @inject ExperienceService ExperienceService
-@using MudBlazor
 @inject NavigationManager NavigationManager
-<div class="text-end">
-    <button class="btn btn-primary btn-sm" @onclick="NavigateToExpEditForm">Edit</button>
-</div>
-@if (experience != null)
-{
-    <div>
-        <h4>Education</h4>
-        @if (experience.EducationQualifications?.Any() == true)
-        {
-            <MudTable Items="experience.EducationQualifications" Bordered="true" Hover="true">
-                <HeaderContent>
-                    <MudTh>Qualification</MudTh>
-                    <MudTh>University</MudTh>
-                    <MudTh>College</MudTh>
+@using MudBlazor
 
-                    <MudTh>Year of Passing</MudTh>
-                    <MudTh>Percentage</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.Qualification</MudTd>
-                    <MudTd>@context.University</MudTd>
-                    <MudTd>@context.College</MudTd>
-                    <MudTd>@context.YearOfPassing</MudTd>
-                    <MudTd>@context.Percentage</MudTd>
-                </RowTemplate>
-            </MudTable>
+<MudThemeProvider />
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="experience-container">
+    @if (experience != null)
+    {
+        <MudCard Class="section-card mb-4">
+            <MudCardHeader Class="section-header">
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.School" Class="mr-2" />Experience Details</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" Class="btn-edit" StartIcon="@Icons.Material.Filled.Edit" OnClick="NavigateToExpEditForm">Edit</MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent Class="card-content-padded">
+                <!-- Education Qualifications -->
+                <MudText Typo="Typo.h6" Class="mb-3 section-title">Education Qualifications</MudText>
+                @if (experience.EducationQualifications?.Any() == true)
+                {
+                    <MudGrid Spacing="2">
+                        @foreach (var edu in experience.EducationQualifications)
+                        {
+                            <MudItem xs="12">
+                                <MudCard Class="sub-section-card">
+                                    <MudCardContent Class="card-content-padded">
+                                        <MudGrid>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>Qualification</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText>@edu.Qualification</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>University</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText>@edu.University</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>College</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText>@edu.College</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>Year of Passing</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText>@edu.YearOfPassing</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>Percentage</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText>@edu.Percentage</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                        </MudGrid>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+                else
+                {
+                    <MudCard Class="sub-section-card">
+                        <MudCardContent Class="card-content-padded d-flex align-center justify-center">
+                            <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">
+                                No education details available. <MudButton Color="Color.Primary" OnClick="NavigateToExpEditForm">Add now</MudButton>
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                }
+
+                <!-- Work Experiences -->
+                <MudText Typo="Typo.h6" Class="mt-5 mb-3 section-title">Work Experiences</MudText>
+                @if (experience.WorkExperiences?.Any() == true)
+                {
+                    <MudGrid Spacing="2">
+                        @foreach (var work in experience.WorkExperiences)
+                        {
+                            <MudItem xs="12">
+                                <MudCard Class="sub-section-card">
+                                    <MudCardContent Class="card-content-padded">
+                                        <MudGrid>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>Employer</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText Style="text-transform: capitalize;">@work.Employer</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>Location</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText Style="text-transform: capitalize;">@work.Location</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>Position</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText Style="text-transform: capitalize;">@work.Designation</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>Date of Joining</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText Style="text-transform: capitalize;">@work.DateOfJoining?.ToString("d")</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                            <MudItem xs="12" Class="info-row">
+                                                <MudGrid>
+                                                    <MudItem xs="4" Class="info-label"><MudText>Date of Leaving</MudText></MudItem>
+                                                    <MudItem xs="8" Class="info-value"><MudText Style="text-transform: capitalize;">@(work.DateOfLeaving?.ToString("d") ?? "Present")</MudText></MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                        </MudGrid>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+                else
+                {
+                    <MudCard Class="sub-section-card">
+                        <MudCardContent Class="card-content-padded d-flex align-center justify-center">
+                            <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">
+                                No work experience details available. <MudButton Color="Color.Primary" OnClick="NavigateToExpEditForm">Add now</MudButton>
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            </MudCardContent>
+        </MudCard>
+    }
+    else
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="loading-container" Style="min-height: 400px;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <MudText Typo="Typo.h6" Color="Color.Default">Loading experience details...</MudText>
+        </MudStack>
+    }
+</MudContainer>
+
+<style>
+    .experience-container {
+        padding: 3rem 1.5rem;
+    }
+
+    .section-card {
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        background-color: #ffffff;
+        padding: 0.5rem;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #3f51b5 0%, #9c27b0 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #c5cae9;
+        color: white;
+        display: flex;
+        align-items: center;
+    }
+
+        .section-header .mud-icon {
+            color: white;
         }
-        else
-        {
-            <MudText>No education details available.</MudText>
+
+    .card-content-padded {
+        padding: 2rem;
+    }
+
+    .sub-section-card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border-radius: 8px;
+        background-color: #ffffff;
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+
+    .section-title {
+        color: #3f51b5;
+        font-weight: 600;
+    }
+
+    .info-row {
+        margin-bottom: 0.5rem;
+        padding: 0.75rem 1rem;
+        transition: background-color 0.2s ease;
+    }
+
+        .info-row:hover {
+            background-color: #e8eaf6;
         }
-        <br/>
-        <h4>Work Experience</h4>
-        @if (experience.WorkExperiences?.Any() == true)
-        {
-            <MudTable Items="experience.WorkExperiences" Bordered="true" Hover="true">
-                <HeaderContent>
-                    <MudTh>Employer</MudTh>
-                    <MudTh>Location</MudTh>
-                    <MudTh>Position</MudTh>
-                    <MudTh>Date of Joining</MudTh>
-                    <MudTh>Date of Leaving</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd Style="text-transform: capitalize;">@context.Employer</MudTd>
-                    <MudTd Style="text-transform: capitalize;">@context.Location</MudTd>
-                    <MudTd Style="text-transform: capitalize;">@context.Designation</MudTd>
-                    <MudTd Style="text-transform: capitalize;">@context.DateOfJoining?.ToString("d")</MudTd>
-                    <MudTd Style="text-transform: capitalize;">@(context.DateOfLeaving?.ToString("d") ?? "Present")</MudTd>
-                </RowTemplate>
-            </MudTable>
+
+        .info-row:nth-child(odd) {
+            background-color: #f5f5f5;
+            border-radius: 4px;
         }
-        else
-        {
-            <MudText>No work experience details available.</MudText>
+
+    .info-label {
+        font-weight: 500;
+        color: #3f51b5;
+        background-color: #e8eaf6;
+        padding: 0.5rem;
+        border-radius: 4px;
+    }
+
+    .info-value {
+        color: #212121;
+        background-color: #ffffff;
+        padding: 0.5rem;
+        border-radius: 4px;
+        word-break: break-word;
+        overflow: visible;
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        transition: all 0.3s ease;
+    }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
         }
-    </div>
-}
-else
-{
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-        <MudText Align="Align.Center">Loading...</MudText>
-    </div>
-}
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 50px 0;
+        text-align: center;
+    }
+
+    @@media (max-width: 600px) {
+        .info-label, .info-value {
+            padding: 0.25rem;
+        }
+
+        .info-row {
+            padding: 0.5rem;
+        }
+
+        .card-content-padded {
+            padding: 1rem;
+        }
+
+        .sub-section-card {
+            padding: 0.5rem;
+        }
+
+        .experience-container {
+            padding: 1.5rem 1rem;
+        }
+    }
+</style>
+
 @code {
     [Parameter] public string EmployeeId { get; set; }
 
@@ -75,8 +278,14 @@ else
 
     private void NavigateToExpEditForm()
     {
-        // Navigate to edit page, optionally passing the employee ID
-        NavigationManager.NavigateTo($"/experienceEditForm/{experience.EmployeeID}");
+        if (experience != null && !string.IsNullOrEmpty(experience.EmployeeID))
+        {
+            NavigationManager.NavigateTo($"/experienceEditForm/{experience.EmployeeID}");
+        }
+        else
+        {
+            Console.WriteLine("Experience info or EmployeeID is not available.");
+        }
     }
 
     protected override async Task OnInitializedAsync()

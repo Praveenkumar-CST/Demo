@@ -15,8 +15,8 @@
     <MudItem xs="12" md="@(userRole == "Admin" || userRole == "Hr" ? 9 : 12)">
         <MudPaper Elevation="2" Class="pa-4 mb-4 d-flex align-center justify-space-between modern-title-container">
             <div class="d-flex align-center">
-                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" Class="mr-3 title-icon" Size="Size.Large" />
-                <MudText Typo="Typo.h4" Class="title-text">Organization Hierarchy</MudText>
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" Class="mr-2 title-icon" Size="Size.Medium" />
+                <MudText Typo="Typo.h5" Class="title-text">Organization Hierarchy</MudText>
             </div>
             @if (userRole == "Admin" || userRole == "Hr")
             {

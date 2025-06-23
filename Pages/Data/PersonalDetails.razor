@@ -1,177 +1,654 @@
 ﻿@page "/employeeDetails/{EmployeeId}"
 @inject NavigationManager NavigationManager
-
 @inject EmployeeService EmployeeService
-@if (employee != null)
-{
-    <div class="card">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h5 class="mb-0">@($"{employee.FirstName} {employee.LastName}")</h5>
-                    <h6 class="text-muted">@employee.Designation</h6>
-                </div>
-                <div class="text-end">
-                    <button class="btn btn-primary btn-sm" @onclick="NavigateToPersonalEditForm">Edit</button>
-                </div>
-            </div>
-            <table class="table table-bordered table-sm">
-                <thead class="table-light">
-                    <tr>
-                        <th colspan="2">Personal Information</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>EmployeeCode</td><td>@employee.EmployeeCode</td></tr>
-                    <tr><td>Email</td><td>@employee.CurrentEmail</td></tr>
-                    <tr><td>Gender</td><td>@employee.Gender</td></tr>
-                    <tr><td>Marital Status</td><td>@employee.MaritalStatus</td></tr>
-                    <tr><td>Date of Birth</td><td>@employee.DateOfBirth.Value.ToShortDateString()</td></tr>
-                    <tr><td>Blood Group</td><td>@employee.BloodGroup</td></tr>
-                    <tr><td>Nationality</td><td>@employee.Nationality</td></tr>
-                    <tr><td>Father's Name</td><td>@employee.FatherName</td></tr>
-                    <tr><td>Mother's Name</td><td>@employee.MotherName</td></tr>
-                    <tr><td>Sons</td><td>@employee.Sons</td></tr>
-                    <tr><td>Daughters</td><td>@employee.Daughters</td></tr>
-                    <tr><td>Allergies</td><td>@employee.Allergies</td></tr>
-                    <tr><td>Medications</td><td>@employee.Medications</td></tr>
-                    <tr><td>Physically Challenged</td><td>@employee.PhysicallyChallenged</td></tr>
-                    <tr><td colspan="2" style="height: 20px;"></td></tr> 
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@inject ILogger<EmployeeDetails> Logger
+@using MudBlazor.Services
 
-                </tbody>
-                <thead class="table-light">
-                    <tr>
-                        <th colspan="2">Employment Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>Employee ID</td><td>@employee.EmployeeID</td></tr>
-                    <tr><td>Type of Employment</td><td>@employee.TypeOfEmployment</td></tr>
-                    <tr><td>Level</td><td>@employee.Level</td></tr>
-                    <tr><td>Designation</td><td>@employee.Designation</td></tr>
-                    <tr><td>Joining Location</td><td>@employee.JoiningLocation</td></tr>
-                    <tr><td>Date of Joining</td><td>@employee.DateOfJoining.Value.ToShortDateString()</td></tr>
-                    <tr><td colspan="2" style="height: 20px;"></td></tr>
+<MudThemeProvider />
+<MudSnackbarProvider />
 
-                </tbody>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="employee-container">
+    @if (!string.IsNullOrEmpty(_searchError))
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-4 mb-4" ShowCloseIcon="true" CloseIconClicked="() => _searchError = null">@_searchError</MudAlert>
+    }
 
-                <thead class="table-light">
-                    <tr>
-                        <th colspan="2">Address Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>Current Address</td><td>@employee.CurrentAddress</td></tr>
-                    <tr><td>Current City</td><td>@employee.CurrentCity</td></tr>
-                    <tr><td>Current State</td><td>@employee.CurrentState</td></tr>
-                    <tr><td>Current Zip</td><td>@employee.CurrentZip</td></tr>
-                    <tr><td>Permanent Address</td><td>@employee.PermanentAddress</td></tr>
-                    <tr><td>Permanent City</td><td>@employee.PermanentCity</td></tr>
-                    <tr><td>Permanent State</td><td>@employee.PermanentState</td></tr>
-                    <tr><td>Permanent Zip</td><td>@employee.PermanentZip</td></tr>
-                    <tr><td colspan="2" style="height: 20px;"></td></tr>
+    @if (employee != null)
+    {
+        <MudCard Class="section-card employee-profile-card">
+            <MudCardHeader Class="employee-header pa-6">
+                <MudGrid>
+                    <MudItem xs="12" sm="2" Class="d-flex align-center justify-center">
+                        @if (!string.IsNullOrEmpty(employee.PhotoBase64Content) && !string.IsNullOrEmpty(employee.PhotoContentType))
+                        {
+                            <MudAvatar Class="employee-avatar" Style="width: 80px; height: 80px;">
+                                <img src="data:@employee.PhotoContentType;base64,@employee.PhotoBase64Content" alt="@employee.FirstName @employee.LastName" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+                            </MudAvatar>
+                        }
+                        else
+                        {
+                            <MudAvatar Class="employee-avatar" Color="Color.Transparent" Style="background: rgba(255, 255, 255, 0.2); font-size: 2rem; font-weight: bold; width: 80px; height: 80px;">
+                                @GetInitials(employee.FirstName, employee.LastName)
+                            </MudAvatar>
+                        }
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="d-flex flex-column">
+                        <MudText Typo="Typo.h5" Class="mb-2 employee-name">@($"{employee.FirstName} {employee.LastName}")</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-3 employee-designation">@employee.Designation</MudText>
+                        <MudChipSet T="string">
+                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Default">ID: @employee.EmployeeID</MudChip>
+                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Default">Code: @employee.EmployeeCode</MudChip>
+                            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Default">@employee.TypeOfEmployment</MudChip>
+                        </MudChipSet>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" Class="d-flex align-center justify-center justify-sm-end gap-2">
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" Class="btn-edit" StartIcon="@Icons.Material.Filled.Edit" OnClick="NavigateToPersonalEditForm">Edit Profile</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudCardHeader>
+        </MudCard>
 
-                </tbody>
+        <MudGrid Class="mt-4">
+            <MudItem xs="12" lg="6" Class="mb-4">
+                <MudCard Class="section-card">
+                    <MudCardHeader Class="section-header">
+                        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-2" />Personal Information</MudText>
+                    </MudCardHeader>
+                    <MudCardContent Class="card-content-padded">
+                        <MudGrid>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Email</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.CurrentEmail</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Gender</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.Gender</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Date of Birth</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.DateOfBirth?.ToShortDateString()</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Marital Status</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.MaritalStatus</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Blood Group</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.BloodGroup) ? "Not specified" : employee.BloodGroup)</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Nationality</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.Nationality</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
 
-                <thead class="table-light">
-                    <tr>
-                        <th colspan="2">Passport Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>Full Name</td><td>@employee.PassportFullName</td></tr>
-                    <tr><td>Passport No</td><td>@employee.PassportNo</td></tr>
-                    <tr><td>Nationality</td><td>@employee.PassportNationality</td></tr>
-                    <tr>
-                        <td>Issue Date</td>
-                        <td>@(employee.PassportIssueDate?.ToShortDateString() ?? "N/A")</td>
-                    </tr>
-                    <tr>
-                        <td>Expiry Date</td>
-                        <td>@(employee.PassportExpiryDate?.ToShortDateString() ?? "N/A")</td>
-                    </tr>
+            <MudItem xs="12" lg="6" Class="mb-4">
+                <MudCard Class="section-card">
+                    <MudCardHeader Class="section-header">
+                        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Work" Class="mr-2" />Employment Details</MudText>
+                    </MudCardHeader>
+                    <MudCardContent Class="card-content-padded">
+                        <MudGrid>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Employee ID</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.EmployeeID</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Employee Code</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.EmployeeCode</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Level</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.Level</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Joining Date</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.DateOfJoining?.ToShortDateString()</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Location</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@employee.JoiningLocation</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
 
-                    <tr><td>Place of Issue</td><td>@employee.PassportPlaceOfIssue</td></tr>
-                    <tr><td colspan="2" style="height: 20px;"></td></tr>
+            <MudItem xs="12" lg="6" Class="mb-4">
+                <MudCard Class="section-card">
+                    <MudCardHeader Class="section-header">
+                        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Home" Class="mr-2" />Family Information</MudText>
+                    </MudCardHeader>
+                    <MudCardContent Class="card-content-padded">
+                        <MudGrid>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Father's Name</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.FatherName) ? "Not specified" : employee.FatherName)</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Mother's Name</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.MotherName) ? "Not specified" : employee.MotherName)</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Sons</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@(employee.Sons?.ToString() ?? "0")</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Daughters</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@(employee.Daughters?.ToString() ?? "0")</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
 
-                </tbody>
+            <MudItem xs="12" lg="6" Class="mb-4">
+                <MudCard Class="section-card">
+                    <MudCardHeader Class="section-header">
+                        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Favorite" Class="mr-2" />Health Information</MudText>
+                    </MudCardHeader>
+                    <MudCardContent Class="card-content-padded">
+                        <MudGrid>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Blood Group</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.BloodGroup) ? "Not specified" : employee.BloodGroup)</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Allergies</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.Allergies) ? "None reported" : employee.Allergies)</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Medications</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.Medications) ? "None reported" : employee.Medications)</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" Class="info-row">
+                                <MudGrid>
+                                    <MudItem xs="4" Class="info-label"><MudText>Physically Challenged</MudText></MudItem>
+                                    <MudItem xs="8" Class="info-value"><MudText>@(employee.PhysicallyChallenged?.ToString() ?? "No")</MudText></MudItem>
+                                </MudGrid>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
 
-                <thead class="table-light">
-                    <tr>
-                        <th colspan="2">Emergency Contacts</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>Contact 1 Name</td><td>@employee.EmergencyContact1Name</td></tr>
-                    <tr><td>Relationship</td><td>@employee.EmergencyContact1Relationship</td></tr>
-                    <tr><td>Address</td><td>@employee.EmergencyContact1Address</td></tr>
-                    <tr><td>City</td><td>@employee.EmergencyContact1City</td></tr>
-                    <tr><td>State</td><td>@employee.EmergencyContact1State</td></tr>
-                    <tr><td>Zip</td><td>@employee.EmergencyContact1ZipCode</td></tr>
-                    <tr><td>Mobile</td><td>@employee.EmergencyContact1Mobile</td></tr>
+            <MudItem xs="12" Class="mb-4">
+                <MudCard Class="section-card">
+                    <MudCardHeader Class="section-header">
+                        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.LocationOn" Class="mr-2" />Address Information</MudText>
+                    </MudCardHeader>
+                    <MudCardContent Class="card-content-padded">
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.subtitle1" Class="mb-3 address-subsection-title">Current Address</MudText> <br/>
+                                <MudGrid>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Address</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.CurrentAddress) ? "Not specified" : employee.CurrentAddress)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>City</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@employee.CurrentCity</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>State</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@employee.CurrentState</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>ZIP Code</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@employee.CurrentZip</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" md="6" Class="border-md-start">
+                                <MudText Typo="Typo.subtitle1" Class="mb-3 address-subsection-title">Permanent Address</MudText> <br />
+                                <MudGrid>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Address</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.PermanentAddress) ? "Not specified" : employee.PermanentAddress)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>City</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@employee.PermanentCity</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>State</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@employee.PermanentState</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>ZIP Code</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@employee.PermanentZip</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
 
-                    <tr><td>Contact 2 Name</td><td>@employee.EmergencyContact2Name</td></tr>
-                    <tr><td>Relationship</td><td>@employee.EmergencyContact2Relationship</td></tr>
-                    <tr><td>Address</td><td>@employee.EmergencyContact2Address</td></tr>
-                    <tr><td>City</td><td>@employee.EmergencyContact2City</td></tr>
-                    <tr><td>State</td><td>@employee.EmergencyContact2State</td></tr>
-                    <tr><td>Zip</td><td>@employee.EmergencyContact2ZipCode</td></tr>
-                    <tr><td>Mobile</td><td>@employee.EmergencyContact2Mobile</td></tr>
-                    <tr><td colspan="2" style="height: 20px;"></td></tr>
+            <MudItem xs="12" Class="mb-4">
+                <MudCard Class="section-card">
+                    <MudCardHeader Class="section-header">
+                        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Book" Class="mr-2" />Passport Information</MudText>
+                    </MudCardHeader>
+                    <MudCardContent Class="card-content-padded">
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudGrid>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Full Name</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.PassportFullName) ? "Not specified" : employee.PassportFullName)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Passport No</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.PassportNo) ? "Not specified" : employee.PassportNo)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Nationality</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.PassportNationality) ? "Not specified" : employee.PassportNationality)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudGrid>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Issue Date</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(employee.PassportIssueDate?.ToShortDateString() ?? "Not specified")</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Expiry Date</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(employee.PassportExpiryDate?.ToShortDateString() ?? "Not specified")</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Place of Issue</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.PassportPlaceOfIssue) ? "Not specified" : employee.PassportPlaceOfIssue)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
 
-                </tbody>
+            <MudItem xs="12" Class="mb-4">
+                <MudCard Class="section-card">
+                    <MudCardHeader Class="section-header">
+                        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Phone" Class="mr-2" />Emergency Contacts</MudText> <br />
+                    </MudCardHeader>
+                    <MudCardContent Class="card-content-padded">
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.subtitle1" Class="mb-3 emergency-subsection-title">Primary Contact</MudText><br/>
+                                <MudGrid>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Name</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.EmergencyContact1Name) ? "Not specified" : employee.EmergencyContact1Name)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Relationship</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.EmergencyContact1Relationship) ? "Not specified" : employee.EmergencyContact1Relationship)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Mobile</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.EmergencyContact1Mobile) ? "Not specified" : employee.EmergencyContact1Mobile)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Address</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.EmergencyContact1Address) ? "Not specified" : employee.EmergencyContact1Address)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>City, State ZIP</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@($"{employee.EmergencyContact1City}, {employee.EmergencyContact1State} {employee.EmergencyContact1ZipCode}".Trim(new char[] { ',', ' ' }))</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem xs="12" md="6" Class="border-md-start">
+                                <MudText Typo="Typo.subtitle1" Class="mb-3 emergency-subsection-title">Secondary Contact</MudText> <br />
+                                <MudGrid>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Name</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.EmergencyContact2Name) ? "Not specified" : employee.EmergencyContact2Name)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Relationship</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.EmergencyContact2Relationship) ? "Not specified" : employee.EmergencyContact2Relationship)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Mobile</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.EmergencyContact2Mobile) ? "Not specified" : employee.EmergencyContact2Mobile)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>Address</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@(string.IsNullOrEmpty(employee.EmergencyContact2Address) ? "Not specified" : employee.EmergencyContact2Address)</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                    <MudItem xs="12" Class="info-row">
+                                        <MudGrid>
+                                            <MudItem xs="4" Class="info-label"><MudText>City, State ZIP</MudText></MudItem>
+                                            <MudItem xs="8" Class="info-value"><MudText>@($"{employee.EmergencyContact2City}, {employee.EmergencyContact2State} {employee.EmergencyContact2ZipCode}".Trim(new char[] { ',', ' ' }))</MudText></MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="loading-container" Style="min-height: 400px;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <MudText Typo="Typo.h6" Color="Color.Default">Loading employee details...</MudText>
+        </MudStack>
+    }
+</MudContainer>
 
-                @* <thead class="table-light"> *@
-                @*     <tr> *@
-                @*         <th colspan="2">Nominee Details</th> *@
-                @*     </tr> *@
-                @* </thead> *@
-                @* <tbody> *@
-                @*     <tr><td>Name</td><td>@employee.NomineeName</td></tr> *@
-                @*     <tr><td>Relationship</td><td>@employee.NomineeRelationship</td></tr> *@
-                @*     <tr><td>Address</td><td>@employee.NomineeAddress</td></tr> *@
-                @*     <tr><td>City</td><td>@employee.NomineeCity</td></tr> *@
-                @*     <tr><td>State</td><td>@employee.NomineeState</td></tr> *@
-                @*     <tr><td>Zip</td><td>@employee.NomineeZipCode</td></tr> *@
-                @*     <tr><td>Mobile</td><td>@employee.NomineeMobile</td></tr> *@
-                @*     <tr><td colspan="2" style="height: 20px;"></td></tr> *@
+<style>
+    .employee-container {
+        padding: 3rem 1.5rem;
+    }
 
-                @* </tbody> *@
+    .employee-profile-card {
+        margin-bottom: 24px;
+    }
 
-                @* <thead class="table-light"> *@
-                @*     <tr> *@
-                @*         <th colspan="2">Timestamps</th> *@
-                @*     </tr> *@
-                @* </thead> *@
-                @* <tbody> *@
-                @*     <tr><td>Created At</td><td>@employee.CreatedAt.ToShortDateString()</td></tr> *@
-                @*     <tr><td>Last Modified At</td><td>@employee.LastModifiedAt.ToShortDateString()</td></tr> *@
-                @* </tbody> *@
-            </table>
-        </div>
-    </div>
-}
-else
-{
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-        <MudText Align="Align.Center">Loading...</MudText>
-    </div>
-}
+    .employee-header {
+        background: linear-gradient(135deg, #3f51b5 0%, #9c27b0 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .employee-name {
+        font-weight: 600;
+    }
+
+    .employee-designation {
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .employee-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+        font-weight: bold;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .btn-edit {
+        min-width: 150px;
+        background: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
+    }
+
+    .section-card {
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        background-color: #ffffff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 0.5rem;
+    }
+
+    .section-header {
+        background-color: #e8eaf6;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #c5cae9;
+        color: #1a237e;
+        display: flex;
+        align-items: center;
+    }
+
+        .section-header .mud-icon {
+            color: #3f51b5;
+        }
+
+    .card-content-padded {
+        padding: 2rem;
+        flex-grow: 1;
+    }
+
+    .info-row {
+        margin-bottom: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .info-label {
+        font-weight: 500;
+        color: #3f51b5;
+        background-color: #e8eaf6;
+        padding: 0.5rem;
+        border-radius: 4px;
+    }
+
+    .info-value {
+        color: #212121;
+        background-color: #ffffff;
+        padding: 0.5rem;
+        border-radius: 4px;
+        word-break: break-word;
+        overflow: visible;
+    }
+
+    .info-row:nth-child(odd) {
+        background-color: #f5f5f5;
+        border-radius: 4px;
+    }
+
+    .address-subsection-title,
+    .emergency-subsection-title {
+        color: #3f51b5;
+        font-weight: 600;
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 50px 0;
+        text-align: center;
+    }
+
+    .border-md-start {
+        border-left: 1px solid #c5cae9;
+    }
+
+    @@media (max-width: 960px) {
+        .border-md-start {
+            border-left: none;
+            border-top: 1px solid #c5cae9;
+        }
+
+        .employee-header .mud-grid {
+            flex-direction: column;
+            align-items: center;
+        }
+
+            .employee-header .mud-grid > .mud-grid-item {
+                justify-content: center !important;
+                margin-bottom: 1rem;
+            }
+
+        .employee-header .mud-chipset {
+            justify-content: center;
+        }
+    }
+</style>
 
 @code {
     [Parameter] public string EmployeeId { get; set; }
 
     private EmployeeDetails employee;
+    private string _searchError;
+
+    private async Task Logout()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "email");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "empId");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "EmpId");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "recentEmployees");
+
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "EmpId");
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "email");
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "role");
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "userRole");
+
+            Logger.LogInformation("User logged out successfully. LocalStorage and sessionStorage cleared.");
+
+            Snackbar.Add("Logged out successfully!", Severity.Success);
+            await Task.Delay(2000);
+
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during logout");
+            Snackbar.Add("Failed to log out. Please try again or clear your browser storage manually.", Severity.Error);
+            _searchError = "Logout failed. Please try again.";
+            StateHasChanged();
+        }
+    }
+
     private void NavigateToPersonalEditForm()
     {
-        // Navigate to edit page, optionally passing the employee ID
         NavigationManager.NavigateTo($"personalEditForm/{employee.EmployeeID}");
     }
 
+    private string GetInitials(string firstName, string lastName)
+    {
+        var first = !string.IsNullOrEmpty(firstName) ? firstName.Substring(0, 1).ToUpper() : "";
+        var last = !string.IsNullOrEmpty(lastName) ? lastName.Substring(0, 1).ToUpper() : "";
+        return first + last;
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        employee = await EmployeeService.GetEmployeeDetails(EmployeeId);
+        try
+        {
+            employee = await EmployeeService.GetEmployeeDetails(EmployeeId);
+            if (employee == null)
+            {
+                _searchError = "Employee not found.";
+                Logger.LogWarning($"Employee with ID {EmployeeId} not found.");
+            }
+            else if (!string.IsNullOrEmpty(employee.PhotoBase64Content))
+            {
+                try
+                {
+                    Convert.FromBase64String(employee.PhotoBase64Content);
+                }
+                catch (FormatException)
+                {
+                    Logger.LogWarning($"Invalid Base64 photo content for employee ID {EmployeeId}");
+                    employee.PhotoBase64Content = null;
+                    _searchError = "Invalid photo data. Displaying default avatar.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, $"Error loading employee details for ID {EmployeeId}");
+            _searchError = "An error occurred while loading employee details.";
+        }
+        StateHasChanged();
     }
 }
