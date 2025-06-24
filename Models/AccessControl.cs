@@ -1,5 +1,4 @@
 ﻿using MudBlazor;
-
 namespace WiseHR.Models
 {
     public static class AccessControl
@@ -30,7 +29,7 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports"),
+                    ("HIDE_ReportList", "/reports"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
                     ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
@@ -65,11 +64,12 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
                     ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
                     //("Asset","/asset"),
+                    ("HIDE_ReportList", "/reports"),
+                    ("List","/reportlist"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
                     ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
@@ -104,6 +104,7 @@ namespace WiseHR.Models
                     ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
                     ("Asset","/asset"),
+                    ("List","/reportlist"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
                     ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
@@ -125,13 +126,6 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
-                }
-            },
-            {
-                "mentor", new List<(string, string)>
-                {
-                    ("Dashboard", "/home"),
-                    ("Fortnight Report", "/fortnight-report"),
                 }
             }
         };
