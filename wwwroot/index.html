@@ -257,7 +257,8 @@
     <script type="module" src="storage.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="storage.js"></script>
-
+    <!-- Add SheetJS library for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         // Generate animated particles
         const particlesContainer = document.getElementById('particles');
@@ -279,13 +280,13 @@
             try {
                 // Create worksheet from the data
                 const worksheet = XLSX.utils.json_to_sheet(data);
-                
+
                 // Create a new workbook
                 const workbook = XLSX.utils.book_new();
-                
+
                 // Add the worksheet to the workbook
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
-                
+
                 // Generate the Excel file and trigger download
                 XLSX.writeFile(workbook, fileName);
                 return true;
@@ -427,6 +428,7 @@
             progressText.textContent = "Error loading application";
             clearInterval(fallbackInterval);
         });
+        window.downloadBase64File = (contentType, base64Data, fileName) => { const linkSource = `data:${contentType};base64,${base64Data}`; const downloadLink = document.createElement("a"); downloadLink.href = linkSource; downloadLink.download = fileName; downloadLink.click(); };
     </script>
 </body>
 </html>
