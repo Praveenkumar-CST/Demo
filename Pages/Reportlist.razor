@@ -2,11 +2,13 @@
 @using System.Globalization
 @using MudBlazor
 @using WiseHR.Models
+@using WiseHR.Pages.Form
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 @inject ReportService ReportService
 @inject EmployeeService EmployeeService
 @inject IJSRuntime JSRuntime
+@inject IDialogService DialogService
 @layout WiseHR.Components.sidebar.HomeLayout
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="py-2">
@@ -15,10 +17,9 @@
         @pageTitle
     </MudText>
     <!-- Buttons for Admin -->
-     <div class="d-flex justify-space-between align-center mb-2">
-        @if (currentUserRole == "Admin" || currentUserRole == "Hr") 
+    <div class="d-flex justify-space-between align-center mb-2">
+        @if (currentUserRole == "Admin" || currentUserRole == "Hr")
         {
-
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
@@ -29,18 +30,16 @@
                 Add Report
             </MudButton>
         }
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Success"
-                       OnClick="@ExportAllToExcel"
-                       StartIcon="@Icons.Material.Filled.Download"
-                       Size="Size.Small"
-                       Margin="Margin.Dense"
-                       Class="admin-button">
-                Export to Excel
-            </MudButton>
-        </div>
-    
-
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Success"
+                   OnClick="@ExportAllToExcel"
+                   StartIcon="@Icons.Material.Filled.Download"
+                   Size="Size.Small"
+                   Margin="Margin.Dense"
+                   Class="admin-button">
+            Export to Excel
+        </MudButton>
+    </div>
 
     <!-- Filter Controls -->
     <MudPaper Class="pa-2 mb-2" Elevation="1">
@@ -88,14 +87,14 @@
                               OnKeyDown="@OnSearchKeyDown"
                               Class="flex-grow-1 small-textfield">
                     <Adornment>
-                        <MudIconButton Icon="@Icons.Material.Filled.Search" 
+                        <MudIconButton Icon="@Icons.Material.Filled.Search"
                                        OnClick="@ApplySearch"
                                        Color="Color.Primary"
                                        Size="Size.Small"/>
                     </Adornment>
                 </MudTextField>
-                <MudButton Variant="Variant.Text" 
-                           Color="Color.Primary" 
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Primary"
                            OnClick="@ClearFilters"
                            Class="ml-1"
                            EndIcon="@Icons.Material.Filled.Clear"
@@ -104,7 +103,6 @@
                     Clear
                 </MudButton>
             </MudItem>
-        
         </MudGrid>
     </MudPaper>
 
@@ -119,11 +117,11 @@
     {
         <MudPaper Elevation="2" Class="pa-2" Style="min-height: 300px;">
             <div class="table-container">
-                <MudTable Class="reports-table" 
-                          Items="@currentPageReports" 
-                          Hover="true" 
-                          Dense="true" 
-                          Striped="true" 
+                <MudTable Class="reports-table"
+                          Items="@currentPageReports"
+                          Hover="true"
+                          Dense="true"
+                          Striped="true"
                           Loading="@isLoading">
                     <HeaderContent>
                         <MudTh Class="col-id">ID</MudTh>
@@ -136,8 +134,11 @@
                         <MudTh Class="col-projects">Projects</MudTh>
                         <MudTh Class="col-perf">Perf 1</MudTh>
                         <MudTh Class="col-feedback">Feedback 1</MudTh>
+                        <MudTh Class="col-st1">StoryPoint 1</MudTh>
                         <MudTh Class="col-perf">Perf 2</MudTh>
                         <MudTh Class="col-feedback">Feedback 2</MudTh>
+                        <MudTh Class="col-st2">StoryPoint 2</MudTh>
+                        <MudTh Class="col-tot">Total</MudTh>
                         <MudTh Class="col-date">Date</MudTh>
                         <MudTh Class="col-actions">Actions</MudTh>
                     </HeaderContent>
@@ -177,7 +178,13 @@
                             <div class="cell-content" title="@context.Feedback1">
                                 @(!string.IsNullOrEmpty(context.Feedback1) ? context.Feedback1 : "-")
                             </div>
+                        </MudTd> 
+                        <MudTd class="col-st1">
+                            <div class="cell-content" title="@(context.CompletedStoryPoints1?.ToString() ?? "-")">
+                                @(context.CompletedStoryPoints1.HasValue ? context.CompletedStoryPoints1.Value.ToString() : "-")
+                            </div>
                         </MudTd>
+
                         <MudTd Class="col-perf">
                             <div class="cell-content" title="@context.Performance2">
                                 @(!string.IsNullOrEmpty(context.Performance2) ? context.Performance2 : "-")
@@ -188,6 +195,19 @@
                                 @(!string.IsNullOrEmpty(context.Feedback2) ? context.Feedback2 : "-")
                             </div>
                         </MudTd>
+                        <MudTd class="col-st1">
+                            <div class="cell-content" title="@(context.CompletedStoryPoints2?.ToString() ?? "-")">
+                                @(context.CompletedStoryPoints2.HasValue ? context.CompletedStoryPoints2.Value.ToString() : "-")
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-tot">
+                            <div class="cell-content">
+                                @{
+                                    int total = (context.CompletedStoryPoints1 ?? 0) + (context.CompletedStoryPoints2 ?? 0);
+                                    @total
+                                }
+                            </div>
+                        </MudTd>
                         <MudTd Class="col-date">
                             <div class="cell-content">
                                 @context.SubmittedOn.ToString("dd MMM yyyy")
@@ -196,26 +216,27 @@
                         <MudTd Class="col-actions">
                             <div class="d-flex">
                                 <MudTooltip Text="Download">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Download" 
-                                                   OnClick="@(() => DownloadReport(context.Id, context.ProjectsWorkedOn))" 
+                                    <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                                   OnClick="@(() => DownloadReport(context.Id, context.ProjectsWorkedOn))"
                                                    Color="Color.Primary"
                                                    Size="Size.Small"/>
                                 </MudTooltip>
-                                @* @if (CanEditReport(context)) *@
-                                @* { *@
-                                @*     <MudTooltip Text="Edit"> *@
-                                @*         <MudIconButton Icon="@Icons.Material.Filled.Edit"  *@
-                                @*                        OnClick="@(() => EditReport(context.Id))"  *@
-                                @*                        Color="Color.Info" *@
-                                @*                        Size="Size.Small" *@
-                                @*                        Class="ml-1"/> *@
-                                @*     </MudTooltip> *@
-                                @* } *@
+
+                                @if (CanEditReport(context))
+                                {
+                                    <MudTooltip Text="Edit">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       OnClick="@(() => EditReport(context.Id))"
+                                                       Color="Color.Info"
+                                                       Size="Size.Small"
+                                                       Class="ml-1"/>
+                                    </MudTooltip>
+                                }
                                 @if (CanDeleteReport())
                                 {
                                     <MudTooltip Text="Delete">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
-                                                       OnClick="@(() => DeleteReport(context.Id))" 
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       OnClick="@(() => ShowDeleteConfirmation(context.Id, context.MenteeName, context.ProjectsWorkedOn))"
                                                        Color="Color.Error"
                                                        Size="Size.Small"
                                                        Class="ml-1"/>
@@ -231,9 +252,9 @@
             </div>
             <div class="d-flex justify-space-between align-center mt-2">
                 <MudText Typo="Typo.caption">Showing @((currentPage - 1) * pageSize + 1) to @Math.Min(currentPage * pageSize, totalItems) of @totalItems reports</MudText>
-                <MudPagination Count="@totalPages" 
-                               Selected="@currentPage" 
-                               BoundaryCount="1" 
+                <MudPagination Count="@totalPages"
+                               Selected="@currentPage"
+                               BoundaryCount="1"
                                SelectedColor="Color.Primary"
                                Variant="Variant.Text"
                                Size="Size.Small"
@@ -323,8 +344,8 @@
     private int totalItems;
     private int totalPages => (int)Math.Ceiling((double)totalItems / pageSize);
 
-    private int selectedYear = DateTime.Now.Year;
-    private int selectedMonth = DateTime.Now.Month;
+    private int selectedYear = DateTime.UtcNow.Year;
+    private int selectedMonth = DateTime.UtcNow.Month;
     private string searchQuery = string.Empty;
     private List<int> availableYears = [];
     private List<ReportModel> allReports = [];
@@ -436,8 +457,9 @@
 
     private bool CanEditReport(ReportModel report)
     {
-        return currentUserRole is "Admin";
+        return currentUserRole is "Admin" or "HR";
     }
+
     private bool CanDeleteReport()
     {
         return currentUserRole is "Admin" or "HR";
@@ -538,18 +560,74 @@
         return string.Join("_", fileName.Split(invalidChars));
     }
 
-    private void EditReport(int reportId)
+    private async Task EditReport(int reportId)
     {
-        if (currentUserRole is "Employee" or "Manager")
+        Console.WriteLine($"Navigating to edit report with ID: {reportId}");
+        var parameters = new DialogParameters
         {
-            var report = allReports.FirstOrDefault(r => r.Id == reportId);
-            if (report == null || !(report.MenteeEmployeeID?.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase) ?? false))
+            { nameof(FortnightReportForm.ReportId), reportId }
+        };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true,
+        };
+        var dialog = await DialogService.ShowAsync<FortnightReportForm>("Edit Report", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled && result.Data is bool success && success)
+        {
+            await LoadAllReports();
+            ApplyFilters();
+        }
+    }
+
+    private async Task ShowDeleteConfirmation(int reportId, string menteeName, string projectName)
+    {
+        if (reportId <= 0 || string.IsNullOrEmpty(menteeName))
+            return;
+
+        bool? confirmed = await DialogService.ShowMessageBox(
+            title: "Confirm Delete",
+            message: $"Are you sure you want to delete report {reportId} for {menteeName} (Project: {projectName ?? "N/A"})? This action cannot be undone.",
+            yesText: "Delete",
+            cancelText: "Cancel",
+            options: new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }
+        );
+
+        if (confirmed == true)
+        {
+            await DeleteReport(reportId);
+        }
+    }
+
+    private async Task DeleteReport(int reportId)
+    {
+        if (currentUserRole is not ("Admin" or "HR"))
+        {
+            Snackbar.Add("You don't have permission to delete reports", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            var success = await ReportService.DeleteReportAsync(reportId);
+            if (success)
             {
-                Snackbar.Add("You can only edit your own reports", Severity.Error);
-                return;
+                Snackbar.Add($"Report {reportId} deleted successfully", Severity.Success);
+                await LoadAllReports();
+                ApplyFilters();
+            }
+            else
+            {
+                Snackbar.Add("Failed to delete report", Severity.Error);
             }
         }
-        NavigationManager.NavigateTo("/reports");
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting report {reportId}: {ex.Message}");
+            Snackbar.Add($"Error deleting report {reportId}: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task InitializeAvailableYears()
@@ -561,13 +639,13 @@
                 .Distinct()
                 .ToList();
 
-            if (!reportYears.Contains(DateTime.Now.Year))
+            if (!reportYears.Contains(DateTime.UtcNow.Year))
             {
-                reportYears.Add(DateTime.Now.Year);
+                reportYears.Add(DateTime.UtcNow.Year);
             }
 
-            var minYear = reportYears.Any() ? reportYears.Min() : DateTime.Now.Year;
-            for (int year = DateTime.Now.Year - 1; year >= minYear - 5; year--)
+            var minYear = reportYears.Any() ? reportYears.Min() : DateTime.UtcNow.Year;
+            for (int year = DateTime.UtcNow.Year - 1; year >= minYear - 5; year--)
             {
                 if (!reportYears.Contains(year))
                 {
@@ -583,7 +661,7 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error loading years: {ex.Message}", Severity.Error);
-            availableYears = [DateTime.Now.Year, DateTime.Now.Year - 1, DateTime.Now.Year - 2];
+            availableYears = [DateTime.UtcNow.Year, DateTime.UtcNow.Year - 1, DateTime.UtcNow.Year - 2];
         }
     }
 
@@ -659,8 +737,8 @@
 
     private async Task ClearFilters()
     {
-        selectedYear = DateTime.Now.Year;
-        selectedMonth = DateTime.Now.Month;
+        selectedYear = DateTime.UtcNow.Year;
+        selectedMonth = DateTime.UtcNow.Month;
         searchQuery = string.Empty;
         currentPage = 1;
         ApplyFilters();
@@ -670,34 +748,6 @@
     {
         currentPage = page;
         UpdatePageData();
-    }
-
-    private async Task DeleteReport(int reportId)
-    {
-        if (currentUserRole is not ("Admin" or "HR"))
-        {
-            Snackbar.Add("You don't have permission to delete reports", Severity.Error);
-            return;
-        }
-
-        try
-        {
-            var success = await ReportService.DeleteReportAsync(reportId);
-            if (success)
-            {
-                Snackbar.Add("Report deleted successfully", Severity.Success);
-                await LoadAllReports();
-                ApplyFilters();
-            }
-            else
-            {
-                Snackbar.Add("Failed to delete report", Severity.Error);
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error deleting report: {ex.Message}", Severity.Error);
-        }
     }
 
     private string GetMonthName(int month)

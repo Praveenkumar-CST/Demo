@@ -191,6 +191,20 @@ namespace WiseHR.Services
                 var sortedResults = results.OrderByDescending(r => r.Score)
                              .ThenBy(r => r.Name)
                              .ToList();
+                foreach (var result in sortedResults)
+
+                {
+
+                    result.Name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(result.Name.ToLower());
+
+                    result.Email = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(result.Email?.ToLower() ?? string.Empty);
+
+                    result.Mobile = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(result.Mobile?.ToLower() ?? string.Empty);
+
+                    result.Designation = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(result.Designation.ToLower());
+
+                }
+
 
                 return sortedResults;
             }
