@@ -74,6 +74,16 @@
                     Clear
                 </MudButton>
             </MudItem>
+            <!-- Excel Export Button -->
+            <MudItem xs="12" sm="4" md="3" Class="d-flex align-end">
+                <MudButton Variant="Variant.Outlined" 
+                           Color="Color.Success" 
+                           OnClick="ExportAllToExcel"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           Class="ml-auto">
+                    Export to Excel
+                </MudButton>
+            </MudItem>
         </MudGrid>
     </MudPaper>
 
@@ -351,14 +361,12 @@
 
         try
         {
-            // First get all reports from the service
             var reports = (await ReportService.GetReportsAsync(1, int.MaxValue))
                 .OrderByDescending(r => r.SubmittedOn)
                 .ToList();
 
             if (currentUserRole == "Employee")
             {
-                // Filter reports where MenteeID matches current user's EmpID
                 allReports = reports
                     .Where(r => !string.IsNullOrEmpty(r.MenteeEmployeeID) &&
                                r.MenteeEmployeeID.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase))
@@ -370,7 +378,6 @@
                 }
                 else
                 {
-                    // For employee view, select the latest year/month
                     selectedYear = allReports.Max(r => r.SubmittedOn.Year);
                     selectedMonth = allReports
                         .Where(r => r.SubmittedOn.Year == selectedYear)
@@ -379,7 +386,6 @@
             }
             else
             {
-                // Admin sees all reports
                 allReports = reports;
             }
         }
@@ -396,16 +402,12 @@
 
     private bool CanEditReport(ReportModel report)
     {
-        // Admins can edit any report
         if (currentUserRole != "Employee") return true;
-        
-        // Employees can only edit their own reports (where they are the mentee)
         return report.MenteeEmployeeID?.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase) ?? false;
     }
 
     private bool CanDeleteReport()
     {
-        // Only admins can delete reports
         return currentUserRole != "Employee";
     }
 
@@ -451,14 +453,12 @@
 
     private void ApplyFilters()
     {
-        // Common filtering for both Employee and Admin by year/month
         filteredReports = allReports
             .Where(r => 
                 r.SubmittedOn.Year == selectedYear && 
                 r.SubmittedOn.Month == selectedMonth)
             .ToList();
 
-        // Apply search if present
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {
             var query = searchQuery.Trim().ToLower();
@@ -539,6 +539,41 @@
         UpdatePageData();
     }
 
+    private async Task ExportAllToExcel()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+            
+            var exportData = filteredReports.Select(r => new
+            {
+                Report_ID = r.Id,
+                Mentee_ID = r.MenteeEmployeeID,
+                Mentee_Name = r.MenteeName,
+                Mentor_Name = r.MentorName,
+                Projects = r.ProjectsWorkedOn,
+                Performance_1 = r.Performance1,
+                Feedback_1 = r.Feedback1,
+                Performance_2 = r.Performance2,
+                Feedback_2 = r.Feedback2,
+                Submitted_On = r.SubmittedOn.ToString("yyyy-MM-dd")
+            }).ToList();
+
+            var fileName = $"Reports_{GetMonthName(selectedMonth)}_{selectedYear}.xlsx";
+            
+            await JSRuntime.InvokeVoidAsync("exportToExcel", exportData, fileName);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error exporting to Excel: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
     private async Task DownloadReport(int reportId, string fileName)
     {
         try
@@ -547,18 +582,42 @@
             
             if (report != null)
             {
-                Snackbar.Add($"Downloading {fileName}", Severity.Info);
-                // Implement actual file download logic here
+                var exportData = new List<object>
+                {
+                    new {
+                        Report_ID = report.Id,
+                        Mentee_ID = report.MenteeEmployeeID,
+                        Mentee_Name = report.MenteeName,
+                        Mentor_Name = report.MentorName,
+                        Projects = report.ProjectsWorkedOn,
+                        Performance_1 = report.Performance1,
+                        Feedback_1 = report.Feedback1,
+                        Performance_2 = report.Performance2,
+                        Feedback_2 = report.Feedback2,
+                        Submitted_On = report.SubmittedOn.ToString("yyyy-MM-dd")
+                    }
+                };
+                
+                var safeFileName = $"{SanitizeFileName(fileName)}_{report.Id}.xlsx";
+                
+                await JSRuntime.InvokeVoidAsync("exportToExcel", exportData, safeFileName);
+                Snackbar.Add($"Downloading {safeFileName}", Severity.Info);
             }
             else
             {
-                Snackbar.Add("No file available for download", Severity.Warning);
+                Snackbar.Add("Report not found", Severity.Warning);
             }
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error downloading report: {ex.Message}", Severity.Error);
         }
+    }
+
+    private string SanitizeFileName(string fileName)
+    {
+        var invalidChars = System.IO.Path.GetInvalidFileNameChars();
+        return string.Join("_", fileName.Split(invalidChars));
     }
 
     private void EditReport(int reportId)
