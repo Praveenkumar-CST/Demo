@@ -351,25 +351,56 @@
 
         public async Task<bool> UpdateEmployee(EmployeeDetails employee)
         {
-            CapitalizeEmployeeDetails(employee);
-
-            var response = await _retryPolicy.ExecuteAsync(() =>
-                _timeoutPolicy.ExecuteAsync(() =>
-                    _httpClient.PostAsJsonAsync("EmployeeDetails/UpdateEmployeeDetails", employee)));
-
-            if (response.IsSuccessStatusCode)
+            try
             {
+                CapitalizeEmployeeDetails(employee);
+
+                var response = await _retryPolicy.ExecuteAsync(() =>
+                    _timeoutPolicy.ExecuteAsync(() =>
+                        _httpClient.PostAsJsonAsync("EmployeeDetails/UpdateEmployeeDetails", employee)));
+
+                // Log the raw response content for debugging
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"API Response: {responseContent}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Update failed with status code: {response.StatusCode}");
+                    return false;
+                }
+
+                // Define a response model to match the API's structure
+                var jsonResponse = await response.Content.ReadFromJsonAsync<UpdateEmployeeResponse>();
+                if (jsonResponse == null || !jsonResponse.Success)
+                {
+                    Console.WriteLine($"Update failed: {jsonResponse?.Message ?? "No response data"}");
+                    return false;
+                }
+
+                // Invalidate cache only on successful update
                 _cache.Remove("AllEmployees");
                 _cache.Remove($"Employee_{employee.EmployeeID}");
                 foreach (var suffix in new[] { "", "_Photos_true", "_Photos_false" })
                 {
                     _cache.Remove($"Employee_{employee.EmployeeID}{suffix}");
                 }
-
                 _cache.Remove($"EmployeeByEmail_{employee.CurrentEmail?.ToLower()}");
-            }
 
-            return await response.Content.ReadFromJsonAsync<bool>();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating employee {employee.EmployeeID}: {ex.Message}");
+                return false;
+            }
+        }
+
+        // Response model to match the API's JSON structure
+        private class UpdateEmployeeResponse
+        {
+            public bool Success { get; set; }
+            public string? Message { get; set; }
+            // Add other fields if the API includes them (e.g., "data")
         }
 
         public async Task<bool> DeleteEmployee(string employeeId)
@@ -634,9 +665,10 @@
                 return false;
             }
         }
-
-        // Delete EmployeeBasicDetails
-        public async Task<bool> DeleteEmployeeBasicDetails(string employeeId)
+ 
+            // Add other fields if the API includes them (e.g., "data")
+            // Delete EmployeeBasicDetails
+            public async Task<bool> DeleteEmployeeBasicDetails(string employeeId)
         {
             try
             {

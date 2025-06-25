@@ -8,7 +8,6 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IJSRuntime JSRuntime
-@implements IDisposable
 
 <PageTitle>Employee Management</PageTitle>
 
@@ -131,24 +130,28 @@
             <MudGrid AlignItems="Center" Spacing="2" Justify="Justify.SpaceBetween">
                 <MudItem xs="12" sm="12" md="4">
                     <MudTextField @bind-Value="searchQuery"
-                                  @oninput="HandleSearchInput"
                                   Placeholder="Search"
                                   Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search"
                                   IconSize="Size.Medium"
                                   Variant="Variant.Outlined"
                                   Clearable="true"
-                                  Immediate="true"
                                   Dense="true"
-                                  Class="search-field" />
+                                  Margin="Margin.Dense"
+                                  DebounceInterval="300"
+                                  OnDebounceIntervalElapsed="@(async () => await UpdateFilteredEmployeesAsync())"
+                                  Class="custom-dropdown" />
                 </MudItem>
                 <MudItem xs="12" sm="12" md="4">
-                    <MudSelect T="string" @bind-Value="SelectedDesignation"
+                    <MudSelect T="string"
+                               @bind-Value="SelectedDesignation"
                                Label="Designation"
                                Variant="Variant.Outlined"
                                AnchorOrigin="Origin.BottomCenter"
                                Clearable="true"
-                               Dense="true">
+                               Dense="true"
+                               Margin="Margin.Dense"
+                               Class="custom-dropdown">
                         @foreach (var designation in designations.OrderBy(d => d))
                         {
                             <MudSelectItem Value="@designation">@designation</MudSelectItem>
@@ -166,7 +169,6 @@
                 </MudItem>
             </MudGrid>
         </MudPaper>
-
 
         @if (isFiltering)
         {
@@ -251,7 +253,7 @@
                                                            Color="Color.Error"
                                                            Size="Size.Small"
                                                            OnClick="() => ShowDeleteConfirmation(context.Item.EmployeeID)"
-                                                           Class="action-btn error" />
+                                                           Class="action-btn error compact-button" />
                                         </MudTooltip>
                                     </MudButtonGroup>
                                 </CellTemplate>
@@ -302,6 +304,14 @@
 </MudContainer>
 
 <style>
+    .custom-dropdown {
+        width: 100%;
+        max-width: 100%;
+        min-height: 32px; /* Matches MudBlazor dense input height */
+        font-size: 14px;
+        box-sizing: border-box;
+        padding: 4px;
+    }
     /* Header Section */
     .dashboard-card {
         background: white !important;
@@ -646,7 +656,6 @@
     private string currentUserRole = string.Empty;
     private string _selectedDesignation = string.Empty;
     private HashSet<string> designations = new();
-    private CancellationTokenSource? debounceCts;
     private HashSet<string> loadingPhotos = new();
 
     private int totalPages => (int)Math.Ceiling((double)filteredEmployees.Count / itemsPerPage);
@@ -688,40 +697,53 @@
         await LoadEmployeesAsync();
     }
 
-    private async Task LoadEmployeesAsync()
+    private async Task LoadEmployeesAsync(int retries = 3)
     {
-        try
+        for (int attempt = 1; attempt <= retries; attempt++)
         {
-            isLoading = true;
-            hasError = false;
-            StateHasChanged();
-
-            employees = await EmployeeService.GetAllEmployees() ?? new();
-            if (!employees.Any())
+            try
             {
-                Console.WriteLine("No employees returned from EmployeeService.");
+                isLoading = true;
+                hasError = false;
+                StateHasChanged();
+
+                employees = await EmployeeService.GetAllEmployees() ?? new();
+                if (!employees.Any())
+                {
+                    Console.WriteLine("No employees returned from EmployeeService.");
+                    return;
+                }
+
+                designations = employees
+                    .Select(e => e.Designation)
+                    .Where(d => !string.IsNullOrWhiteSpace(d))
+                    .Distinct()
+                    .ToHashSet();
+
+                if (!designations.Any())
+                {
+                    Snackbar.Add("No designations found.", Severity.Warning);
+                }
+
+                _ = LoadAllPhotosAsync();
+                await UpdateFilteredEmployeesAsync();
                 return;
             }
-
-            designations = employees
-                .Select(e => e.Designation)
-                .Where(d => !string.IsNullOrWhiteSpace(d))
-                .Distinct()
-                .ToHashSet();
-
-            _ = LoadAllPhotosAsync();
-            await UpdateFilteredEmployeesAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading employees: {ex.Message}");
-            hasError = true;
-            Snackbar.Add($"Error loading employees: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Attempt {attempt} failed: {ex.Message}");
+                if (attempt == retries)
+                {
+                    hasError = true;
+                    Snackbar.Add($"Error loading employees: {ex.Message}", Severity.Error);
+                }
+                await Task.Delay(1000 * attempt); // Exponential backoff
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
         }
     }
 
@@ -765,7 +787,6 @@
             loadingPhotos.Remove(emp.EmployeeID);
         }
     }
-
     private async Task UpdateFilteredEmployeesAsync()
     {
         if (isFiltering)
@@ -774,25 +795,24 @@
         isFiltering = true;
         try
         {
-            var localSearchQuery = searchQuery;
+            var localSearchQuery = searchQuery?.Trim().ToLower() ?? string.Empty;
             var localSelectedDesignation = _selectedDesignation;
 
-            await Task.Run(() =>
-            {
-                filteredEmployees = employees
-                    .Where(emp => emp != null &&
-                        (string.IsNullOrWhiteSpace(localSearchQuery) ||
-                         (emp.FirstName?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true ||
-                          emp.LastName?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true ||
-                          emp.CurrentEmail?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true ||
-                          emp.EmployeeID?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true ||
-                          emp.Designation?.Contains(localSearchQuery, StringComparison.OrdinalIgnoreCase) == true)) &&
-                        (string.IsNullOrEmpty(localSelectedDesignation) || emp.Designation == localSelectedDesignation))
-                    .OrderBy(emp => emp.FirstName)
-                    .ToList();
+            filteredEmployees = employees
+                .Where(emp => emp != null &&
+                    (string.IsNullOrEmpty(localSearchQuery) ||
+                     (emp.FirstName?.ToLower().Contains(localSearchQuery) == true ||
+                      emp.LastName?.ToLower().Contains(localSearchQuery) == true ||
+                      emp.CurrentEmail?.ToLower().Contains(localSearchQuery) == true ||
+                      emp.EmployeeID?.ToLower().Contains(localSearchQuery) == true ||
+                      emp.Designation?.ToLower().Contains(localSearchQuery) == true)) &&
+                    (string.IsNullOrEmpty(localSelectedDesignation) || emp.Designation == localSelectedDesignation))
+                .OrderBy(emp => emp.FirstName)
+                .ToList();
 
-                UpdatePagedEmployees();
-            });
+            Console.WriteLine($"Filtered employees count: {filteredEmployees.Count}");
+            currentPage = 1;
+            UpdatePagedEmployees();
         }
         catch (Exception ex)
         {
@@ -827,22 +847,7 @@
         StateHasChanged();
     }
 
-    private async Task HandleSearchInput(ChangeEventArgs e)
-    {
-        searchQuery = e.Value?.ToString() ?? string.Empty;
-        debounceCts?.Cancel();
-        debounceCts = new CancellationTokenSource();
 
-        try
-        {
-            await Task.Delay(300, debounceCts.Token);
-            currentPage = 1;
-            await UpdateFilteredEmployeesAsync();
-        }
-        catch (TaskCanceledException)
-        {
-        }
-    }
 
     private void OnPageChanged(int page)
     {
@@ -908,11 +913,14 @@
             ["Color"] = Color.Error
         };
 
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<MudDialog>("Confirm Delete", parameters, options);
-        var result = await dialog.Result;
-
-        if (result != null && !result.Canceled)
+        bool? confirmed = await DialogService.ShowMessageBox(
+       title: "Confirm Delete",
+       message: $"Are you sure you want to delete {employeeName} (ID: {employeeId})? This action cannot be undone and will remove all associated data.",
+       yesText: "Delete",
+       cancelText: "Cancel",
+       options: new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true }
+       );
+        if (confirmed == true)
         {
             await DeleteEmployeeAsync(employeeId);
         }
@@ -947,9 +955,4 @@
         }
     }
 
-    public void Dispose()
-    {
-        debounceCts?.Cancel();
-        debounceCts?.Dispose();
-    }
 }
