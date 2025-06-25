@@ -1,0 +1,41 @@
+﻿<div class="progress mb-4" style="height: 15px;">
+    <div class="progress-bar bg-primary text-white d-flex align-items-center justify-content-center"
+         role="progressbar"
+         style="width: @(CalculateProgress())%"
+         aria-valuenow="@(CalculateProgress())"
+         aria-valuemin="0"
+         aria-valuemax="100">
+        Step @CurrentStep of @TotalSteps
+    </div>
+</div>
+
+<style>
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 0.25rem;
+        overflow: hidden;
+        height:70%
+    }
+
+    .progress-bar {
+        font-size: 1rem;
+        font-weight: 500;
+        height: 70% transition: width 0.3s ease-in-out;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int CurrentStep { get; set; } = 1;
+
+    [Parameter]
+    public int TotalSteps { get; set; } = 3;
+
+    private double CalculateProgress()
+    {
+        if (TotalSteps <= 1) return 100;
+        // Ensure progress starts at 10% for Step 1 to avoid empty bar
+        double stepPercentage = 100.0 / TotalSteps;
+        return Math.Max(10, CurrentStep * stepPercentage);
+    }
+}

@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using WiseHR.Interfaces
 @using WiseHR.Services
 @using System.IdentityModel.Tokens.Jwt
 @using MudBlazor
@@ -187,7 +188,7 @@
                 var (role, verifyError) = await AuthService.VerifyToken();
                 if (!string.IsNullOrEmpty(role))
                 {
-                    await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
+                  //  await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
                     await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
                     NavigationManager.NavigateTo("/home");
                 }
@@ -198,7 +199,7 @@
             }
             else
             {
-                NavigationManager.NavigateTo("/registration");
+                NavigationManager.NavigateTo("/employee-form");
             }
         }
         else

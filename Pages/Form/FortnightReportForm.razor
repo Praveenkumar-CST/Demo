@@ -1,14 +1,16 @@
-﻿@page "/fortnight-report"
+﻿
+@page "/fortnight-report"
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 @inject EmployeeService EmployeeService
 @inject ReportService ReportService
 @layout HomeLayout
+@using WiseHR.Interfaces
 @inject IUserService UserService
 @inject MentorAssignmentService MentorAssignmentService
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-4">
     <MudPaper Class="pa-6" Elevation="2">
         @if (isLoading)
         {
@@ -31,19 +33,12 @@
                         <MudText Typo="Typo.h6" Class="mb-4">Mentor Information</MudText>
                     </MudItem>
                     <MudItem xs="12" sm="6" md="4">
-                        <MudTextField @bind-Value="report.MentorName" 
-                                    Label="Mentor Name" 
-                                    Variant="Variant.Outlined" 
-                                    Disabled="true" 
-                                    Margin="Margin.Dense" />
+                        <MudTextField @bind-Value="report.MentorName"
+                                      Label="Mentor Name"
+                                      Variant="Variant.Outlined"
+                                      Disabled="true"
+                                      Margin="Margin.Dense" />
                     </MudItem>
-                    @* <MudItem xs="12" sm="6" md="4"> *@
-                    @*     <MudTextField @bind-Value="report.MentorDesignation"  *@
-                    @*                 Label="Mentor Designation"  *@
-                    @*                 Variant="Variant.Outlined"  *@
-                    @*                 Disabled="true"  *@
-                    @*                 Margin="Margin.Dense" /> *@
-                    @* </MudItem> *@
 
                     <!-- Mentee Information Section -->
                     <MudItem xs="12">
@@ -51,26 +46,20 @@
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudSelect T="string"
-                                 Label="Select Mentee Email"
-                                 Value="selectedMenteeEmail"
-                                 ValueChanged="OnMenteeEmailChanged"
-                                 Required="true"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 For="@(() => report.MenteeEmail)">
+                                   Label="Select Mentee Email"
+                                   Value="selectedMenteeEmail"
+                                   ValueChanged="OnMenteeEmailChanged"
+                                   Required="true"
+                                   Disabled="@isEditMode"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   For="@(() => report.MenteeEmail)">
                             @foreach (var emp in employees)
                             {
                                 <MudSelectItem Value="@emp.CurrentEmail">@emp.CurrentEmail</MudSelectItem>
                             }
                         </MudSelect>
-                    </MudItem>                 
-                    @* <MudItem xs="12" sm="6"> *@
-                    @*     <MudTextField @bind-Value="report.MenteeEmail"  *@
-                    @*                 Label="Mentee Email"  *@
-                    @*                 Variant="Variant.Outlined"  *@
-                    @*                 Disabled="true"  *@
-                    @*                 Margin="Margin.Dense" /> *@
-                    @* </MudItem> *@
+                    </MudItem>
 
                     <!-- Project Information Section -->
                     <MudItem xs="12">
@@ -84,48 +73,58 @@
                             <MudSelectItem Value=@("WiseMASTRO")>WiseMASTRO</MudSelectItem>
                             <MudSelectItem Value=@("WeatherAPP")>WeatherAPP</MudSelectItem>
                             <MudSelectItem Value=@("BlogAPP")>BlogAPP</MudSelectItem>
+                            <MudSelectItem Value=@("Others")>Others</MudSelectItem>
                         </MudSelect>
                     </MudItem>
+                    @if (report.ProjectsWorkedOn == "Others")
+                    {
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="report.CustomProjectName"
+                                          Label="Custom Project Name"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          Margin="Margin.Dense" />
+                        </MudItem>
+                    }
 
                     <!-- Fortnight 1 Section -->
                     <MudItem xs="12">
-                        <MudText Typo="Typo.h6" Class="mt-6 mb-4">First fortnight (1st - 15th)</MudText>
+                        <MudText Typo="Typo.h6" Class="mt-6 mb-4">First Fortnight (1st - 15th)</MudText>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudSelect T="string" 
-                                 @bind-Value="report.Performance1" 
-                                 For="@(() => report.Performance1)" 
-                                 Label="Performance 1" 
-                                 Required="true" 
-                                 Disabled="@IsFirstFortnightDisabled"
-                                 Variant="Variant.Outlined" 
-                                 Margin="Margin.Dense">
-                            <MudSelectItem Value=@("Excellent")>Excellent</MudSelectItem>
+                        <MudSelect T="string"
+                                   @bind-Value="report.Performance1"
+                                   For="@(() => report.Performance1)"
+                                   Label="Performance 1"
+                                   Required="true"
+                                   Disabled="@(IsFirstFortnightDisabled && !isAdminOrHr)"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense">
+                                                      <MudSelectItem Value=@("Excellent")>Excellent</MudSelectItem>
                             <MudSelectItem Value=@("Good")>Good</MudSelectItem>
                             <MudSelectItem Value=@("Average")>Average</MudSelectItem>
                             <MudSelectItem Value=@("Below Average")>Below Average</MudSelectItem>
-                            <MudSelectItem Value=@("Poor")>Poor</MudSelectItem>
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="report.CompletedStoryPoints1" 
-                                    For="@(() => report.CompletedStoryPoints1)" 
-                                    Label="Completed Story Points 1" 
-                                    InputType="InputType.Number" 
-                                    Required="true" 
-                                    Disabled="@IsFirstFortnightDisabled"
-                                    Variant="Variant.Outlined" 
-                                    Margin="Margin.Dense" />
+                        <MudTextField @bind-Value="report.CompletedStoryPoints1"
+                                      For="@(() => report.CompletedStoryPoints1)"
+                                      Label="Completed Story Points 1"
+                                      InputType="InputType.Number"
+                                      Required="true"
+                                      Disabled="@(IsFirstFortnightDisabled && !isAdminOrHr)"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
                     </MudItem>
                     <MudItem xs="12">
-                        <MudTextField @bind-Value="report.Feedback1" 
-                                    For="@(() => report.Feedback1)" 
-                                    Label="Feedback 1" 
-                                    Lines="3" 
-                                    Required="true" 
-                                    Disabled="@IsFirstFortnightDisabled"
-                                    Variant="Variant.Outlined" 
-                                    Margin="Margin.Dense" />
+                        <MudTextField @bind-Value="report.Feedback1"
+                                      For="@(() => report.Feedback1)"
+                                      Label="Feedback 1"
+                                      Lines="3"
+                                      Required="true"
+                                      Disabled="@(IsFirstFortnightDisabled && !isAdminOrHr)"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
                     </MudItem>
 
                     <!-- Fortnight 2 Section -->
@@ -133,51 +132,63 @@
                         <MudText Typo="Typo.h6" Class="mt-6 mb-4">Second Fortnight (16th - 31st)</MudText>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudSelect T="string" 
-                                 @bind-Value="report.Performance2" 
-                                 For="@(() => report.Performance2)" 
-                                 Label="Performance 2" 
-                                 Required="true" 
-                                 Disabled="@IsSecondFortnightDisabled"
-                                 Variant="Variant.Outlined" 
-                                 Margin="Margin.Dense">
+                        <MudSelect T="string"
+                                   @bind-Value="report.Performance2"
+                                   For="@(() => report.Performance2)"
+                                   Label="Performance 2"
+                                   Required="true"
+                                   Disabled="@(IsSecondFortnightDisabled && !isAdminOrHr)"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense">
                             <MudSelectItem Value=@("Excellent")>Excellent</MudSelectItem>
                             <MudSelectItem Value=@("Good")>Good</MudSelectItem>
                             <MudSelectItem Value=@("Average")>Average</MudSelectItem>
                             <MudSelectItem Value=@("Below Average")>Below Average</MudSelectItem>
-                            <MudSelectItem Value=@("Poor")>Poor</MudSelectItem>
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="report.CompletedStoryPoints2" 
-                                    For="@(() => report.CompletedStoryPoints2)" 
-                                    Label="Completed Story Points 2" 
-                                    InputType="InputType.Number" 
-                                    Required="true" 
-                                    Disabled="@IsSecondFortnightDisabled"
-                                    Variant="Variant.Outlined" 
-                                    Margin="Margin.Dense" />
+                        <MudTextField @bind-Value="report.CompletedStoryPoints2"
+                                      For="@(() => report.CompletedStoryPoints2)"
+                                      Label="Completed Story Points 2"
+                                      InputType="InputType.Number"
+                                      Required="true"
+                                      Disabled="@(IsSecondFortnightDisabled && !isAdminOrHr)"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
                     </MudItem>
                     <MudItem xs="12">
-                        <MudTextField @bind-Value="report.Feedback2" 
-                                    For="@(() => report.Feedback2)" 
-                                    Label="Feedback 2" 
-                                    Lines="3" 
-                                    Required="true" 
-                                    Disabled="@IsSecondFortnightDisabled"
-                                    Variant="Variant.Outlined" 
-                                    Margin="Margin.Dense" />
+                        <MudTextField @bind-Value="report.Feedback2"
+                                      For="@(() => report.Feedback2)"
+                                      Label="Feedback 2"
+                                      Lines="3"
+                                      Required="true"
+                                      Disabled="@(IsSecondFortnightDisabled && !isAdminOrHr)"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
                     </MudItem>
 
-                    <!-- Submit Button -->
+                    <!-- Action Buttons -->
                     <MudItem xs="12" Class="mt-6">
-                        <MudButton ButtonType="ButtonType.Submit" 
-                                 Variant="Variant.Filled" 
-                                 Color="Color.Primary" 
-                                 Size="Size.Large" 
-                                 FullWidth="true">
-                            @(isEditMode ? "Update Report" : "Submit Report")
-                        </MudButton>
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudButton ButtonType="ButtonType.Submit"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Size="Size.Large"
+                                           FullWidth="true">
+                                    @(isEditMode ? "Update Report" : "Submit Report")
+                                </MudButton>
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Secondary"
+                                           Size="Size.Large"
+                                           FullWidth="true"
+                                           OnClick="@(() => Navigation.NavigateTo("/reportlist"))">
+                                    Close
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
                     </MudItem>
                 </MudGrid>
             </EditForm>
@@ -187,12 +198,14 @@
 
 @code {
     [Parameter] public ReportModel Report { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "reportId")] public int? ReportId { get; set; }
     private ReportModel report = new();
     private List<EmployeeDetails> employees = new();
     private string selectedMenteeEmail;
     private bool isLoading = true;
     private bool hasError = false;
     private bool isEditMode = false;
+    private bool isAdminOrHr = false;
 
     private bool IsFirstFortnightDisabled => DateTime.Now.Day >= 16 && DateTime.Now.Day <= 31;
     private bool IsSecondFortnightDisabled => DateTime.Now.Day >= 1 && DateTime.Now.Day <= 15;
@@ -201,7 +214,10 @@
     {
         try
         {
-            var email = await JS.InvokeAsync<string>("localStorage.getItem", "email");
+            var email = await JS.InvokeAsync<string>("sessionStorage.getItem", "email");
+            var role = await JS.InvokeAsync<string>("sessionStorage.getItem", "userRole");
+            isAdminOrHr = role is "Admin" or "HR";
+
             if (!string.IsNullOrWhiteSpace(email))
             {
                 var mentor = await EmployeeService.GetEmployeeDetailsByEmail(email);
@@ -222,7 +238,6 @@
                 .ToList();
 
             employees = new List<EmployeeDetails>();
-
             foreach (var menteeId in assignedMenteeIds)
             {
                 var mentee = await EmployeeService.GetEmployeeDetails(menteeId);
@@ -238,6 +253,21 @@
                 report = Report;
                 selectedMenteeEmail = report.MenteeEmail;
             }
+            else if (ReportId.HasValue)
+            {
+                var existingReport = await ReportService.GetReportByIdAsync(ReportId.Value);
+                if (existingReport != null)
+                {
+                    isEditMode = true;
+                    report = existingReport;
+                    selectedMenteeEmail = report.MenteeEmail;
+                }
+                else
+                {
+                    Snackbar.Add("Report not found.", Severity.Error);
+                    hasError = true;
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -247,13 +277,13 @@
         finally
         {
             isLoading = false;
+            StateHasChanged();
         }
     }
 
     private async Task OnMenteeEmailChanged(string email)
     {
         selectedMenteeEmail = email;
-
         if (!string.IsNullOrWhiteSpace(selectedMenteeEmail))
         {
             var mentee = await EmployeeService.GetEmployeeDetailsByEmail(selectedMenteeEmail);
@@ -269,6 +299,16 @@
     private async Task HandleValidSubmit()
     {
         report.SubmittedOn = DateTime.Now;
+        if (report.ProjectsWorkedOn == "Others" && string.IsNullOrEmpty(report.CustomProjectName))
+        {
+            Snackbar.Add("Custom project name is required when selecting 'Others'.", Severity.Warning);
+            return;
+        }
+
+        if (report.ProjectsWorkedOn == "Others")
+        {
+            report.ProjectsWorkedOn = report.CustomProjectName?.Trim();
+        }
 
         try
         {
@@ -286,7 +326,7 @@
 
             if (response)
             {
-                Navigation.NavigateTo("/reports");
+                Navigation.NavigateTo("/reportlist");
             }
         }
         catch (Exception ex)

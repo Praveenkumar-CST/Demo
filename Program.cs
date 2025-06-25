@@ -15,6 +15,7 @@ using Syncfusion.Blazor;
 using WiseHR.Models.NewFolder;
 using Syncfusion.Licensing;
 using WiseHR.Services.ChatFormatting;
+using WiseHR.Interfaces;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");

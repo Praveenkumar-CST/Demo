@@ -1,5 +1,4 @@
 ﻿using MudBlazor;
-
 namespace WiseHR.Models
 {
     public static class AccessControl
@@ -30,12 +29,12 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports"),
+                    ("HIDE_FortnightReport", "/reports"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
                     ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
                     ("Asset","/asset"),   
-                    ("List","/reportlist"),
+                    ("ReportList","/reportlist"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
                     ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
@@ -46,14 +45,12 @@ namespace WiseHR.Models
                 {
                     ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
-                    //("Role Management", "/home/rolemanagement"),
-                    ("HIDE_Create Employee","/home/employees"),
-                    ("Organizational Hierarchy", "/role-hierarchy"),           
-                    //("Add Employees", "/home/employees"),
-                    ("Holiday Calendar", "/calendar"),
-                    ("Attendance", "/AdminAttendanceView"),
-                    ("Policies", "/policies"),
+                    ("Organizational Hierarchy", "/role-hierarchy"),
+                    ("Holiday Calendar", "/user"),
+                    ("Attendance", "/UserAttendanceView"),
+                    //("Policies", "/policies"),
                     ("LeaveManagement", "/admin/leave"),
+                    ("HIDE_Create Employee","/home/employees"),
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -65,11 +62,10 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
                     ("HIDE_Analytics", "/analytics"),
-                    //("Assign Mentee","/managers"),
-                    //("Asset","/asset"),
+                    ("FortnightReport", "/reports"),
+                    ("ReportList","/reportlist"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
                     ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
@@ -80,14 +76,13 @@ namespace WiseHR.Models
                 {
                     ("Dashboard", "/home"),
                     ("Employee List", "/home/employeeList"),
-                    ("Role Management", "/home/rolemanagement"),
-                    ("HIDE_Create Employee","/home/employees"),
+                    //("Role Management", "/home/rolemanagement"),
                     ("Organizational Hierarchy", "/role-hierarchy"),           
-                    //("Add Employees", "/home/employees"),
                     ("Holiday Calendar", "/calendar"),
                     ("Attendance", "/AdminAttendanceView"),
                     ("Policies", "/policies"),
                     ("LeaveManagement", "/admin/leave"),
+                    ("HIDE_Create Employee","/home/employees"),
                     ("HIDE_admin", "/AdminAbsenceReasons"),
                     ("HIDE_employeeDetailsData", "/employeeDetailsData/.*"),
                     ("HIDE_personalEditForm", "/personalEditForm/.*"),
@@ -99,11 +94,12 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_Fortnight Report", "/fortnight-report"),
-                    ("ReportList", "/reports"),
+                    ("FortnightReport", "/reports"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
                     ("HIDE_Analytics", "/analytics"),
                     //("Assign Mentee","/managers"),
                     ("Asset","/asset"),
+                    ("ReportList","/reportlist"),
                     ("HIDE_product","/assets/{id:int}"),
                     ("HIDE_addasset","/add-asset"),
                     ("HIDE_user", "/assets/{assetId:int}/instance/{instanceId:int}/history")
@@ -117,21 +113,13 @@ namespace WiseHR.Models
                     ("Organizational Hierarchy", "/role-hierarchy"),
                     ("Attendance", "/UserAttendanceView"),
                     ("LeaveManagement", "/employee/leave"),
-                    // Removed "ReportList" access completely for employees
-                    ("List", "/reportlist"),  // Kept only the reportlist access
+                    ("ReportList", "/reportlist"),
                     ("HIDE_Registration", "/registration"),
                     ("HIDE_confirmationPage", "/confirmation"),
                     ("HIDE_workExperience", "/workExperience"),
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
-                }
-            },
-            {
-                "mentor", new List<(string, string)>
-                {
-                    ("Dashboard", "/home"),
-                    ("Fortnight Report", "/fortnight-report"),
                 }
             }
         };
