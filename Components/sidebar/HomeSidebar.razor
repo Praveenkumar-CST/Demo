@@ -1,0 +1,380 @@
+﻿@using System.Text.RegularExpressions
+@using WiseHR.Models
+@inject AuthService AuthService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="sidebar-wrapper">
+    <MudDrawer @bind-Open="DrawerOpen"
+    Class="@(DrawerOpen ? "mud-drawer open" : "mud-drawer mini")"
+    Width="@(DrawerOpen ? "260px" : "70px")"
+    Elevation="2"
+    Variant="@DrawerVariant.Mini"
+    OpenMiniOnHover="true"
+    ClipMode="DrawerClipMode.Always">
+
+        <MudNavMenu Class="mud-nav-menu pa-2">
+            @if (accessibleMenuItems != null && accessibleMenuItems.Count > 0)
+            {
+                @foreach (var item in accessibleMenuItems)
+                {
+                    if (!item.Name.StartsWith("HIDE_"))
+                    {
+                        var displayName = item.Name.Replace("HIDE_", "");
+                        <MudNavLink Class="sidebar-navlink mb-2 rounded-lg"
+                        Match="NavLinkMatch.All"
+                        Icon="@GetIconForMenuItem(item.Name)"
+                        IconColor="Color.Primary"
+                        Href="@item.Url"
+                        ActiveClass="sidebar-navlink-active">
+                            @displayName
+                        </MudNavLink>
+                    }
+                }
+            }
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-2">@errorMessage</MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Class="mt-2">No menu items available.</MudAlert>
+            }
+        </MudNavMenu>
+
+        <div class="sidebar-toggle-button">
+            <MudIconButton Icon="@(DrawerOpen ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)" 
+                           OnClick="ToggleDrawer" 
+                           Color="Color.Primary" />
+        </div>
+    </MudDrawer>
+</div>
+
+<style>
+    .sidebar-wrapper {
+        height: 100%;
+    }
+
+    .mud-drawer {
+        background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
+        border-right: 1px solid #e0e6ff;
+        transition: all 0.3s ease;
+       
+    }
+
+    .mud-drawer.open {
+        width: 260px;
+            top: 67px;
+            position:fixed;
+    }
+
+    .mud-drawer.mini {
+        width: 70px;
+            top: 67px;
+            position:fixed;
+    }
+
+    .mud-primary-text {
+        color: rgb(19 19 20) !important;
+        --mud-ripple-color: var(--mud-palette-primary) !important;
+    }
+
+    .pa-2 {
+        padding: 4px !important;
+    }
+    .mud-nav-link {
+        width: 100%;
+        font-weight: 400;
+        padding: 8px 0px 8px 8px;
+        color: inherit;
+    }
+
+    .sidebar-navlink {
+        transition: all 0.3s ease;
+        margin: 4px 0;
+        padding: 2px !important;
+        border-radius: 8px;
+        color: var(--text-primary) !important;
+        height: 48px;
+        display: flex;
+        align-items: center;
+    }
+
+    .sidebar-navlink:hover {
+        background-color: rgba(25, 118, 210, 0.08);
+        transform: translateX(4px);
+    }
+
+    .sidebar-navlink-active {
+        background: linear-gradient(90deg, #69c6cf 0%, #57b0c0 100%) !important;
+        color: white !important;
+        font-weight: 500;
+        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+    }
+
+    .sidebar-navlink-active:hover {
+        transform: translateX(4px);
+        box-shadow: 0 6px 12px rgba(25, 118, 210, 0.3);
+    }
+
+    /* Make sure icons match text color in active state */
+    .sidebar-navlink-active ::deep .mud-nav-link-icon {
+        color: white !important;
+    }
+
+    /* Style for inactive nav link text */
+    .sidebar-navlink ::deep span {
+        color: var(--text-primary) !important;
+        font-weight: 500;
+        transition: opacity 0.3s ease;
+    }
+
+
+    .sidebar-footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        background-color: #f8f9ff;
+        border-top: 1px solid #e0e6ff;
+    }
+
+    .mud-toolbar-gutters {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .sidebar-toggle-button {
+        position: absolute;
+        bottom: 16px;
+        right: 5px;
+        z-index: 10;
+    }
+       .sidebar-navlink-active {
+        background: linear-gradient(90deg, #69c6cf 0%, #57b0c0 100%) !important;
+        color: white !important;
+        font-weight: 500;
+        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+        padding: 12px !important; /* Equal padding on all sides */
+        border-radius: 8px;
+    }
+
+
+    /* Better icon visibility in mini mode */
+    .mud-drawer-mini ::deep .mud-nav-link {
+        padding: 12px 0 !important;
+        justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+
+    .mud-drawer-mini ::deep .mud-nav-link .mud-nav-link-icon {
+        margin: 0 auto !important;
+        font-size: 24px !important;
+        min-width: unset !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        transition: all 0.3s ease;
+    }
+
+    .mud-drawer-mini-hover ::deep .mud-nav-link {
+        padding-left: 16px !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+
+    .mud-drawer-mini-hover ::deep .mud-nav-link .mud-nav-link-icon {
+        margin-right: 16px !important;
+        margin-left: 0 !important;
+        justify-content: flex-start !important;
+    }
+
+    .mud-drawer-mini ::deep .mud-nav-link .mud-nav-link-text {
+        transition: opacity 0.3s ease;
+        opacity: 0;
+        display: none;
+    }
+
+    .mud-drawer-mini-hover ::deep .mud-nav-link .mud-nav-link-text {
+        opacity: 1;
+        display: inline;
+    }
+
+    /* Enhanced active state for mini mode */
+    .mud-drawer-mini ::deep .sidebar-navlink-active {
+        position: relative;
+        overflow: visible;
+    }
+
+    .mud-drawer-mini ::deep .sidebar-navlink-active::after {
+        content: '';
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: white;
+    }
+    
+    /* Fix icon alignment in mini mode */
+    .mud-drawer-mini ::deep .mud-nav-item {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .mud-drawer-mini ::deep .mud-icon-button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+    }
+
+    .mud-drawer-mini ::deep .mud-nav-link .mud-nav-link-icon {
+        background: linear-gradient(135deg, #69c6cf 0%, #57b0c0 100%);
+        border-radius: 50%;
+        padding: 18px !important; /* More expanded padding on all sides */
+        color: white !important;
+        box-sizing: border-box;
+        margin: 0 auto !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        font-size: 24px !important;
+        min-width: unset !important;
+        transition: all 0.3s ease;
+    }
+</style>
+
+@code {
+
+    [Parameter]
+    public bool DrawerOpen { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> DrawerOpenChanged { get; set; }
+
+    private List<(string Name, string Url)> accessibleMenuItems = new List<(string Name, string Url)>();
+    private string errorMessage;
+   
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+        Console.WriteLine($"Token from localStorage: {token ?? "null"}");
+
+
+
+        var (role, error) = await AuthService.VerifyToken();
+        Console.WriteLine($"Role: {role ?? "null"}, Error: {error ?? "null"}");
+
+        if (!string.IsNullOrEmpty(role))
+        {
+            accessibleMenuItems = AccessControl.GetMenuForRole(role);
+            Console.WriteLine($"Role: {role}, Menu Items Count: {accessibleMenuItems?.Count ?? 0}");
+            Console.WriteLine($"Accessible URLs: {string.Join(", ", accessibleMenuItems.Select(i => i.Url))}");
+
+            var pagesToExclude = new List<string>
+                {
+                    "/confirm"
+                };
+            accessibleMenuItems = accessibleMenuItems
+     .Where(item =>
+         !pagesToExclude.Any(pattern =>
+             Regex.IsMatch(item.Url, $"^{pattern}$", RegexOptions.IgnoreCase)))
+     .ToList();
+
+            if (accessibleMenuItems == null || accessibleMenuItems.Count == 0)
+            {
+                errorMessage = $"No accessible menu items available for role: {role}";
+            }
+            else
+            {
+                errorMessage = null;
+                // await RestrictNavigation();
+            }
+        }
+        else
+        {
+            accessibleMenuItems = new List<(string Name, string Url)>();
+            errorMessage = $"No role assigned to the user. Error: {error ?? "Unknown"}";
+            NavigationManager.NavigateTo("/"); // Redirect to login if no role
+        }
+
+        // Subscribe to location changes
+        NavigationManager.LocationChanged += HandleLocationChanged;
+    }
+
+    private async Task RestrictNavigation()
+    {
+        var currentUrl = NavigationManager.Uri.Replace(NavigationManager.BaseUri, "/").TrimEnd('/');
+        Console.WriteLine($"Current URL: {currentUrl}");
+        bool isAllowed = accessibleMenuItems.Any(item =>
+        Regex.IsMatch(currentUrl, item.Url, RegexOptions.IgnoreCase));
+
+        if (!isAllowed && currentUrl != "/")
+        {
+            Console.WriteLine($"Access denied to {currentUrl}. Redirecting to /home.");
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private void HandleLocationChanged(object sender, LocationChangedEventArgs args)
+    {
+        _ = RestrictNavigation(); // Check URL on every navigation
+        StateHasChanged(); // Refresh UI if needed
+    }
+
+    public async Task ToggleDrawer()
+    {
+        DrawerOpen = !DrawerOpen;
+        await DrawerOpenChanged.InvokeAsync(DrawerOpen);
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from event to prevent memory leaks
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+    public static class CustomIcons
+    {
+        public const string LeaveManagement = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'><path d='M208 96a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM123.7 200.5c1-.4 1.9-.8 2.9-1.2l-16.9 63.5c-5.6 21.1-.1 43.6 14.7 59.7l70.7 77.1 22 88.1c4.3 17.1 21.7 27.6 38.8 23.3s27.6-21.7 23.3-38.8l-23-92.1c-1.9-7.8-5.8-14.9-11.2-20.8l-49.5-54 19.3-65.5 9.6 23c4.4 10.6 12.5 19.3 22.8 24.5l26.7 13.3c15.8 7.9 35 1.5 42.9-14.3s1.5-35-14.3-42.9L281 232.7l-15.3-36.8C248.5 154.8 208.3 128 163.7 128c-22.8 0-45.3 4.8-66.1 14l-8 3.5c-32.9 14.6-58.1 42.4-69.4 76.5l-2.6 7.8c-5.6 16.8 3.5 34.9 20.2 40.5s34.9-3.5 40.5-20.2l2.6-7.8c5.7-17.1 18.3-30.9 34.7-38.2l8-3.5zm-30 135.1L68.7 398 9.4 457.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L116.3 441c4.6-4.6 8.2-10.1 10.6-16.1l14.5-36.2-40.7-44.4c-2.5-2.7-4.8-5.6-7-8.6zM550.6 153.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L530.7 224 384 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l146.7 0-25.4 25.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l80-80c12.5-12.5 12.5-32.8 0-45.3l-80-80z'/></svg>";
+    }
+    // Helper method to get appropriate icons based on menu item name
+    private string GetIconForMenuItem(string itemName)
+    {
+        // itemName = itemName.Replace("HIDE_", "").ToLower();
+
+        return itemName switch
+        {
+            "Dashboard"  => Icons.Material.Filled.Dashboard,
+            "Employee List"  => Icons.Material.Filled.People,
+            "Role Management" => Icons.Material.Filled.Person,
+            "Create Employee"=>Icons.Material.Filled.Add,
+            "departments" => Icons.Material.Filled.BusinessCenter,
+            "ReportList"  => Icons.Material.Filled.EventNote,
+            "attendance" => Icons.Material.Filled.EventAvailable,
+            "projects" => Icons.Material.Filled.Assignment,
+            "tasks" => Icons.Material.Filled.Task,
+            "documents" => Icons.Material.Filled.Book,
+            "payroll" => Icons.Material.Filled.Payments,
+            "benefits" => Icons.Material.Filled.HealthAndSafety,
+            "settings" => Icons.Material.Filled.Settings,
+            "analytics"  => Icons.Material.Filled.BarChart,
+            "Holiday Calendar"  => Icons.Material.Filled.CalendarToday,
+            "Attendance"  => Icons.Material.Filled.CalendarMonth,
+            "messages" or "chat" => Icons.Material.Filled.Chat,
+            "notifications" => Icons.Material.Filled.Notifications,
+            "Organizational Hierarchy" => Icons.Material.Filled.AdminPanelSettings,
+            "logout" => Icons.Material.Filled.Logout,
+            "Assign Mentee" => Icons.Material.Filled.Person4,
+            "about" => Icons.Material.Filled.Info,
+            "Asset" => Icons.Material.Filled.Inventory,
+            "Policies" => Icons.Material.Filled.Policy,
+            "LeaveManagement" => CustomIcons.LeaveManagement,
+            "List"=>Icons.Material.Filled.List,
+            _ => Icons.Material.Filled.ChevronRight,  // Default icon
+        };
+    }
+}

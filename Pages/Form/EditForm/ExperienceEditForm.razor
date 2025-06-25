@@ -1,0 +1,350 @@
+﻿@page "/experienceEditForm/{EmployeeId}"
+@using WiseHRServer.Models
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject ExperienceService ExperienceService
+@using System.Text.Json
+@using Components.sidebar
+@layout HomeLayout
+@using System.ComponentModel.DataAnnotations
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudCard Elevation="2" Class="p-2">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                EXPERIENCE DETAILS
+            </MudText>
+        </MudCardHeader>
+
+        <MudCardContent Margin="Margin.Dense" Dense="true">
+            <EditForm Model="@experience" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <!-- Education Qualifications Section -->
+                <h4 class="text-secondary mt-2">
+                    Education Qualifications <span class="text-danger">*</span>
+                </h4>
+                <small class="text-danger mb-2 d-block">At least one education qualification is mandatory.</small>
+
+                @foreach (var edu in educationList)
+                {
+                    var isFirst = (edu == educationList.First());
+                    <div class="border p-2 mb-1 bg-light rounded">
+                        <div class="row g-1">
+                            <div class="col-md-3">
+                                <label>Qualification</label>
+                                <InputText class="form-control" @bind-Value="edu.Qualification" />
+                                <ValidationMessage For="@(() => edu.Qualification)" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>University</label>
+                                <InputText class="form-control" @bind-Value="edu.University" />
+                                <ValidationMessage For="@(() => edu.University)" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>College</label>
+                                <InputText class="form-control" @bind-Value="edu.College" />
+                                <ValidationMessage For="@(() => edu.College)" />
+                            </div>
+                            <div class="col-md-2">
+                                <label>Passing Year</label>
+                                <InputSelect class="form-control" @bind-Value="edu.YearOfPassing">
+                                    <ValidationMessage For="@(() => edu.YearOfPassing)" />
+                                    <option value="">Select Year</option>
+                                    @foreach (var year in YearList)
+                                    {
+                                        <option value="@year">@year</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-2">
+                                <label>Percentage</label>
+                                <InputNumber class="form-control" @bind-Value="edu.Percentage" />
+                                <ValidationMessage For="@(() => edu.Percentage)" />
+                            </div>
+                            @if (!isFirst)
+                            {
+                                <div class="col-1 d-flex align-items-end">
+                                    <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveEducation(edu)">
+                                        ×
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <button type="button" class="btn btn-outline-primary mb-4 mt-1" @onclick="AddEducation">+ Add Education</button>
+
+                <!-- Work Experience Section -->
+                <h4 class="text-secondary mt-1">Work Experience</h4>
+                @if (workList.Any())
+                {
+                    @for (int i = 0; i < workList.Count; i++)
+                    {
+                        var work = workList[i];
+                        var workIndex = i;
+                        <div class="border p-2 mb-2 bg-light rounded">
+                            <div class="row g-1">
+                                <div class="col-md-3">
+                                    <label>Employer</label>
+                                    <InputText class="form-control" @bind-Value="work.Employer"
+                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.Employer)))" />
+                                    <ValidationMessage For="@(() => workList[workIndex].Employer)" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Location</label>
+                                    <InputText class="form-control" @bind-Value="work.Location"
+                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.Location)))" />
+                                    <ValidationMessage For="@(() => workList[workIndex].Location)" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Join Date</label>
+                                    <InputDate class="form-control" @bind-Value="work.DateOfJoining"
+                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.DateOfJoining)))" />
+                                    <ValidationMessage For="@(() => workList[workIndex].DateOfJoining)" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Leave Date</label>
+                                    <InputDate class="form-control" @bind-Value="work.DateOfLeaving"
+                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.DateOfLeaving)))" />
+                                    <ValidationMessage For="@(() => workList[workIndex].DateOfLeaving)" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Designation</label>
+                                    <InputText class="form-control" @bind-Value="work.Designation"
+                                               @onblur="@(() => ValidateWorkField(workIndex, nameof(work.Designation)))" />
+                                    <ValidationMessage For="@(() => workList[workIndex].Designation)" />
+                                </div>
+                                <div class="col-1 d-flex align-items-end">
+                                    <span class="text-danger fs-4 cursor-pointer" title="Remove" @onclick="() => RemoveWork(work)">
+                                        ×
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                <button type="button" class="btn btn-outline-primary mb-1 mt-1" @onclick="AddWork">+ Add Work Experience</button>
+
+                <!-- Action Buttons -->
+                <MudItem xs="12" Class="d-flex justify-end mt-4 gap-3">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@isSubmitting"
+                               ButtonType="ButtonType.Submit">
+                        @if (isSubmitting)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Inherit" />
+                            <span class="ms-2">Updating...</span>
+                        }
+                        else
+                        {
+                            <span>Update</span>
+                        }
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@CloseForm">
+                        Close
+                    </MudButton>
+                </MudItem>
+            </EditForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string EmployeeId { get; set; }
+    private bool isSubmitting = false;
+    private Experience experience = new Experience();
+    private List<Education> educationList = new();
+    private List<WorkExperience> workList = new();
+    private List<int> YearList = new();
+    private Dictionary<string, List<string>> validationErrors = new Dictionary<string, List<string>>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        int currentYear = DateTime.Now.Year;
+        for (int year = currentYear; year >= 1980; year--)
+        {
+            YearList.Add(year);
+        }
+
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            var allExperiences = await ExperienceService.GetAllExperience();
+            var empExperience = allExperiences.FirstOrDefault(e => e.EmployeeID == EmployeeId);
+
+            if (empExperience != null)
+            {
+                experience = empExperience;
+                educationList = experience.EducationQualifications ?? new List<Education>();
+                workList = experience.WorkExperiences ?? new List<WorkExperience>();
+            }
+            else
+            {
+                AddEducation();
+                // Don't add default WorkExperience to allow empty work list
+            }
+        }
+    }
+
+    private void ValidateWorkField(int workIndex, string propertyName)
+    {
+        if (workIndex < 0 || workIndex >= workList.Count) return;
+
+        var work = workList[workIndex];
+        var validationContext = new ValidationContext(work) { MemberName = propertyName };
+        var validationResults = new List<ValidationResult>();
+        var property = work.GetType().GetProperty(propertyName);
+        var value = property?.GetValue(work);
+
+        // Use a unique key for each work experience field
+        var errorKey = $"Work_{workIndex}_{propertyName}";
+        validationErrors.Remove(errorKey);
+
+        var isValid = Validator.TryValidateProperty(value, validationContext, validationResults);
+
+        if (!isValid)
+        {
+            validationErrors[errorKey] = validationResults.Select(r => r.ErrorMessage).ToList();
+        }
+
+        StateHasChanged();
+    }
+
+    private bool HasValidationError(string key)
+    {
+        return validationErrors.ContainsKey(key) && validationErrors[key].Any();
+    }
+
+    private string GetValidationError(string key)
+    {
+        return validationErrors.ContainsKey(key) && validationErrors[key].Any()
+            ? validationErrors[key].First()
+            : string.Empty;
+    }
+
+    private void ValidateAllFields()
+    {
+        validationErrors.Clear();
+
+        // Validate Experience object
+        var experienceContext = new ValidationContext(experience);
+        var experienceResults = new List<ValidationResult>();
+        Validator.TryValidateObject(experience, experienceContext, experienceResults, true);
+
+        foreach (var result in experienceResults)
+        {
+            foreach (var memberName in result.MemberNames)
+            {
+                validationErrors[memberName] = validationErrors.GetValueOrDefault(memberName, new List<string>());
+                validationErrors[memberName].Add(result.ErrorMessage);
+            }
+        }
+
+        // Validate each WorkExperience
+        for (int i = 0; i < workList.Count; i++)
+        {
+            var work = workList[i];
+            var workContext = new ValidationContext(work);
+            var workResults = new List<ValidationResult>();
+            Validator.TryValidateObject(work, workContext, workResults, true);
+
+            foreach (var result in workResults)
+            {
+                foreach (var memberName in result.MemberNames)
+                {
+                    var errorKey = $"Work_{i}_{memberName}";
+                    validationErrors[errorKey] = validationErrors.GetValueOrDefault(errorKey, new List<string>());
+                    validationErrors[errorKey].Add(result.ErrorMessage);
+                }
+            }
+        }
+
+        // Validate each Education
+        for (int i = 0; i < educationList.Count; i++)
+        {
+            var edu = educationList[i];
+            var eduContext = new ValidationContext(edu);
+            var eduResults = new List<ValidationResult>();
+            Validator.TryValidateObject(edu, eduContext, eduResults, true);
+
+            foreach (var result in eduResults)
+            {
+                foreach (var memberName in result.MemberNames)
+                {
+                    var errorKey = $"Education_{i}_{memberName}";
+                    validationErrors[errorKey] = validationErrors.GetValueOrDefault(errorKey, new List<string>());
+                    validationErrors[errorKey].Add(result.ErrorMessage);
+                }
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (educationList == null || !educationList.Any())
+        {
+            Snackbar.Add("Please add at least one education qualification.", Severity.Error);
+            return;
+        }
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        experience.EducationQualifications = educationList;
+        experience.WorkExperiences = workList;
+
+        bool result = await ExperienceService.UpdateExperienceAsync(experience);
+        isSubmitting = false;
+        StateHasChanged();
+
+        if (result)
+        {
+            var parameters = new DialogParameters
+            {
+                { "Message", "Experience details updated successfully!" },
+                { "OnClose", EventCallback.Factory.Create(this, NavigateToList) }
+            };
+            DialogService.Show<SubmitSuccessDialog>("Success", parameters);
+            Snackbar.Add("Updated successfully!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Update failed. Please try again.", Severity.Error);
+        }
+    }
+
+    private void NavigateToList()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId))
+        {
+            NavigationManager.NavigateTo($"/employeeDetailsData/{EmployeeId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("home/employeeList");
+        }
+    }
+
+    private void CloseForm()
+    {
+        NavigateToList();
+    }
+
+    private void AddEducation() => educationList.Add(new Education());
+    private void RemoveEducation(Education edu)
+    {
+        if (educationList.Count > 1)
+            educationList.Remove(edu);
+    }
+
+    private void AddWork() => workList.Add(new WorkExperience());
+    private void RemoveWork(WorkExperience work) => workList.Remove(work);
+}

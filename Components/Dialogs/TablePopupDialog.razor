@@ -1,0 +1,262 @@
+@using MudBlazor
+@using WiseHR.Services.ChatFormatting
+@using Newtonsoft.Json.Linq
+@using System.Text
+@code {
+    [Parameter] public string HtmlContent { get; set; }
+    [Parameter] public string RawContent { get; set; }
+    [Parameter] public ChatMessageTableType TableType { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    void Close() => MudDialog?.Close(DialogResult.Cancel());
+
+    private bool showExportFeedback = false;
+    private async Task ExportTable()
+    {
+        try
+        {
+            byte[] csvData;
+            switch (TableType)
+            {
+                case ChatMessageTableType.Json:
+                    csvData = ParseJsonTableToCsv(RawContent);
+                    break;
+                case ChatMessageTableType.Generic:
+                    csvData = ParseMarkdownTableToCsv(RawContent);
+                    break;
+                case ChatMessageTableType.Asset:
+                    csvData = ParseAssetTableToCsv(RawContent);
+                    break;
+                default:
+                    throw new Exception("Unsupported table type for export.");
+            }
+            using var streamRef = new DotNetStreamReference(new MemoryStream(csvData));
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", "table-export.csv", streamRef);
+            showExportFeedback = true;
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(1200);
+            showExportFeedback = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error exporting table: {ex.Message}");
+        }
+    }
+    private byte[] ParseJsonTableToCsv(string content)
+    {
+        var json = JObject.Parse(content);
+        var data = json["data"];
+        if (data == null) return Array.Empty<byte>();
+        var sb = new StringBuilder();
+        var headers = (data.FirstOrDefault() as JObject)?.Properties().Select(p => p.Name).ToList();
+        if (headers != null)
+        {
+            sb.AppendLine(string.Join(",", headers.Select(h => $"\"{h}\"")));
+        }
+        foreach (var row in data)
+        {
+            var line = new List<string>();
+            foreach (var header in headers)
+            {
+                var value = row[header]?.ToString().Replace("\"", "\"\"") ?? "";
+                line.Add($"\"{value}\"");
+            }
+            sb.AppendLine(string.Join(",", line));
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+    private byte[] ParseMarkdownTableToCsv(string content)
+    {
+        var lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                           .Select(l => l.Trim()).ToList();
+        if (lines.Count < 2) return Array.Empty<byte>();
+        var headers = lines[0].Split('|').Select(h => h.Trim()).ToList();
+        var sb = new StringBuilder();
+        sb.AppendLine(string.Join(",", headers.Select(h => $"\"{h}\"")));
+        for (int i = 2; i < lines.Count; i++)
+        {
+            var row = lines[i].Split('|').Select(cell => cell.Trim().Replace("\"", "\"\"")).ToList();
+            while (row.Count < headers.Count) row.Add("");
+            if (row.Count > headers.Count) row = row.Take(headers.Count).ToList();
+            sb.AppendLine(string.Join(",", row.Select(cell => $"\"{cell}\"")));
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+    private byte[] ParseAssetTableToCsv(string content)
+    {
+        var lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                           .Select(line => line.Trim()).ToList();
+        var assets = new List<Dictionary<string, object?>>();
+        Dictionary<string, object?>? currentAsset = null;
+        List<string> instances = new List<string>();
+        string? currentAssetType = null;
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            if (line.StartsWith("Successfully executed")) continue;
+            if (System.Text.RegularExpressions.Regex.IsMatch(line, @"^[A-Za-z\s]+\s*\([\w\s-]+\)$"))
+            {
+                if (currentAsset != null)
+                {
+                    if (instances.Any())
+                        currentAsset["Instances"] = string.Join(", ", instances);
+                    assets.Add(currentAsset);
+                    instances = new List<string>();
+                }
+                currentAssetType = line.Trim();
+                currentAsset = new Dictionary<string, object?>
+                {
+                    { "Asset Type", currentAssetType },
+                    { "Tag Prefix", null },
+                    { "Total Instances", null },
+                    { "Instances", null }
+                };
+            }
+            else if (line.StartsWith("Asset Tag Prefix:"))
+            {
+                var parts = line.Split(':');
+                if (parts.Length >= 2 && currentAsset != null)
+                {
+                    currentAsset["Tag Prefix"] = parts[1].Trim();
+                }
+            }
+            else if (line.StartsWith("Total Instances:"))
+            {
+                var parts = line.Split(':');
+                if (parts.Length >= 2 && currentAsset != null)
+                {
+                    currentAsset["Total Instances"] = parts[1].Trim();
+                }
+            }
+            else if (line.StartsWith("Instances:"))
+            {
+            }
+            else if (line.StartsWith("- ") && currentAsset != null)
+            {
+                instances.Add(line.Substring(2).Trim());
+            }
+        }
+        if (currentAsset != null)
+        {
+            if (instances.Any())
+                currentAsset["Instances"] = string.Join(", ", instances);
+            assets.Add(currentAsset);
+        }
+        if (!assets.Any()) return Array.Empty<byte>();
+        var sb = new StringBuilder();
+        var headers = new[] { "Asset Type", "Tag Prefix", "Total Instances", "Instances" };
+        sb.AppendLine(string.Join(",", headers.Select(h => $"\"{h}\"")));
+        foreach (var asset in assets)
+        {
+            var row = headers.Select(h => asset.ContainsKey(h) && asset[h] != null ? asset[h]!.ToString()!.Replace("\"", "\"\"") : "").ToList();
+            sb.AppendLine(string.Join(",", row.Select(cell => $"\"{cell}\"")));
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+}
+<MudDialog class="table-popup-dialog">
+    <DialogContent>
+        @if (showExportFeedback)
+        {
+            <div class="dialog-global-feedback"><MudIcon Icon="@Icons.Material.Filled.Check" /></div>
+        }
+        <div class="table-popup-header" style="display:flex;align-items:center;justify-content:space-between;position:relative;">
+            <span style="font-weight:bold;">Table View</span>
+            <div class="dialog-icon-group">
+                <MudIconButton Icon="@Icons.Material.Filled.Download" Class="dialog-export-btn chat-style-icon" OnClick="ExportTable" />
+            </div>
+        </div>
+        <div style="max-width:90vw;overflow-x:auto;width:100%;">
+            @((MarkupString)HtmlContent)
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+<style>
+.table-popup-dialog {
+    z-index: 20000 !important;
+}
+.table-popup-header {
+    margin-bottom: 8px;
+}
+.dialog-icon-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    position: relative;
+}
+.dialog-export-btn.chat-style-icon {
+    background: rgba(255,255,255,0.95);
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.18s, background 0.18s;
+    cursor: pointer;
+    opacity: 1;
+    color: var(--mud-palette-primary);
+    border: 1.5px solid #e0e0e0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+.dialog-export-btn.chat-style-icon:hover {
+    background: var(--mud-palette-primary-lighten);
+    color: white;
+    transform: scale(1.13) translateY(-2px);
+    box-shadow: 0 4px 16px rgba(var(--mud-palette-primary-rgb), 0.18);
+    border-color: var(--mud-palette-primary);
+}
+.dialog-export-btn.chat-style-icon:active {
+    transform: scale(0.97);
+    background: var(--mud-palette-primary-darken);
+    color: white;
+}
+.dialog-global-feedback {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 30000;
+    background: #e8f5e9;
+    color: #43a047;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 2px 8px rgba(67,160,71,0.12);
+    pointer-events: none;
+    @@keyframes popFade {
+        0% { opacity: 0; transform: scale(0.7); }
+        20% { opacity: 1; transform: scale(1.15); }
+        60% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.7); }
+    }
+    animation: popFade 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+.table-popup-dialog .wisechat-table-container {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    width: 100%;
+}
+.table-popup-dialog .wisechat-table {
+    min-width: 600px;
+}
+.table-popup-dialog ::-webkit-scrollbar {
+    height: 12px;
+    background: #eee;
+}
+.table-popup-dialog ::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 6px;
+}
+.dialog-tooltip-pop {
+    z-index: 30001 !important;
+}
+</style> 

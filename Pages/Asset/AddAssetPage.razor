@@ -1,0 +1,797 @@
+﻿@page "/add-asset"
+@inject NavigationManager Navigation
+@inject AssetStateService AssetService
+@layout HomeLayout
+@using System.Text.Json
+@using System.Linq
+@using WiseHR.Models
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Add New Asset</h1>
+        <button class="btn back-btn" @onclick="NavigateToHome">← Back to Dashboard</button>
+    </div>
+
+    <div class="form-container">
+        <div class="form-section">
+            <div class="form-group">
+                <label>Category</label>
+                <select class="form-control" @bind="category" @bind:after="ResetForm">
+                    <option value="">Select Category</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Non-Electronics">Non-Electronics</option>
+                </select>
+            </div>
+
+            @if (!string.IsNullOrEmpty(category))
+                {
+                <div class="form-group">
+                    <label>Product</label>
+                    <select class="form-control" @bind="product" @bind:after="ResetCustomAssetName">
+                        <option value="">Select Product</option>
+                        @foreach (var item in GetProductsByCategory(category))
+                            {
+                            <option value="@item">@item</option>
+                            }
+                    </select>
+                </div>
+                }
+
+            @if (product == "Others")
+                {
+                <div class="form-group">
+                    <label>Custom Asset Name</label>
+                    <input type="text" class="form-control" @bind="customAssetName" placeholder="Enter custom asset name" />
+                </div>
+                }
+
+            @if (!string.IsNullOrEmpty(product) && (product != "Others" || !string.IsNullOrEmpty(customAssetName)))
+                {
+                <div class="form-fields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Product Brand</label>
+                            <input type="text" class="form-control" @bind="productBrand" />
+                        </div>
+                        <div class="form-group addon-btn">
+                            <button class="btn add-btn" @onclick="OpenSpecModal">+</button>
+                        </div>
+                    </div>
+
+                    @foreach (var spec in productSpecs.ToList())
+                        {
+                        <div class="form-row" key="@spec.Key">
+                            <div class="form-group">
+                                <label>@spec.Key</label>
+                                <input type="text" class="form-control" @bind="productSpecs[spec.Key]" />
+                            </div>
+                            <div class="form-group addon-btn">
+                                <button class="btn add-btn remove-btn" @onclick="() => RemoveProductSpec(spec.Key)">-</button>
+                            </div>
+                        </div>
+                        }
+
+                    <div class="form-group">
+                        <label>Number of Assets</label>
+                        <input type="number" class="form-control" @bind="assetCount" min="1" />
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn save-btn" @onclick="ShowConfirmSave">Save</button>
+                    </div>
+                </div>
+                }
+        </div>
+    </div>
+</div>
+
+@if (showConfirmSave)
+    {
+    <div class="modal-backdrop" @onclick="CloseConfirmSave"></div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirm Save</h2>
+                <button class="close-btn" @onclick="CloseConfirmSave">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="confirm-message">Are you sure you want to save <strong>@assetCount</strong> asset(s) for <strong>@GetDisplayProductName()</strong>?</p>
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th>NO OF ASSET</th>
+                            <th>ASSET TAG</th>
+                            <th>BRAND</th>
+                            <th>SPECIFICATIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 1; i <= assetCount; i++)
+                            {
+                            <tr>
+                                <td>@i</td>
+                                <td>@GenerateAssetTag(GetStoredProductName(), latestTagIndex + i)</td>
+                                <td>@productBrand</td>
+                                <td>
+                                    @foreach (var spec in productSpecs)
+                                        {
+                                        <div>@spec.Key: @spec.Value</div>
+                                        }
+                                </td>
+                            </tr>
+                            }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn save-btn" @onclick="SaveAndClose">Confirm & Save</button>
+                <button class="btn cancel-btn" @onclick="CloseConfirmSave">Cancel</button>
+            </div>
+        </div>
+    </div>
+    }
+
+@if (showSpecModal)
+    {
+    <div class="modal-backdrop" @onclick="CloseSpecModal"></div>
+    <div class="modal-dialog spec-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Specification</h2>
+                <button class="close-btn" @onclick="CloseSpecModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Specification Name</label>
+                    <input type="text" class="form-control" @bind="newSpecName" placeholder="e.g. RAM, CPU" />
+                </div>
+                <div class="form-group">
+                    <label>Specification Value</label>
+                    <input type="text" class="form-control" @bind="newSpecValue" placeholder="e.g. 8GB, Intel i5" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn save-btn" @onclick="AddProductSpec">Add</button>
+                <button class="btn cancel-btn" @onclick="CloseSpecModal">Cancel</button>
+            </div>
+        </div>
+    </div>
+    }
+
+<style>
+    :root {
+        --fb-blue: #1877F2;
+        --fb-blue-dark: #166FE5;
+        --fb-blue-light: #E7F3FF;
+        --fb-blue-lighter: #F0F6FF;
+        --fb-blue-hover: #1564C0;
+        --fb-grey: #E4E6EB;
+        --fb-text-dark: #050505;
+        --fb-text-secondary: #65676B;
+        --fb-border: #DADDE1;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-container {
+        background-color: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--fb-border);
+    }
+
+    .form-section {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        width: 100%;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--fb-text-dark);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--fb-border);
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+
+        .form-control:focus {
+            border-color: var(--fb-blue);
+            outline: none;
+            box-shadow: 0 0 0 2px var(--fb-blue-light);
+        }
+
+    select.form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23050505' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-position: right 12px center;
+        background-repeat: no-repeat;
+        background-size: 16px;
+        padding-right: 36px;
+        appearance: none;
+    }
+
+    .addon-btn {
+        flex: 0 0 auto;
+        width: auto;
+    }
+
+    .add-btn {
+        background-color: var(--fb-blue-light);
+        color: var(--fb-blue);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .add-btn:hover {
+            background-color: var(--fb-blue);
+            color: white;
+        }
+
+    .remove-btn {
+        background-color: rgba(250, 56, 62, 0.1);
+        color: #FA383E;
+    }
+
+        .remove-btn:hover {
+            background-color: #FA383E;
+            color: white;
+        }
+
+    .action-buttons {
+        display: flex;
+        gap: 16px;
+        margin-top: 24px;
+    }
+
+    .save-btn {
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+        background-color: var(--fb-blue);
+        color: white;
+        border: none;
+        flex: 1;
+    }
+
+        .save-btn:hover {
+            background-color: var(--fb-blue-hover);
+        }
+
+    .back-btn {
+        background-color: var(--fb-grey);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        color: var(--fb-text-dark);
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+        .back-btn:hover {
+            background-color: #d0d2d7;
+        }
+
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+    }
+
+    .modal-dialog {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 700px;
+        z-index: 101;
+    }
+
+    .spec-modal {
+        max-width: 500px;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--fb-border);
+    }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--fb-text-dark);
+        }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--fb-text-secondary);
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+        .close-btn:hover {
+            background-color: var(--fb-grey);
+            color: var(--fb-text-dark);
+        }
+
+    .modal-body {
+        padding: 24px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--fb-border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+    }
+
+    .confirm-message {
+        margin-bottom: 16px;
+        font-size: 16px;
+        color: var(--fb-text-dark);
+    }
+
+    .cancel-btn {
+        background-color: var(--fb-grey);
+        color: var(--fb-text-dark);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+        .cancel-btn:hover {
+            background-color: #d0d2d7;
+        }
+
+    .preview-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .preview-table th {
+            background-color: var(--fb-blue-lighter);
+            padding: 14px 18px;
+            text-align: left;
+            color: var(--fb-blue-dark);
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid var(--fb-border);
+        }
+
+        .preview-table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--fb-border);
+            color: var(--fb-text-dark);
+            font-size: 14px;
+        }
+
+        .preview-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .preview-table tr:hover td {
+            background-color: var(--fb-blue-lighter);
+        }
+
+    @@media (max-width: 767px) {
+        .form-row {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .addon-btn {
+            align-self: flex-start;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .back-btn {
+            margin-top: 10px;
+            align-self: flex-end;
+        }
+    }
+</style>
+
+@code {
+    private string category = string.Empty;
+    private string product = string.Empty;
+    private string customAssetName = string.Empty;
+    private string productBrand = string.Empty;
+    private int assetCount = 1;
+    private Dictionary<string, string> productSpecs = new();
+    private bool showConfirmSave = false;
+    private bool showSpecModal = false;
+    private string newSpecName = string.Empty;
+    private string newSpecValue = string.Empty;
+    private int latestTagIndex = 0;
+
+    private Dictionary<string, List<string>> customProducts = new()
+    {
+        { "Electronics", new List<string>() },
+        { "Non-Electronics", new List<string>() }
+    };
+
+    protected override async Task OnInitializedAsync()
+        {
+        await LoadCustomProducts();
+        }
+
+    private async Task LoadCustomProducts()
+        {
+        try
+            {
+            Console.WriteLine("Loading custom products...");
+            var assets = await AssetService.GetAssetsAsync();
+            Console.WriteLine($"Retrieved {assets?.Count ?? 0} assets.");
+            customProducts["Electronics"].Clear();
+            customProducts["Non-Electronics"].Clear();
+
+            if (assets?.Any() == true)
+                {
+                var electronicsAssets = assets
+                    .Where(a => a.Category.Equals("Electronics", StringComparison.OrdinalIgnoreCase))
+                    .Select(a => a.Name)
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Distinct(StringComparer.OrdinalIgnoreCase);
+
+                var nonElectronicsAssets = assets
+                    .Where(a => a.Category.Equals("Non-Electronics", StringComparison.OrdinalIgnoreCase))
+                    .Select(a => a.Name)
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Distinct(StringComparer.OrdinalIgnoreCase);
+
+                var electronicsPredefined = GetPredefinedProducts("Electronics");
+                var nonElectronicsPredefined = GetPredefinedProducts("Non-Electronics");
+
+                customProducts["Electronics"].AddRange(electronicsAssets
+                    .Where(name => !electronicsPredefined.Contains(name, StringComparer.OrdinalIgnoreCase)));
+                customProducts["Non-Electronics"].AddRange(nonElectronicsAssets
+                    .Where(name => !nonElectronicsPredefined.Contains(name, StringComparer.OrdinalIgnoreCase)));
+                }
+            }
+        catch (Exception ex)
+            {
+            Console.WriteLine($"Error loading custom products: {ex.Message}");
+            }
+        }
+
+    private void NavigateToHome()
+        {
+        Navigation.NavigateTo("/asset");
+        }
+
+    private void ResetForm()
+        {
+        if (!string.IsNullOrWhiteSpace(productBrand) || !string.IsNullOrWhiteSpace(customAssetName) || productSpecs.Any())
+            {
+            Console.WriteLine("Changing category will clear the form. Save your data first.");
+            }
+        product = string.Empty;
+        customAssetName = string.Empty;
+        productBrand = string.Empty;
+        assetCount = 1;
+        productSpecs.Clear();
+        latestTagIndex = 0;
+        StateHasChanged();
+        }
+
+    private void ResetCustomAssetName()
+        {
+        if (product != "Others")
+            {
+            customAssetName = string.Empty;
+            }
+        StateHasChanged();
+        }
+
+    private List<string> GetPredefinedProducts(string category)
+        {
+        if (category == "Electronics")
+            {
+            return new List<string> { "Laptop", "Desktop", "Monitor", "Phone", "Tablet", "Printer", "Router", "Keyboard", "Mouse", "Headset", "WebCam", "Docking Station", "Smart TV", "Others" };
+            }
+        else if (category == "Non-Electronics")
+            {
+            return new List<string> { "Office Chair", "Desk", "Conference Table", "Notebook", "Stationery Kit", "Books/Manuals", "Whiteboard", "Locker", "Packaging Boxes", "Plant", "Wall Clock", "Fan", "Others" };
+            }
+        return new List<string>();
+        }
+
+    private List<string> GetProductsByCategory(string category)
+        {
+        var products = GetPredefinedProducts(category);
+        if (customProducts.ContainsKey(category))
+            {
+            products.AddRange(customProducts[category].Where(p => !p.Equals("Others", StringComparison.OrdinalIgnoreCase)));
+            }
+        var sortedProducts = products
+            .Where(p => !p.Equals("Others", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(p => p)
+            .ToList();
+        if (products.Contains("Others", StringComparer.OrdinalIgnoreCase))
+            {
+            sortedProducts.Add("Others");
+            }
+        return sortedProducts;
+        }
+
+    private string GetDisplayProductName()
+        {
+        return product == "Others" ? customAssetName : product;
+        }
+
+    private string GetStoredProductName()
+        {
+        return product == "Others" ? customAssetName : product;
+        }
+
+    private void OpenSpecModal()
+        {
+        newSpecName = string.Empty;
+        newSpecValue = string.Empty;
+        showSpecModal = true;
+        }
+
+    private void CloseSpecModal()
+        {
+        showSpecModal = false;
+        }
+
+    private void AddProductSpec()
+        {
+        if (string.IsNullOrWhiteSpace(newSpecName))
+            {
+            Console.WriteLine("Specification name is required.");
+            return;
+            }
+        if (productSpecs.ContainsKey(newSpecName))
+            {
+            Console.WriteLine("Specification name must be unique.");
+            return;
+            }
+
+        productSpecs[newSpecName] = newSpecValue;
+        CloseSpecModal();
+        }
+
+    private void RemoveProductSpec(string key)
+        {
+        productSpecs.Remove(key);
+        }
+
+    private async Task ShowConfirmSave()
+        {
+        Console.WriteLine($"productBrand: '{productBrand}', assetCount: {assetCount}, specsCount: {productSpecs.Count}");
+        if (string.IsNullOrWhiteSpace(category))
+            {
+            Console.WriteLine("Category is required.");
+            return;
+            }
+        if (string.IsNullOrWhiteSpace(product))
+            {
+            Console.WriteLine("Product is required.");
+            return;
+            }
+        if (product == "Others" && string.IsNullOrWhiteSpace(customAssetName))
+            {
+            Console.WriteLine("Custom asset name is required when selecting 'Others'.");
+            return;
+            }
+        if (string.IsNullOrWhiteSpace(productBrand))
+            {
+            Console.WriteLine("Brand is required.");
+            return;
+            }
+        if (assetCount <= 0)
+            {
+            Console.WriteLine("Number of assets must be greater than 0.");
+            return;
+            }
+
+        if (product == "Others")
+            {
+            var trimmedAssetName = customAssetName.Trim();
+            var predefinedProducts = GetPredefinedProducts(category);
+            if (predefinedProducts.Contains(trimmedAssetName, StringComparer.OrdinalIgnoreCase))
+                {
+                Console.WriteLine($"The asset '{trimmedAssetName}' is already a predefined product. Please select it from the product list.");
+                return;
+                }
+            }
+
+        await FetchLatestTagIndex();
+        showConfirmSave = true;
+        }
+
+    private void CloseConfirmSave()
+        {
+        showConfirmSave = false;
+        }
+
+    private async Task FetchLatestTagIndex()
+        {
+        try
+            {
+            var productName = GetStoredProductName();
+            var assets = await AssetService.GetAssetsAsync();
+            latestTagIndex = 0;
+            if (assets?.Any() == true)
+                {
+                var prefix = GenerateAssetTagPrefix(productName);
+                var matchingInstances = assets
+                    .Where(a => a.Name.Equals(productName, StringComparison.OrdinalIgnoreCase))
+                    .SelectMany(a => a.Instances ?? new List<AssetInstance>())
+                    .Where(i => !string.IsNullOrEmpty(i.AssetTag) && i.AssetTag.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .Select(i =>
+                    {
+                        var numericPart = i.AssetTag.Substring(prefix.Length);
+                        return int.TryParse(numericPart, out var index) ? index : 0;
+                    });
+
+                latestTagIndex = matchingInstances.Any() ? matchingInstances.Max() : 0;
+                }
+            }
+        catch (Exception ex)
+            {
+            Console.WriteLine($"Error fetching tag index: {ex.Message}");
+            }
+        }
+
+    private string GenerateAssetTagPrefix(string name)
+        {
+        return "WW" + name.Substring(0, Math.Min(3, name.Length)).ToUpper();
+        }
+
+    private string GenerateAssetTag(string productName, int index)
+        {
+        var prefix = GenerateAssetTagPrefix(productName);
+        return $"{prefix}{index:D3}";
+        }
+
+    private async Task SaveAndClose()
+        {
+        try
+            {
+            Console.WriteLine($"Saving asset with assetCount: {assetCount}, specsCount: {productSpecs.Count}");
+
+            var assetDto = new CreateAssetDto
+                    {
+                    Name = GetStoredProductName().Trim(),
+                    Category = category.Trim(),
+                    Brand = productBrand.Trim(),
+                    AssetTagPrefix = GenerateAssetTagPrefix(GetStoredProductName()),
+                    InstanceCount = assetCount,
+                    Specifications = productSpecs
+                    };
+
+            var assetJson = JsonSerializer.Serialize(assetDto);
+            Console.WriteLine($"Sending CreateAssetDto: {assetJson}");
+
+            Asset createdAsset = await AssetService.CreateAssetAsync(assetDto);
+            Console.WriteLine($"Created asset response: ID={createdAsset?.Id}, Name={createdAsset?.Name}");
+
+            if (createdAsset == null)
+                {
+                Console.WriteLine("Warning: Asset creation succeeded, but response body was empty.");
+                }
+
+            for (int i = 1; i <= assetCount; i++)
+                {
+                var instanceDto = new CreateInstanceDto
+                        {
+                        AssetTag = GenerateAssetTag(GetStoredProductName(), latestTagIndex + i),
+                        Brand = productBrand.Trim(),
+                        Status = "Available"
+                        };
+
+                var instanceJson = JsonSerializer.Serialize(instanceDto);
+                Console.WriteLine($"Sending CreateInstanceDto {i}: {instanceJson}");
+
+                var createdInstance = await AssetService.CreateInstanceAsync(createdAsset?.Id ?? 0, instanceDto);
+                Console.WriteLine($"Created instance response: ID={createdInstance?.Id}, AssetTag={createdInstance?.AssetTag}");
+
+                if (createdInstance == null)
+                    {
+                    Console.WriteLine($"Warning: Instance {i} creation succeeded, but response body was empty.");
+                    }
+                }
+
+            if (product == "Others" && !string.IsNullOrWhiteSpace(customAssetName))
+                {
+                var trimmedAssetName = customAssetName.Trim();
+                var predefinedProducts = GetPredefinedProducts(category);
+                if (!predefinedProducts.Contains(trimmedAssetName, StringComparer.OrdinalIgnoreCase) &&
+                    !customProducts[category].Contains(trimmedAssetName, StringComparer.OrdinalIgnoreCase))
+                    {
+                    customProducts[category].Add(trimmedAssetName);
+                    }
+                }
+
+            CloseConfirmSave();
+            Navigation.NavigateTo("/asset");
+            }
+        catch (Exception ex)
+            {
+            Console.WriteLine($"Error saving asset: {ex.Message}");
+            CloseConfirmSave();
+            Navigation.NavigateTo("/asset");
+            }
+        }
+}

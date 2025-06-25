@@ -1,0 +1,279 @@
+﻿@page "/"
+@using WiseHR.Services
+@using System.IdentityModel.Tokens.Jwt
+@using MudBlazor
+@using System.Text.Json
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject IUserService UserService
+@inject EmployeeService EmployeeService
+
+<MudContainer MaxWidth="MaxWidth.False" Style="min-height: 100vh; width: 100vw; padding: 0; margin: 0; background: white;" Class="d-flex justify-center align-center">
+    <MudPaper Width="450px" Elevation="25" Class="pa-8 transition-transform" Style="border-radius: 24px; background: linear-gradient(145deg, #ffffff, #f8f9fa); box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2); transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;" HoverStyle="transform: scale(1.02); box-shadow: 0px 15px 35px rgba(0, 0, 0, 0.25);">
+        <MudGrid>
+            <MudItem xs="12" Class="d-flex flex-column align-center mb-6">
+                <div style="position: relative; margin-bottom: 24px;">
+                    <MudImage Src="assets/wwlogo.png" Alt="Wise Work Logo" Width="160" Height="160" Class="mb-2" Style="border-radius: 16px; filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.15));" />
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 16px; background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%); pointer-events: none;"></div>
+                </div>
+                <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2" Style="font-style: italic; color: #526480; font-weight: 500;">"Empowering Your Future – Wise Work."</MudText>
+                <MudText Typo="Typo.h4" Align="Align.Center" Class="font-weight-bold mb-4" Style="background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-top: 16px;">
+                    @if (CurrentForm == FormState.Login)
+                    {
+                        <span>Login</span>
+                    }
+                    else
+                    {
+                        <span>Sign Up</span>
+                    }
+                </MudText>
+            </MudItem>
+
+            @if (CurrentForm == FormState.Login)
+            {
+                <MudItem xs="12">
+                    <MudForm @ref="loginForm" @onsubmit="HandleLogin">
+                        <MudTextField T="string" Label="Email" @bind-Value="Email" Variant="Variant.Outlined"
+                                      Class="mb-4" Required="true" For="@(() => Email)"
+                                      AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End"
+                                      Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
+                        <div class="d-flex">
+                            <MudTextField T="string" Label="Password" @bind-Value="Password" Variant="Variant.Outlined"
+                                         InputType="@PasswordInput" Class="mb-2" Required="true" For="@(() => Password)"
+                                         Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+                                         OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password"
+                                         Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(LoginErrorMessage))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error" Class="mb-4" Style="margin-top: -8px;">@LoginErrorMessage</MudText>
+                        }
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-6 mb-4" FullWidth="true"
+                                  ButtonType="ButtonType.Submit" Disabled="IsLoading"
+                                  Style="border-radius: 12px; background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); height: 48px; text-transform: none; font-size: 16px; font-weight: 500; box-shadow: 0px 4px 12px rgba(142, 84, 233, 0.5);">
+                            @if (IsLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>Logging in...</span>
+                            }
+                            else
+                            {
+                                <span>Login</span>
+                            }
+                        </MudButton>
+                    </MudForm>
+                    <MudItem xs="12" Class="d-flex justify-center">
+                        <MudLink Underline="Underline.Hover" Color="Color.Primary" @onclick='() => NavigationManager.NavigateTo("/forgot-password")'>Forgot Password?</MudLink>
+                    </MudItem>
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="12">
+                    @if (!string.IsNullOrEmpty(SignupMessage))
+                    {
+                        <MudAlert Severity="Severity.Success" Class="mb-4">@SignupMessage</MudAlert>
+                    }
+                    @if (!string.IsNullOrEmpty(SignupErrorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mb-4">@SignupErrorMessage</MudAlert>
+                    }
+                    <MudForm @ref="signupForm" @onsubmit="HandleSignup">
+                        <MudTextField T="string" Label="Email" @bind-Value="SignupEmail" Variant="Variant.Outlined"
+                                     Class="mb-4" Required="true" For="@(() => SignupEmail)"
+                                     AdornmentIcon="@Icons.Material.Filled.Email" Adornment="Adornment.End"
+                                     Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
+                        <div class="d-flex">
+                            <MudTextField T="string" Label="Password" @bind-Value="SignupPassword" Variant="Variant.Outlined"
+                                         InputType="@PasswordInput" Class="mb-6" Required="true" For="@(() => SignupPassword)"
+                                         Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+                                         OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password"
+                                         Style="border-radius: 12px; background: rgba(255,255,255,0.6);" />
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mb-4" FullWidth="true"
+                                  ButtonType="ButtonType.Submit" Disabled="IsLoading"
+                                  Style="border-radius: 12px; background: linear-gradient(90deg, #34adb8 0%, #8E54E9 100%); height: 48px; text-transform: none; font-size: 16px; font-weight: 500;">
+                            @if (IsLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>Signing up...</span>
+                            }
+                            else
+                            {
+                                <span>Sign Up</span>
+                            }
+                        </MudButton>
+                    </MudForm>
+                    <MudStack Row="true" Spacing="4" Class="justify-center">
+                        <MudLink Underline="Underline.Hover" Color="Color.Primary" @onclick="() => ShowForm(FormState.Login)">Already have an account? Login</MudLink>
+                    </MudStack>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private enum FormState { Login, Signup }
+    private FormState CurrentForm { get; set; } = FormState.Login;
+    private bool IsLoading { get; set; } = false;
+
+    private MudForm? loginForm;
+    private MudForm? signupForm;
+
+    private string Email { get; set; } = "";
+    private string Password { get; set; } = "";
+    private string LoginErrorMessage { get; set; } = "";
+
+    private string SignupEmail { get; set; } = "";
+    private string SignupPassword { get; set; } = "";
+    private string SignupMessage { get; set; } = "";
+    private string SignupErrorMessage { get; set; } = "";
+
+    private bool isShow;
+    private InputType PasswordInput = InputType.Password;
+    private string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private void ShowForm(FormState formState)
+    {
+        CurrentForm = formState;
+        Email = "";
+        Password = "";
+        LoginErrorMessage = "";
+        SignupEmail = "";
+        SignupPassword = "";
+        SignupMessage = "";
+        SignupErrorMessage = "";
+        IsLoading = false;
+        loginForm?.ResetValidation();
+        signupForm?.ResetValidation();
+    }
+
+    private async Task HandleLogin()
+{
+    if (loginForm == null) return;
+    IsLoading = true;
+    LoginErrorMessage = "";
+    await loginForm.Validate();
+    if (!loginForm.IsValid)
+    {
+        IsLoading = false;
+        StateHasChanged();
+        return;
+    }
+    try
+    {
+        var (token, error) = await AuthService.Login(Email, Password);
+        await JSRuntime.InvokeVoidAsync("eval", $"console.log('Saving email: {Email}')");
+        await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", Email);
+        Console.WriteLine($"Email to store: {Email}");
+        if (!string.IsNullOrEmpty(token))
+        {
+            var userDetails = await UserService.GetUserByEmailAsync(Email);
+            if (userDetails != null)
+            {
+                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
+                Console.WriteLine($"EmpId stored in sessionStorage: {userDetails.EmpId}");
+            }
+            else
+            {
+                Console.WriteLine($"Error in storing the EmpId sessionStorage: {userDetails?.EmpId}");
+            }
+
+            var employeeDetails = await EmployeeService.GetEmployeeDetailsByEmail(Email);
+            if (employeeDetails != null)
+            {
+                var (role, verifyError) = await AuthService.VerifyToken();
+                if (!string.IsNullOrEmpty(role))
+                {
+                    await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "role", role);
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", Email);
+                    NavigationManager.NavigateTo("/home");
+                }
+                else
+                {
+                    LoginErrorMessage = "Invalid";
+                }
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/registration");
+            }
+        }
+        else
+        {
+                LoginErrorMessage = "Invalid email or password.";
+        }
+    }
+    catch (Exception)
+    {
+            LoginErrorMessage = "Invalid login credentials";
+    }
+    IsLoading = false;
+    StateHasChanged();
+}
+    private async Task HandleSignup()
+    {
+        if (signupForm == null) return;
+        IsLoading = true;
+        SignupMessage = "";
+        SignupErrorMessage = "";
+        await signupForm.Validate();
+        if (!signupForm.IsValid)
+        {
+            IsLoading = false;
+            StateHasChanged();
+            return;
+        }
+        try
+        {
+            var (token, userId, error) = await AuthService.Signup(SignupEmail, SignupPassword);
+            if (!string.IsNullOrEmpty(token))
+            {
+                await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "email", SignupEmail);
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "email", SignupEmail);
+
+                var userDetails = await UserService.GetUserByEmailAsync(SignupEmail);
+                if (userDetails != null)
+                {
+                    await JSRuntime.InvokeVoidAsync("sessionStorageHelper.setItem", "EmpId", userDetails.EmpId);
+                }
+
+                SignupMessage = "Signup successful! Please check your email to confirm and then log in.";
+                SignupErrorMessage = "";
+                await Task.Delay(2000);
+                ShowForm(FormState.Login);
+            }
+            else
+            {
+                SignupErrorMessage = error ?? "Signup failed.";
+                SignupMessage = "";
+            }
+        }
+        catch (Exception ex)
+        {
+            SignupErrorMessage = $"Signup error: {ex.Message}";
+            await JSRuntime.InvokeVoidAsync("console.error", $"Signup error: {ex}");
+            SignupMessage = "";
+        }
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+}
