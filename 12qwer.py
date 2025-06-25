@@ -1,2 +1,2 @@
 deqno
-raviqwertyuio
+raviqwe
