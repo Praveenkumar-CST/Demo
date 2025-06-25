@@ -17,7 +17,6 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-
     <style>
         /* ===== WISEONE LOADER STYLES ===== */
         .wiseone-loader {
@@ -30,9 +29,9 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: #ffffff; /* Changed to white */
+            background: #ffffff;
             z-index: 10000;
-            color: #333; /* Darker text for better contrast on white */
+            color: #333;
             font-family: 'Arial', sans-serif;
         }
 
@@ -84,7 +83,7 @@
             width: 100%;
             max-width: 600px;
             height: 12px;
-            background: rgba(81, 75, 130, 0.1); /* Lighter background for white theme */
+            background: rgba(81, 75, 130, 0.1);
             border-radius: 10px;
             overflow: hidden;
             margin: 1.5rem 0;
@@ -127,13 +126,13 @@
         .progress-text {
             font-size: 1.4rem;
             margin-top: 0.5rem;
-            color: #7a72c9; /* Changed to match gradient */
+            color: #7a72c9;
             font-weight: 600;
         }
 
         .subtitle {
             font-size: 1.2rem;
-            color: rgba(51, 51, 51, 0.7); /* Darker for white background */
+            color: rgba(51, 51, 51, 0.7);
             margin-top: 1.5rem;
             animation: pulse 2s infinite;
         }
@@ -164,7 +163,7 @@
 
         .particle {
             position: absolute;
-            background: rgba(122, 114, 201, 0.3); /* More subtle on white */
+            background: rgba(122, 114, 201, 0.3);
             border-radius: 50%;
             animation: float 10s infinite linear;
         }
@@ -256,7 +255,8 @@
     <!--<script type="module" src="storage.js"></script>-->
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="storage.js"></script>
-
+    <!-- Add SheetJS library for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         // Generate animated particles
         const particlesContainer = document.getElementById('particles');
@@ -272,6 +272,39 @@
             particle.style.animationDuration = `${Math.random() * 10 + 5}s`;
             particlesContainer.appendChild(particle);
         }
+
+        // Excel Export Function
+        function exportToExcel(data, fileName) {
+            try {
+                // Create worksheet from the data
+                const worksheet = XLSX.utils.json_to_sheet(data);
+
+                // Create a new workbook
+                const workbook = XLSX.utils.book_new();
+
+                // Add the worksheet to the workbook
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
+
+                // Generate the Excel file and trigger download
+                XLSX.writeFile(workbook, fileName);
+                return true;
+            } catch (error) {
+                console.error('Excel export failed:', error);
+                return false;
+            }
+        }
+
+        // Make the function available globally
+        window.exportToExcel = exportToExcel;
+
+        // Original download function
+        window.downloadBase64File = (contentType, base64Data, fileName) => {
+            const linkSource = `data:${contentType};base64,${base64Data}`;
+            const downloadLink = document.createElement("a");
+            downloadLink.href = linkSource;
+            downloadLink.download = fileName;
+            downloadLink.click();
+        };
 
         // Blazor WASM loading progress tracking
         const progressBar = document.getElementById('progressBar');
@@ -425,6 +458,7 @@
             downloadLink.download = fileName;
             downloadLink.click();
         };
+
     </script>
 </body>
 </html>
