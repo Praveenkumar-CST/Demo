@@ -47,7 +47,7 @@ else
                                Margin="Margin.Dense"
                                Dense="true"
                                Class="custom-dropdown">
-                        <MudSelectItem T="int?" Value="@(null)">All Months</MudSelectItem>
+                        @* <MudSelectItem T="int?" Value="@(null)">All Months</MudSelectItem> *@
                         @foreach (var month in Enumerable.Range(1, 12))
                         {
                             <MudSelectItem T="int?" Value="@month">

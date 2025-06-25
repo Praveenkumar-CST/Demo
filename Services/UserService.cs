@@ -3,6 +3,7 @@ using Microsoft.JSInterop;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using WiseHR.Models;
+using WiseHR.Interfaces;
 
 namespace WiseHR.Services
 {

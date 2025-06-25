@@ -12,7 +12,11 @@
 
 @layout HomeLayout
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="main-form-compact">
+<ProgressBar CurrentStep="2" />
+
+<!-- Rest of your form content -->
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="main-form-compact">
     <MudCard Elevation="2" Class="p-3">
         <MudCardHeader>
             <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
@@ -280,7 +284,7 @@
                             <div class="aadhaar-rectangle-content">
                                 <div class="aadhaar-rectangle-title">
                                     <MudText Typo="Typo.subtitle1" Class="aadhaar-heading-highlight">
-                                        <b>Passbook Document <span class="aadhaar-required">*</span></b>
+                                        <b>Passbook Document </b>
                                     </MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Primary">(PDF/JPG/PNG, max 20MB)</MudText>
                                 </div>

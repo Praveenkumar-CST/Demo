@@ -501,7 +501,6 @@
             // Clear all relevant sessionStorage keys
             await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "EmpId");
             await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "email");
-            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "role");
             await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "userRole");
 
             // Log successful logout
