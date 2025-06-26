@@ -11,7 +11,7 @@
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
-<!-- Error Message -->
+
 @if (!string.IsNullOrEmpty(errorMessage))
 {
     <div class="error-message">
@@ -20,7 +20,7 @@
     </div>
 }
 
-<!-- Success Message -->
+
 @if (!string.IsNullOrEmpty(successMessage))
 {
     <div class="success-message">
@@ -29,7 +29,7 @@
     </div>
 }
 
-<!-- Success Pop-up -->
+
 @if (showSuccessPopup)
 {
     <div class="success-popup">
@@ -38,7 +38,7 @@
     </div>
 }
 
-<!-- Modal for absence reason -->
+
 @if (showModal && absencePeriod != null)
 {
     <div class="modal-overlay">
@@ -199,24 +199,24 @@ else
 
                             <!-- Red lines for absence periods between sessions -->
                             @foreach (var absence in day.AbsencePeriods)
-{
-    var absStartHour = absence.StartTime.Hour + (absence.StartTime.Minute / 60.0) + (absence.StartTime.Second / 3600.0);
-    var absStartPosition = ((absStartHour - startHour) / totalHours) * 100;
-    absStartPosition = Math.Max(10, Math.Min(90, absStartPosition));
+                            {
+                            var absStartHour = absence.StartTime.Hour + (absence.StartTime.Minute / 60.0) + (absence.StartTime.Second / 3600.0);
+                            var absStartPosition = ((absStartHour - startHour) / totalHours) * 100;
+                            absStartPosition = Math.Max(10, Math.Min(90, absStartPosition));
 
-    var nextSessionDot = dotPositions
-        .Where(p => p.Time > absence.StartTime)
-        .OrderBy(p => p.Time)
-        .FirstOrDefault();
+                            var nextSessionDot = dotPositions
+                            .Where(p => p.Time > absence.StartTime)
+                            .OrderBy(p => p.Time)
+                            .FirstOrDefault();
 
-    var absEndPosition = nextSessionDot != default ? nextSessionDot.Position : 90.0;
+                             var absEndPosition = nextSessionDot != default ? nextSessionDot.Position : 90.0;
 
-    <div class="absence-line"
-         data-tooltip=@($"Absent: {absence.StartTime:hh:mm:ss tt} - {absence.EndTime:hh:mm:ss tt}{(string.IsNullOrEmpty(absence.Reason) ? "" : $"\nReason: {absence.Reason}")}")
-         @onclick="() => OpenModal(day, absence)"
-         style="position: absolute; top: 50%; left: @(absStartPosition)%; right: calc(100% - @(absEndPosition)%); height: 2px; background-color: #ef4444; transform: translateY(-50%); z-index: 0;">
-    </div>
-}
+                            <div class="absence-line"
+                            data-tooltip=@($"Absent: {absence.StartTime:hh:mm:ss tt} - {absence.EndTime:hh:mm:ss tt}{(string.IsNullOrEmpty(absence.Reason) ? "" : $"\nReason: {absence.Reason}")}")
+                            @onclick="() => OpenModal(day, absence)"
+                             style="position: absolute; top: 50%; left: @(absStartPosition)%; right: calc(100% - @(absEndPosition)%); height: 2px; background-color: #ef4444; transform: translateY(-50%); z-index: 0;">
+                             </div>
+                            }
 
                         }
                     </div>
@@ -312,9 +312,9 @@ else
         min-width: 2px;
     }
 
-        .absence-line:hover {
-            opacity: 0.85;
-        }
+    .absence-line:hover {
+        opacity: 0.85;
+    }
 
             .absence-line:hover::after {
                 content: attr(data-tooltip);
@@ -592,6 +592,7 @@ else
 
 @code {
     private string userId = "";
+    private string employeeId = "";
     private readonly List<Attendancedata> logs = new();
     private bool isLoading = false;
     private string? errorMessage;
@@ -642,7 +643,16 @@ else
             }
 
             userId = userIdResponse;
-            Console.WriteLine($"Assigned userId: {userId}");
+
+            // Fetch employee ID from session storage
+            employeeId = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "EmpId");
+            if (string.IsNullOrEmpty(employeeId))
+            {
+                errorMessage = "Unable to retrieve employee ID from session storage.";
+                return;
+            }
+
+            Console.WriteLine($"Assigned userId: {userId}, employeeId: {employeeId}");
             await FetchLogsById();
         }
         catch (Exception ex)
@@ -996,6 +1006,7 @@ else
             {
                 Id = 0,
                 UserId = userId,
+                EmployeeId = employeeId,
                 Name = userLog.Name,
                 Date = absencePeriod.StartTime.Date,
                 StartTime = absencePeriod.StartTime,
@@ -1063,3 +1074,5 @@ else
         successMessage = null;
     }
 }
+
+
