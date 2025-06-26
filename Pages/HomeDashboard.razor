@@ -18,9 +18,7 @@
         <div class="dashboard-header">
             <div class="header-content">
                 <div class="user-profile">
-                    <MudAvatar Sizerge" Class="user-avatar">
-                        @(userName?.L.ToUpper() : "A")
-                    </MudAvatar>
+                    <MudAvatar Sizerge" Class="use/MudAvatar>
                     <div class="user-info">
                         <h1 class="welcome-title">
                             Welcome back, @(userName ?? "Admin")
@@ -36,7 +34,7 @@
         @if (isLoading)
         {
             <div class="loading-container">
-                <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                <MudPrograte="true" />
                 <p class="loading-text">Loading dashboard...</p>
             </div>
         }
@@ -53,7 +51,7 @@
             <div class="metrics-section">
                 <h2 class="section-title">Dashboard Overview</h2>
                 <div class="metrics-grid">
-                    <MudPaper Class="metric-card clickable" Elevation="3" @onclick="@(() => NavigateToEmployeeList())">
+                    loyeeList())">
                         <div class="metric-icon primary">
                             <MudIcon Icon="@Icons.Material.Filled.Group" />
                         </div>
