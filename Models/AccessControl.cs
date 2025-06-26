@@ -120,6 +120,7 @@ namespace WiseHR.Models
                     ("HIDE_employee-form", "/employee-form"),
                     ("HIDE_bankingForm", "/bankingForm"),
                     ("HIDE_EmployeeProfile", "/employee/.*"),
+                    ("Clock", "/Clock")
                 }
             }
         };

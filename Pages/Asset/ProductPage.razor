@@ -224,13 +224,25 @@
                         </div>
                         <div class="form-group">
                             <label for="decommissionedBy">Decommissioned By</label>
-                            <InputText id="decommissionedBy" class="form-control" @bind-Value="decommissionModel.DecommissionedBy" />
-                            <ValidationMessage For="@(() => decommissionModel.DecommissionedBy)" />
+                            <MudSelect T="string" id="decommissionedBy" @bind-Value="@decommissionModel.DecommissionedByEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => decommissionModel.DecommissionedByEmployeeId)" />
                         </div>
                         <div class="form-group">
                             <label for="approvedBy">Approved By</label>
-                            <InputText id="approvedBy" class="form-control" @bind-Value="decommissionModel.ApprovedBy" />
-                            <ValidationMessage For="@(() => decommissionModel.ApprovedBy)" />
+                            <MudSelect T="string" id="approvedBy" @bind-Value="@decommissionModel.ApprovedByEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => decommissionModel.ApprovedByEmployeeId)" />
                         </div>
                         <div class="form-group">
                             <label for="decommissionDate">Decommission Date</label>
@@ -558,7 +570,6 @@
         box-shadow: none;
     }
 
-
     .mud-table-row:hover .spec-row {
         display: table-row;
     }
@@ -705,6 +716,10 @@
             color: var(--danger-color);
         }
 
+    .mud-select {
+        width: 100%;
+    }
+
     @@keyframes slideDown {
         from {
             opacity: 0;
@@ -723,6 +738,7 @@
     public int Id { get; set; }
 
     private Asset? asset;
+    private List<Employee> employees = new();
     private bool loading = true;
     private string errorMessage = string.Empty;
     private List<AssetInstance> filteredInstances = new();
@@ -748,10 +764,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Configure Snackbar
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
         Snackbar.Configuration.SnackbarVariant = Variant.Filled;
         Snackbar.Configuration.ShowCloseIcon = true;
+
+        try
+        {
+            employees = await AssetsService.GetAllEmployeesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading employees: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
+        }
 
         await LoadAsset();
         StartTimer();
@@ -810,22 +835,24 @@
             {
                 bool hasActiveIssue = await AssetStateService.HasActiveIssueRecordAsync(instance.Id);
                 instanceIssueStatus[instance.Id] = hasActiveIssue;
-                
+
                 if (instance.Status == "Unavailable")
                 {
                     var issueRecords = await AssetsService.GetAssetIssueRecordsAsync(instance.Id);
                     if (issueRecords == null || !issueRecords.Any())
                         continue;
-                    var lastReturn = issueRecords
-                        .Where(r => r.ReturnedOn != default)
-                        .OrderByDescending(r => r.ReturnedOn)
+
+                    var lastIssue = issueRecords
+                        .Where(r => r.ReturnedOn == default && !string.IsNullOrEmpty(r.IssuedToEmployeeId))
+                        .OrderByDescending(r => r.IssuedOn)
                         .FirstOrDefault();
-                    if (lastReturn != null)
+
+                    if (lastIssue != null)
                     {
-                        var returnDate = lastReturn.ReturnedOn;
-                        var istDate = returnDate.AddHours(5.5);
+                        var issuedOn = lastIssue.IssuedOn;
+                        var istDate = issuedOn.Add(istOffset);
                         var endOfDayIst = new DateTime(istDate.Year, istDate.Month, istDate.Day, 23, 59, 59, DateTimeKind.Local);
-                        var utcEndOfDay = endOfDayIst.AddHours(-5.5);
+                        var utcEndOfDay = endOfDayIst.Subtract(istOffset);
                         instanceReturnDates[instance.Id] = utcEndOfDay;
                     }
                 }
@@ -845,7 +872,7 @@
     private void StartTimer()
     {
         timer = new System.Timers.Timer(1000);
-        timer.Elapsed += (sender, e) => 
+        timer.Elapsed += (sender, e) =>
         {
             UpdateCountdown();
         };
@@ -862,14 +889,14 @@
 
         bool updated = false;
         var now = DateTime.UtcNow;
-        var nowIst = now.AddHours(5.5);
+        var nowIst = now.Add(istOffset);
 
         foreach (var instance in asset.Instances)
         {
             if (instance.Status == "Unavailable" && instanceReturnDates.ContainsKey(instance.Id))
             {
                 var returnDate = instanceReturnDates[instance.Id];
-                var returnDateIst = returnDate.AddHours(5.5);
+                var returnDateIst = returnDate.Add(istOffset);
 
                 if (returnDateIst > nowIst)
                 {
@@ -893,7 +920,7 @@
 
         if (updated)
         {
-            InvokeAsync(() => 
+            InvokeAsync(() =>
             {
                 StateHasChanged();
             });
@@ -1012,7 +1039,7 @@
         else if (status == "Unavailable")
         {
             Navigation.NavigateTo($"{navUrl}?openUnassignDialog=true");
-            notifiedInstanceIds.Remove(instanceId); // Clear notification tracking on unassign
+            notifiedInstanceIds.Remove(instanceId);
         }
         else
         {
@@ -1023,11 +1050,10 @@
     private void OpenDecommissionModal(int instanceId, string assetTag)
     {
         selectedInstanceId = instanceId;
-        // Set the current date in IST without time
         decommissionModel = new DecommissionDto
             {
                 AssetTag = assetTag,
-                DecommissionDate = DateTime.UtcNow.AddHours(5.5).Date
+                DecommissionDate = DateTime.UtcNow.Add(istOffset).Date
             };
         showDecommissionModal = true;
         StateHasChanged();
@@ -1048,7 +1074,6 @@
             loading = true;
             StateHasChanged();
 
-            // Validate instance status
             var instance = asset?.Instances.FirstOrDefault(i => i.Id == selectedInstanceId);
             if (instance == null)
             {
@@ -1064,37 +1089,28 @@
                 return;
             }
 
-            // Get UTC time for API
-            var utcDecommissionDate = decommissionModel.GetUtcDecommissionDate();
+            var decommissionedByEmployee = employees.FirstOrDefault(e => e.EmployeeId == decommissionModel.DecommissionedByEmployeeId);
+            var approvedByEmployee = employees.FirstOrDefault(e => e.EmployeeId == decommissionModel.ApprovedByEmployeeId);
 
-            var decommissionData = new
+            if (decommissionedByEmployee == null || approvedByEmployee == null)
             {
-                assetTag = decommissionModel.AssetTag,
-                decommissionedBy = decommissionModel.DecommissionedBy,
-                approvedBy = decommissionModel.ApprovedBy,
-                decommissionDate = utcDecommissionDate?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                remark = decommissionModel.Remark
-            };
-
-            var response = await Http.PostAsJsonAsync($"/api/Assets/instances/{selectedInstanceId}/decommission", decommissionData);
-            if (response.IsSuccessStatusCode)
-            {
-                Snackbar.Add($"Instance {decommissionModel.AssetTag} decommissioned successfully.", Severity.Success);
-                // Update local instance status
-                instance.Status = "Decommissioned";
-                instance.AssignedTo = null;
-                // Clear notification tracking for this instance
-                notifiedInstanceIds.Remove(selectedInstanceId);
-                CloseDecommissionModal();
-                await LoadInstanceIssueStatus();
-                ApplyFilters();
-            }
-            else
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                errorMessage = $"Error decommissioning instance: {errorContent}";
+                errorMessage = "Invalid employee selection.";
                 Snackbar.Add(errorMessage, Severity.Error);
+                return;
             }
+
+            decommissionModel.DecommissionedByFullName = decommissionedByEmployee.FullName;
+            decommissionModel.ApprovedByFullName = approvedByEmployee.FullName;
+
+            await AssetStateService.DecommissionInstanceAsync(selectedInstanceId, decommissionModel);
+
+            Snackbar.Add($"Instance {decommissionModel.AssetTag} decommissioned successfully.", Severity.Success);
+            instance.Status = "Decommissioned";
+            instance.AssignedTo = null;
+            notifiedInstanceIds.Remove(selectedInstanceId);
+            CloseDecommissionModal();
+            await LoadInstanceIssueStatus();
+            ApplyFilters();
         }
         catch (Exception ex)
         {

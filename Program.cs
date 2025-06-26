@@ -27,6 +27,8 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<AssetStateService>();
 builder.Services.AddScoped<AssetsService>();
 
+
+
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;

@@ -1,0 +1,976 @@
+@page "/Payroll"
+@layout HomeLayout
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@using System.Linq
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using System.Net.Http.Json
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+
+<style>
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8fafc;
+    }
+
+    .search-filter-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+        align-items: flex-end;
+    }
+
+    .month-switcher {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 16px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .salary-table-container {
+        width: 100%;
+        overflow-x: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        background-color: #ffffff;
+    }
+
+    .salary-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1000px;
+    }
+
+        .salary-table th, .salary-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .salary-table th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: #1f2937;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .salary-table tbody tr:hover {
+            background-color: #f9fafb;
+            cursor: pointer;
+        }
+
+        .salary-table tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .salary-table .name-column {
+            white-space: nowrap;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .salary-table tfoot {
+            background-color: #e8f0fe;
+            font-weight: 600;
+            color: #1a73e8;
+        }
+
+            .salary-table tfoot td {
+                border-top: 2px solid #d1d5db;
+            }
+
+    .total-section {
+        margin-top: 24px;
+        padding: 16px;
+        background-color: #e8f0fe;
+        border-radius: 8px;
+        text-align: right;
+    }
+
+        .total-section h3 {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1a73e8;
+            margin: 0;
+        }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        }
+
+    .form-select {
+        display: block;
+        padding: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+
+    .error-alert {
+        background-color: #fee2e2;
+        color: #b91c1c;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .success-alert {
+        background-color: #d1fae5;
+        color: #065f46;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .info-alert {
+        background-color: #e0f2fe;
+        color: #1e40af;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .edit-button, .run-payroll-button, .summary-button {
+        padding: 8px 16px;
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+        .edit-button:hover, .run-payroll-button:hover, .summary-button:hover {
+            background-color: #2563eb;
+        }
+
+    .modal {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        height: calc(100% - 60px);
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        margin-top: 2%;
+        background-color: #fff;
+        padding: 24px;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+
+        .modal-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+            .modal-content table td {
+                padding: 8px;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+        .modal-content .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .modal-content .close-button {
+            padding: 8px 16px;
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+            .modal-content .close-button:hover {
+                background-color: #dc2626;
+            }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+<div class="container">
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 8px;">Loading...</p>
+        </div>
+    }
+    else if (hasError)
+    {
+        <div class="error-alert">@errorMessage</div>
+    }
+    else
+    {
+        @if (showSuccessMessage)
+        {
+            <div class="success-alert">Payroll data saved successfully!</div>
+        }
+
+        <div style="margin-bottom: 24px; display: flex; gap: 12px;">
+            <button class="run-payroll-button" @onclick="RunPayroll">Run Payroll</button>
+            <button class="summary-button" @onclick="NavigateToSummary">Summary</button>
+        </div>
+
+        <div class="search-filter-container">
+            <InputText class="form-control"
+                       style="max-width: 320px;"
+                       placeholder="Search by name, email, ID, or designation"
+                       @bind-Value="SearchQuery"
+                       @bind-Value:after="DebounceFilter" />
+            <InputSelect class="form-select"
+                         style="max-width: 220px;"
+                         @bind-Value="DesignationFilter"
+                         @bind-Value:after="FilterEmployees">
+                <option value="">All Designations</option>
+                @foreach (var designation in designations)
+                {
+                    <option value="@designation">@designation</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="month-switcher">
+            <InputSelect class="form-select"
+                         style="max-width: 200px;"
+                         @bind-Value="SelectedMonth"
+                         @bind-Value:after="LoadEmployeeData">
+                @foreach (var month in months)
+                {
+                    <option value="@month.Key">@month.Value</option>
+                }
+            </InputSelect>
+            <InputSelect class="form-select"
+                         style="max-width: 150px;"
+                         @bind-Value="SelectedYear"
+                         @bind-Value:after="LoadEmployeeData">
+                @foreach (var year in years)
+                {
+                    <option value="@year">@year</option>
+                }
+            </InputSelect>
+        </div>
+
+        @if (filteredEmployees.Any())
+        {
+            <div class="salary-table-container">
+                <table class="salary-table">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Designation</th>
+                            <th>CTC</th>
+                            <th>Basic Salary</th>
+                            <th>Gross Salary</th>
+                            <th>Total Deductions</th>
+                            <th>Net Pay</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var (employee, index) in filteredEmployees.Select((e, i) => (e, i)))
+                        {
+                            <tr @onclick="() => ShowPayrollDetails(employee)">
+                                <td>@(index + 1)</td>
+                                <td>@employee.EmployeeID</td>
+                                <td class="name-column" title="@employee.FullName">@employee.FullName</td>
+                                <td>@employee.CurrentEmail</td>
+                                <td>@employee.Designation</td>
+                                <td>@employee.CTC_Amount.ToString("N2")</td>
+                                <td>@employee.BasicSalary.ToString("N2")</td>
+                                <td>@employee.GrossSalary.ToString("N0")</td>
+                                <td>@employee.TotalDeductions.ToString("N0")</td>
+                                <td>@employee.NetPay.ToString("N0")</td>
+                                <td>
+                                    <button class="edit-button" @onclick:stopPropagation="true" @onclick="() => NavigateToEdit(employee)">Edit</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5">Total:</td>
+                            <td>@filteredEmployees.Sum(e => e.CTC_Amount).ToString("N2")</td>
+                            <td>@filteredEmployees.Sum(e => e.BasicSalary).ToString("N2")</td>
+                            <td>@filteredEmployees.Sum(e => e.GrossSalary).ToString("N0")</td>
+                            <td>@filteredEmployees.Sum(e => e.TotalDeductions).ToString("N0")</td>
+                            <td>@filteredEmployees.Sum(e => e.NetPay).ToString("N0")</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="total-section">
+                <h3>Total Net Pay for @months[SelectedMonth] @SelectedYear: @filteredEmployees.Sum(e => e.NetPay).ToString("N0")</h3>
+            </div>
+        }
+        else
+        {
+            <div class="info-alert">No employee data found for the selected criteria.</div>
+        }
+
+        @if (showDetailsModal && selectedEmployee != null)
+        {
+            <div class="modal">
+                <div class="modal-content">
+                    <h2>Payroll Details for @selectedEmployee.FullName</h2>
+                    <table>
+                        <tr>
+                            <td><strong>Employee ID:</strong></td>
+                            <td>@selectedEmployee.EmployeeID</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Month/Year:</strong></td>
+                            <td>@months[selectedEmployee.Month] @selectedEmployee.Year</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HRA:</strong></td>
+                            <td>@selectedEmployee.HRA_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Special Allowance:</strong></td>
+                            <td>@selectedEmployee.SpecialAllowance_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Arrears:</strong></td>
+                            <td>@selectedEmployee.Arrears_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employer PF:</strong></td>
+                            <td>@selectedEmployee.EmployerPF_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employee PF:</strong></td>
+                            <td>@selectedEmployee.EmployeePF_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employer ESIC:</strong></td>
+                            <td>@selectedEmployee.EmployerESIC_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employee ESIC:</strong></td>
+                            <td>@selectedEmployee.EmployeeESIC_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gratuity:</strong></td>
+                            <td>@selectedEmployee.Gratuity_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Income Tax:</strong></td>
+                            <td>@selectedEmployee.IncomeTax_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Professional Tax:</strong></td>
+                            <td>@selectedEmployee.ProfessionalTax_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Loans:</strong></td>
+                            <td>@selectedEmployee.Loans_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>LOP:</strong></td>
+                            <td>@selectedEmployee.LOP_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gross Salary:</strong></td>
+                            <td>@selectedEmployee.GrossSalary.ToString("N0")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Deductions:</strong></td>
+                            <td>@selectedEmployee.TotalDeductions.ToString("N0")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Net Pay:</strong></td>
+                            <td>@selectedEmployee.NetPay.ToString("N0")</td>
+                        </tr>
+                        @if (selectedEmployee.Others != null && selectedEmployee.Others.Any())
+                        {
+                            <tr>
+                                <td colspan="2"><strong>Other Components:</strong></td>
+                            </tr>
+                            @foreach (var item in selectedEmployee.Others)
+                            {
+                                <tr>
+                                    <td>@item.Key</td>
+                                    <td>@item.Value.ToString("N0")</td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                    <div class="button-group">
+                        <button class="close-button" @onclick="CloseDetailsModal">Close</button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    public class Employee
+    {
+        [JsonPropertyName("employeeID")]
+        public string EmployeeID { get; set; } = string.Empty;
+        [JsonPropertyName("fullName")]
+        public string FullName { get; set; } = string.Empty;
+        [JsonPropertyName("currentEmail")]
+        public string CurrentEmail { get; set; } = string.Empty;
+        [JsonPropertyName("designation")]
+        public string Designation { get; set; } = string.Empty;
+        [JsonPropertyName("ctC_Amount")]
+        public decimal CTC_Amount { get; set; }
+        [JsonPropertyName("basicSalary")]
+        public decimal BasicSalary { get; set; }
+    }
+
+    public class EmployeePayroll
+    {
+        [Required(ErrorMessage = "Employee ID is required")]
+        [JsonPropertyName("employeeID")]
+        public string EmployeeID { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Full Name is required")]
+        [MaxLength(100, ErrorMessage = "Full Name cannot exceed 100 characters")]
+        [JsonPropertyName("fullName")]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        [MaxLength(100, ErrorMessage = "Email cannot exceed 100 characters")]
+        [JsonPropertyName("currentEmail")]
+        public string CurrentEmail { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Designation is required")]
+        [MaxLength(50, ErrorMessage = "Designation cannot exceed 50 characters")]
+        [JsonPropertyName("designation")]
+        public string Designation { get; set; } = string.Empty;
+
+        [Range(1, 12, ErrorMessage = "Month must be between 1 and 12")]
+        [JsonPropertyName("month")]
+        public int Month { get; set; }
+
+        [Range(1900, 2100, ErrorMessage = "Year must be between 1900 and 2100")]
+        [JsonPropertyName("year")]
+        public int Year { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "CTC Amount cannot be negative")]
+        [JsonPropertyName("ctC_Amount")]
+        public decimal CTC_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Basic Salary cannot be negative")]
+        [JsonPropertyName("basicSalary")]
+        public decimal BasicSalary { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "HRA cannot be negative")]
+        [JsonPropertyName("hrA_Amount")]
+        public decimal HRA_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Special Allowance cannot be negative")]
+        [JsonPropertyName("specialAllowance_Amount")]
+        public decimal SpecialAllowance_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Arrears cannot be negative")]
+        [JsonPropertyName("arrears_Amount")]
+        public decimal Arrears_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Employer PF cannot be negative")]
+        [JsonPropertyName("employerPF_Amount")]
+        public decimal EmployerPF_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Employee PF cannot be negative")]
+        [JsonPropertyName("employeePF_Amount")]
+        public decimal EmployeePF_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Employer ESIC cannot be negative")]
+        [JsonPropertyName("employerESIC_Amount")]
+        public decimal EmployerESIC_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Employee ESIC cannot be negative")]
+        [JsonPropertyName("employeeESIC_Amount")]
+        public decimal EmployeeESIC_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Gratuity cannot be negative")]
+        [JsonPropertyName("gratuity_Amount")]
+        public decimal Gratuity_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Income Tax cannot be negative")]
+        [JsonPropertyName("incomeTax_Amount")]
+        public decimal IncomeTax_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Professional Tax cannot be negative")]
+        [JsonPropertyName("professionalTax_Amount")]
+        public decimal ProfessionalTax_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Loans cannot be negative")]
+        [JsonPropertyName("loans_Amount")]
+        public decimal Loans_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "LOP Amount cannot be negative")]
+        [JsonPropertyName("loP_Amount")]
+        public decimal LOP_Amount { get; set; }
+
+        [Range(0, int.MaxValue, ErrorMessage = "Gross Salary cannot be negative")]
+        [JsonPropertyName("grossSalary")]
+        public int GrossSalary { get; set; }
+
+        [Range(0, int.MaxValue, ErrorMessage = "Total Deductions cannot be negative")]
+        [JsonPropertyName("totalDeductions")]
+        public int TotalDeductions { get; set; }
+
+        [Range(0, int.MaxValue, ErrorMessage = "Net Pay cannot be negative")]
+        [JsonPropertyName("netPay")]
+        public int NetPay { get; set; }
+
+        [JsonPropertyName("Others")]
+        public Dictionary<string, int> Others { get; set; } = new();
+    }
+
+    public class EmployeeService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly string _apiBaseUrl;
+        private readonly JsonSerializerOptions _jsonOptions;
+
+        public EmployeeService(HttpClient httpClient, string apiBaseUrl)
+        {
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _apiBaseUrl = apiBaseUrl?.TrimEnd('/') ?? throw new ArgumentNullException(nameof(apiBaseUrl));
+            _jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = true
+                };
+        }
+
+        public async Task<List<Employee>> GetAllEmployeesAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/PayrollDetails", cancellationToken);
+                response.EnsureSuccessStatusCode();
+                var employees = await response.Content.ReadFromJsonAsync<List<Employee>>(_jsonOptions, cancellationToken) ?? new();
+                return employees.Where(e => IsValidEmployee(e)).ToList();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error fetching employees: {ex.Message}");
+                throw new Exception($"Failed to fetch employees: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error fetching employees: {ex.Message}");
+                throw new Exception($"Failed to fetch employees: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<List<EmployeePayroll>> GetPayrollRecordsAsync(int month, int year, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/PayrollMonthlyDetails?month={month}&year={year}", cancellationToken);
+                response.EnsureSuccessStatusCode();
+                var payrollRecords = await response.Content.ReadFromJsonAsync<List<EmployeePayroll>>(_jsonOptions, cancellationToken) ?? new();
+                return payrollRecords.Where(IsValidPayroll).ToList();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error fetching payroll records: {ex.Message}");
+                throw new Exception($"Failed to fetch payroll records: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error fetching payroll records: {ex.Message}");
+                throw new Exception($"Failed to fetch payroll records: {ex.Message}", ex);
+            }
+        }
+
+        public async Task SavePayrollAsync(List<EmployeePayroll> payrolls, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                foreach (var payroll in payrolls)
+                {
+                    var jsonPayload = JsonSerializer.Serialize(payroll, _jsonOptions);
+                    Console.WriteLine($"Sending payroll payload: {jsonPayload}");
+
+                    var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/api/PayrollMonthlyDetails", payroll, _jsonOptions, cancellationToken);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                        Console.WriteLine($"Error saving payroll: {response.StatusCode}, Details: {errorContent}");
+                        throw new HttpRequestException($"Failed to save payroll: {errorContent}, Status Code: {response.StatusCode}");
+                    }
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error saving payroll: {ex.Message}");
+                throw new Exception($"Failed to save payroll: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error saving payroll: {ex.Message}");
+                throw new Exception($"Failed to save payroll: {ex.Message}", ex);
+            }
+        }
+
+        private bool IsValidEmployee(Employee emp) =>
+            !string.IsNullOrWhiteSpace(emp.EmployeeID) &&
+            !string.IsNullOrWhiteSpace(emp.FullName) &&
+            !string.IsNullOrWhiteSpace(emp.CurrentEmail) &&
+            IsValidEmail(emp.CurrentEmail);
+
+        public bool IsValidPayroll(EmployeePayroll emp) =>
+            !string.IsNullOrWhiteSpace(emp.EmployeeID) &&
+            !string.IsNullOrWhiteSpace(emp.FullName) &&
+            !string.IsNullOrWhiteSpace(emp.CurrentEmail) &&
+            IsValidEmail(emp.CurrentEmail) &&
+            emp.Month is >= 1 and <= 12 &&
+            emp.Year is >= 1900 and <= 2100;
+    }
+
+    private EmployeeService? _employeeService;
+    private List<EmployeePayroll> employees = new();
+    private List<EmployeePayroll> filteredEmployees = new();
+    private bool isLoading;
+    private bool hasError;
+    private string errorMessage = string.Empty;
+    private bool showSuccessMessage;
+    private string _searchQuery = string.Empty;
+    private string _designationFilter = string.Empty;
+    private List<string> designations = new();
+    private CancellationTokenSource? _debounceCts;
+    private readonly Dictionary<int, string> months = new()
+    {
+        { 1, "January" }, { 2, "February" }, { 3, "March" }, { 4, "April" },
+        { 5, "May" }, { 6, "June" }, { 7, "July" }, { 8, "August" },
+        { 9, "September" }, { 10, "October" }, { 11, "November" }, { 12, "December" }
+    };
+    private readonly List<int> years = Enumerable.Range(DateTime.Now.Year - 1, 10).ToList();
+    private int _selectedMonth = DateTime.Now.Month;
+    private int _selectedYear = DateTime.Now.Year;
+    private bool showDetailsModal;
+    private EmployeePayroll? selectedEmployee;
+
+    private const string ApiBaseUrl = "https://localhost:7021";
+
+    private string SearchQuery
+    {
+        get => _searchQuery;
+        set => _searchQuery = value;
+    }
+
+    private string DesignationFilter
+    {
+        get => _designationFilter;
+        set => _designationFilter = value;
+    }
+
+    private int SelectedMonth
+    {
+        get => _selectedMonth;
+        set => _selectedMonth = value;
+    }
+
+    private int SelectedYear
+    {
+        get => _selectedYear;
+        set => _selectedYear = value;
+    }
+
+    protected override void OnInitialized()
+    {
+        _employeeService = new EmployeeService(HttpClient, ApiBaseUrl);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployeeData();
+    }
+
+    private async Task LoadEmployeeData()
+    {
+        if (_employeeService == null)
+        {
+            errorMessage = "Employee service not initialized.";
+            hasError = true;
+            isLoading = false;
+            StateHasChanged();
+            return;
+        }
+
+        isLoading = true;
+        hasError = false;
+        errorMessage = string.Empty;
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var employeeDetails = await _employeeService.GetAllEmployeesAsync(cts.Token);
+            var payrollRecords = await _employeeService.GetPayrollRecordsAsync(SelectedMonth, SelectedYear, cts.Token);
+
+            employees = employeeDetails.Select(emp => MergeEmployeeData(emp, payrollRecords)).ToList();
+            designations = employees.Select(p => p.Designation).Distinct().OrderBy(d => d).ToList();
+            FilterEmployees();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load data: {ex.Message}";
+            hasError = true;
+            Console.WriteLine($"Error loading employee data: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private EmployeePayroll MergeEmployeeData(Employee emp, List<EmployeePayroll> payrollRecords)
+    {
+        var payroll = payrollRecords.FirstOrDefault(p => p.EmployeeID == emp.EmployeeID && p.Month == SelectedMonth && p.Year == SelectedYear)
+            ?? new EmployeePayroll
+                {
+                    EmployeeID = emp.EmployeeID,
+                    FullName = emp.FullName,
+                    CurrentEmail = emp.CurrentEmail,
+                    Designation = emp.Designation ?? string.Empty,
+                    Month = SelectedMonth,
+                    Year = SelectedYear,
+                    CTC_Amount = emp.CTC_Amount,
+                    BasicSalary = emp.BasicSalary,
+                    GrossSalary = (int)emp.BasicSalary,
+                    NetPay = (int)emp.BasicSalary,
+                    HRA_Amount = 0,
+                    SpecialAllowance_Amount = 0,
+                    Arrears_Amount = 0,
+                    EmployerPF_Amount = 0,
+                    EmployeePF_Amount = 0,
+                    EmployerESIC_Amount = 0,
+                    EmployeeESIC_Amount = 0,
+                    Gratuity_Amount = 0,
+                    IncomeTax_Amount = 0,
+                    ProfessionalTax_Amount = 0,
+                    Loans_Amount = 0,
+                    LOP_Amount = 0,
+                    TotalDeductions = 0,
+                    Others = new Dictionary<string, int>
+                    {
+                    { "additionalProp1", 0 },
+                    { "additionalProp2", 0 },
+                    { "additionalProp3", 0 }
+                    }
+                };
+
+        payroll.EmployeeID = emp.EmployeeID;
+        payroll.FullName = emp.FullName;
+        payroll.CurrentEmail = emp.CurrentEmail;
+        payroll.Designation = emp.Designation ?? string.Empty;
+        Console.WriteLine($"Merged EmployeePayroll for {payroll.FullName}: {JsonSerializer.Serialize(payroll)}");
+        return payroll;
+    }
+
+    private async Task RunPayroll()
+    {
+        isLoading = true;
+        hasError = false;
+        showSuccessMessage = false;
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var validEmployees = filteredEmployees.Where(e => _employeeService!.IsValidPayroll(e)).ToList();
+            if (!validEmployees.Any())
+            {
+                errorMessage = "No valid employee data to save.";
+                hasError = true;
+                StateHasChanged();
+                return;
+            }
+
+            await _employeeService.SavePayrollAsync(validEmployees, cts.Token);
+            showSuccessMessage = true;
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(3000);
+                showSuccessMessage = false;
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Failed to save payroll: {ex.Message}";
+            hasError = true;
+            Console.WriteLine($"Error saving payroll: {ex}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save payroll: {ex.Message}";
+            hasError = true;
+            Console.WriteLine($"Error saving payroll: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void FilterEmployees()
+    {
+        filteredEmployees = employees
+            .Where(p => p.Month == SelectedMonth && p.Year == SelectedYear)
+            .Where(p => string.IsNullOrEmpty(SearchQuery) ||
+                p.FullName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                p.EmployeeID.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                p.CurrentEmail.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                p.Designation.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase))
+            .Where(p => string.IsNullOrEmpty(DesignationFilter) || p.Designation == DesignationFilter)
+            .OrderBy(p => p.FullName)
+            .ToList();
+        StateHasChanged();
+    }
+
+    private async Task DebounceFilter()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(300, _debounceCts.Token);
+            FilterEmployees();
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignore cancellation
+        }
+    }
+
+    private void ShowPayrollDetails(EmployeePayroll employee)
+    {
+        selectedEmployee = employee;
+        showDetailsModal = true;
+        Console.WriteLine($"Showing payroll details for {employee.FullName}: {JsonSerializer.Serialize(employee)}");
+        StateHasChanged();
+    }
+
+    private void CloseDetailsModal()
+    {
+        showDetailsModal = false;
+        selectedEmployee = null;
+        StateHasChanged();
+    }
+
+    private void NavigateToSummary()
+    {
+        NavigationManager.NavigateTo("/Summary");
+    }
+
+    private void NavigateToEdit(EmployeePayroll employee)
+    {
+        var json = JsonSerializer.Serialize(employee);
+        var jsonBytes = System.Text.Encoding.UTF8.GetBytes(json);
+        var encodedJson = Convert.ToBase64String(jsonBytes);
+        NavigationManager.NavigateTo($"/Payroll/Edit?employee={Uri.EscapeDataString(encodedJson)}");
+    }
+
+    private static bool IsValidEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public void Dispose()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+    }
+}

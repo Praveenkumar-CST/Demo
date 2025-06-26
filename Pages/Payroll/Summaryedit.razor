@@ -1,0 +1,1166 @@
+@page "/Employee"
+@layout HomeLayout
+@inject EmployeeService EmployeeService
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject MudBlazor.ISnackbar Snackbar
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+
+<style>
+        .container {
+        width: 100%;
+        max-width: 1400px;
+        margin: 20px auto;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+    }
+
+    .main-content {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .earnings-section, .deductions-section {
+        flex: 1;
+        min-width: 400px;
+    }
+
+    .card {
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+
+    .card-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #6c757d;
+    }
+
+        .close-btn:hover {
+            color: #007bff;
+        }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 5px;
+        display: block;
+        flex: 0 0 150px;
+    }
+
+    .table-like {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table-like th, .table-like td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .table-like th {
+            font-weight: 600;
+            color: #495057;
+            background-color: #e9ecef;
+        }
+
+    .input-field {
+        width: 100px;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+        .input-field:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+    .percentage-input {
+        width: 80px;
+        padding-right: 20px;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%23495057" stroke-width="2"><text x="12" y="18" font-size="16" text-anchor="middle" fill="%23495057">%</text></svg>') no-repeat right 8px center;
+        background-size: 12px;
+    }
+
+    .add-component {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .select-field {
+        width: 200px;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .custom-input {
+        width: 200px;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-left: 10px;
+    }
+
+        .custom-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+    .remove-btn {
+        background-color: #dc3545;
+        color: #ffffff;
+        padding: 2px 6px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 10px;
+        line-height: 1.5;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 5px;
+    }
+
+        .remove-btn:hover {
+            background-color: #c82333;
+        }
+
+    .toggle-btn {
+        background-color: #28a745;
+        color: #ffffff;
+        padding: 2px 6px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 10px;
+        line-height: 1.5;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .toggle-btn:hover {
+            background-color: #218838;
+        }
+
+    .add-btn {
+        background-color: #28a745;
+        color: #ffffff;
+        padding: 4px 8px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+        .add-btn:hover {
+            background-color: #218838;
+        }
+
+    .save-btn {
+        background-color: #007bff;
+        color: #ffffff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        margin: 20px auto 0;
+        display: block;
+    }
+
+        .save-btn:hover {
+            background-color: #0056b3;
+        }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+    .summary-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .summary-value {
+        color: #495057;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 12px;
+        border-radius: 4px;
+        text-align: center;
+        border: 1px solid #f5c6cb;
+        width: 100%;
+        max-width: 600px;
+        margin: 20px auto;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 12px;
+        border-radius: 4px;
+        text-align: center;
+        border: 1px solid #ffeeba;
+        width: 100%;
+        max-width: 600px;
+        margin: 20px auto;
+    }
+
+    .loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .spinner {
+        border: 4px solid #f8f9fa;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .month-year-selector {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .month-select, .year-select {
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 5px;
+    }
+
+    @@media (max-width: 768px) {
+        .main-content {
+            flex-direction: column;
+        }
+
+        .earnings-section, .deductions-section {
+            min-width: 100%;
+        }
+
+        .table-like {
+            display: block;
+            overflow-x: auto;
+        }
+
+            .table-like th, .table-like td {
+                min-width: 80px;
+            }
+
+        .month-year-selector {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+
+</style>
+
+<div class="container">
+    @if (isLoading)
+    {
+        <div class="loader">
+            <div class="spinner"></div>
+            <span>Loading...</span>
+        </div>
+    }
+    else if (hasError)
+    {
+        <div class="alert-danger">Failed to load employee data.</div>
+    }
+    else
+    {
+        <div style="width: 100%;">
+            <div class="card-header">
+                <h3 class="card-title">Edit Payroll for @(selectedEmployee?.FullName ?? "New Employee")</h3>
+                <button class="close-btn" @onclick="CloseEditPage">×</button>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Yearly CTC</h3>
+                </div>
+                <div class="">
+                    <div class="d-flex align-content-center align-items-center gap-3">
+                        <label class="mb-1">Yearly CTC</label>
+                        <input class="" step="0.01"
+                               value="@(salaryDetails.YearlySalary != 0 ? $"{Math.Round(salaryDetails.YearlySalary, 2)}" : "")"
+                               @onchange="@(e => UpdateYearlySalary(decimal.TryParse(e.Value?.ToString(), out var result) ? result : 0))"
+                               placeholder="Enter CTC" />
+                    </div>
+                </div>
+            </div>
+            @if (showWarning)
+            {
+                <div class="alert-warning">Total salary components exceed the yearly CTC.</div>
+            }
+            <div class="main-content">
+                <div class="earnings-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Earnings</h3>
+                        </div>
+                        <table class="table-like">
+                            <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Part of CTC</th>
+                                    <th>Percentage</th>
+                                    <th>Yearly</th>
+                                    <th>Monthly</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var earning in salaryDetails.Earnings.OrderBy(e => e.Name != "HRA"))
+                                {
+                                    <tr>
+                                        <td><label class="form-label">@earning.Name</label></td>
+                                        <td><input type="checkbox" checked="@earning.IsPartOfCTC" @onchange="@(e => TogglePartOfCTC(earning, (bool)e.Value))" /></td>
+                                        <td>
+                                            <input class="input-field percentage-input" step="0.01"
+                                                   value="@(earning.Percentage != null ? $"{Math.Round(earning.Percentage.Value, 2)}" : "")"
+                                                   @onchange="@(e => UpdateEarningPercentage(earning, decimal.TryParse(e.Value?.ToString(), out var result) ? result : 0))"
+                                                   placeholder="0.00" disabled="@(!earning.IsEditable)" />
+                                        </td>
+                                        <td>
+                                            <input class="input-field" step="0.01"
+                                                   value="@(earning.YearlyAmount != 0 ? $"{Math.Round(earning.YearlyAmount, 2)}" : "")"
+                                                   @onchange="@(e => UpdateEarningYearlyAmount(earning, decimal.TryParse(e.Value?.ToString(), out var result) ? result : 0))"
+                                                   placeholder="Yearly" disabled="@(!earning.IsEditable)" />
+                                        </td>
+                                        <td>
+                                            <input class="input-field" step="0.01"
+                                                   value="@(earning.MonthlyAmount != 0 ? $"{Math.Round(earning.MonthlyAmount, 2)}" : "")"
+                                                   @onchange="@(e => UpdateEarningMonthlyAmount(earning, decimal.TryParse(e.Value?.ToString(), out var result) ? result : 0))"
+                                                   placeholder="Monthly" disabled="@(!earning.IsEditable)" />
+                                        </td>
+                                        <td>
+                                            <div class="button-group">
+                                                @if (earning.IsEditable)
+                                                {
+                                                    <button class="remove-btn" @onclick="() => RemoveEarning(earning)">×</button>
+                                                    <button class="toggle-btn" @onclick="() => ToggleEarningDropdownForComponent(earning)">+</button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                                @if (!salaryDetails.Earnings.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5"></td>
+                                        <td>
+                                            <button class="toggle-btn" type="button" @onclick="ToggleEarningDropdown">+</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="form-group add-component @(showEarningDropdown ? "" : "hidden")">
+                            <select class="select-field" value="@newEarning"
+                                    @onchange="@(e => HandleEarningSelection(e.Value?.ToString() ?? ""))">
+                                <option value="">Select Earning</option>
+                                @foreach (var earning in availableEarnings)
+                                {
+                                    <option value="@earning">@earning</option>
+                                }
+                            </select>
+                            @if (showCustomEarningInput)
+                            {
+                                <input type="text" class="custom-input" placeholder="Enter custom earning name"
+                                       @bind="customEarningName" @bind:event="oninput" />
+                                <button class="add-btn" type="button" @onclick="AddCustomEarning">+</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="deductions-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Deductions</h3>
+                        </div>
+                        <table class="table-like">
+                            <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Percentage</th>
+                                    <th>Yearly</th>
+                                    <th>Monthly</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var deduction in salaryDetails.Deductions.OrderBy(d => d.Name != "HRA"))
+                                {
+                                    <tr>
+                                        <td><label class="form-label">@deduction.Name</label></td>
+                                        <td>
+                                            <input class="input-field percentage-input" step="0.01"
+                                                   value="@(deduction.Percentage != null ? $"{Math.Round(deduction.Percentage.Value, 2)}" : "")"
+                                                   @onchange="@(e => UpdateDeductionPercentage(deduction, decimal.TryParse(e.Value?.ToString(), out var result) ? result : 0))"
+                                                   placeholder="0.00" disabled="@(!deduction.IsEditable)" />
+                                        </td>
+                                        <td>
+                                            <input class="input-field" step="0.01"
+                                                   value="@(deduction.YearlyAmount != 0 ? $"{Math.Round(deduction.YearlyAmount, 2)}" : "")"
+                                                   @onchange="@(e => UpdateDeductionYearlyAmount(deduction, decimal.TryParse(e.Value?.ToString(), out var result) ? result : 0))"
+                                                   placeholder="Yearly" disabled="@(!deduction.IsEditable)" />
+                                        </td>
+                                        <td>
+                                            <input class="input-field" step="0.01"
+                                                   value="@(deduction.MonthlyAmount != 0 ? $"{Math.Round(deduction.MonthlyAmount, 2)}" : "")"
+                                                   @onchange="@(e => UpdateDeductionMonthlyAmount(deduction, decimal.TryParse(e.Value?.ToString(), out var result) ? result : 0))"
+                                                   placeholder="Monthly" disabled="@(!deduction.IsEditable)" />
+                                        </td>
+                                        <td>
+                                            <div class="button-group">
+                                                @if (deduction.IsEditable)
+                                                {
+                                                    <button class="remove-btn" @onclick="() => RemoveDeduction(deduction)">×</button>
+                                                    <button class="toggle-btn" @onclick="() => ToggleDeductionDropdownForComponent(deduction)">+</button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                                @if (!salaryDetails.Deductions.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5"></td>
+                                        <td>
+                                            <button class="toggle-btn" type="button" @onclick="ToggleDeductionDropdown">+</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="form-group add-component @(showDeductionDropdown ? "" : "hidden")">
+                            <select class="select-field" value="@newDeduction"
+                                    @onchange="@(e => HandleDeductionSelection(e.Value?.ToString() ?? ""))">
+                                <option value="">Select Deduction</option>
+                                @foreach (var deduction in availableDeductions)
+                                {
+                                    <option value="@deduction">@deduction</option>
+                                }
+                            </select>
+                            @if (showCustomDeductionInput)
+                            {
+                                <input type="text" class="custom-input" placeholder="Enter custom deduction name"
+                                       @bind="customDeductionName" @bind:event="oninput" />
+                                <button class="add-btn" type="button" @onclick="AddCustomDeduction">+</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Summary</h3>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Monthly Gross Salary:</span>
+                    <span class="summary-value">@Math.Round(salaryDetails.MonthlyGrossSalary, 2)</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Yearly Gross Salary:</span>
+                    <span class="summary-value">@Math.Round(salaryDetails.YearlyGrossSalary, 2)</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Monthly Total Deductions:</span>
+                    <span class="summary-value">@Math.Round(salaryDetails.MonthlyTotalDeductions, 2)</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Yearly Total Deductions:</span>
+                    <span class="summary-value">@Math.Round(salaryDetails.YearlyTotalDeductions, 2)</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Monthly Net Pay:</span>
+                    <span class="summary-value">@Math.Round(salaryDetails.MonthlyNetPay, 2)</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Yearly Net Pay:</span>
+                    <span class="summary-value">@Math.Round(salaryDetails.YearlyNetPay, 2)</span>
+                </div>
+            </div>
+            <button @onclick="SaveSalaryDetails" class="save-btn" type="submit">Save Changes</button>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool hasError = false;
+    private bool showWarning = false;
+    private bool showEarningDropdown = false;
+    private bool showDeductionDropdown = false;
+    private EmployeePayroll selectedEmployee = new EmployeePayroll();
+    private SalaryDetails salaryDetails = new SalaryDetails();
+    private string newEarning = string.Empty;
+    private string newDeduction = string.Empty;
+    private string customEarningName = string.Empty;
+    private string customDeductionName = string.Empty;
+    private bool showCustomEarningInput = false;
+    private bool showCustomDeductionInput = false;
+    private List<string> availableEarnings = new() { "Basic Salary", "HRA", "Special Allowance", "Arrears", "Others" };
+    private List<string> availableDeductions = new() { "Employer PF", "Employee PF", "Employer ESIC", "Employee ESIC", "Gratuity", "Income Tax", "Professional Tax", "Loans", "LOP", "Others" };
+    private Component? currentEarningComponent = null;
+    private Component? currentDeductionComponent = null;
+    private List<string> months = new List<string>
+    {
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
+    private string selectedMonth = DateTime.Now.ToString("MMMM");
+    private int selectedYear = DateTime.Now.Year;
+
+    private class EmployeePayroll
+    {
+        public string EmployeeID { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string CurrentEmail { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty;
+        public decimal BasicSalary { get; set; }
+        public decimal HRA_Amount { get; set; }
+        public decimal SpecialAllowance_Amount { get; set; }
+        public decimal Arrears_Amount { get; set; }
+        public decimal EmployerPF_Amount { get; set; }
+        public decimal EmployeePF_Amount { get; set; }
+        public decimal EmployerESIC_Amount { get; set; }
+        public decimal EmployeeESIC_Amount { get; set; }
+        public decimal Gratuity_Amount { get; set; }
+        public decimal IncomeTax_Amount { get; set; }
+        public decimal ProfessionalTax_Amount { get; set; }
+        public decimal Loans_Amount { get; set; }
+        public decimal LoP_Amount { get; set; }
+        public int GrossSalary { get; set; }
+        public int TotalDeductions { get; set; }
+        public int NetPay { get; set; }
+        public decimal CTC_Amount { get; set; }
+        public string Month { get; set; } = DateTime.Now.ToString("MMMM");
+        public int Year { get; set; } = DateTime.Now.Year;
+        public Dictionary<string, int> Others { get; set; } = new();
+    }
+
+    private class Component
+    {
+        public string Name { get; set; } = string.Empty;
+        public decimal MonthlyAmount { get; set; }
+        public decimal YearlyAmount { get; set; }
+        public decimal? Percentage { get; set; }
+        public bool IsEditable { get; set; } = true;
+        public bool IsPartOfCTC { get; set; } = true;
+    }
+
+    private class SalaryDetails
+    {
+        public decimal YearlySalary { get; set; }
+        public List<Component> Earnings { get; set; } = new();
+        public List<Component> Deductions { get; set; } = new();
+        public decimal MonthlyGrossSalary => Earnings.Sum(e => e.MonthlyAmount);
+        public decimal YearlyGrossSalary => MonthlyGrossSalary * 12;
+        public decimal MonthlyTotalDeductions => Deductions
+            .Where(d => d.Name != "Employer PF" && d.Name != "Employer ESIC")
+            .Sum(d => d.MonthlyAmount);
+        public decimal YearlyTotalDeductions => MonthlyTotalDeductions * 12;
+        public decimal MonthlyNetPay => MonthlyGrossSalary - MonthlyTotalDeductions;
+        public decimal YearlyNetPay => MonthlyNetPay * 12;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            var query = new Uri(NavigationManager.Uri).Query;
+            var queryParams = System.Web.HttpUtility.ParseQueryString(query);
+            var encodedJson = queryParams["employee"];
+            string employeeId = string.Empty;
+
+            if (!string.IsNullOrEmpty(encodedJson))
+            {
+                var jsonBytes = Convert.FromBase64String(encodedJson);
+                var json = System.Text.Encoding.UTF8.GetString(jsonBytes);
+                selectedEmployee = JsonSerializer.Deserialize<EmployeePayroll>(json);
+                if (selectedEmployee != null)
+                {
+                    employeeId = selectedEmployee.EmployeeID;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(employeeId))
+            {
+                // Fetch the latest data from the database
+                var response = await HttpClient.GetAsync($"https://localhost:7021/api/PayrollDetails/{employeeId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    selectedEmployee = await response.Content.ReadFromJsonAsync<EmployeePayroll>();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(selectedEmployee?.Month))
+            {
+                selectedMonth = selectedEmployee.Month;
+            }
+            if (selectedEmployee?.Year > 0)
+            {
+                selectedYear = selectedEmployee.Year;
+            }
+
+            // Initialize SalaryDetails with empty components
+            salaryDetails = new SalaryDetails
+            {
+                YearlySalary = selectedEmployee?.CTC_Amount ?? 0,
+                Earnings = new List<Component>(),
+                Deductions = new List<Component>()
+            };
+
+            if (selectedEmployee != null)
+            {
+                // Initialize SalaryDetails with non-zero components only
+                salaryDetails.Earnings = new List<Component>
+                {
+                    new Component { Name = "Basic Salary", MonthlyAmount = selectedEmployee.BasicSalary, YearlyAmount = selectedEmployee.BasicSalary * 12, IsEditable = true, Percentage = selectedEmployee.CTC_Amount > 0 ? (selectedEmployee.BasicSalary * 12 / selectedEmployee.CTC_Amount) * 100 : 0, IsPartOfCTC = true },
+                    new Component { Name = "HRA", MonthlyAmount = selectedEmployee.HRA_Amount, YearlyAmount = selectedEmployee.HRA_Amount * 12, IsEditable = true, Percentage = selectedEmployee.CTC_Amount > 0 ? (selectedEmployee.HRA_Amount * 12 / selectedEmployee.CTC_Amount) * 100 : 0, IsPartOfCTC = true },
+                    new Component { Name = "Special Allowance", MonthlyAmount = selectedEmployee.SpecialAllowance_Amount, YearlyAmount = selectedEmployee.SpecialAllowance_Amount * 12, IsEditable = true, Percentage = selectedEmployee.CTC_Amount > 0 ? (selectedEmployee.SpecialAllowance_Amount * 12 / selectedEmployee.CTC_Amount) * 100 : 0, IsPartOfCTC = true },
+                    new Component { Name = "Arrears", MonthlyAmount = selectedEmployee.Arrears_Amount, YearlyAmount = selectedEmployee.Arrears_Amount * 12, IsEditable = true, Percentage = selectedEmployee.CTC_Amount > 0 ? (selectedEmployee.Arrears_Amount * 12 / selectedEmployee.CTC_Amount) * 100 : 0, IsPartOfCTC = true }
+                }.Where(e => e.MonthlyAmount != 0).ToList();
+
+                salaryDetails.Deductions = new List<Component>
+                {
+                    new Component { Name = "Employer PF", MonthlyAmount = selectedEmployee.EmployerPF_Amount, YearlyAmount = selectedEmployee.EmployerPF_Amount * 12, IsEditable = true, Percentage = selectedEmployee.GrossSalary > 0 ? (selectedEmployee.EmployerPF_Amount * 12 / selectedEmployee.GrossSalary) * 100 : 0, IsPartOfCTC = true },
+                    new Component { Name = "Employee PF", MonthlyAmount = selectedEmployee.EmployeePF_Amount, YearlyAmount = selectedEmployee.EmployeePF_Amount * 12, IsEditable = true, Percentage = selectedEmployee.GrossSalary > 0 ? (selectedEmployee.EmployeePF_Amount * 12 / selectedEmployee.GrossSalary) * 100 : 0, IsPartOfCTC = false },
+                    new Component { Name = "Employer ESIC", MonthlyAmount = selectedEmployee.EmployerESIC_Amount, YearlyAmount = selectedEmployee.EmployerESIC_Amount * 12, IsEditable = true, Percentage = selectedEmployee.GrossSalary > 0 ? (selectedEmployee.EmployerESIC_Amount * 12 / selectedEmployee.GrossSalary) * 100 : 0, IsPartOfCTC = true },
+                    new Component { Name = "Employee ESIC", MonthlyAmount = selectedEmployee.EmployeeESIC_Amount, YearlyAmount = selectedEmployee.EmployeeESIC_Amount * 12, IsEditable = true, Percentage = selectedEmployee.GrossSalary > 0 ? (selectedEmployee.EmployeeESIC_Amount * 12 / selectedEmployee.GrossSalary) * 100 : 0, IsPartOfCTC = false },
+                    new Component { Name = "Gratuity", MonthlyAmount = selectedEmployee.Gratuity_Amount, YearlyAmount = selectedEmployee.Gratuity_Amount * 12, IsEditable = true, Percentage = selectedEmployee.GrossSalary > 0 ? (selectedEmployee.Gratuity_Amount * 12 / selectedEmployee.GrossSalary) * 100 : 0, IsPartOfCTC = true },
+                    new Component { Name = "Income Tax", MonthlyAmount = selectedEmployee.IncomeTax_Amount, YearlyAmount = selectedEmployee.IncomeTax_Amount * 12, IsEditable = true, Percentage = selectedEmployee.GrossSalary > 0 ? (selectedEmployee.IncomeTax_Amount * 12 / selectedEmployee.GrossSalary) * 100 : 0, IsPartOfCTC = false },
+                    new Component { Name = "Professional Tax", MonthlyAmount = selectedEmployee.ProfessionalTax_Amount, YearlyAmount = selectedEmployee.ProfessionalTax_Amount * 12, IsEditable = true, Percentage = selectedEmployee.GrossSalary > 0 ? (selectedEmployee.ProfessionalTax_Amount * 12 / selectedEmployee.GrossSalary) * 100 : 0, IsPartOfCTC = false },
+                    new Component { Name = "Loans", MonthlyAmount = selectedEmployee.Loans_Amount, YearlyAmount = selectedEmployee.Loans_Amount * 12, IsEditable = true, Percentage = selectedEmployee.GrossSalary > 0 ? (selectedEmployee.Loans_Amount * 12 / selectedEmployee.GrossSalary) * 100 : 0, IsPartOfCTC = false },
+                    new Component { Name = "LOP", MonthlyAmount = selectedEmployee.LoP_Amount, YearlyAmount = selectedEmployee.LoP_Amount * 12, IsEditable = true, Percentage = selectedEmployee.GrossSalary > 0 ? (selectedEmployee.LoP_Amount * 12 / selectedEmployee.GrossSalary) * 100 : 0, IsPartOfCTC = false }
+                }.Where(d => d.MonthlyAmount != 0).ToList();
+
+                // Add non-zero Others components
+                foreach (var other in selectedEmployee.Others.Where(o => o.Value != 0))
+                {
+                    if (other.Value > 0)
+                    {
+                        salaryDetails.Earnings.Add(new Component
+                        {
+                            Name = other.Key,
+                            MonthlyAmount = other.Value / 12m,
+                            YearlyAmount = other.Value,
+                            IsEditable = true,
+                            Percentage = selectedEmployee.CTC_Amount > 0 ? (other.Value / selectedEmployee.CTC_Amount) * 100 : 0,
+                            IsPartOfCTC = true
+                        });
+                    }
+                    else
+                    {
+                        salaryDetails.Deductions.Add(new Component
+                        {
+                            Name = other.Key,
+                            MonthlyAmount = Math.Abs(other.Value / 12m),
+                            YearlyAmount = Math.Abs(other.Value),
+                            IsEditable = true,
+                            Percentage = selectedEmployee.GrossSalary > 0 ? (Math.Abs(other.Value) / selectedEmployee.GrossSalary) * 100 : 0,
+                            IsPartOfCTC = false
+                        });
+                    }
+                }
+            }
+
+            UpdateAvailableComponents();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employee data: {ex.Message}");
+            hasError = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool IsValidSalary()
+    {
+        return salaryDetails.Earnings.Any(e => e.Name == "Basic Salary" && e.MonthlyAmount >= 0);
+    }
+
+    private void CloseEditPage()
+    {
+        NavigationManager.NavigateTo("/Summary");
+    }
+
+    private void ToggleEarningDropdown()
+    {
+        showEarningDropdown = !showEarningDropdown;
+        currentEarningComponent = null;
+        StateHasChanged();
+    }
+
+    private void ToggleEarningDropdownForComponent(Component earning)
+    {
+        showEarningDropdown = !showEarningDropdown;
+        currentEarningComponent = earning;
+        StateHasChanged();
+    }
+
+    private void ToggleDeductionDropdown()
+    {
+        showDeductionDropdown = !showDeductionDropdown;
+        currentDeductionComponent = null;
+        StateHasChanged();
+    }
+
+    private void ToggleDeductionDropdownForComponent(Component deduction)
+    {
+        showDeductionDropdown = !showDeductionDropdown;
+        currentDeductionComponent = deduction;
+        StateHasChanged();
+    }
+
+    private async Task SaveSalaryDetails()
+    {
+        if (selectedEmployee == null || !IsValidSalary())
+        {
+            Snackbar.Add("Invalid salary details. Basic Salary is required.", MudBlazor.Severity.Error);
+            return;
+        }
+
+        decimal totalYearlyEarnings = salaryDetails.Earnings.Where(e => e.IsPartOfCTC).Sum(e => e.YearlyAmount);
+        if (totalYearlyEarnings > salaryDetails.YearlySalary)
+        {
+            showWarning = true;
+            Snackbar.Add("Total salary components exceed the yearly CTC.", MudBlazor.Severity.Warning);
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var others = new Dictionary<string, int>();
+            foreach (var earning in salaryDetails.Earnings)
+            {
+                if (!new List<string> { "Basic Salary", "HRA", "Special Allowance", "Arrears" }.Contains(earning.Name))
+                {
+                    others[earning.Name] = (int)Math.Round(earning.YearlyAmount);
+                }
+            }
+            foreach (var deduction in salaryDetails.Deductions)
+            {
+                if (!new List<string> { "Employer PF", "Employee PF", "Employer ESIC", "Employee ESIC", "Gratuity", "Income Tax", "Professional Tax", "Loans", "LOP" }.Contains(deduction.Name))
+                {
+                    others[deduction.Name] = -(int)Math.Round(deduction.YearlyAmount);
+                }
+            }
+
+            var employeeData = new
+            {
+                EmployeeID = selectedEmployee.EmployeeID,
+                FullName = selectedEmployee.FullName,
+                CurrentEmail = selectedEmployee.CurrentEmail,
+                Designation = selectedEmployee.Designation,
+                Month = selectedMonth,
+                Year = selectedYear,
+                CTC_Amount = salaryDetails.YearlySalary,
+                BasicSalary = salaryDetails.Earnings.FirstOrDefault(e => e.Name == "Basic Salary")?.MonthlyAmount ?? 0,
+                HRA_Amount = salaryDetails.Earnings.FirstOrDefault(e => e.Name == "HRA")?.MonthlyAmount ?? 0,
+                SpecialAllowance_Amount = salaryDetails.Earnings.FirstOrDefault(e => e.Name == "Special Allowance")?.MonthlyAmount ?? 0,
+                Arrears_Amount = salaryDetails.Earnings.FirstOrDefault(e => e.Name == "Arrears")?.MonthlyAmount ?? 0,
+                EmployerPF_Amount = salaryDetails.Deductions.FirstOrDefault(d => d.Name == "Employer PF")?.MonthlyAmount ?? 0,
+                EmployeePF_Amount = salaryDetails.Deductions.FirstOrDefault(d => d.Name == "Employee PF")?.MonthlyAmount ?? 0,
+                EmployerESIC_Amount = salaryDetails.Deductions.FirstOrDefault(d => d.Name == "Employer ESIC")?.MonthlyAmount ?? 0,
+                EmployeeESIC_Amount = salaryDetails.Deductions.FirstOrDefault(d => d.Name == "Employee ESIC")?.MonthlyAmount ?? 0,
+                Gratuity_Amount = salaryDetails.Deductions.FirstOrDefault(d => d.Name == "Gratuity")?.MonthlyAmount ?? 0,
+                IncomeTax_Amount = salaryDetails.Deductions.FirstOrDefault(d => d.Name == "Income Tax")?.MonthlyAmount ?? 0,
+                ProfessionalTax_Amount = salaryDetails.Deductions.FirstOrDefault(d => d.Name == "Professional Tax")?.MonthlyAmount ?? 0,
+                Loans_Amount = salaryDetails.Deductions.FirstOrDefault(d => d.Name == "Loans")?.MonthlyAmount ?? 0,
+                LOP_Amount = salaryDetails.Deductions.FirstOrDefault(d => d.Name == "LOP")?.MonthlyAmount ?? 0,
+                GrossSalary = (int)Math.Round(salaryDetails.MonthlyGrossSalary),
+                TotalDeductions = (int)Math.Round(salaryDetails.MonthlyTotalDeductions),
+                NetPay = (int)Math.Round(salaryDetails.MonthlyNetPay),
+                Others = others
+            };
+
+            var response = await HttpClient.PostAsJsonAsync("https://localhost:7021/api/PayrollDetails", employeeData);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Payroll details saved successfully!", MudBlazor.Severity.Success);
+                // Reload data to reflect the latest changes
+                await OnInitializedAsync();
+            }
+            else
+            {
+                hasError = true;
+                Snackbar.Add("Failed to save payroll details.", MudBlazor.Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving payroll details: {ex.Message}");
+            hasError = true;
+            Snackbar.Add("An error occurred while saving payroll details.", MudBlazor.Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateAvailableComponents()
+    {
+        availableEarnings = new List<string> { "Basic Salary", "HRA", "Special Allowance", "Arrears", "Others" }
+            .Where(earning => earning == "Others" || !salaryDetails.Earnings.Any(component => component.Name == earning))
+            .ToList();
+        availableDeductions = new List<string> { "Employer PF", "Employee PF", "Employer ESIC", "Employee ESIC", "Gratuity", "Income Tax", "Professional Tax", "Loans", "LOP", "Others" }
+            .Where(deduction => deduction == "Others" || !salaryDetails.Deductions.Any(component => component.Name == deduction))
+            .ToList();
+    }
+
+    private void HandleEarningSelection(string value)
+    {
+        newEarning = value;
+        showCustomEarningInput = value == "Others";
+        if (!showCustomEarningInput)
+        {
+            AddEarning(value);
+            showEarningDropdown = false;
+        }
+        customEarningName = string.Empty;
+        StateHasChanged();
+    }
+
+    private void HandleDeductionSelection(string value)
+    {
+        newDeduction = value;
+        showCustomDeductionInput = value == "Others";
+        if (!showCustomDeductionInput)
+        {
+            AddDeduction(value);
+            showDeductionDropdown = false;
+        }
+        customDeductionName = string.Empty;
+        StateHasChanged();
+    }
+
+    private void AddEarning(string value)
+    {
+        if (!string.IsNullOrEmpty(value) && value != "Others")
+        {
+            salaryDetails.Earnings.Add(new Component { Name = value, MonthlyAmount = 0, YearlyAmount = 0, IsEditable = true, Percentage = 0, IsPartOfCTC = true });
+            newEarning = string.Empty;
+            UpdateAvailableComponents();
+            StateHasChanged();
+        }
+    }
+
+    private void AddDeduction(string value)
+    {
+        if (!string.IsNullOrEmpty(value) && value != "Others")
+        {
+            salaryDetails.Deductions.Add(new Component { Name = value, MonthlyAmount = 0, YearlyAmount = 0, IsEditable = true, Percentage = 0, IsPartOfCTC = value == "Employer PF" || value == "Employer ESIC" || value == "Gratuity" });
+            newDeduction = string.Empty;
+            UpdateAvailableComponents();
+            StateHasChanged();
+        }
+    }
+
+    private void AddCustomEarning()
+    {
+        if (!string.IsNullOrWhiteSpace(customEarningName) && !salaryDetails.Earnings.Any(e => e.Name == customEarningName))
+        {
+            salaryDetails.Earnings.Add(new Component { Name = customEarningName, MonthlyAmount = 0, YearlyAmount = 0, IsEditable = true, Percentage = 0, IsPartOfCTC = true });
+            newEarning = string.Empty;
+            showCustomEarningInput = false;
+            customEarningName = string.Empty;
+            showEarningDropdown = false;
+            UpdateAvailableComponents();
+            StateHasChanged();
+        }
+    }
+
+    private void AddCustomDeduction()
+    {
+        if (!string.IsNullOrWhiteSpace(customDeductionName) && !salaryDetails.Deductions.Any(d => d.Name == customDeductionName))
+        {
+            salaryDetails.Deductions.Add(new Component { Name = customDeductionName, MonthlyAmount = 0, YearlyAmount = 0, IsEditable = true, Percentage = 0, IsPartOfCTC = false });
+            newDeduction = string.Empty;
+            showCustomDeductionInput = false;
+            customDeductionName = string.Empty;
+            showDeductionDropdown = false;
+            UpdateAvailableComponents();
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveEarning(Component earning)
+    {
+        if (earning.IsEditable)
+        {
+            salaryDetails.Earnings.Remove(earning);
+            if (currentEarningComponent == earning)
+            {
+                showEarningDropdown = false;
+                currentEarningComponent = null;
+            }
+            UpdateAvailableComponents();
+            CheckTotalSalary();
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveDeduction(Component deduction)
+    {
+        if (deduction.IsEditable)
+        {
+            salaryDetails.Deductions.Remove(deduction);
+            if (currentDeductionComponent == deduction)
+            {
+                showDeductionDropdown = false;
+                currentDeductionComponent = null;
+            }
+            UpdateAvailableComponents();
+            CheckTotalSalary();
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateYearlySalary(decimal value)
+    {
+        salaryDetails.YearlySalary = value;
+        UpdateAllPercentages();
+        CheckTotalSalary();
+        StateHasChanged();
+    }
+
+    private void UpdateEarningMonthlyAmount(Component earning, decimal value)
+    {
+        earning.MonthlyAmount = value;
+        earning.YearlyAmount = value * 12;
+        if (salaryDetails.YearlySalary > 0)
+        {
+            earning.Percentage = (value * 12 / salaryDetails.YearlySalary) * 100;
+        }
+        else
+        {
+            earning.Percentage = 0;
+        }
+        CheckTotalSalary();
+        StateHasChanged();
+    }
+
+    private void UpdateEarningYearlyAmount(Component earning, decimal value)
+    {
+        earning.YearlyAmount = value;
+        earning.MonthlyAmount = value / 12;
+        if (salaryDetails.YearlySalary > 0)
+        {
+            earning.Percentage = (value / salaryDetails.YearlySalary) * 100;
+        }
+        else
+        {
+            earning.Percentage = 0;
+        }
+        CheckTotalSalary();
+        StateHasChanged();
+    }
+
+    private void UpdateDeductionMonthlyAmount(Component deduction, decimal value)
+    {
+        if (deduction.IsEditable)
+        {
+            deduction.MonthlyAmount = value;
+            deduction.YearlyAmount = value * 12;
+            if (salaryDetails.YearlyGrossSalary > 0)
+            {
+                deduction.Percentage = (value * 12 / salaryDetails.YearlyGrossSalary) * 100;
+            }
+            else
+            {
+                deduction.Percentage = 0;
+            }
+            CheckTotalSalary();
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateDeductionYearlyAmount(Component deduction, decimal value)
+    {
+        if (deduction.IsEditable)
+        {
+            deduction.YearlyAmount = value;
+            deduction.MonthlyAmount = value / 12;
+            if (salaryDetails.YearlyGrossSalary > 0)
+            {
+                deduction.Percentage = (value / salaryDetails.YearlyGrossSalary) * 100;
+            }
+            else
+            {
+                deduction.Percentage = 0;
+            }
+            CheckTotalSalary();
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateEarningPercentage(Component earning, decimal value)
+    {
+        earning.Percentage = value;
+        if (value > 0 && salaryDetails.YearlySalary > 0)
+        {
+            earning.YearlyAmount = (value / 100) * salaryDetails.YearlySalary;
+            earning.MonthlyAmount = earning.YearlyAmount / 12;
+        }
+        else
+        {
+            earning.MonthlyAmount = 0;
+            earning.YearlyAmount = 0;
+        }
+        CheckTotalSalary();
+        StateHasChanged();
+    }
+
+    private void UpdateDeductionPercentage(Component deduction, decimal value)
+    {
+        if (deduction.IsEditable)
+        {
+            deduction.Percentage = value;
+            if (value > 0 && salaryDetails.YearlyGrossSalary > 0)
+            {
+                deduction.YearlyAmount = (value / 100) * salaryDetails.YearlyGrossSalary;
+                deduction.MonthlyAmount = deduction.YearlyAmount / 12;
+            }
+            else
+            {
+                deduction.MonthlyAmount = 0;
+                deduction.YearlyAmount = 0;
+            }
+            CheckTotalSalary();
+            StateHasChanged();
+        }
+    }
+
+    private void TogglePartOfCTC(Component component, bool isPartOfCTC)
+    {
+        component.IsPartOfCTC = isPartOfCTC;
+        CheckTotalSalary();
+        StateHasChanged();
+    }
+
+    private void UpdateAllPercentages()
+    {
+        foreach (var earning in salaryDetails.Earnings)
+        {
+            if (salaryDetails.YearlySalary > 0)
+            {
+                earning.Percentage = (earning.YearlyAmount / salaryDetails.YearlySalary) * 100;
+            }
+            else
+            {
+                earning.Percentage = 0;
+            }
+        }
+        foreach (var deduction in salaryDetails.Deductions)
+        {
+            if (salaryDetails.YearlyGrossSalary > 0)
+            {
+                deduction.Percentage = (deduction.YearlyAmount / salaryDetails.YearlyGrossSalary) * 100;
+            }
+            else
+            {
+                deduction.Percentage = 0;
+            }
+        }
+        CheckTotalSalary();
+    }
+
+    private void CheckTotalSalary()
+    {
+        decimal totalYearlyEarnings = salaryDetails.Earnings.Where(e => e.IsPartOfCTC).Sum(e => e.YearlyAmount);
+        showWarning = totalYearlyEarnings > salaryDetails.YearlySalary;
+        StateHasChanged();
+    }
+}

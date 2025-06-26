@@ -7,7 +7,7 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
-@using WiseHR.Services
+@using System.Linq
 
 <div class="dashboard-container">
     <div class="dashboard-header">
@@ -78,18 +78,18 @@
                     <div class="table-container">
                         <MudTable Items="@assetIssueRecords" Hover="true" Striped="true" Dense="true" Elevation="0">
                             <HeaderContent>
-                                <MudTh>ISSUED TO</MudTh>
+                                <MudTh>ISSUED TO ID</MudTh>
                                 <MudTh>ISSUED ON</MudTh>
-                                <MudTh>ISSUED BY</MudTh>
-                                <MudTh>APPROVED BY</MudTh>
+                                <MudTh>ISSUED BY ID</MudTh>
+                                <MudTh>APPROVED BY ID</MudTh>
                                 <MudTh>EXPECTED RETURN DATE</MudTh>
                             </HeaderContent>
                             <RowTemplate>
-                                <MudTd DataLabel="ISSUED TO">@context.IssuedTo</MudTd>
-                                <MudTd DataLabel="ISSUED ON">@context.IssuedOn.Date.ToString("dd/MM/yyyy")</MudTd>
-                                <MudTd DataLabel="ISSUED BY">@context.IssuedBy</MudTd>
-                                <MudTd DataLabel="APPROVED BY">@context.ApprovedBy</MudTd>
-                                <MudTd DataLabel="EXPECTED RETURN DATE">@(context.ReturnedOn != default ? context.ReturnedOn.Date.ToString("dd/MM/yyyy") : "-")</MudTd>
+                                <MudTd DataLabel="ISSUED TO ID">@context.IssuedToEmployeeId</MudTd>
+                                <MudTd DataLabel="ISSUED ON">@(context.IssuedOn.Date.ToString("dd/MM/yyyy"))</MudTd>
+                                <MudTd DataLabel="ISSUED BY ID">@context.IssuedByEmployeeId</MudTd>
+                                <MudTd DataLabel="APPROVED BY ID">@context.ApprovedByEmployeeId</MudTd>
+                                <MudTd DataLabel="EXPECTED RETURN DATE">@(context.ReturnedOn.HasValue ? context.ReturnedOn.Value.Date.ToString("dd/MM/yyyy") : "-")</MudTd>
                             </RowTemplate>
                         </MudTable>
                     </div>
@@ -107,17 +107,17 @@
                     <div class="table-container">
                         <MudTable Items="@assetReturnRecords" Hover="true" Striped="true" Dense="true" Elevation="0">
                             <HeaderContent>
-                                <MudTh>RETURNED BY</MudTh>
+                                <MudTh>RETURNED BY ID</MudTh>
                                 <MudTh>RETURNED ON</MudTh>
-                                <MudTh>RECEIVED BY</MudTh>
-                                <MudTh>APPROVED BY</MudTh>
+                                <MudTh>RECEIVED BY ID</MudTh>
+                                <MudTh>APPROVED BY ID</MudTh>
                                 <MudTh>REMARKS</MudTh>
                             </HeaderContent>
                             <RowTemplate>
-                                <MudTd DataLabel="RETURNED BY">@context.ReturnedBy</MudTd>
+                                <MudTd DataLabel="RETURNED BY ID">@context.ReturnedByEmployeeId</MudTd>
                                 <MudTd DataLabel="RETURNED ON">@context.ReturnedOn.Date.ToString("dd/MM/yyyy")</MudTd>
-                                <MudTd DataLabel="RECEIVED BY">@context.ReceivedBy</MudTd>
-                                <MudTd DataLabel="APPROVED BY">@context.ApprovedBy</MudTd>
+                                <MudTd DataLabel="RECEIVED BY ID">@context.ReceivedByEmployeeId</MudTd>
+                                <MudTd DataLabel="APPROVED BY ID">@context.ApprovedByEmployeeId</MudTd>
                                 <MudTd DataLabel="REMARKS">@(string.IsNullOrEmpty(context.Remarks) ? "-" : context.Remarks)</MudTd>
                             </RowTemplate>
                         </MudTable>
@@ -137,15 +137,15 @@
                         <MudTable Items="@(new[] { decommissionRecord })" Hover="true" Striped="true" Dense="true" Elevation="0">
                             <HeaderContent>
                                 <MudTh>ASSET TAG</MudTh>
-                                <MudTh>DECOMMISSIONED BY</MudTh>
-                                <MudTh>APPROVED BY</MudTh>
+                                <MudTh>DECOMMISSIONED BY ID</MudTh>
+                                <MudTh>APPROVED BY ID</MudTh>
                                 <MudTh>DECOMMISSION DATE</MudTh>
                                 <MudTh>REMARK</MudTh>
                             </HeaderContent>
                             <RowTemplate>
                                 <MudTd DataLabel="ASSET TAG">@context.AssetTag</MudTd>
-                                <MudTd DataLabel="DECOMMISSIONED BY">@context.DecommissionedBy</MudTd>
-                                <MudTd DataLabel="APPROVED BY">@context.ApprovedBy</MudTd>
+                                <MudTd DataLabel="DECOMMISSIONED BY ID">@context.DecommissionedByEmployeeId</MudTd>
+                                <MudTd DataLabel="APPROVED BY ID">@context.ApprovedByEmployeeId</MudTd>
                                 <MudTd DataLabel="DECOMMISSION DATE">@context.DecommissionDate.ToLocalTime().Date.ToString("dd/MM/yyyy")</MudTd>
                                 <MudTd DataLabel="REMARK">@(string.IsNullOrEmpty(context.Remark) ? "-" : context.Remark)</MudTd>
                             </RowTemplate>
@@ -163,47 +163,70 @@
     <!-- Assign Asset Dialog -->
     @if (showAssignDialog)
     {
-        <div class="dialog-overlay">
-            <div class="dialog-container">
-                <h3>Assign Asset</h3>
-                <EditForm Model="@assignModel" OnValidSubmit="@SubmitAssign">
-                    <DataAnnotationsValidator />
-                    <div class="form-group">
-                        <label for="issuedTo">Issued To</label>
-                        <InputText id="issuedTo" class="form-control" @bind-Value="@assignModel.IssuedTo" />
-                        <ValidationMessage For="@(() => assignModel.IssuedTo)" />
-                    </div>
-                    <div class="form-group">
-                        <label for="issuedOn">Issued On</label>
-                        <InputDate id="issuedOn" class="form-control" @bind-Value="@assignModel.IssuedOn" />
-                        <ValidationMessage For="@(() => assignModel.IssuedOn)" />
-                    </div>
-                    <div class="form-group">
-                        <label for="issuedBy">Issued By</label>
-                        <InputText id="issuedBy" class="form-control" @bind-Value="@assignModel.IssuedBy" />
-                        <ValidationMessage For="@(() => assignModel.IssuedBy)" />
-                    </div>
-                    <div class="form-group">
-                        <label for="approvedBy">Approved By</label>
-                        <InputText id="approvedBy" class="form-control" @bind-Value="@assignModel.ApprovedBy" />
-                        <ValidationMessage For="@(() => assignModel.ApprovedBy)" />
-                    </div>
-                    <div class="form-group">
-                        <label for="returnedOn">Expected Return Date</label>
-                        <InputDate id="returnedOn" class="form-control" @bind-Value="@assignModel.ReturnedOn" />
-                        <ValidationMessage For="@(() => assignModel.ReturnedOn)" />
-                    </div>
-                    @if (!string.IsNullOrEmpty(assignErrorMessage))
-                    {
-                        <div class="alert alert-danger">@assignErrorMessage</div>
-                    }
-                    <div class="dialog-actions">
-                        <button type="button" class="btn btn-secondary" @onclick="@(() => CancelAssign())">Cancel</button>
-                        <button type="submit" class="btn btn-primary" disabled="@isAssigning">
-                            @(isAssigning ? "Submitting..." : "Submit")
-                        </button>
-                    </div>
-                </EditForm>
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Assign Asset</h2>
+                    <span class="modal-close" @onclick="@(() => CancelAssign())">×</span>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@assignModel" OnValidSubmit="@SubmitAssign">
+                        <DataAnnotationsValidator />
+                        <div class="form-group">
+                            <label for="issuedTo">Issued To</label>
+                            <MudSelect T="string" id="issuedTo" @bind-Value="@assignModel.IssuedToEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => assignModel.IssuedToEmployeeId)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="issuedOn">Issued On</label>
+                            <InputDate id="issuedOn" class="form-control" @bind-Value="@assignModel.IssuedOn" />
+                            <ValidationMessage For="@(() => assignModel.IssuedOn)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="issuedBy">Issued By</label>
+                            <MudSelect T="string" id="issuedBy" @bind-Value="@assignModel.IssuedByEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => assignModel.IssuedByEmployeeId)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="approvedBy">Approved By</label>
+                            <MudSelect T="string" id="approvedBy" @bind-Value="@assignModel.ApprovedByEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => assignModel.ApprovedByEmployeeId)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="returnedOn">Expected Return Date</label>
+                            <InputDate id="returnedOn" class="form-control" @bind-Value="@assignModel.ReturnedOn" />
+                            <ValidationMessage For="@(() => assignModel.ReturnedOn)" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(assignErrorMessage))
+                        {
+                            <div class="alert alert-danger">@assignErrorMessage</div>
+                        }
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="@(() => CancelAssign())">Cancel</button>
+                            <button type="submit" class="btn btn-primary" disabled="@isAssigning">
+                                @(isAssigning ? "Submitting..." : "Submit")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
             </div>
         </div>
     }
@@ -211,47 +234,70 @@
     <!-- Unassign Asset Dialog -->
     @if (showReturnDialog)
     {
-        <div class="dialog-overlay">
-            <div class="dialog-container">
-                <h3>Unassign Asset</h3>
-                <EditForm Model="@returnModel" OnValidSubmit="@SubmitReturn">
-                    <DataAnnotationsValidator />
-                    <div class="form-group">
-                        <label>Returned By</label>
-                        <InputText class="form-control" @bind-Value="@returnModel.ReturnedBy" />
-                        <ValidationMessage For="@(() => returnModel.ReturnedBy)" />
-                    </div>
-                    <div class="form-group">
-                        <label>Received By @(hasActiveIssue ? "(Populated from Issued To)" : "")</label>
-                        <InputText class="form-control" @bind-Value="@returnModel.ReceivedBy" />
-                        <ValidationMessage For="@(() => returnModel.ReceivedBy)" />
-                    </div>
-                    <div class="form-group">
-                        <label>Returned On</label>
-                        <InputDate class="form-control" @bind-Value="@returnModel.ReturnedOn" />
-                        <ValidationMessage For="@(() => returnModel.ReturnedOn)" />
-                    </div>
-                    <div class="form-group">
-                        <label>Approved By</label>
-                        <InputText class="form-control" @bind-Value="@returnModel.ApprovedBy" />
-                        <ValidationMessage For="@(() => returnModel.ApprovedBy)" />
-                    </div>
-                    <div class="form-group">
-                        <label>Remarks</label>
-                        <InputText class="form-control" @bind-Value="@returnModel.Remarks" />
-                        <ValidationMessage For="@(() => returnModel.Remarks)" />
-                    </div>
-                    @if (!string.IsNullOrEmpty(returnErrorMessage))
-                    {
-                        <div class="alert alert-danger">@returnErrorMessage</div>
-                    }
-                    <div class="dialog-actions">
-                        <button type="button" class="btn btn-secondary" @onclick="@(() => CancelReturn())">Cancel</button>
-                        <button type="submit" class="btn btn-primary" disabled="@isReturning">
-                            @(isReturning ? "Submitting..." : "Submit")
-                        </button>
-                    </div>
-                </EditForm>
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Unassign Asset</h2>
+                    <span class="modal-close" @onclick="@(() => CancelReturn())">×</span>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@returnModel" OnValidSubmit="@SubmitReturn">
+                        <DataAnnotationsValidator />
+                        <div class="form-group">
+                            <label for="returnedBy">Returned By</label>
+                            <MudSelect T="string" id="returnedBy" @bind-Value="@returnModel.ReturnedByEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => returnModel.ReturnedByEmployeeId)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="receivedBy">Received By</label>
+                            <MudSelect T="string" id="receivedBy" @bind-Value="@returnModel.ReceivedByEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => returnModel.ReceivedByEmployeeId)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="approvedBy">Approved By</label>
+                            <MudSelect T="string" id="approvedBy" @bind-Value="@returnModel.ApprovedByEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => returnModel.ApprovedByEmployeeId)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="returnedOn">Returned On</label>
+                            <InputDate id="returnedOn" class="form-control" @bind-Value="@returnModel.ReturnedOn" />
+                            <ValidationMessage For="@(() => returnModel.ReturnedOn)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="remarks">Remarks</label>
+                            <InputTextArea id="remarks" class="form-control" @bind-Value="@returnModel.Remarks" rows="3" />
+                            <ValidationMessage For="@(() => returnModel.Remarks)" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(returnErrorMessage))
+                        {
+                            <div class="alert alert-danger">@returnErrorMessage</div>
+                        }
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="@(() => CancelReturn())">Cancel</button>
+                            <button type="submit" class="btn btn-primary" disabled="@isReturning">
+                                @(isReturning ? "Submitting..." : "Submit")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
             </div>
         </div>
     }
@@ -472,56 +518,105 @@
         color: var(--text-primary);
     }
 
-    .dialog-overlay {
+    .modal-overlay {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        right: 0;
+        bottom: 0;
         background-color: rgba(0, 0, 0, 0.5);
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 1000;
-        overflow-y: auto;
-        padding: 20px;
-        box-sizing: border-box;
-        margin-top: 50px;
     }
 
-    .dialog-container {
+    .modal-content {
         background-color: var(--card-background);
-        padding: 20px;
         border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        max-width: 400px;
         width: 100%;
-        max-height: 80vh;
-        overflow-y: auto;
-        box-sizing: border-box;
+        max-width: 500px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
     }
 
-        .dialog-container h3 {
-            margin-top: 0;
-            margin-bottom: 20px;
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
             color: var(--text-primary);
         }
+
+    .modal-close {
+        cursor: pointer;
+        font-size: 24px;
+        color: var(--text-secondary);
+    }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 10px 20px;
+        border-top: 1px solid var(--border-color);
+    }
 
     .form-group {
         margin-bottom: 15px;
     }
 
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
     .form-control {
         width: 100%;
         padding: 8px;
+        font-size: 14px;
         border: 1px solid var(--border-color);
         border-radius: 4px;
+        color: var(--text-primary);
+        background-color: var(--card-background);
+        transition: border-color 0.2s ease;
     }
 
-    .dialog-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .form-control[type="date"] {
+            padding: 7px 8px;
+        }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .field-validation-error {
+        color: var(--danger-color);
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
     }
 
     .btn-secondary {
@@ -529,40 +624,37 @@
         color: var(--card-background);
     }
 
-        .btn-secondary:hover {
-            background-color: #6c757d;
-        }
-
     .btn-primary {
         background-color: var(--accent-color);
         color: var(--card-background);
     }
 
-        .btn-primary:hover {
-            background-color: #2a7ab8;
-        }
+    .mud-select {
+        width: 100%;
+    }
 </style>
 
 @code {
     [Parameter]
     public int AssetId { get; set; }
+
     [Parameter]
     public int InstanceId { get; set; }
+
     [Parameter]
     [SupplyParameterFromQuery]
     public bool OpenDialog { get; set; }
+
     [Parameter]
     [SupplyParameterFromQuery]
     public bool OpenUnassignDialog { get; set; }
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public bool OpenReturnDialog { get; set; }
 
     private AssetInstance? assetInstance;
     private List<AssetIssueRecord> assetIssueRecords = new();
     private List<AssetReturnRecord> assetReturnRecords = new();
     private DecommissionRecord? decommissionRecord;
     private AssetIssueRecord? activeIssueRecord;
+    private List<Employee> employees = new();
     private bool loading = true;
     private string errorMessage = string.Empty;
     private bool hasActiveIssue = false;
@@ -577,71 +669,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadAssetData();
+        try
+        {
+            employees = await AssetsService.GetAllEmployeesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading employees: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
+        }
+
         if (OpenDialog)
         {
             ShowAssignDialog();
         }
-        if (OpenUnassignDialog || OpenReturnDialog)
+        if (OpenUnassignDialog)
         {
             await ShowReturnDialog();
         }
     }
-
-    private async Task LoadAssetData()
-    {
-        try
-        {
-            loading = true;
-            StateHasChanged();
-
-            assetInstance = await AssetsService.GetAssetInstanceAsync(InstanceId);
-            if (assetInstance == null)
-            {
-                errorMessage = $"Asset instance with ID {InstanceId} not found.";
-                Snackbar.Add(errorMessage, Severity.Error);
-                return;
-            }
-
-            assetIssueRecords = await AssetsService.GetAssetIssueRecordsAsync(InstanceId);
-            if (assetIssueRecords == null)
-            {
-                assetIssueRecords = new List<AssetIssueRecord>();
-            }
-
-            assetReturnRecords = await AssetsService.GetAssetReturnRecordsAsync(InstanceId);
-            if (assetReturnRecords == null)
-            {
-                assetReturnRecords = new List<AssetReturnRecord>();
-            }
-
-            try
-            {
-                decommissionRecord = await AssetsService.GetDecommissionRecordAsync(assetInstance.AssetTag);
-            }
-            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                decommissionRecord = null;
-            }
-
-            hasActiveIssue = await AssetsService.HasActiveIssueAsync(InstanceId);
-            activeIssueRecord = assetIssueRecords
-                .OrderByDescending(r => r.Sno)
-                .FirstOrDefault(r => r.ReturnedOn == default);
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error loading asset data: {ex.Message}";
-            Snackbar.Add(errorMessage, Severity.Error);
-            assetInstance = null;
-        }
-        finally
-        {
-            loading = false;
-            StateHasChanged();
-        }
-    }
-
     private void NavigateBack()
     {
         Navigation.NavigateTo($"/assets/{AssetId}");
@@ -659,41 +705,62 @@
 
         showAssignDialog = true;
         assignModel = new AssetIssueRecord
-            {
-                AssetInstanceId = InstanceId,
-                IssuedOn = DateTime.Now,
-                ReturnedOn = DateTime.Now
-            };
+        {
+            AssetInstanceId = InstanceId,
+            IssuedOn = DateTime.Now,
+            ReturnedOn = null
+        };
         assignErrorMessage = string.Empty;
         StateHasChanged();
     }
 
     private async Task ShowReturnDialog()
     {
-        if (assetInstance?.Status != "Unavailable" || assetInstance?.Status == "Decommissioned")
+        if (assetInstance?.Status == "Decommissioned")
         {
-            returnErrorMessage = "Asset cannot be returned. It must be in 'Unavailable' status and not decommissioned.";
+            returnErrorMessage = "Asset cannot be returned as it is decommissioned.";
+            Snackbar.Add(returnErrorMessage, Severity.Error);
+            StateHasChanged();
+            return;
+        }
+
+        if (assetInstance?.Status != "Unavailable")
+        {
+            returnErrorMessage = "Asset cannot be returned. It must be in 'Unavailable' status.";
             Snackbar.Add(returnErrorMessage, Severity.Error);
             StateHasChanged();
             return;
         }
 
         activeIssueRecord = assetIssueRecords
-            .OrderByDescending(r => r.Sno)
-            .FirstOrDefault(r => r.ReturnedOn == default);
+            .OrderByDescending(r => r.Id)
+            .FirstOrDefault(r => r.ReturnedOn == null);
 
         hasActiveIssue = activeIssueRecord != null;
 
+        if (!hasActiveIssue)
+        {
+            returnErrorMessage = "No active issue record found.";
+            Snackbar.Add(returnErrorMessage, Severity.Error);
+            StateHasChanged();
+            return;
+        }
+
         showReturnDialog = true;
         returnModel = new AssetReturnRecordDto
-            {
-                AssetInstanceId = InstanceId,
-                ReturnedBy = activeIssueRecord?.IssuedTo ?? string.Empty,
-                ReturnedOn = DateTime.Now,
-                ReceivedBy = activeIssueRecord?.IssuedTo ?? string.Empty,
-                ApprovedBy = activeIssueRecord?.ApprovedBy ?? string.Empty,
-                Remarks = string.Empty
-            };
+        {
+            AssetInstanceId = InstanceId,
+            ReturnedByEmployeeId = activeIssueRecord?.IssuedToEmployeeId ?? "",
+            ReceivedByEmployeeId = "",
+            ApprovedByEmployeeId = activeIssueRecord?.ApprovedByEmployeeId ?? "",
+            ReturnedOn = DateTime.Now,
+            Remarks = ""
+        };
+
+        // Populate full names based on initial IDs
+        returnModel.ReturnedByFullName = employees.FirstOrDefault(e => e.EmployeeId == returnModel.ReturnedByEmployeeId)?.FullName ?? "";
+        returnModel.ApprovedByFullName = employees.FirstOrDefault(e => e.EmployeeId == returnModel.ApprovedByEmployeeId)?.FullName ?? "";
+
         returnErrorMessage = string.Empty;
         StateHasChanged();
     }
@@ -708,35 +775,39 @@
 
             if (assetInstance == null)
             {
-                assignErrorMessage = "Asset instance not loaded. Please refresh and try again.";
+                assignErrorMessage = "Asset instance not loaded.";
                 Snackbar.Add(assignErrorMessage, Severity.Error);
                 showAssignDialog = false;
                 StateHasChanged();
                 return;
             }
 
-            assignModel.AssetInstanceId = InstanceId;
+            // Populate full names based on selected IDs
+            var issuedToEmployee = employees.FirstOrDefault(e => e.EmployeeId == assignModel.IssuedToEmployeeId);
+            var issuedByEmployee = employees.FirstOrDefault(e => e.EmployeeId == assignModel.IssuedByEmployeeId);
+            var approvedByEmployee = employees.FirstOrDefault(e => e.EmployeeId == assignModel.ApprovedByEmployeeId);
+
+            if (issuedToEmployee == null || issuedByEmployee == null || approvedByEmployee == null)
+            {
+                assignErrorMessage = "Invalid employee selection.";
+                Snackbar.Add(assignErrorMessage, Severity.Error);
+                return;
+            }
+
+            assignModel.IssuedToFullName = issuedToEmployee.FullName;
+            assignModel.IssuedByFullName = issuedByEmployee.FullName;
+            assignModel.ApprovedByFullName = approvedByEmployee.FullName;
+
             await AssetsService.CreateAssetIssueRecordAsync(assignModel);
-
             assetInstance.Status = "Unavailable";
-            assetInstance.AssignedTo = assignModel.IssuedTo;
-
-            await LoadAssetData();
+            assetInstance.AssignedTo = assignModel.IssuedToEmployeeId;
             showAssignDialog = false;
             Snackbar.Add("Asset assigned successfully.", Severity.Success);
-            StateHasChanged();
-        }
-        catch (HttpRequestException ex)
-        {
-            assignErrorMessage = $"Error assigning asset: {ex.Message}";
-            Snackbar.Add(assignErrorMessage, Severity.Error);
-            StateHasChanged();
         }
         catch (Exception ex)
         {
             assignErrorMessage = $"Error assigning asset: {ex.Message}";
             Snackbar.Add(assignErrorMessage, Severity.Error);
-            StateHasChanged();
         }
         finally
         {
@@ -755,45 +826,48 @@
 
             if (assetInstance == null)
             {
-                returnErrorMessage = "Asset instance not loaded. Please refresh and try again.";
+                returnErrorMessage = "Asset instance not loaded.";
                 Snackbar.Add(returnErrorMessage, Severity.Error);
                 showReturnDialog = false;
                 StateHasChanged();
                 return;
             }
 
-            returnModel.AssetInstanceId = InstanceId;
-            await AssetsService.CreateAssetReturnRecordAsync(returnModel);
-
-            if (activeIssueRecord != null)
+            if (activeIssueRecord == null)
             {
-                var unassignModel = new AssetIssueRecord.UnassignRequest
-                    {
-                        AssetInstanceId = InstanceId,
-                        Remarks = returnModel.Remarks
-                    };
-                await AssetsService.UnAssignAssetIssueRecordAsync(unassignModel);
+                returnErrorMessage = "No active issue record found.";
+                Snackbar.Add(returnErrorMessage, Severity.Error);
+                showReturnDialog = false;
+                StateHasChanged();
+                return;
             }
 
+            // Populate full names based on selected IDs
+            var returnedByEmployee = employees.FirstOrDefault(e => e.EmployeeId == returnModel.ReturnedByEmployeeId);
+            var receivedByEmployee = employees.FirstOrDefault(e => e.EmployeeId == returnModel.ReceivedByEmployeeId);
+            var approvedByEmployee = employees.FirstOrDefault(e => e.EmployeeId == returnModel.ApprovedByEmployeeId);
+
+            if (returnedByEmployee == null || receivedByEmployee == null || approvedByEmployee == null)
+            {
+                returnErrorMessage = "Invalid employee selection.";
+                Snackbar.Add(returnErrorMessage, Severity.Error);
+                return;
+            }
+
+            returnModel.ReturnedByFullName = returnedByEmployee.FullName;
+            returnModel.ReceivedByFullName = receivedByEmployee.FullName;
+            returnModel.ApprovedByFullName = approvedByEmployee.FullName;
+
+            await AssetsService.CreateAssetReturnRecordAsync(returnModel);
             assetInstance.Status = "Available";
             assetInstance.AssignedTo = null;
-
-            await LoadAssetData();
             showReturnDialog = false;
             Snackbar.Add("Asset returned successfully.", Severity.Success);
-            StateHasChanged();
-        }
-        catch (HttpRequestException ex)
-        {
-            returnErrorMessage = $"Error returning asset: {ex.Message}";
-            Snackbar.Add(returnErrorMessage, Severity.Error);
-            StateHasChanged();
         }
         catch (Exception ex)
         {
             returnErrorMessage = $"Error returning asset: {ex.Message}";
             Snackbar.Add(returnErrorMessage, Severity.Error);
-            StateHasChanged();
         }
         finally
         {

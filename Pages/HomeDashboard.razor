@@ -1,4 +1,9 @@
 ﻿@page "/home"
+@using System
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.Json
+@using System.Threading.Tasks
 @using Components.sidebar
 @layout HomeLayout
 @inject AuthService AuthService
@@ -7,16 +12,14 @@
 @inject LeaveManagementService LeaveService
 @inject MentorAssignmentService MentorService
 @inject NavigationManager Navigation
-@inject HttpClient Http
+@inject HttpClient Http3
 
-<div class="dashboard-wrapper">
-    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="dashboard-content">
         <!-- Header Section -->
         <div class="dashboard-header">
             <div class="header-content">
                 <div class="user-profile">
                     <MudAvatar Size="Size.Large" Class="user-avatar">
-                        @(userName?.Length > 0 ? userName[0].ToString().ToUpper() : "A")
+                        @(userName?.L.ToUpper() : "A")
                     </MudAvatar>
                     <div class="user-info">
                         <h1 class="welcome-title">
@@ -130,8 +133,8 @@
                             <MudIcon Icon="@Icons.Material.Filled.Timeline" Class="title-icon" />
                             <h3>Recent Leave Requests</h3>
                         </div>
-                        <MudButton Variant="Variant.Text" 
-                                  Size="Size.Small" 
+                        <MudButton Variant="Variant.Text"
+                                  Size="Size.Small"
                                   Color="Color.Primary"
                                   @onclick="@(() => NavigateToLeaveManagement())">
                             View All
@@ -155,9 +158,9 @@
                                         </div>
                                     </div>
                                     <div class="activity-status">
-                                        <MudChip T="string" Size="Size.Small" 
-                                                Color="@GetStatusColor(leave.Status)"
-                                                Variant="Variant.Filled">
+                                        <MudChip T="string" Size="Size.Small"
+                                                 Color="@GetStatusColor(leave.Status)"
+                                                 Variant="Variant.Filled">
                                             @leave.Status
                                         </MudChip>
                                         @if (leave.Status == "Pending" && userRole == "Admin")
@@ -185,8 +188,8 @@
                             <MudIcon Icon="@Icons.Material.Filled.Event" Class="title-icon" />
                             <h3>Upcoming Holidays</h3>
                         </div>
-                        <MudButton Variant="Variant.Text" 
-                                  Size="Size.Small" 
+                        <MudButton Variant="Variant.Text"
+                                  Size="Size.Small"
                                   Color="Color.Primary"
                                   @onclick="@(() => NavigateToHolidays())">
                             View All
@@ -211,9 +214,9 @@
                                         </div>
                                     </div>
                                     <div class="event-actions">
-                                        <MudChip T="string" Size="Size.Small" 
-                                                Color="@GetHolidayTypeColor(holiday.HolidayType)" 
-                                                Variant="Variant.Text">
+                                        <MudChip T="string" Size="Size.Small"
+                                                 Color="@GetHolidayTypeColor(holiday.HolidayType)"
+                                                 Variant="Variant.Text">
                                             @holiday.HolidayType
                                         </MudChip>
                                         <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="nav-icon" />
@@ -240,8 +243,8 @@
                                 <MudIcon Icon="@Icons.Material.Filled.Groups" Class="title-icon" />
                                 <h3>Team Management</h3>
                             </div>
-                            <MudButton Variant="Variant.Text" 
-                                      Size="Size.Small" 
+                            <MudButton Variant="Variant.Text"
+                                      Size="Size.Small"
                                       Color="Color.Primary"
                                       @onclick="@(() => NavigateToEmployeeList())">
                                 Manage Team
@@ -258,7 +261,6 @@
                                         <div class="stat-label">Total Employees</div>
                                     </div>
                                 </div>
-                                
                                 <div class="stat-item">
                                     <div class="stat-icon">
                                         <MudIcon Icon="@Icons.Material.Filled.Business" Color="Color.Secondary" />
@@ -268,7 +270,6 @@
                                         <div class="stat-label">Designations</div>
                                     </div>
                                 </div>
-
                                 <div class="stat-item">
                                     <div class="stat-icon">
                                         <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Info" />
@@ -279,33 +280,44 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="quick-actions">
-                                <MudButton Variant="Variant.Outlined" 
-                                          Size="Size.Small" 
+                                <MudButton Variant="Variant.Outlined"
+                                          Size="Size.Small"
                                           StartIcon="@Icons.Material.Filled.PersonAdd"
                                           @onclick="@(() => NavigateToAddEmployee())"
                                           Class="action-btn">
                                     Add Employee
                                 </MudButton>
-                                <MudButton Variant="Variant.Outlined" 
-                                          Size="Size.Small" 
+                                <MudButton Variant="Variant.Outlined"
+                                          Size="Size.Small"
                                           StartIcon="@Icons.Material.Filled.Assignment"
                                           @onclick="@(() => NavigateToLeaveManagement())"
                                           Class="action-btn">
                                     Manage Leaves
                                 </MudButton>
                             </div>
+                            <div class="clock-actions">
+                                <MudButton Variant="Variant.Outlined"
+                                          Size="Size.Small"
+                                          StartIcon="@Icons.Material.Filled.Login"
+                                          @onclick="@ToggleClock"
+                                          Class="clock-btn">
+                                    @(isClockedIn ? "Clock Out" : "Clock In")
+                                </MudButton>
+                            </div>
                         </div>
                     </MudPaper>
                 }
             </div>
-        }
-    </MudContainer>
-</div>
+
+@if (showSnackbar)
+{
+    <div class="snackbar show">
+        @snackbarMessage
+    </div>
+}
 
 <style>
-
     /* Header Section */
     .dashboard-header {
         background: white;
@@ -736,6 +748,18 @@
         min-width: 140px;
     }
 
+    .clock-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .clock-btn {
+        flex: 1;
+        min-width: 140px;
+    }
+
     /* Empty States */
     .empty-state {
         text-align: center;
@@ -762,6 +786,30 @@
 
     .clickable:active {
         transform: scale(0.98);
+    }
+
+    /* Snackbar */
+    .snackbar {
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 4px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 30px;
+        font-size: 14px;
+        opacity: 0;
+        transition: opacity 0.5s, visibility 0.5s;
+    }
+
+    .snackbar.show {
+        visibility: visible;
+        opacity: 1;
     }
 
     /* Responsive Design */
@@ -835,7 +883,23 @@
     }
 </style>
 
+<script>
+    function playSound() {
+        var audio = new Audio('/audio/thankyou.mp3');
+        audio.play().catch(e => console.error("Audio playback failed:", e));
+    }
+
+    async function getUserIP() {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    }
+</script>
+
 @code {
+    private bool isClockedIn = false;
+    private bool showSnackbar = false;
+    private string snackbarMessage = string.Empty;
     private string userRole = "User";
     private string userName = "Admin";
     private string userEmail;
@@ -844,16 +908,12 @@
     private string userLocation = "Default Location";
     private bool isLoading = true;
     private string errorMessage;
-    
-    // Dashboard metrics - All fetched from backend
     private int totalEmployees = 0;
     private int totalDesignations = 0;
     private int totalLocations = 0;
     private int pendingLeaves = 0;
     private int approvedLeaves = 0;
     private int upcomingHolidays = 0;
-    
-    // Data collections - All fetched from backend
     private List<LeaveRequest> recentLeaves = new();
     private List<Events> holidays = new();
     private List<EmployeeDetails> employees = new();
@@ -863,8 +923,6 @@
         try
         {
             await LoadUserRoleAndDetails();
-            
-            // Load all data in parallel for better performance
             var loadTasks = new List<Task>
             {
                 LoadEmployeeData(),
@@ -873,8 +931,6 @@
             };
 
             await Task.WhenAll(loadTasks);
-            
-            // Log loaded data for debugging
             Console.WriteLine($"Dashboard loaded - Employees: {totalEmployees}, Pending Leaves: {pendingLeaves}, Upcoming Holidays: {upcomingHolidays}");
         }
         catch (Exception ex)
@@ -899,7 +955,6 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading user details: {ex.Message}");
-            // Keep defaults
         }
     }
 
@@ -909,27 +964,21 @@
         {
             employees = await EmployeeService.GetAllEmployees() ?? new();
             totalEmployees = employees.Count;
-            
-            // Calculate unique designations from actual data
             totalDesignations = employees
                 .Where(e => !string.IsNullOrWhiteSpace(e.Designation))
                 .Select(e => e.Designation.Trim())
                 .Distinct()
                 .Count();
-                
-            // Calculate unique locations from actual data
             totalLocations = employees
                 .Where(e => !string.IsNullOrWhiteSpace(e.JoiningLocation))
                 .Select(e => e.JoiningLocation.Trim())
                 .Distinct()
                 .Count();
-                
             Console.WriteLine($"Loaded {totalEmployees} employees, {totalDesignations} designations, {totalLocations} locations");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading employee data: {ex.Message}");
-            // Keep defaults at 0
         }
     }
 
@@ -937,18 +986,12 @@
     {
         try
         {
-            // Get all pending leave requests
             var allLeaves = await LeaveService.GetPendingRequestsAsync() ?? new();
-            
-            // Store recent leaves for display
             recentLeaves = allLeaves
                 .OrderByDescending(l => l.StartDate)
                 .ToList();
 
-            // Count pending leaves
             pendingLeaves = allLeaves.Count(l => l.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true);
-            
-            // Try to get approved leaves count from user's history
             try
             {
                 var userHistory = await LeaveService.GetMyLeaveHistoryAsync();
@@ -956,25 +999,22 @@
                 {
                     var currentMonth = DateTime.Now.Month;
                     var currentYear = DateTime.Now.Year;
-                    
                     approvedLeaves = userHistory.History
-                        .Count(l => l.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true && 
-                                   l.StartDate.Month == currentMonth && 
-                                   l.StartDate.Year == currentYear);
+                        .Count(l => l.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true &&
+                                     l.StartDate.Month == currentMonth &&
+                                     l.StartDate.Year == currentYear);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error loading user leave history: {ex.Message}");
-                approvedLeaves = 0;  // Default to 0 if can't load
+                approvedLeaves = 0;
             }
-            
             Console.WriteLine($"Loaded {recentLeaves.Count} recent leaves, {pendingLeaves} pending, {approvedLeaves} approved this month");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading leave data: {ex.Message}");
-            // Keep defaults
         }
     }
 
@@ -982,7 +1022,6 @@
     {
         try
         {
-            // Get user's location from employee data
             if (!string.IsNullOrEmpty(userEmployeeId))
             {
                 var employee = await EmployeeService.GetEmployeeDetails(userEmployeeId);
@@ -999,23 +1038,17 @@
             if (httpResponse.IsSuccessStatusCode)
             {
                 var allHolidays = await httpResponse.Content.ReadFromJsonAsync<Events[]>() ?? Array.Empty<Events>();
-                
-                // Filter for upcoming holidays (today onwards, next 60 days)
                 var today = DateTime.Today;
                 var next60Days = today.AddDays(60);
-                
                 holidays = allHolidays
-                    .Where(h => DateTime.TryParse(h.Date, out var date) && 
-                               date >= today && 
-                               date <= next60Days)
+                    .Where(h => DateTime.TryParse(h.Date, out var date) &&
+                                date >= today &&
+                                date <= next60Days)
                     .OrderBy(h => DateTime.Parse(h.Date))
                     .ToList();
 
                 upcomingHolidays = holidays.Count;
-                
                 Console.WriteLine($"Loaded {holidays.Count} upcoming holidays for location: {userLocation}");
-                
-                // Debug: Log first few holidays
                 foreach (var holiday in holidays.Take(3))
                 {
                     Console.WriteLine($"Holiday: {holiday.Description} on {holiday.Date}");
@@ -1067,12 +1100,10 @@
                     userName = employee.FirstName ?? "User";
                     userEmployeeId = employee.EmployeeID;
                     userDesignation = employee.Designation;
-                    
                     if (!string.IsNullOrEmpty(employee.JoiningLocation))
                     {
                         userLocation = employee.JoiningLocation;
                     }
-                    
                     Console.WriteLine($"User loaded: {userName}, Role: {userRole}, Location: {userLocation}");
                 }
                 else
@@ -1089,14 +1120,12 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading user details: {ex.Message}");
-            // Keep defaults
         }
     }
 
     private string GetNameFromEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email)) return "User";
-        
         try
         {
             var name = email.Split('@')[0];
@@ -1159,7 +1188,6 @@
         };
     }
 
-    // Navigation Methods
     private void NavigateToEmployeeList()
     {
         Navigation.NavigateTo("/home/employeeList");
@@ -1178,5 +1206,60 @@
     private void NavigateToAddEmployee()
     {
         Navigation.NavigateTo("/home/employees");
+    }
+
+    private async Task ToggleClock()
+    {
+        try
+        {
+            var ipAddress = await JSRuntime.InvokeAsync<string>("getUserIP");
+            var locationDetails = await GetLocationDetails(ipAddress);
+            snackbarMessage = !string.IsNullOrEmpty(locationDetails) ? $"Successfully done! Your current location is: {locationDetails}" : "Unable to determine your location.";
+            showSnackbar = true;
+
+            await JSRuntime.InvokeVoidAsync("playSound");
+
+            await Task.Delay(2000);
+            showSnackbar = false;
+
+            isClockedIn = !isClockedIn;
+        }
+        catch (Exception ex)
+        {
+            snackbarMessage = $"Error: {ex.Message}";
+            showSnackbar = true;
+            await Task.Delay(2000);
+            showSnackbar = false;
+        }
+    }
+
+    private async Task<string> GetLocationDetails(string ipAddress)
+    {
+        var url = $"http://ip-api.com/json/{ipAddress}";
+        var response = await Http.GetAsync(url);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            var locationData = JsonSerializer.Deserialize<IpLocationData>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (locationData != null && locationData.Status == "success")
+            {
+                return $"{locationData.City}, {locationData.RegionName}, {locationData.Country}";
+            }
+        }
+
+        return "Unknown location";
+    }
+
+    public class IpLocationData
+    {
+        public string Status { get; set; }
+        public string Country { get; set; }
+        public string RegionName { get; set; }
+        public string City { get; set; }
+        public double Lat { get; set; }
+        public double Lon { get; set; }
+    }
     }
 }
