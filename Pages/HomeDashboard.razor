@@ -25,19 +25,7 @@
                         <h1 class="welcome-title">
                             Welcome back, @(userName ?? "Admin")
                         </h1>
-                        <p class="welcome-subtitle">
-                            @DateTime.Now.Toe.Now.ToString("hh:mm tt")
-                        </p>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <MudChip T="string" Class="role-chip" Size="Size.Medium" Variant="Variant.Filled">
-                        <MudIcon Icon="@GetRoleIcon(userRole)" Class="chip-icon" />
-                        @userRole
-                    </MudChip>
-                    @if (!string.IsNullOrEmpty(userDesignation))
-                    {
-                        <MudChip T="string" Class="designation-chip" Size="Size.Medium" Variant="Variant.Filled">
+                    esignation-chip" Size="Size.Medium" Variant="Variant.Filled">
                             <MudIcon Icon="@Icons.Material.Filled.Work" Class="chip-icon" />
                             @userDesignation
                         </MudChip>
