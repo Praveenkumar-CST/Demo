@@ -1,0 +1,137 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/bin/Debug/net8.0/wwwroot/_framework/blazor.webassembly.js",
+      "PackagePath": "staticwebassets/_framework/blazor.webassembly.js"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/assets/company-image.jpg",
+      "PackagePath": "staticwebassets/assets/company-image.jpg"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/assets/wwlogo.png",
+      "PackagePath": "staticwebassets/assets/wwlogo.png"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/css/StyleSheet.css",
+      "PackagePath": "staticwebassets/css/StyleSheet.css"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/css/app.css",
+      "PackagePath": "staticwebassets/css/app.css"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/css/site.css",
+      "PackagePath": "staticwebassets/css/site.css"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/icon-192.png",
+      "PackagePath": "staticwebassets/icon-192.png"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/icon-512.png",
+      "PackagePath": "staticwebassets/icon-512.png"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/images/avatar.jpg",
+      "PackagePath": "staticwebassets/images/avatar.jpg"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/images/default-avatar.jpg",
+      "PackagePath": "staticwebassets/images/default-avatar.jpg"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/images/logo1.png",
+      "PackagePath": "staticwebassets/images/logo1.png"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/index.html",
+      "PackagePath": "staticwebassets/index.html"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/js/download.js",
+      "PackagePath": "staticwebassets/js/download.js"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/js/fileDownload.js",
+      "PackagePath": "staticwebassets/js/fileDownload.js"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/manifest.webmanifest",
+      "PackagePath": "staticwebassets/manifest.webmanifest"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/pdfs/CSharp Coding Guidelines.pdf",
+      "PackagePath": "staticwebassets/pdfs/CSharp Coding Guidelines.pdf"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/pdfs/Git Guidelines.pdf",
+      "PackagePath": "staticwebassets/pdfs/Git Guidelines.pdf"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/pdfs/Json Coding Guidelines.pdf",
+      "PackagePath": "staticwebassets/pdfs/Json Coding Guidelines.pdf"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/pdfs/MongoDB Coding Guidelines.pdf",
+      "PackagePath": "staticwebassets/pdfs/MongoDB Coding Guidelines.pdf"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/pdfs/Python Coding Guidelines.pdf",
+      "PackagePath": "staticwebassets/pdfs/Python Coding Guidelines.pdf"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/pdfs/Wise Work Attendance Policy v3.pdf",
+      "PackagePath": "staticwebassets/pdfs/Wise Work Attendance Policy v3.pdf"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/pdfs/Wise Work Code of Conduct v1.pdf",
+      "PackagePath": "staticwebassets/pdfs/Wise Work Code of Conduct v1.pdf"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/scripts/fileOperations.js",
+      "PackagePath": "staticwebassets/scripts/fileOperations.js"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/scripts/hierarchyTree.js",
+      "PackagePath": "staticwebassets/scripts/hierarchyTree.js"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/scripts/localStorage.js",
+      "PackagePath": "staticwebassets/scripts/localStorage.js"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/scripts/pdfScroll.js",
+      "PackagePath": "staticwebassets/scripts/pdfScroll.js"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/scripts/sessionStorage.js",
+      "PackagePath": "staticwebassets/scripts/sessionStorage.js"
+    },
+    {
+      "Id": "/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/wwwroot/scripts/storage.js",
+      "PackagePath": "staticwebassets/scripts/storage.js"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.WiseHR.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.WiseHR.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.WiseHR.props",
+      "PackagePath": "build\\WiseHR.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.WiseHR.props",
+      "PackagePath": "buildMultiTargeting\\WiseHR.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.WiseHR.props",
+      "PackagePath": "buildTransitive\\WiseHR.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
