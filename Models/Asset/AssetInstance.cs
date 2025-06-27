@@ -4,7 +4,7 @@
         {
         public int Id { get; set; }
         public int AssetId { get; set; }
-        public string AssetTag { get; set; } = string.Empty;
+        public string Asse123456765432234543 { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public string? AssignedTo { get; set; }
