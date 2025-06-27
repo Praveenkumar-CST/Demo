@@ -9,8 +9,35 @@
 @inject HttpClient Http3
 
         <!-- Header Section -->
-    jfiruhfjiurchurcfhrtufhcrtufhtufhtuh uhvujrthvucjrhvchrvurhv="error-alert" Variant="Variant.Filled">
-        hfuvhrvhrv         <MudIcon Icon="@Icons.Material.Filled.Error" Class="alert-icon" />
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-profile">
+                    <MudAvatar Sizerge" Class="user-avatar">
+                        @(userName?.L.ToUpper() : "A")
+                    </MudAvatar>
+                    <div class="user-info">
+                        <h1 class="welcome-title">
+                            Welcome back, @(userName ?? "Admin")
+                        </h1>
+                    esigna"chip-icon" />
+                            @userDesignation
+                        </MudChip>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="loading-container">
+                <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                <p class="loading-text">Loading dashboard...</p>
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="error-alert" Variant="Variant.Filled">
+                <MudIcon Icon="@Icons.Material.Filled.Error" Class="alert-icon" />
                 @errorMessage
             </MudAlert>
         }
@@ -20,7 +47,7 @@
             <div class="metrics-section">
                 <h2 class="section-title">Dashboard Overview</h2>
                 <div class="metrics-grid">
-                    loyeeList())">
+                    <MudPaper Class="metric-card clickable" Elevarfbcfyctn123456789098765432123567="3" @onclick="@(() => NavigateToEmployeeList())">
                         <div class="metric-icon primary">
                             <MudIcon Icon="@Icons.Material.Filled.Group" />
                         </div>
@@ -59,7 +86,19 @@
                                 <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" />
                                 Next 60 days
                             </div>
-                        </div
+                        </div>
+                    </MudPaper>
+
+                    <MudPaper Class="metric-card clickable" Elevation="3" @onclick="@(() => NavigateToLeaveManagement())">
+                        <div class="metric-icon success">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value">@approvedLeaves</div>
+                            <div class="metric-label">Approved Leaves</div>
+                            <div class="metric-trend positive">
+                                <MudIcon Icon="@Icons.Material.Filled.ThumbUp" Size="Size.Small" />
+                                This month
                             </div>
                         </div>
                     </MudPaper>

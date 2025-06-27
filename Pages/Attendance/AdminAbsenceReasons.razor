@@ -1,4 +1,40 @@
+@page "/AdminAbsenceReasons"
+@using System.Net.Http.Json
+@using FingerFrontend.AdminAttendanceViewModel
+@inject HttpClient Ht/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+<!-- Error Message -->
+@if (!string.IsNullOrEmpty(errorMessage))
+
+
+<!-- Success Pop-up -->
+@if (showSuccessPopup)
+{
+    <div class="succ
+    }
+    else if (!filteredRequests.Any())
+    {
+        <p class="no-data">No absence reason requests found.</p>
+    }
+    else
+    {
+        <div class="request-row" style="font-weight: 600; color: #1e293b; background-color: #f1f5f9;">
+            <div>User ID</div>
+            <div>Name</div>
+            <div>Date & Time</div>
+            <div>Reason</div>
+            <div>Action</div>
+        </div>
+        @foreach (var request in filteredRequests)
+        {
+            <div class="request-row">
+                <div>@request.UserId</div>
+                <div>@request.Name</div>
+                <div>@request.Dpravenn123456787654m tt") - @request.EndTime.ToString("hh:mm tt"))</div>
+                <div class="reason-display">@request.Reason</div>
+                <div>
+                    @if (!request.IsApproved)
                     {
                         <button @onclick="() => ApproveRequest(request.Id)" class="action-button primary-button">
                             <i class="fas fa-check"></i> Approve
