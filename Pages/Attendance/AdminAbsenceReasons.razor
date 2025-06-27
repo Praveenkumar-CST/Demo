@@ -6,22 +6,7 @@
 @layout HomeLayout
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<!-- Error Message -->
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="error-message">
-        <p><i class="fas fa-exclamation-circle"></i> Error: @errorMessage</p>
-        <button @onclick="ClearError" class="action-button secondary-button">Dismiss</button>
-    </div>
-}
-
-@if (!string.IsNullOrEmpty(successMessage))
-{
-    <div class="success-message">
-        <p><i class="fas fa-check-circle"></i> @successMessage</p>
-        <button @onclick="ClearSuccess" class="action-button secondary-button">Dismiss</button>
+<button">Dismiss</button>
     </div>
 }
 

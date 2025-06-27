@@ -3,62 +3,17 @@
 @using ClosedXML.Excel
 @using System.IO
 @using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.Components.Web
-@using MudBlazor
-@using FingerFrontend.AdminAttendanceViewModel
-@inject HttpClient Http
-@inject NavigationManager Nav
-@layout HomeLayout
-
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-
-<!-- Error Message -->
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="error-message">
-        <p>Error: @errorMessage</p>
-        <button @onclick="ClearError" class="action-button secondary-button">Clear</button>
-    </div>
+@using Microsoft.AspNetCore.Components
 }
 
 <!-- Success Message -->
 @if (!string.IsNullOrEmpty(successMessage))
-{
-    <div class="success-message">
-        <p>@successMessage</p>
-        <button @onclick="ClearSuccess" class="action-button secondary-button">Clear</button>
-    </div>
-}
 
-<!-- Success Pop-up -->
-@if (showSuccessPopup)
-{
-    <div class="success-popup">
-        <i class="fas fa-check-circle"></i>
-        <p>@successPopupMessage</p>
     </div>
 }
 
 <!-- Download Progress -->
-@if (isDownloading)
-{
-    <div class="download-progress">
-        <p style="color: #1e293b; font-size: 16px; font-weight: 500;">Downloading... @downloadProgress.ToString("F1")%</p>
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
-    </div>
-}
-
-<!-- Date Range Modal for Download -->
-@if (showDateRangeModal)
-{
-    <div class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                Select Date Range for Download
-            </div>
-            <div class="modal-body">
+@if (isDowny">
                 <div style="margin-bottom: 16px;">
                     <label for="startDate" style="color: #1e293b; font-weight: 500; display: block; margin-bottom: 6px;">Start Date</label>
                     <input type="date" id="startDate" @bind="startDate" class="search-input" />
@@ -92,36 +47,12 @@
         <input id="nameInput" @bind="nameInput" @bind:event="oninput" @bind:after="UpdateUserIdFromName" placeholder="Enter Name" class="search-input" />
     </div>
     <button @onclick="FetchLogs" class="action-button primary-button">
-        <i class="fas fa-search"></i> Search
-    </button>
-    <button @onclick="() => OpenDateRangeModal(false)" class="action-button download-button" disabled="@(isDownloading || (string.IsNullOrEmpty(userIdInput) && string.IsNullOrEmpty(nameInput)))">
-        <i class="fas fa-download"></i> Download for User
-    </button>
-    <button @onclick="() => OpenDateRangeModal(true)" class="action-button download-button" disabled="@isDownloading">
-        <i class="fas fa-download"></i> Download All
-    </button>
-    <button @onclick="NavigateToReasons" class="action-button reasons-button">
-        <i class="fas fa-file-alt"></i> Absence Requests
-    </button>
-    @if (isSearching)
-    {
-        <div class="loading-overlay">
+        <i
             <MudProgressCircular Color="Color.Info" Size="Size.Large" Indeterminate="true" />
         </div>
     }
 </div>
 
-<!-- Modal for viewing absence reason -->
-@if (showModal && absencePeriod != null)
-{
-    <div class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                Absence Reasons (@absencePeriod.StartTime.ToString("dd MMM yyyy hh:mm:ss tt") - @absencePeriod.EndTime.ToString("hh:mm:ss tt"))
-            </div>
-            <div class="modal-body">
-                @if (!string.IsNullOrEmpty(absencePeriod.Reason))
-                {
                     <div class="reason-display">
                         Reason: @absencePeriod.Reason
                     </div>
