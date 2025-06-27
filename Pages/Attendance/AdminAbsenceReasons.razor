@@ -9,45 +9,7 @@
 <button">Dismiss</button>
     </div>
 }
-
-<!-- Success Pop-up -->
-@if (showSuccessPopup)
-{
-    <div class="success-popup">
-        <i class="fas fa-check-circle"></i>
-        <p>@successPopupMessage</p>
-    </div>
-}
-
-<div class="admin-container">
-    <div class="table-header">
-        <h1>Absence Requests</h1>
-    </div>
-
-    <!-- Search Section -->
-    <div class="search-container">
-        <input type="text" class="search-input" placeholder="Search by User ID" @bind="userIdSearch" @oninput="OnUserIdSearchInput" />
-        <input type="text" class="search-input" placeholder="Search by Name" @bind="nameSearch" @oninput="OnNameSearchInput" />
-        <button class="clear-button" @onclick="ClearSearch">
-            <i class="fas fa-times"></i> Clear
-        </button>
-    </div>
-
-    @if (isLoading)
-    {
-        <div style="display: flex; justify-content: center;"><div class="loader"></div></div>
-
-    }
-    else if (!filteredRequests.Any())
-    {
-        <p class="no-data">No absence reason requests found.</p>
-    }
-    else
-    {
-        <div class="request-row" style="font-weight: 600; color: #1e293b; background-color: #f1f5f9;">
-            <div>User ID</div>
-            <div>Name</div>
-            <div>Date & Time</div>
+iv>
             <div>Reason</div>
             <div>Action</div>
         </div>
