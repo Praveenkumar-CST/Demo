@@ -5,21 +5,6 @@
 @inject WiseHR.Services.AuthService AuthService
 @inject IJSRuntime JSRuntime
 @layout Homemin.css" rel="stylesheet">
-
-<!-- Error Message -div>
-        </div>
-        @foreach (var reason in absenceReasons)
-        {
-            <div class="table-row">
-                <div>@reason.Date.ToString("dd MMM yyyy")</div>
-                <div>@reason.StartTime.ToString("hh:mm:ss tt")</div>
-                <div>@reason.EndTime.ToString("hh:mm:ss tt")</div>
-                <div class="@(reason.IsApproved ? "status-approved" : "status-pending")">
-                    @(reason.IsApproved ? "Approved" : "Pending")
-                </div>
-                <div class="reason-text">@reason.Reason</div>
-            </div>
-        }
     }
 </div>
 
