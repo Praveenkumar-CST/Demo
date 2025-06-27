@@ -31,5 +31,5 @@ namespace WiseHR.Models.Chat
         Sent,
         Read,
         Failed
-    } tejas
+    } tejas veera
 } 
