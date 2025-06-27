@@ -4,17 +4,11 @@
 @inject NavigationManager Nav
 @inject WiseHR.Services.AuthService AuthService
 @inject IJSRuntime JSRuntime
-@layout HomeLayout
-@using FingerFrontend.AdminAttendanceViewModel
-
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+@layout Homemin.css" rel="stylesheet">
 
 <!-- Error Message -->
 @if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="error-message">
-        <p>Error: @errorMessage</p>
-        <button @onclick="ClearError" class="action-button secondary-button">Clear</button>
+{ndary-button">Clear</button>
     </div>
 }
 
