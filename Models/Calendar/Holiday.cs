@@ -7,4 +7,4 @@ public class Events
         public string? Location { get; set; }
         public string? Day { get; set; }
     
-  }
+  } praveen
