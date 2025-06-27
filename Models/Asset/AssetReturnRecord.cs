@@ -1,23 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-
-namespace WiseHR.Models
-{
-    public class AssetReturnRecord
-    {
-        public int Id { get; set; }
-
-        [Required]
-        public int AssetInstanceId { get; set; }
-
-        [Required, MaxLength(100)]
-        public string ReturnedByEmployeeId { get; set; } = string.Empty;
-
-        [MaxLength(200)]
-        [JsonPropertyName("returnedBy")]
-        public string ReturnedByFullName { get; set; } = string.Empty;
-
+﻿
         [Required, MaxLength(100)]
         public string ReceivedByEmployeeId { get; set; } = string.Empty;
 
