@@ -1,0 +1,248 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = false
+build_property.IncludeAllContentForSelfExtract = 
+build_property.MudDebugAnalyzer = 
+build_property.MudAllowedAttributePattern = 
+build_property.MudAllowedAttributeList = 
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = WiseHR
+build_property.RootNamespace = WiseHR
+build_property.ProjectDir = /Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = false
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = /Users/praveenkumar/Desktop/WiseHR-Frontend- Latest
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Components/Chat/WiseChatWidget.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9DaGF0L1dpc2VDaGF0V2lkZ2V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Components/Dialogs/TablePopupDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EaWFsb2dzL1RhYmxlUG9wdXBEaWFsb2cucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Components/Dialogs/ViewPolicyDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EaWFsb2dzL1ZpZXdQb2xpY3lEaWFsb2cucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Components/sidebar/HomeLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9zaWRlYmFyL0hvbWVMYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Components/sidebar/HomeSidebar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9zaWRlYmFyL0hvbWVTaWRlYmFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L01haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/AddEmployee.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQWRkRW1wbG95ZWUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/AnalyticsPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQW5hbHl0aWNzUGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Asset/AddAssetPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXNzZXQvQWRkQXNzZXRQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Asset/AssetPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXNzZXQvQXNzZXRQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Asset/ProductPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXNzZXQvUHJvZHVjdFBhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Asset/UserPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXNzZXQvVXNlclBhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Attendance/AdminAbsenceReasons.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXR0ZW5kYW5jZS9BZG1pbkFic2VuY2VSZWFzb25zLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Attendance/AdminAttendanceView.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXR0ZW5kYW5jZS9BZG1pbkF0dGVuZGFuY2VWaWV3LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Attendance/UserAbsenceReasons.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXR0ZW5kYW5jZS9Vc2VyQWJzZW5jZVJlYXNvbnMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Attendance/UserAttendanceView.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXR0ZW5kYW5jZS9Vc2VyQXR0ZW5kYW5jZVZpZXcucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Calendar/Admin Calendar.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ2FsZW5kYXIvQWRtaW4gQ2FsZW5kYXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Calendar/Holiday.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ2FsZW5kYXIvSG9saWRheS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Calendar/User Calendar.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ2FsZW5kYXIvVXNlciBDYWxlbmRhci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Clock.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ2xvY2sucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/ConfirmationPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ29uZmlybWF0aW9uUGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Data/Bankdetails.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRGF0YS9CYW5rZGV0YWlscy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Data/EmployeeDetailsData.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRGF0YS9FbXBsb3llZURldGFpbHNEYXRhLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Data/EmployeeList.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRGF0YS9FbXBsb3llZUxpc3QucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Data/Experienceinfo.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRGF0YS9FeHBlcmllbmNlaW5mby5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Data/PersonalDetails.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRGF0YS9QZXJzb25hbERldGFpbHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/EmployeeData.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRW1wbG95ZWVEYXRhLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/EmployeeProfile.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRW1wbG95ZWVQcm9maWxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/ForgotPassword.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRm9yZ290UGFzc3dvcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Form/BankingInfoForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRm9ybS9CYW5raW5nSW5mb0Zvcm0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Form/EditForm/BankEditForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRm9ybS9FZGl0Rm9ybS9CYW5rRWRpdEZvcm0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Form/EditForm/ExperienceEditForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRm9ybS9FZGl0Rm9ybS9FeHBlcmllbmNlRWRpdEZvcm0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Form/EditForm/PersonalEditForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRm9ybS9FZGl0Rm9ybS9QZXJzb25hbEVkaXRGb3JtLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Form/EmployeeDetailsForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRm9ybS9FbXBsb3llZURldGFpbHNGb3JtLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Form/FortnightReportForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRm9ybS9Gb3J0bmlnaHRSZXBvcnRGb3JtLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Form/ProgressBar.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRm9ybS9Qcm9ncmVzc0Jhci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Form/WorkExperienceForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvRm9ybS9Xb3JrRXhwZXJpZW5jZUZvcm0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Hierarchy/RoleHierarchy.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSGllcmFyY2h5L1JvbGVIaWVyYXJjaHkucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSG9tZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/HomeDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSG9tZURhc2hib2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/LeaveManagement/AdminDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTGVhdmVNYW5hZ2VtZW50L0FkbWluRGFzaGJvYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/LeaveManagement/UserDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTGVhdmVNYW5hZ2VtZW50L1VzZXJEYXNoYm9hcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Managers.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTWFuYWdlcnMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Payroll/Payroll.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGF5cm9sbC9QYXlyb2xsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Payroll/Payrolledit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGF5cm9sbC9QYXlyb2xsZWRpdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Payroll/Summary.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGF5cm9sbC9TdW1tYXJ5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Payroll/Summaryedit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGF5cm9sbC9TdW1tYXJ5ZWRpdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Payroll/UserPayroll.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGF5cm9sbC9Vc2VyUGF5cm9sbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/PolicyPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUG9saWN5UGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Reportlist.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUmVwb3J0bGlzdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/ReportsDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUmVwb3J0c0RpYWxvZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/ResetPassword.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUmVzZXRQYXNzd29yZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/RoleMangement.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUm9sZU1hbmdlbWVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
