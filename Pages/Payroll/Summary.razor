@@ -1,0 +1,617 @@
+@page "/Summary"
+@layout HomeLayout
+@inject EmployeeService EmployeeService
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@using System.Linq
+@using System.Text.Json
+<style>
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8fafc;
+    }
+
+    .search-filter-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+        align-items: flex-end;
+    }
+
+    .salary-table-container {
+        width: 100%;
+        overflow-x: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        background-color: #ffffff;
+    }
+
+    .salary-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1000px;
+    }
+
+        .salary-table th, .salary-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .salary-table th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: #1f2937;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .salary-table tbody tr:hover {
+            background-color: #f9fafb;
+            cursor: pointer;
+        }
+
+        .salary-table tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .salary-table .name-column {
+            white-space: nowrap;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .salary-table tfoot {
+            background-color: #e8f0fe;
+            font-weight: 600;
+            color: #1a73e8;
+        }
+
+            .salary-table tfoot td {
+                border-top: 2px solid #d1d5db;
+            }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        }
+
+    .form-select {
+        display: block;
+        padding: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+
+    .error-alert {
+        background-color: #fee2e2;
+        color: #b91c1c;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .info-alert {
+        background-color: #e0f2fe;
+        color: #1e40af;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .edit-button {
+        padding: 8px 16px;
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+        .edit-button:hover {
+            background-color: #2563eb;
+        }
+
+    .view-switcher {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .view-box {
+        flex: 1;
+        padding: 16px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        cursor: pointer;
+    }
+
+        .view-box.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+    .modal {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        height: calc(100% - 60px);
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        margin-top: 2%;
+        background-color: #fff;
+        padding: 24px;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+
+        .modal-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+            .modal-content table td {
+                padding: 8px;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+        .modal-content .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .modal-content .close-button {
+            padding: 8px 16px;
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+            .modal-content .close-button:hover {
+                background-color: #dc2626;
+            }
+</style>
+<div class="container">
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 8px;">Loading...</p>
+        </div>
+    }
+    else if (hasError)
+    {
+        <div class="error-alert">Failed to load employee data.</div>
+    }
+    else
+    {
+        <!-- View Switcher -->
+        <div class="view-switcher">
+            <div class="view-box active">Summary</div>
+            <div class="view-box" @onclick="NavigateToPayroll">Payroll</div>
+        </div>
+        <!-- Search and Filter -->
+        <div class="search-filter-container">
+            <input type="text"
+                   class="form-control"
+                   style="max-width: 320px;"
+                   placeholder="Search by name, email, ID, or designation"
+                   @bind="SearchQuery"
+                   @bind:event="oninput" />
+            <select class="form-select"
+                    style="max-width: 220px;"
+                    @bind="DesignationFilter"
+                    @bind:event="onchange">
+                <option value="">All Designations</option>
+                @foreach (var designation in designations)
+                {
+                    <option value="@designation">@designation</option>
+                }
+            </select>
+        </div>
+        <!-- Summary Table -->
+        @if (filteredEmployees.Any())
+        {
+            <div class="salary-table-container">
+                <table class="salary-table">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Designation</th>
+                            <th>CTC</th>
+                            <th>Basic Salary</th>
+                            <th>Gross Salary</th>
+                            <th>Total Deductions</th>
+                            <th>Net Pay</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < filteredEmployees.Count; i++)
+                        {
+                            var employee = filteredEmployees[i];
+                            <tr @onclick="() => { selectedEmployee = employee; showModal = true; }">
+                                <td>@(i + 1)</td>
+                                <td>@employee.EmployeeID</td>
+                                <td class="name-column" title="@employee.FullName">@employee.FullName</td>
+                                <td>@employee.CurrentEmail</td>
+                                <td>@employee.Designation</td>
+                                <td>@employee.CTC_Amount.ToString("N2")</td>
+                                <td>@employee.BasicSalary.ToString("N2")</td>
+                                <td>@employee.GrossSalary.ToString("N0")</td>
+                                <td>@employee.TotalDeductions.ToString("N0")</td>
+                                <td>@employee.NetPay.ToString("N0")</td>
+                                <td>
+                                    <button class="edit-button" @onclick:stopPropagation="true" @onclick="() => NavigateToEmployeePage(employee)">Edit</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5">Total:</td>
+                            <td>@filteredEmployees.Sum(e => e.CTC_Amount).ToString("N2")</td>
+                            <td>@filteredEmployees.Sum(e => e.BasicSalary).ToString("N2")</td>
+                            <td>@filteredEmployees.Sum(e => e.GrossSalary).ToString("N0")</td>
+                            <td>@filteredEmployees.Sum(e => e.TotalDeductions).ToString("N0")</td>
+                            <td>@filteredEmployees.Sum(e => e.NetPay).ToString("N0")</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="info-alert">No employee data found for the selected criteria.</div>
+        }
+        <!-- Modal Popup -->
+        @if (showModal && selectedEmployee != null)
+        {
+            <div class="modal">
+                <div class="modal-content">
+                    <h2>Payroll Details for @selectedEmployee.FullName</h2>
+                    <table>
+                        <tr>
+                            <td><strong>Employee ID:</strong></td>
+                            <td>@selectedEmployee.EmployeeID</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Month/Year:</strong></td>
+                            <td>@selectedEmployee.Month @DateTime.Now.Year</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HRA:</strong></td>
+                            <td>@selectedEmployee.HRA_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Special Allowance:</strong></td>
+                            <td>@selectedEmployee.SpecialAllowance_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Arrears:</strong></td>
+                            <td>@selectedEmployee.Arrears_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employer PF:</strong></td>
+                            <td>@selectedEmployee.EmployerPF_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employee PF:</strong></td>
+                            <td>@selectedEmployee.EmployeePF_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employer ESIC:</strong></td>
+                            <td>@selectedEmployee.EmployerESIC_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employee ESIC:</strong></td>
+                            <td>@selectedEmployee.EmployeeESIC_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gratuity:</strong></td>
+                            <td>@selectedEmployee.Gratuity_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Income Tax:</strong></td>
+                            <td>@selectedEmployee.IncomeTax_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Professional Tax:</strong></td>
+                            <td>@selectedEmployee.ProfessionalTax_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Loans:</strong></td>
+                            <td>@selectedEmployee.Loans_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>LOP:</strong></td>
+                            <td>@selectedEmployee.LoP_Amount.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gross Salary:</strong></td>
+                            <td>@selectedEmployee.GrossSalary.ToString("N0")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Deductions:</strong></td>
+                            <td>@selectedEmployee.TotalDeductions.ToString("N0")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Net Pay:</strong></td>
+                            <td>@selectedEmployee.NetPay.ToString("N0")</td>
+                        </tr>
+                        @if (selectedEmployee.Others != null && selectedEmployee.Others.Any())
+                        {
+                            <tr>
+                                <td colspan="2"><strong>Other Components:</strong></td>
+                            </tr>
+                            @foreach (var item in selectedEmployee.Others)
+                            {
+                                <tr>
+                                    <td>@item.Key</td>
+                                    <td>@item.Value.ToString("N0")</td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                    <div class="button-group">
+                        <button class="close-button" @onclick="() => showModal = false">Close</button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+@code {
+    private List<EmployeePayroll> employees = new();
+    private List<EmployeePayroll> filteredEmployees = new();
+    private bool isLoading = true;
+    private bool hasError = false;
+    private string _searchQuery = string.Empty;
+    private string _designationFilter = string.Empty;
+    private List<string> designations = new();
+    private CancellationTokenSource? debounceCts;
+    private bool showModal = false;
+    private EmployeePayroll? selectedEmployee;
+    private string SearchQuery
+    {
+        get => _searchQuery;
+        set
+        {
+            if (_searchQuery != value)
+            {
+                _searchQuery = value;
+                DebounceFilter();
+            }
+        }
+    }
+    private string DesignationFilter
+    {
+        get => _designationFilter;
+        set
+        {
+            if (_designationFilter != value)
+            {
+                _designationFilter = value;
+                FilterEmployees();
+            }
+        }
+    }
+    private class EmployeePayroll
+    {
+        public string EmployeeID { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string CurrentEmail { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty;
+        public decimal BasicSalary { get; set; }
+        public decimal HRA_Amount { get; set; }
+        public decimal SpecialAllowance_Amount { get; set; }
+        public decimal Arrears_Amount { get; set; }
+        public decimal EmployerPF_Amount { get; set; }
+        public decimal EmployeePF_Amount { get; set; }
+        public decimal EmployerESIC_Amount { get; set; }
+        public decimal EmployeeESIC_Amount { get; set; }
+        public decimal Gratuity_Amount { get; set; }
+        public decimal IncomeTax_Amount { get; set; }
+        public decimal ProfessionalTax_Amount { get; set; }
+        public decimal Loans_Amount { get; set; }
+        public decimal LoP_Amount { get; set; }
+        public int GrossSalary { get; set; }
+        public int TotalDeductions { get; set; }
+        public int NetPay { get; set; }
+        public decimal CTC_Amount { get; set; }
+        public Dictionary<string, int> Others { get; set; } = new();
+        public string Month { get; set; } = DateTime.Now.ToString("MMMM");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployeeData();
+    }
+    private async Task LoadEmployeeData()
+    {
+        try
+        {
+            isLoading = true;
+            var employeeDetails = await EmployeeService.GetAllEmployees();
+            if (employeeDetails == null || !employeeDetails.Any())
+            {
+                hasError = true;
+                return;
+            }
+            var response = await HttpClient.GetAsync("https://localhost:7021/api/PayrollDetails");
+            response.EnsureSuccessStatusCode();
+            var payrollRecords = await response.Content.ReadFromJsonAsync<List<EmployeePayroll>>() ?? new();
+            employees = employeeDetails.Select(emp => new EmployeePayroll
+            {
+                EmployeeID = emp.EmployeeID ?? string.Empty,
+                FullName = $"{emp.FirstName} {emp.LastName}".Trim(),
+                CurrentEmail = emp.CurrentEmail ?? string.Empty,
+                Designation = emp.Designation ?? string.Empty,
+                BasicSalary = 0,
+                HRA_Amount = 0,
+                SpecialAllowance_Amount = 0,
+                Arrears_Amount = 0,
+                EmployerPF_Amount = 0,
+                EmployeePF_Amount = 0,
+                EmployerESIC_Amount = 0,
+                EmployeeESIC_Amount = 0,
+                Gratuity_Amount = 0,
+                IncomeTax_Amount = 0,
+                ProfessionalTax_Amount = 0,
+                Loans_Amount = 0,
+                LoP_Amount = 0,
+                GrossSalary = 0,
+                TotalDeductions = 0,
+                NetPay = 0,
+                CTC_Amount = 0,
+                Others = new Dictionary<string, int>(),
+                Month = DateTime.Now.ToString("MMMM")
+            }).ToList();
+            foreach (var emp in employees)
+            {
+                var payroll = payrollRecords.FirstOrDefault(p => p.EmployeeID == emp.EmployeeID);
+                if (payroll != null)
+                {
+                    emp.BasicSalary = payroll.BasicSalary;
+                    emp.HRA_Amount = payroll.HRA_Amount;
+                    emp.SpecialAllowance_Amount = payroll.SpecialAllowance_Amount;
+                    emp.Arrears_Amount = payroll.Arrears_Amount;
+                    emp.EmployerPF_Amount = payroll.EmployerPF_Amount;
+                    emp.EmployeePF_Amount = payroll.EmployeePF_Amount;
+                    emp.EmployerESIC_Amount = payroll.EmployerESIC_Amount;
+                    emp.EmployeeESIC_Amount = payroll.EmployeeESIC_Amount;
+                    emp.Gratuity_Amount = payroll.Gratuity_Amount;
+                    emp.IncomeTax_Amount = payroll.IncomeTax_Amount;
+                    emp.ProfessionalTax_Amount = payroll.ProfessionalTax_Amount;
+                    emp.Loans_Amount = payroll.Loans_Amount;
+                    emp.LoP_Amount = payroll.LoP_Amount;
+                    emp.GrossSalary = payroll.GrossSalary;
+                    emp.TotalDeductions = payroll.TotalDeductions;
+                    emp.NetPay = payroll.NetPay;
+                    emp.CTC_Amount = payroll.CTC_Amount;
+                    emp.Others = payroll.Others ?? new Dictionary<string, int>();
+                }
+            }
+            designations = employees.Select(p => p.Designation).Distinct().ToList();
+            FilterEmployees();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employee data: {ex.Message}");
+            hasError = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+    private void FilterEmployees()
+    {
+        filteredEmployees = employees
+        .Where(p => string.IsNullOrEmpty(_searchQuery) ||
+        p.FullName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+        p.EmployeeID.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+        p.CurrentEmail.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+        p.Designation.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+        .Where(p => string.IsNullOrEmpty(_designationFilter) || p.Designation == _designationFilter)
+        .ToList();
+        StateHasChanged();
+    }
+    private async void DebounceFilter()
+    {
+        debounceCts?.Cancel();
+        debounceCts = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(300, debounceCts.Token);
+            FilterEmployees();
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignore cancellation
+        }
+    }
+    private void NavigateToEmployeePage(EmployeePayroll employee)
+    {
+        var json = JsonSerializer.Serialize(employee);
+        var encodedJson = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+        NavigationManager.NavigateTo($"/Employee?employee={Uri.EscapeDataString(encodedJson)}");
+    }
+    private void NavigateToPayroll()
+    {
+        NavigationManager.NavigateTo("/Payroll");
+    }
+    public void Dispose()
+    {
+        debounceCts?.Cancel();
+        debounceCts?.Dispose();
+    }
+}

@@ -1,0 +1,867 @@
+﻿@inherits LayoutComponentBase
+@using WiseHR.Components.sidebar
+@using WiseHR.Models
+@using System.Net.Http.Json
+@using System.Text.Json
+@using WiseHR.Services
+@using System.Net.Http.Headers
+@using WiseHR.Dtos
+@using WiseHRServer.Models
+@using WiseHR.Components.Chat
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@using System.Text.RegularExpressions
+@inject EmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+@inject SearchService SearchService
+@inject IDialogService DialogService
+@inject AnalyticsCacheService AnalyticsCache
+@inject ILogger<HomeLayout> Logger
+
+
+<MudThemeProvider />
+<MudSnackbarProvider />
+
+<!-- Top Navigation Bar -->
+<MudAppBar Elevation="5" Style="background: linear-gradient(90deg, #f8f9fa 0%, #e2e6ea 100%); height: 67px; color: var(--primary); padding-top:2px;padding-left:4px">
+    <MudItem xs="2" Class="d-flex align-center">
+        <MudImage Class="logo-hover" Src="images/logo1.png"
+                  Alt="Company Logo"
+                  Height="50"
+                  @onclick=@(() => NavigationManager.NavigateTo("/home")) />
+    </MudItem>
+    <MudItem xs="8" Class="d-flex flex-column justify-center align-center">
+        <div class="d-flex flex-column align-center position-relative" style="width: 75%; max-width: 800px;">
+            <div class="d-flex align-center position-relative" style="width: 100%;">
+                <MudAutocomplete T="EmployeeSearchResult"
+                                 SearchFunc="@SearchEmployeesAutocomplete"
+                                 Placeholder="Search employees..."
+                                 Variant="Variant.Outlined"
+                                 Adornment="Adornment.Start"
+                                 AdornmentIcon="@Icons.Material.Filled.Search"
+                                 AdornmentColor="Color.Primary"
+                                 Class="search-elevated analytics-link "
+                                 Style="width: 100%;  font-size: 1.1rem; outline: none; border: none; box-shadow: none;"
+                                 DebounceInterval="300"
+                                 ResetValueOnEmptyText="true"
+                                 ShowProgressIndicator="true"
+                                 ValueChanged="OnSearchItemSelected"
+                                 @bind-Text="_searchText"
+                                 ItemTemplate="@ResultTemplate"
+                                 MaxItems="15"
+                                 ToStringFunc="@(e => null)" />
+                @if (IsAdmin)
+                {
+                    <MudTooltip Text="Go to Advanced Search">
+                        <MudIconButton Icon="@Icons.Material.Filled.FilterList"
+                                       Color="Color.Primary"
+                                       Size="Size.Large"
+                                       Class="ml-2 filter-button"
+                                       OnClick="@(() => NavigationManager.NavigateTo("/analytics"))"
+                                       Style="border-radius: 50%;" />
+                    </MudTooltip>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(_searchError))
+            {
+                <MudText Typo="Typo.body1" Color="Color.Error" Class="mt-2 position-absolute" Style="top: 100%; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 1.1rem; font-weight: 500;">@_searchError</MudText>
+            }
+        </div>
+    </MudItem>
+
+    <MudItem xs="2" Style="padding: 8px;display: flex;justify-content: flex-end;">
+        <MudMenu AnchorOrigin="Origin.BottomLeft">
+            <ActivatorContent>
+                <div class="d-flex align-center justify-end ">
+
+                    @if (!string.IsNullOrEmpty(userProfilePicture))
+                    {
+                        <img src="@userProfilePicture"
+                             class="border-hover-color-shift profile-bounce neon-glow " alt="Employee Photo"
+                             style="width: 55px; height: 55px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <MudAvatar Size="Size.Large"
+                                   Class="cursor-pointer"
+                                   Style="background-color: var(--secondary); color: white; border: 2px solid var(--primary);">
+                            @userInitials
+                        </MudAvatar>
+                    }
+                </div>
+            </ActivatorContent>
+            <ChildContent>
+                <div class="px-2 py-3">
+                    <MudText Typo="Typo.subtitle1" Class="px-4 mb-2">@(userName ?? "Guest")</MudText>
+                    <MudDivider Class="mb-2" />
+                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Person" IconColor="Color.Primary" OnClick="NavigateToProfile">My Profile</MudMenuItem>
+                    <MudMenuItem Style="color: var(--text-primary);" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary">Settings</MudMenuItem>
+                    <MudDivider Class="my-2" />
+                    <MudMenuItem Style="color: var(--error);" Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="Logout">Logout</MudMenuItem>
+                </div>
+            </ChildContent>
+        </MudMenu>
+    </MudItem>
+</MudAppBar>
+
+<!-- Sidebar -->
+<div class="sidebar-container">
+    <HomeSidebar @ref="sidebar" @bind-DrawerOpen="drawerOpen" />
+</div>
+
+<!-- Main Content -->
+<MudMainContent Style="@($"flex-grow: 1; margin-left: {(drawerOpen ? "260px" : "70px")}; transition: margin 0.3s ease; z-index = 1610")">
+    <MudContainer Class="mt-6 mx-auto" MaxWidth="MaxWidth.ExtraLarge">
+        @Body
+    </MudContainer>
+</MudMainContent>
+
+<!-- Chat Widget -->
+<div class="chat-widget-container">
+    <WiseChatWidget />
+</div>
+
+<MudDialogProvider />
+<MudPopoverProvider />
+
+<style>
+    .logo-hover:hover {
+        animation: pulse 1s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .neon-glow {
+        border: 2px solid #686f76;
+        box-shadow: 0 0 5px #686f76;
+    }
+
+        .neon-glow:hover {
+            border-color: #6f7984;
+            box-shadow: 0 0 10px #686f76, 0 0 20px #686f76, 0 0 30px #686f76;
+            animation: neon-flicker 0.5s infinite alternate;
+        }
+
+    @@keyframes neon-flicker {
+        0% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0.8;
+        }
+    }
+
+    .search-elevated {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        border: 1px solid #e0e0e0 !important;
+        transition: all 0.3s ease !important;
+    }
+
+        .search-elevated:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+            transform: translateY(-2px);
+        }
+
+        .search-elevated:focus-within {
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2) !important;
+            border-color: var(--primary) !important;
+        }
+
+    .border-hover-color-shift {
+        border: 1.5px solid var(--primary);
+        border-radius: 50%;
+        transition: border-color 0.3s ease;
+    }
+
+        .border-hover-color-shift:hover {
+            border-color: #e2e6ea;
+        }
+
+    .profile-bounce {
+        transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        cursor: pointer;
+    }
+
+        .profile-bounce:hover {
+            transform: scale(1.15);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+    .mud-input > input.mud-input-root-outlined.mud-input-root-adorned-start {
+        border: none;
+        outline: none;
+        box-shadow: none;
+        color: black;
+    }
+
+    .mud-overlay {
+        z-index: -1;
+    }
+
+    .sidebar-container {
+        height: 100%;
+        position: fixed;
+        top: 67px;
+        z-index: 1000;
+    }
+
+    ::deep .mud-divider {
+        margin: 0;
+        flex-shrink: 0;
+        border-color: rgb(22 21 21);
+        border-width: 2px;
+        border-style: solid none none none;
+    }
+
+    ::deep .search-autocomplete .mud-input {
+        border-radius: 28px;
+        transition: all 0.3s ease;
+    }
+
+        ::deep .search-autocomplete .mud-input:focus-within {
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+    ::deep .search-autocomplete .mud-input-adornment {
+        color: var(--primary);
+    }
+
+    ::deep .mud-menu-list {
+        border-radius: 12px;
+        overflow: hidden;
+        min-width: 200px;
+    }
+
+
+
+    ::deep .mud-list-item-icon {
+        min-width: 40px;
+    }
+
+    ::deep .mud-drawer {
+        transition: width 0.3s ease;
+        width: 60px; /* Default collapsed width */
+        overflow: hidden;
+    }
+
+        ::deep .mud-drawer.open {
+            width: 250px !important; /* Expanded width */
+        }
+
+    ::deep .mud-nav-menu {
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    ::deep .mud-nav-link span {
+        display: none; /* Hide text when collapsed */
+    }
+
+    ::deep .mud-drawer.open .mud-nav-link span {
+        display: inline; /* Show text when expanded */
+    }
+
+    /* Analytics Link Styles */
+    /* .analytics-link { */
+    /*     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+    /*     -webkit-background-clip: text; */
+    /*     -webkit-text-fill-color: transparent; */
+    /*     background-clip: text; */
+    /*     font-style: italic; */
+    /*     padding: 0px 0px; */
+    /*     text-align: center; */
+
+    /*     font-weight: 500; */
+    /*     border-radius: 8px; */
+    /*     background-color: rgba(102, 126, 234, 0.1); */
+    /*     margin: 8px 0; */
+    /* } */
+
+    /* Main Grid Container */
+    .py-2.px-1 {
+        padding: 16px 8px;
+        margin: 12px 0;
+        border-radius: 16px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+        .py-2.px-1:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+    /* Avatar Container */
+    .d-flex.align-center.justify-center {
+        position: relative;
+    }
+
+    /* MudAvatar Custom Styling */
+    .mud-avatar {
+        background: linear-gradient(135deg, #1d349e 0%, #764ba2 100%);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        border: 3px solid #ffffff;
+        font-weight: 600;
+       
+        letter-spacing: 1px;
+    }
+
+    /* Employee Details Card */
+    .pa-2.border-1.border-solid.mud-border-grey-light.rounded {
+        background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);
+        border: 1px solid rgba(0, 0, 0, 0.06) !important;
+        border-radius: 12px;
+        padding: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .pa-2.border-1.border-solid.mud-border-grey-light.rounded::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+    /* Name Text Styling */
+    .mud-typography-body1 {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+
+    /* Designation Text Styling */
+    .mud-typography-body2 {
+        color: #4a5568;
+        font-weight: 500;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+
+    /* Email Text Styling */
+    .mud-typography-caption {
+        color: #718096;
+        font-size: 13px;
+        line-height: 1.3;
+    }
+
+        /* Matched Fields Styling */
+        .mud-typography-caption.mud-info-text {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-style: italic;
+            font-weight: 500;
+            margin-top: 8px;
+            display: inline-block;
+            font-size: 12px;
+        }
+
+    /* Highlighted Text Styling */
+    mark, .highlight {
+        background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        color: #2d3748;
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-weight: 600;
+        box-shadow: 0 1px 3px rgba(253, 160, 133, 0.3);
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .py-2.px-1 {
+            padding: 12px 6px;
+            margin: 8px 0;
+            border-radius: 12px;
+        }
+
+        .pa-2.border-1.border-solid.mud-border-grey-light.rounded {
+            padding: 12px;
+        }
+
+        .mud-avatar {
+            width: 50px;
+            height: 50px;
+        }
+    }
+
+    /* Animation for Loading States */
+    @@keyframes shimmer {
+        0% {
+            background-position: -200px 0;
+        }
+
+        100% {
+            background-position: calc(200px + 100%) 0;
+        }
+    }
+
+    .employee-loading {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200px 100%;
+        animation: shimmer 1.5s infinite;
+    }
+
+    .chat-widget-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1200;
+    }
+
+    .mud-popover, .mud-dialog, .mud-tooltip-popper, .mud-overlay {
+        z-index: 1300 !important;
+    }
+</style>
+
+@code {
+
+    [Parameter]
+    public EventCallback<string> OnSearchQueryChanged { get; set; }
+
+    private bool drawerOpen = false; // Start closed
+    private HomeSidebar? sidebar;
+    private string? userProfilePicture;
+    private string? userName;
+    private string? userInitials;
+    private string? _searchError = null;
+    private string _lastSearchQuery = string.Empty;
+    private string? _searchText = null;
+    private List<string> designations = new();
+    private string? activeSearchQuery = "";
+    private string? employeeId;
+    private bool IsAdmin = false;
+    private bool _isSearching;
+    private List<EmployeeSearchResult> _searchResults = new();
+    private string? Email;
+
+    // Close sidebar when mouse leaves
+    private async Task HandleMouseLeave()
+    {
+        if (drawerOpen)
+        {
+            drawerOpen = false;
+            if (sidebar != null)
+            {
+                await sidebar.ToggleDrawer();
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearSearchQuery()
+    {
+        activeSearchQuery = "";
+        _searchText = "";
+        await RefreshMainEmployeeListAsync();
+        StateHasChanged();
+    }
+
+    private async Task HandleSearchInputKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            Console.WriteLine($"Enter key pressed. Finalizing search for: '{_searchText}'");
+            activeSearchQuery = _searchText ?? "";
+            await RefreshMainEmployeeListAsync();
+        }
+    }
+
+    private async Task Logout()
+    {
+        try
+        {
+            // Clear all relevant localStorage keys
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "email");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "empId");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "EmpId"); // Clear uppercase EmpId
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "recentEmployees");
+
+            // Clear all relevant sessionStorage keys
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "EmpId");
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "email");
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "userRole");
+
+            // Log successful logout
+            Logger.LogInformation("User logged out successfully. LocalStorage and sessionStorage cleared.");
+
+            // Navigate to login page
+            NavigationManager.NavigateTo("/", forceLoad: true); // forceLoad ensures a full page reload
+        }
+        catch (Exception ex)
+        {
+            // Log the error for debugging
+            Logger.LogError(ex, "Error during logout");
+
+            // Display user-friendly error message
+            _searchError = "Failed to log out. Please try again or clear your browser storage manually.";
+            StateHasChanged();
+        }
+    }
+
+    private RenderFragment<EmployeeSearchResult> ResultTemplate => (context) => __builder =>
+    {
+        if (context.EmployeeID == "ANALYTICS_LINK")
+        {
+            __builder.OpenComponent<MudText>(0);
+            __builder.AddAttribute(1, "Typo", Typo.body2);
+            __builder.AddAttribute(2, "Color", Color.Primary);
+            __builder.AddAttribute(3, "Style", "font-style: italic; padding: 8px 16px;");
+            __builder.AddAttribute(4, "ChildContent", (RenderFragment)((__builder2) =>
+            {
+                __builder2.AddContent(5, context.Name);
+            }));
+            __builder.CloseComponent();
+        }
+        else
+        {
+            __builder.OpenComponent<MudGrid>(10);
+            __builder.AddAttribute(11, "Spacing", 2);
+            __builder.AddAttribute(12, "AlignItems", AlignItems.Center);
+            __builder.AddAttribute(13, "Class", "py-2 px-1");
+            __builder.AddAttribute(14, "ChildContent", (RenderFragment)((__builder2) =>
+            {
+                __builder2.OpenComponent<MudItem>(15);
+                __builder2.AddAttribute(16, "xs", 3);
+                __builder2.AddAttribute(17, "Class", "d-flex align-center justify-center");
+                __builder2.AddAttribute(18, "ChildContent", (RenderFragment)((__builder3) =>
+                {
+                    if (!string.IsNullOrEmpty(context.Name))
+                    {
+                        __builder3.OpenComponent<MudAvatar>(22);
+                        __builder3.AddAttribute(23, "Color", Color.Primary);
+                        __builder3.AddAttribute(24, "Size", Size.Large);
+                        __builder3.AddAttribute(25, "ChildContent", (RenderFragment)((__builder4) =>
+                        {
+                            __builder4.AddContent(26, GetInitials(context.Name));
+                        }));
+                        __builder3.CloseComponent();
+                    }
+                }));
+                __builder2.CloseComponent();
+
+                __builder2.OpenComponent<MudItem>(27);
+                __builder2.AddAttribute(28, "xs", 9);
+                __builder2.AddAttribute(29, "ChildContent", (RenderFragment)((__builder3) =>
+                {
+                    __builder3.OpenComponent<MudPaper>(30);
+                    __builder3.AddAttribute(31, "Elevation", 0);
+                    __builder3.AddAttribute(32, "Class", "pa-2 border-1 border-solid mud-border-grey-light rounded");
+                    __builder3.AddAttribute(33, "ChildContent", (RenderFragment)((__builder4) =>
+                    {
+                        __builder4.OpenComponent<MudText>(34);
+                        __builder4.AddAttribute(35, "Typo", Typo.body1);
+                        __builder4.AddAttribute(36, "Style", "line-height: 1.2;");
+                        __builder4.AddAttribute(37, "ChildContent", (RenderFragment)((__builder5) =>
+                        {
+                            __builder5.AddContent(38, (MarkupString)GetHighlightedHtml(context.Name, _lastSearchQuery));
+                        }));
+                        __builder4.CloseComponent();
+
+                        __builder4.OpenComponent<MudText>(39);
+                        __builder4.AddAttribute(40, "Typo", Typo.body2);
+                        __builder4.AddAttribute(41, "Color", Color.Dark);
+                        __builder4.AddAttribute(42, "Style", "line-height: 1.2;");
+                        __builder4.AddAttribute(43, "ChildContent", (RenderFragment)((__builder5) =>
+                        {
+                            __builder5.AddContent(44, (MarkupString)GetHighlightedHtml(context.Designation, _lastSearchQuery));
+                        }));
+                        __builder4.CloseComponent();
+
+                        __builder4.OpenComponent<MudText>(45);
+                        __builder4.AddAttribute(46, "Typo", Typo.caption);
+                        __builder4.AddAttribute(47, "Color", Color.Dark);
+                        __builder4.AddAttribute(48, "Style", "line-height: 1.2;");
+                        __builder4.AddAttribute(49, "ChildContent", (RenderFragment)((__builder5) =>
+                        {
+                            __builder5.AddContent(50, (MarkupString)GetHighlightedHtml(context.Email, _lastSearchQuery));
+                        }));
+                        __builder4.CloseComponent();
+
+                        if (context.MatchedFields.Any())
+                        {
+                            __builder4.OpenComponent<MudText>(51);
+                            __builder4.AddAttribute(52, "Typo", Typo.caption);
+                            __builder4.AddAttribute(53, "Color", Color.Info);
+                            __builder4.AddAttribute(54, "Style", "line-height: 1.2; font-style: italic; margin-top: 2px;");
+                            __builder4.AddAttribute(55, "ChildContent", (RenderFragment)((__builder5) =>
+                            {
+                                __builder5.AddContent(56, $" Matches: {string.Join(", ", context.MatchedFields)}");
+                            }));
+                            __builder4.CloseComponent();
+                        }
+                    }));
+                    __builder3.CloseComponent();
+                }));
+                __builder2.CloseComponent();
+            }));
+            __builder.CloseComponent();
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Email = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+
+        // Initialize cache service by preloading analytics data
+        try
+        {
+            var Token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+            if (!string.IsNullOrEmpty(Token))
+            {
+                // Preload analytics data
+                await AnalyticsCache.GetOrSetAnalyticsDataAsync(new Func<Task<List<EmployeeAnalyticsResponseDto>>>(async () =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, "/api/Analytics/all");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+                    var response = await Http.SendAsync(request);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var data = await response.Content.ReadFromJsonAsync<List<EmployeeAnalyticsResponseDto>>() ?? new List<EmployeeAnalyticsResponseDto>();
+                        Console.WriteLine($"Preloaded analytics data: {data.Count} employees");
+                        return data;
+                    }
+                    return new List<EmployeeAnalyticsResponseDto>();
+                }));
+
+                // Preload common lookup data
+                var lookupTypes = new[] { "nationalities", "designations", "joiningLocations", "levels" };
+                foreach (var lookupType in lookupTypes)
+                {
+                    await AnalyticsCache.GetOrSetLookupDataAsync(lookupType, async () =>
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Get, $"api/Lookup/{lookupType}");
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+                        var response = await Http.SendAsync(request);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var data = await response.Content.ReadFromJsonAsync<List<string>>() ?? new List<string>();
+                            Console.WriteLine($"Preloaded {lookupType}: {data.Count} items");
+                            return data.OrderBy(s => s).ToList();
+                        }
+                        return new List<string>();
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error preloading cache: {ex.Message}");
+        }
+
+        await LoadUserDetails();
+    }
+
+    private async Task<IEnumerable<EmployeeSearchResult>> SearchEmployeesAutocomplete(string query, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return Enumerable.Empty<EmployeeSearchResult>();
+        }
+
+        try
+        {
+            _isSearching = true;
+            _searchError = null;
+            _searchResults = await SearchService.SearchEmployees(query);
+
+            if (!_searchResults.Any())
+            {
+                _searchError = "No matching results found";
+
+                StateHasChanged();
+            }
+
+            return _searchResults;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error searching employees");
+            _searchError = "An error occurred while searching. Please try again.";
+            return Enumerable.Empty<EmployeeSearchResult>();
+        }
+        finally
+        {
+            _isSearching = false;
+        }
+    }
+
+    private void OnSearchItemSelected(EmployeeSearchResult item)
+    {
+        if (item != null)
+        {
+            NavigationManager.NavigateTo(item.ProfileUrl);
+            _searchText = null;
+        }
+    }
+
+    private async Task RefreshMainEmployeeListAsync()
+    {
+        Console.WriteLine($"Refreshing main content with Query: '{activeSearchQuery}'");
+        await Task.CompletedTask;
+        StateHasChanged();
+    }
+
+    private async Task<string?> CurrentUserEmail()
+    {
+        try
+        {
+            return await JSRuntime.InvokeAsync<string>("localStorage.getItem", "email");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error retrieving email from localStorage: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task NavigateToProfile()
+    {
+        var empid = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "EmpId");
+        Console.WriteLine($"Navigate to current user profile, employeeId: {empid}");
+        if (!string.IsNullOrEmpty(empid))
+        {
+            NavigationManager.NavigateTo($"/employee/{empid}");
+        }
+        else
+        {
+            Console.WriteLine("Cannot navigate to profile: employeeId is null or empty.");
+            _searchError = "Unable to load profile. Please try logging in again.";
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadUserDetails()
+    {
+        try
+        {
+            var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
+            var value = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userRole");
+
+            IsAdmin = value == "Admin";
+            Console.WriteLine($"Retrieved email from sessionStorage: {email}");
+
+            userProfilePicture = null;
+            userName = null;
+            userInitials = null;
+            employeeId = null;
+
+            employeeId = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "empId");
+            Console.WriteLine($"Retrieved employeeId from localStorage: {employeeId}");
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var employee = await EmployeeService.GetEmployeeDetailsByEmail(email);
+                if (employee != null)
+                {
+                    employeeId ??= employee.EmployeeID;
+                    Console.WriteLine($"EmployeeID from API: {employee.EmployeeID}");
+                    Console.WriteLine($"Employee ID {employeeId}");
+
+                    if (!string.IsNullOrEmpty(employee.PhotoBase64Content) && !string.IsNullOrEmpty(employee.PhotoContentType))
+                    {
+                        userProfilePicture = $"data:{employee.PhotoContentType};base64,{employee.PhotoBase64Content}";
+                    }
+                    else
+                    {
+                        userProfilePicture = null;
+                    }
+
+                    userName = employee.FirstName ?? "User";
+                    userInitials = GetInitials(userName);
+                    return;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                userName = "User";
+                userInitials = GetInitialFromEmail(email);
+                userProfilePicture = null;
+            }
+            else
+            {
+                SetDefaultUser();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user details: {ex.Message}");
+            SetDefaultUser();
+        }
+    }
+
+    private void SetDefaultUser()
+    {
+        userName = "Guest";
+        userInitials = "?";
+        userProfilePicture = null;
+        employeeId = null;
+        IsAdmin = false;
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "?";
+
+        var parts = name.Split(new[] { ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+            return "?";
+        if (parts.Length == 1)
+            return parts[0].Length > 0 ? parts[0][0].ToString().ToUpper() : "?";
+
+        return $"{parts[0][0]}{parts.Last()[0]}".ToUpper();
+    }
+
+    private string GetInitialFromEmail(string? email)
+    {
+        if (!string.IsNullOrWhiteSpace(email) && email.Length > 0)
+            return char.ToUpper(email[0]).ToString();
+
+        return "?";
+    }
+
+    private string GetHighlightedHtml(string? text, string? highlightTerm)
+    {
+        if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(highlightTerm))
+        {
+            return text ?? string.Empty;
+        }
+
+        try
+        {
+            var regex = new Regex(Regex.Escape(highlightTerm), RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            return regex.Replace(text, match => $"<strong>{match.Value}</strong>");
+        }
+        catch (ArgumentException ex)
+        {
+            Console.WriteLine($"Regex error during highlighting: {ex.Message}");
+            return text;
+        }
+    }
+}

@@ -1,0 +1,1132 @@
+﻿@page "/assets/{id:int}"
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@inject AssetStateService AssetStateService
+@inject AssetsService AssetsService
+@layout HomeLayout
+@using WiseHR.Models
+@using System.Text.Json
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@using System.Timers
+@implements IDisposable
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Asset Details</h1>
+        <button class="btn back-btn" @onclick="NavigateToHome">← Back to Dashboard</button>
+    </div>
+
+    @if (loading)
+    {
+        <div class="loading-container">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <span>Loading asset details...</span>
+        </div>
+    }
+    else if (asset == null)
+    {
+        <div class="error-message">Asset not found. @errorMessage</div>
+    }
+    else
+    {
+        <div class="asset-details-container">
+            <div class="asset-header">
+                <h2>@asset.Name Details</h2>
+                <div class="asset-badge @(asset.Instances.Any(i => i.Status == "Available") ? "in-stock" : "out-stock")">
+                    @(asset.Instances.Any(i => i.Status == "Available") ? "In Stock" : "Out of Stock")
+                </div>
+            </div>
+
+            <div class="asset-info-cards">
+                <div class="asset-info-card">
+                    <div class="card-label">Asset Tag Prefix</div>
+                    <div class="card-value">@asset.AssetTagPrefix</div>
+                </div>
+                <div class="asset-info-card">
+                    <div class="card-label">Category</div>
+                    <div class="card-value">@asset.Category</div>
+                </div>
+                <div class="asset-info-card">
+                    <div class="card-label">Quantity</div>
+                    <div class="card-value">@asset.Instances.Count</div>
+                </div>
+            </div>
+
+            @if (asset.Specifications.Any())
+            {
+                <MudExpansionPanel Text="Specifications" Style="margin: 10px 0;">
+                    <div class="specifications-content">
+                        @foreach (var spec in asset.Specifications)
+                        {
+                            <div class="spec-item">
+                                <strong>@spec.Key:</strong> @spec.Value
+                            </div>
+                        }
+                    </div>
+                </MudExpansionPanel>
+            }
+            else
+            {
+                <div class="specifications-content">
+                    <p>No specifications available.</p>
+                </div>
+            }
+
+            <div class="asset-instances">
+                <h3>Instances</h3>
+                <div class="table-container">
+                    <MudTable Items="filteredInstances" Hover="true" Striped="true" Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>NO</MudTh>
+                            <MudTh>
+                                <div class="filter-container">
+                                    ASSET TAG
+                                    <span class="sort-icon" @onclick="ToggleSortOrder">
+                                        @(sortOrder == "Ascending" ? "↑" : "↓")
+                                    </span>
+                                    @if (showAssetTagFilter)
+                                    {
+                                        <select class="filter-dropdown" @onchange="ApplyAssetTagFilter">
+                                            <option value="" disabled selected>Select Asset Tag</option>
+                                            @foreach (var tag in uniqueAssetTags)
+                                            {
+                                                <option value="@tag">@tag</option>
+                                            }
+                                        </select>
+                                    }
+                                </div>
+                            </MudTh>
+                            <MudTh>
+                                <div class="filter-container">
+                                    BRAND
+                                    <MudIconButton Icon="@Icons.Material.Filled.FilterList" OnClick="ToggleBrandFilter" Size="Size.Small" Style="margin-left: 5px; color: var(--text-secondary);" />
+                                    @if (showBrandFilter)
+                                    {
+                                        <select class="filter-dropdown" @onchange="ApplyBrandFilter">
+                                            <option value="">Select Brand</option>
+                                            @foreach (var brand in availableBrands)
+                                            {
+                                                <option value="@brand">@brand</option>
+                                            }
+                                        </select>
+                                    }
+                                </div>
+                            </MudTh>
+                            <MudTh>
+                                <div class="filter-container">
+                                    STATUS
+                                    <MudIconButton Icon="@Icons.Material.Filled.FilterList" OnClick="ToggleStatusFilter" Size="Size.Small" Style="margin-left: 5px; color: var(--text-secondary);" />
+                                    @if (showStatusFilter)
+                                    {
+                                        <select class="filter-dropdown" @onchange="ApplyStatusFilter">
+                                            <option value="" disabled selected>Select Status</option>
+                                            @foreach (var status in availableStatuses)
+                                            {
+                                                <option value="@status">@status</option>
+                                            }
+                                        </select>
+                                    }
+                                </div>
+                            </MudTh>
+                            <MudTh>ACTION</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="instance">
+                            @{
+                                var index = filteredInstances.IndexOf(instance) + 1;
+                                bool hasActiveIssue = instanceIssueStatus.ContainsKey(instance.Id) && instanceIssueStatus[instance.Id];
+                            }
+                            <MudTd DataLabel="NO" Class="@(instance.Status == "Decommissioned" ? "decommissioned-row" : "")">@index</MudTd>
+                            <MudTd DataLabel="ASSET TAG" Class="@(instance.Status == "Decommissioned" ? "decommissioned-row" : "")">@instance.AssetTag</MudTd>
+                            <MudTd DataLabel="BRAND" Class="@(instance.Status == "Decommissioned" ? "decommissioned-row" : "")">@(instance.Brand ?? "N/A")</MudTd>
+                            <MudTd DataLabel="STATUS" Class="@(instance.Status == "Decommissioned" ? "decommissioned-row" : "")">
+                                <span class="status-badge @(GetStatusClass(instance.Status))">
+                                    @instance.Status
+                                </span>
+                            </MudTd>
+                            <MudTd DataLabel="ACTION">
+                                <button class="btn @(instance.Status == "Decommissioned" ? "btn-info" : instance.Status == "Unavailable" ? "btn-danger" : "assign-btn")"
+                                        @onclick="async () => await HandleInstanceAction(instance.Id, instance.Status, hasActiveIssue)"
+                                        disabled="@(instance.Status == "Decommissioned" ? false : instance.Status == "Unavailable" ? false : instance.Status != "Available")">
+                                    @(instance.Status == "Decommissioned" ? "History" : instance.Status == "Unavailable" ? "Unassign" : "Assign")
+                                </button>
+                                <button class="btn btn-warning"
+                                        @onclick="() => OpenDecommissionModal(instance.Id, instance.AssetTag)"
+                                        disabled="@(instance.Status == "Decommissioned")">
+                                    Decommission
+                                </button>
+                                @if (instance.Status == "Unavailable")
+                                {
+                                    if (countdownTimers.ContainsKey(instance.Id))
+                                    {
+                                        var time = countdownTimers[instance.Id];
+                                        <div class="timer-display">@($"{time.Days}d {time.Hours}h {time.Minutes}m {time.Seconds}s")</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="timer-display">Timer not initialized</div>
+                                    }
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                        <ChildRowContent Context="instance">
+                            <MudTr class="spec-row">
+                                <MudTd colspan="5">
+                                    <MudExpansionPanel IsExpanded="false" Class="mdc-expansion-panel">
+                                        <div class="spec-content">
+                                            @if (instance.Specifications != null && instance.Specifications.Any())
+                                            {
+                                                @foreach (var spec in instance.Specifications)
+                                                {
+                                                    <div class="spec-item">
+                                                        <strong>@spec.Key:</strong> @spec.Value
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <p>No specifications available.</p>
+                                            }
+                                        </div>
+                                    </MudExpansionPanel>
+                                </MudTd>
+                            </MudTr>
+                        </ChildRowContent>
+                    </MudTable>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3" role="alert">@errorMessage</div>
+    }
+
+    @if (showDecommissionModal)
+    {
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Decommission Instance</h2>
+                    <span class="modal-close" @onclick="CloseDecommissionModal">×</span>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@decommissionModel" OnValidSubmit="SubmitDecommission">
+                        <DataAnnotationsValidator />
+                        <div class="form-group">
+                            <label for="assetTag">Asset Tag</label>
+                            <InputText id="assetTag" class="form-control" @bind-Value="decommissionModel.AssetTag" readonly />
+                            <ValidationMessage For="@(() => decommissionModel.AssetTag)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="decommissionedBy">Decommissioned By</label>
+                            <MudSelect T="string" id="decommissionedBy" @bind-Value="@decommissionModel.DecommissionedByEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => decommissionModel.DecommissionedByEmployeeId)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="approvedBy">Approved By</label>
+                            <MudSelect T="string" id="approvedBy" @bind-Value="@decommissionModel.ApprovedByEmployeeId" Variant="Variant.Outlined" Class="form-control">
+                                <MudSelectItem Value="@(string.Empty)">Select Employee</MudSelectItem>
+                                @foreach (var employee in employees)
+                                {
+                                    <MudSelectItem Value="@employee.EmployeeId">@employee.EmployeeId - @employee.FullName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => decommissionModel.ApprovedByEmployeeId)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="decommissionDate">Decommission Date</label>
+                            <InputDate id="decommissionDate" class="form-control" @bind-Value="decommissionModel.DecommissionDate" />
+                            <ValidationMessage For="@(() => decommissionModel.DecommissionDate)" />
+                        </div>
+                        <div class="form-group">
+                            <label for="remark">Remark</label>
+                            <InputTextArea id="remark" class="form-control" @bind-Value="decommissionModel.Remark" rows="3" />
+                            <ValidationMessage For="@(() => decommissionModel.Remark)" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="CloseDecommissionModal">Cancel</button>
+                            <button type="submit" class="btn btn-warning">Decommission</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --accent-color: #3498db;
+        --success-color: #27ae60;
+        --danger-color: #e74c3c;
+        --warning-color: #f1c40f;
+        --background-color: #f5f7fa;
+        --card-background: #ffffff;
+        --text-primary: #2c3e50;
+        --text-secondary: #7f8c8d;
+        --border-color: #e0e0e0;
+        --decommissioned-color: #d3d3d3;
+    }
+
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: var(--background-color);
+        min-height: 100vh;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+        .dashboard-header h1 {
+            font-size: 28px;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        font-size: 16px;
+        color: var(--text-secondary);
+    }
+
+        .loading-container .mud-progress-circular {
+            margin-bottom: 10px;
+        }
+
+    .error-message {
+        text-align: center;
+        padding: 40px;
+        font-size: 16px;
+        color: var(--danger-color);
+    }
+
+    .asset-details-container {
+        background-color: var(--card-background);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+    }
+
+    .asset-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .asset-header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--text-primary);
+        }
+
+    .asset-badge {
+        padding: 6px 12px;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .in-stock {
+        background-color: rgba(39, 174, 96, 0.1);
+        color: var(--success-color);
+    }
+
+    .out-stock {
+        background-color: rgba(231, 76, 60, 0.1);
+        color: var(--danger-color);
+    }
+
+    .asset-info-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .asset-info-card {
+        background-color: var(--card-background);
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid var(--accent-color);
+        transition: transform 0.2s;
+    }
+
+        .asset-info-card:hover {
+            transform: translateY(-2px);
+        }
+
+    .card-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+    }
+
+    .card-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .asset-instances {
+        margin-bottom: 25px;
+    }
+
+        .asset-instances h3 {
+            margin: 0 0 15px;
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .sort-icon {
+        cursor: pointer;
+        margin-left: 5px;
+        font-size: 16px;
+        color: var(--text-secondary);
+    }
+
+        .sort-icon:hover {
+            color: var(--accent-color);
+        }
+
+    .filter-container {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .filter-dropdown {
+        position: absolute;
+        top: 30px;
+        left: 0;
+        z-index: 1000;
+        padding: 5px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--card-background);
+        min-width: 150px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        font-size: 14px;
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .Available {
+        background-color: rgba(39, 174, 96, 0.1);
+        color: var(--success-color);
+    }
+
+    .Unavailable {
+        background-color: rgba(231, 76, 60, 0.1);
+        color: var(--danger-color);
+    }
+
+    .Decommissioned {
+        background-color: rgba(127, 140, 141, 0.1);
+        color: var(--text-secondary);
+    }
+
+    .decommissioned-row {
+        background-color: var(--decommissioned-color) !important;
+        color: var(--text-secondary);
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 5px;
+    }
+
+    .back-btn {
+        background-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .assign-btn {
+        background-color: var(--success-color);
+        color: var(--card-background);
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .btn-info {
+        background-color: var(--accent-color);
+        color: var(--card-background);
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .btn-danger {
+        background-color: var(--danger-color);
+        color: var(--card-background);
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .btn-warning {
+        background-color: var(--warning-color);
+        color: var(--text-primary);
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .btn:disabled {
+        background-color: var(--text-secondary);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .btn:hover:not(:disabled) {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .alert {
+        padding: 12px;
+        border-radius: 6px;
+        margin: 15px 0;
+        font-size: 14px;
+    }
+
+    .alert-danger {
+        background-color: rgba(231, 76, 60, 0.1);
+        color: var(--danger-color);
+        border: 1px solid var(--danger-color);
+    }
+
+    .specifications-content {
+        padding: 15px;
+        background-color: var(--background-color);
+        border-radius: 4px;
+        margin: 10px;
+    }
+
+    .spec-item {
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .spec-row {
+        background-color: var(--background-color);
+        transition: all 0.3s ease;
+    }
+
+    .spec-content {
+        padding: 15px;
+        border-left: 4px solid var(--accent-color);
+        margin: 5px;
+    }
+
+    .mdc-expansion-panel {
+        margin: 0;
+        background-color: var(--background-color);
+        border: none;
+        box-shadow: none;
+    }
+
+    .mud-table-row:hover .spec-row {
+        display: table-row;
+    }
+
+    .mud-table-row:hover .mdc-expansion-panel {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+        .mud-table-row:hover .mdc-expansion-panel .mud-expand-panel {
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+    .mud-table-row:not(:hover) .mdc-expansion-panel .mud-expand-panel {
+        display: none;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: var(--card-background);
+        border-radius: 8px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+
+    .modal-close {
+        cursor: pointer;
+        font-size: 24px;
+        color: var(--text-secondary);
+    }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 10px 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-primary);
+        background-color: var(--card-background);
+        transition: border-color 0.2s ease;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .form-control:disabled,
+        .form-control[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .form-control[type="date"] {
+            padding: 7px 8px;
+        }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .field-validation-error {
+        color: var(--danger-color);
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .btn-secondary {
+        background-color: var(--text-secondary);
+        color: var(--card-background);
+    }
+
+    .timer-display {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: rgba(241, 196, 15, 0.1);
+        color: var(--warning-color);
+        margin-left: 5px;
+    }
+
+        .timer-display.overdue {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+        }
+
+    .mud-select {
+        width: 100%;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Asset? asset;
+    private List<Employee> employees = new();
+    private bool loading = true;
+    private string errorMessage = string.Empty;
+    private List<AssetInstance> filteredInstances = new();
+    private List<string> availableBrands = new();
+    private List<string> uniqueAssetTags = new();
+    private List<string> availableStatuses = new() { "Available", "Unavailable", "Decommissioned" };
+    private string sortOrder = "Ascending";
+    private string selectedAssetTagFilter = "";
+    private string selectedBrandFilter = "";
+    private string selectedStatusFilter = "";
+    private bool showAssetTagFilter = false;
+    private bool showBrandFilter = false;
+    private bool showStatusFilter = false;
+    private Dictionary<int, bool> instanceIssueStatus = new();
+    private Dictionary<int, DateTime> instanceReturnDates = new();
+    private Dictionary<int, (int Days, int Hours, int Minutes, int Seconds)> countdownTimers = new();
+    private System.Timers.Timer? timer;
+    private readonly TimeSpan istOffset = TimeSpan.FromHours(5.5);
+    private bool showDecommissionModal = false;
+    private int selectedInstanceId;
+    private DecommissionDto decommissionModel = new();
+    private HashSet<int> notifiedInstanceIds = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Configuration.ShowCloseIcon = true;
+
+        try
+        {
+            employees = await AssetsService.GetAllEmployeesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading employees: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
+        }
+
+        await LoadAsset();
+        StartTimer();
+    }
+
+    private async Task LoadAsset()
+    {
+        try
+        {
+            loading = true;
+            StateHasChanged();
+            asset = await AssetStateService.GetAssetAsync(Id);
+            if (asset == null || asset.Instances == null)
+            {
+                errorMessage = "Asset data is empty or invalid.";
+                Snackbar.Add(errorMessage, Severity.Error);
+                return;
+            }
+
+            availableBrands = asset.Instances
+                .Where(i => !string.IsNullOrEmpty(i.Brand))
+                .Select(i => i.Brand!)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(b => b)
+                .ToList();
+            uniqueAssetTags = asset.Instances
+                .Select(i => i.AssetTag)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(t => t)
+                .ToList();
+
+            filteredInstances = asset.Instances;
+            await LoadInstanceIssueStatus();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading asset: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
+            asset = null;
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadInstanceIssueStatus()
+    {
+        instanceIssueStatus.Clear();
+        instanceReturnDates.Clear();
+        foreach (var instance in asset?.Instances ?? new List<AssetInstance>())
+        {
+            try
+            {
+                bool hasActiveIssue = await AssetStateService.HasActiveIssueRecordAsync(instance.Id);
+                instanceIssueStatus[instance.Id] = hasActiveIssue;
+
+                if (instance.Status == "Unavailable")
+                {
+                    var issueRecords = await AssetsService.GetAssetIssueRecordsAsync(instance.Id);
+                    if (issueRecords == null || !issueRecords.Any())
+                        continue;
+
+                    var lastIssue = issueRecords
+                        .Where(r => r.ReturnedOn == default && !string.IsNullOrEmpty(r.IssuedToEmployeeId))
+                        .OrderByDescending(r => r.IssuedOn)
+                        .FirstOrDefault();
+
+                    if (lastIssue != null)
+                    {
+                        var issuedOn = lastIssue.IssuedOn;
+                        var istDate = issuedOn.Add(istOffset);
+                        var endOfDayIst = new DateTime(istDate.Year, istDate.Month, istDate.Day, 23, 59, 59, DateTimeKind.Local);
+                        var utcEndOfDay = endOfDayIst.Subtract(istOffset);
+                        instanceReturnDates[instance.Id] = utcEndOfDay;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!notifiedInstanceIds.Contains(instance.Id))
+                {
+                    errorMessage = $"Error checking issue status for instance {instance.Id}: {ex.Message}";
+                    Snackbar.Add(errorMessage, Severity.Error);
+                    notifiedInstanceIds.Add(instance.Id);
+                }
+            }
+        }
+    }
+
+    private void StartTimer()
+    {
+        timer = new System.Timers.Timer(1000);
+        timer.Elapsed += (sender, e) =>
+        {
+            UpdateCountdown();
+        };
+        timer.AutoReset = true;
+        timer.Start();
+    }
+
+    private void UpdateCountdown()
+    {
+        if (asset?.Instances == null)
+        {
+            return;
+        }
+
+        bool updated = false;
+        var now = DateTime.UtcNow;
+        var nowIst = now.Add(istOffset);
+
+        foreach (var instance in asset.Instances)
+        {
+            if (instance.Status == "Unavailable" && instanceReturnDates.ContainsKey(instance.Id))
+            {
+                var returnDate = instanceReturnDates[instance.Id];
+                var returnDateIst = returnDate.Add(istOffset);
+
+                if (returnDateIst > nowIst)
+                {
+                    var distance = returnDateIst - nowIst;
+                    var time = (
+                        Days: (int)distance.TotalDays,
+                        Hours: distance.Hours,
+                        Minutes: distance.Minutes,
+                        Seconds: distance.Seconds
+                    );
+                    countdownTimers[instance.Id] = time;
+                    updated = true;
+                }
+                else
+                {
+                    countdownTimers.Remove(instance.Id);
+                    updated = true;
+                }
+            }
+        }
+
+        if (updated)
+        {
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+            });
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        if (asset?.Instances == null) return;
+
+        var filtered = asset.Instances.AsEnumerable();
+
+        if (!string.IsNullOrEmpty(selectedAssetTagFilter))
+        {
+            filtered = filtered.Where(i => i.AssetTag.Equals(selectedAssetTagFilter, StringComparison.OrdinalIgnoreCase));
+        }
+        if (!string.IsNullOrEmpty(selectedBrandFilter))
+        {
+            filtered = filtered.Where(i => i.Brand != null && i.Brand.Equals(selectedBrandFilter, StringComparison.OrdinalIgnoreCase));
+        }
+        if (!string.IsNullOrEmpty(selectedStatusFilter))
+        {
+            filtered = filtered.Where(i => i.Status.Equals(selectedStatusFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filteredInstances = sortOrder == "Ascending"
+            ? filtered.OrderBy(i => i.AssetTag).ToList()
+            : filtered.OrderByDescending(i => i.AssetTag).ToList();
+
+        StateHasChanged();
+    }
+
+    private void ApplyAssetTagFilter(ChangeEventArgs e)
+    {
+        selectedAssetTagFilter = e.Value?.ToString() ?? "";
+        showAssetTagFilter = false;
+        ApplyFilters();
+    }
+
+    private void ApplyBrandFilter(ChangeEventArgs e)
+    {
+        selectedBrandFilter = e.Value?.ToString() ?? "";
+        showBrandFilter = false;
+        ApplyFilters();
+    }
+
+    private void ApplyStatusFilter(ChangeEventArgs e)
+    {
+        selectedStatusFilter = e.Value?.ToString() ?? "";
+        showStatusFilter = false;
+        ApplyFilters();
+    }
+
+    private void ToggleAssetTagFilter()
+    {
+        showAssetTagFilter = !showAssetTagFilter;
+        showBrandFilter = false;
+        showStatusFilter = false;
+        StateHasChanged();
+    }
+
+    private void ToggleBrandFilter()
+    {
+        showBrandFilter = !showBrandFilter;
+        showAssetTagFilter = false;
+        showStatusFilter = false;
+        StateHasChanged();
+    }
+
+    private void ToggleStatusFilter()
+    {
+        showStatusFilter = !showStatusFilter;
+        showAssetTagFilter = false;
+        showBrandFilter = false;
+        StateHasChanged();
+    }
+
+    private void ToggleSortOrder()
+    {
+        sortOrder = sortOrder == "Ascending" ? "Descending" : "Ascending";
+        ApplyFilters();
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Available" => "Available",
+            "Unavailable" => "Unavailable",
+            "Decommissioned" => "Decommissioned",
+            _ => ""
+        };
+    }
+
+    private void NavigateToHome()
+    {
+        Navigation.NavigateTo("/asset");
+    }
+
+    private async Task HandleInstanceAction(int instanceId, string status, bool hasActiveIssue)
+    {
+        var instance = asset?.Instances.FirstOrDefault(i => i.Id == instanceId);
+        if (instance == null)
+        {
+            errorMessage = $"Instance with ID {instanceId} not found.";
+            Snackbar.Add(errorMessage, Severity.Error);
+            StateHasChanged();
+            return;
+        }
+
+        string navUrl = $"/assets/{Id}/instance/{instanceId}/history";
+        if (status == "Decommissioned")
+        {
+            Navigation.NavigateTo(navUrl);
+        }
+        else if (status == "Unavailable")
+        {
+            Navigation.NavigateTo($"{navUrl}?openUnassignDialog=true");
+            notifiedInstanceIds.Remove(instanceId);
+        }
+        else
+        {
+            Navigation.NavigateTo($"{navUrl}?openDialog=true");
+        }
+    }
+
+    private void OpenDecommissionModal(int instanceId, string assetTag)
+    {
+        selectedInstanceId = instanceId;
+        decommissionModel = new DecommissionDto
+            {
+                AssetTag = assetTag,
+                DecommissionDate = DateTime.UtcNow.Add(istOffset).Date
+            };
+        showDecommissionModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseDecommissionModal()
+    {
+        showDecommissionModal = false;
+        decommissionModel = new();
+        selectedInstanceId = 0;
+        StateHasChanged();
+    }
+
+    private async Task SubmitDecommission()
+    {
+        try
+        {
+            loading = true;
+            StateHasChanged();
+
+            var instance = asset?.Instances.FirstOrDefault(i => i.Id == selectedInstanceId);
+            if (instance == null)
+            {
+                errorMessage = "Instance not found.";
+                Snackbar.Add(errorMessage, Severity.Error);
+                return;
+            }
+
+            if (instance.Status == "Decommissioned")
+            {
+                errorMessage = "This instance is already decommissioned.";
+                Snackbar.Add(errorMessage, Severity.Error);
+                return;
+            }
+
+            var decommissionedByEmployee = employees.FirstOrDefault(e => e.EmployeeId == decommissionModel.DecommissionedByEmployeeId);
+            var approvedByEmployee = employees.FirstOrDefault(e => e.EmployeeId == decommissionModel.ApprovedByEmployeeId);
+
+            if (decommissionedByEmployee == null || approvedByEmployee == null)
+            {
+                errorMessage = "Invalid employee selection.";
+                Snackbar.Add(errorMessage, Severity.Error);
+                return;
+            }
+
+            decommissionModel.DecommissionedByFullName = decommissionedByEmployee.FullName;
+            decommissionModel.ApprovedByFullName = approvedByEmployee.FullName;
+
+            await AssetStateService.DecommissionInstanceAsync(selectedInstanceId, decommissionModel);
+
+            Snackbar.Add($"Instance {decommissionModel.AssetTag} decommissioned successfully.", Severity.Success);
+            instance.Status = "Decommissioned";
+            instance.AssignedTo = null;
+            notifiedInstanceIds.Remove(selectedInstanceId);
+            CloseDecommissionModal();
+            await LoadInstanceIssueStatus();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error decommissioning instance: {ex.Message}";
+            Snackbar.Add(errorMessage, Severity.Error);
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        timer?.Stop();
+        timer?.Dispose();
+    }
+}

@@ -1,0 +1,497 @@
+﻿@page "/home/rolemanagement"
+@using WiseHR.Models
+@using WiseHR.Interfaces
+@using System.Threading.Tasks
+@using Components.sidebar
+@using MudBlazor
+@layout HomeLayout
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-1">
+    <MudPaper Elevation="2" Class="pa-2 modern-title-container">
+        <div class="d-flex align-center justify-space-between">
+            <div class="d-flex align-center">
+                <MudIcon Icon="@Icons.Material.Filled.SupervisorAccount" Color="Color.Primary" Class="mr-2 title-icon" Size="Size.Medium" />
+                <MudText Typo="Typo.h5" Class="font-weight-bold title-text">Role Management</MudText>
+            </div>
+            <div class="d-flex align-center gap-2">
+                <MudItem xs="12" sm="9" md="3">
+                    <MudTextField @bind-Value="searchQuery"
+                                  Label="Search"
+                                  Variant="Variant.Outlined"
+                                  Class="compact-field"
+                                  Margin="Margin.Dense"
+                                  Dense="true"
+                                  Placeholder="Search"
+                                  DebounceInterval="300"
+                                  OnValueChanged="@(async () => await ApplyFiltersAsync())" />
+                </MudItem>
+                <MudItem xs="12" sm="9" md="6">
+                    <MudSelect T="string"
+                               Placeholder="Filter by Role"
+                               @bind-Value="roleFilter"
+                               Variant="Variant.Outlined"
+                               MultiSelection="false"
+                               Clearable="true"
+                               OnValueChanged="@(async () => await ApplyFiltersAsync())"
+                               Class="compact-field wider-select"
+                               Dense="true"
+                               Size="Size.Small">
+                        <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
+                        <MudSelectItem Value="@("Manager")">Manager</MudSelectItem>
+                        <MudSelectItem Value="@("HR")">HR</MudSelectItem>
+                        <MudSelectItem Value="@("Employee")">Employee</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               OnClick="@ClearFiltersAsync"
+                               Disabled="@(string.IsNullOrEmpty(searchQuery) && string.IsNullOrEmpty(roleFilter))"
+                               Class="compact-button" />
+                <MudTooltip Text="Refresh Users">
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                   Color="Color.Secondary"
+                                   Size="Size.Small"
+                                   OnClick="@LoadUsersAsync"
+                                   Class="refresh-btn"
+                                   Disabled="@isLoading" />
+                </MudTooltip>
+            </div>
+        </div>
+    </MudPaper>
+
+    <MudGrid Spacing="0">
+        <MudItem xs="12" sm="2">
+            <MudPaper Elevation="1" Class="pa-1 modern-count-container">
+                @foreach (var role in new[] { "Admin", "HR", "Manager", "Employee" })
+                {
+                    <MudPaper Elevation="1" Class="pa-1 mb-1 modern-count-card">
+                        <MudText Typo="Typo.caption" Class="mb-1">@role</MudText>
+                        <MudText Typo="Typo.subtitle2" Color="Color.Primary">
+                            @(users?.Count(u => u.Role == role) ?? 0)
+                        </MudText>
+                    </MudPaper>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="10">
+            <MudPaper Elevation="1" Class="pa-1 mb-1 modern-count-card">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary">
+                    Total Users: @(users?.Count ?? 0)
+                </MudText>
+            </MudPaper>
+            @if (isLoading)
+            {
+                <MudPaper Class="pa-3 text-center" Elevation="0">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+                    <MudText Typo="Typo.caption" Class="mt-1">Loading users...</MudText>
+                </MudPaper>
+            }
+            else if (users == null || !FilteredUsers.Any())
+            {
+                <MudAlert Severity="Severity.Info" Class="ma-1 modern-alert">
+                    <MudText>No users found.</MudText>
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@FilteredUsers"
+                          Dense="true"
+                          Hover="true"
+                          Bordered="false"
+                          Striped="true"
+                          Elevation="2"
+                          FixedHeader="true"
+                          Height="calc(100vh - 220px)"
+                          Class="modern-table compact-table">
+                    <HeaderContent>
+                        <MudTh Style="font-weight: 600; background-color: #f5f7fa;">
+                            <div class="d-flex align-center">
+                                Email
+                                <MudIconButton Icon="@(sortColumn == "Email" && !sortAscending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)"
+                                               Color="@(sortColumn == "Email" ? Color.Primary : Color.Default)"
+                                               Size="Size.Small"
+                                               OnClick="@(() => SortByColumn("Email"))"
+                                               Class="compact-button ml-1"
+                                               Disabled="@isLoading" />
+                            </div>
+                        </MudTh>
+                        <MudTh Style="font-weight: 600; background-color: #f5f7fa;">
+                            <div class="d-flex align-center">
+                                Employee ID
+                                <MudIconButton Icon="@(sortColumn == "EmpId" && !sortAscending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)"
+                                               Color="@(sortColumn == "EmpId" ? Color.Primary : Color.Default)"
+                                               Size="Size.Small"
+                                               OnClick="@(() => SortByColumn("EmpId"))"
+                                               Class="compact-button ml-1"
+                                               Disabled="@isLoading" />
+                            </div>
+                        </MudTh>
+                        <MudTh Style="font-weight: 600; background-color: #f5f7fa;">
+                            <div class="d-flex align-center">
+                                Current Role
+                                <MudIconButton Icon="@(sortColumn == "Role" && !sortAscending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)"
+                                               Color="@(sortColumn == "Role" ? Color.Primary : Color.Default)"
+                                               Size="Size.Small"
+                                               OnClick="@(() => SortByColumn("Role"))"
+                                               Class="compact-button ml-1"
+                                               Disabled="@isLoading" />
+                            </div>
+                        </MudTh>
+                        <MudTh Style="font-weight: 600; background-color: #f5f7fa;">New Role</MudTh>
+                        <MudTh Style="font-weight: 600; background-color: #f5f7fa;">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Email" Style="font-size: 0.8rem; padding: 2px 6px;">@context.Email</MudTd>
+                        <MudTd DataLabel="Employee ID" Style="font-size: 0.8rem; padding: 2px 6px;">@(context.EmpId ?? "N/A")</MudTd>
+                        <MudTd DataLabel="Current Role" Style="font-size: 0.8rem; padding: 2px 6px;">@context.Role</MudTd>
+                        <MudTd DataLabel="New Role" Style="padding: 2px 6px;">
+                            <MudSelect T="string"
+                                       Value="@context.Role"
+                                       ValueChanged="@(newRole => UpdateRole(context, newRole))"
+                                       Variant="Variant.Outlined"
+                                       Dense="true"
+                                       Class="compact-field"
+                                       Size="Size.Small">
+                                <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
+                                <MudSelectItem Value="@("HR")">HR</MudSelectItem>
+                                <MudSelectItem Value="@("Manager")">Manager</MudSelectItem>
+                                <MudSelectItem Value="@("Employee")">Employee</MudSelectItem>
+                            </MudSelect>
+                        </MudTd>
+                        <MudTd DataLabel="Actions" Style="padding: 2px 6px;">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           OnClick="() => ShowDeleteConfirmation(context.Id, context.Email)"
+                                           Class="compact-button" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<User>? users;
+    private string searchQuery = "";
+    private string roleFilter = "";
+    private bool isLoading = true;
+    private string sortColumn = "Email";
+    private bool sortAscending = true;
+
+    private int GetRolePriority(string role)
+    {
+        return role switch
+        {
+            "Admin" => 1,
+            "HR" => 2,
+            "Manager" => 3,
+            "Employee" => 4,
+            _ => 5 // Fallback for unknown roles
+        };
+    }
+
+    private IEnumerable<User> FilteredUsers
+    {
+        get
+        {
+            var filtered = users?
+                .Where(u =>
+                    (string.IsNullOrEmpty(searchQuery) ||
+                     u.Email.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrEmpty(roleFilter) || u.Role == roleFilter));
+
+            if (filtered == null) return new List<User>();
+
+            switch (sortColumn)
+            {
+                case "Email":
+                    filtered = sortAscending ? filtered.OrderBy(u => u.Email) : filtered.OrderByDescending(u => u.Email);
+                    break;
+                case "EmpId":
+                    filtered = sortAscending ? filtered.OrderBy(u => u.EmpId ?? "") : filtered.OrderByDescending(u => u.EmpId ?? "");
+                    break;
+                case "Role":
+                    filtered = sortAscending
+                        ? filtered.OrderBy(u => GetRolePriority(u.Role))
+                        : filtered.OrderByDescending(u => GetRolePriority(u.Role));
+                    break;
+                default:
+                    filtered = filtered.OrderBy(u => u.Email);
+                    break;
+            }
+
+            return filtered.ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsersAsync();
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        isLoading = true;
+        try
+        {
+            users = await UserService.GetUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading users: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        StateHasChanged();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        searchQuery = "";
+        roleFilter = "";
+        await ApplyFiltersAsync();
+    }
+
+    private async Task SortByColumn(string column)
+    {
+        if (sortColumn == column)
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = column;
+            sortAscending = true;
+        }
+        StateHasChanged();
+    }
+
+    [CascadingParameter]
+    private HomeLayout? Layout { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Layout != null)
+        {
+            Layout.OnSearchQueryChanged = EventCallback.Factory.Create<string>(this, HandleSearchQuery);
+        }
+    }
+
+    private async Task HandleSearchQuery(string query)
+    {
+        searchQuery = query;
+        await ApplyFiltersAsync();
+    }
+
+    private async Task UpdateRole(User user, string? newRole)
+    {
+        if (user == null || string.IsNullOrEmpty(newRole)) return;
+
+        var oldRole = user.Role;
+        user.Role = newRole;
+        try
+        {
+            await UserService.UpdateUserRoleAsync(user.Id, user.Role);
+            Snackbar.Add($"Role updated for {user.Email} from {oldRole} to {newRole}", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating role: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ShowDeleteConfirmation(string? id, string email)
+    {
+        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(email))
+            return;
+
+        bool? confirmed = await DialogService.ShowMessageBox(
+            title: "Confirm Delete",
+            message: $"Are you sure you want to delete user {email}? This action will also delete associated role data and cannot be undone.",
+            yesText: "Delete",
+            cancelText: "Cancel",
+            options: new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }
+        );
+
+        if (confirmed == true)
+        {
+            await DeleteUser(id, email);
+        }
+    }
+
+    private async Task DeleteUser(string? id, string email)
+    {
+        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(email))
+            return;
+
+        try
+        {
+            await UserService.DeleteUserAsync(id);
+            if (users != null)
+            {
+                users.RemoveAll(u => u.Id == id);
+            }
+            Console.WriteLine($"Successfully deleted user {email} (ID: {id})");
+            Snackbar.Add($"User {email} deleted successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting user {email} (ID: {id}): {ex.Message}");
+            Snackbar.Add($"Error deleting user {email}: {ex.Message}", Severity.Error);
+        }
+
+        StateHasChanged();
+    }
+}
+
+<style>
+    .modern-text-field.compact-field {
+        border-radius: 4px;
+        width: 200px;
+        font-size: 0.9rem;
+    }
+
+    .compact-field .mud-select-input {
+        font-size: 0.9rem;
+        padding: 4px 6px;
+        height: 30px;
+    }
+
+    .compact-button {
+        padding: 2px;
+        font-size: 0.9rem;
+        height: 30px;
+    }
+
+    .wider-select {
+        min-width: 200px !important;
+        width: 100%;
+    }
+
+        .wider-select .mud-select-input {
+            white-space: nowrap;
+            overflow: visible;
+        }
+
+    .refresh-btn {
+        transition: background-color 0.3s ease;
+        padding: 2px;
+    }
+
+        .refresh-btn:hover {
+            background-color: rgba(33, 150, 243, 0.08);
+        }
+
+    .modern-count-container {
+        border-radius: 4px;
+        background: #f9fafb;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 4px !important;
+    }
+
+    .modern-count-card {
+        border-radius: 4px;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        padding: 4px !important;
+    }
+
+        .modern-count-card:hover {
+            transform: translateY(-1px)
+            background: #905089;
+            color:white
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+
+    .modern-table.compact-table {
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        background: #ffffff;
+    }
+
+        .modern-table.compact-table .mud-table-container {
+            background: #ffffff;
+        }
+
+        .modern-table.compact-table .mud-table-head th {
+            background: #f5f7fa;
+            color: #1e88e5;
+            font-size: 0.85rem;
+            padding: 4px 6px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .modern-table.compact-table .mud-table-row {
+            transition: background-color 0.2s ease;
+        }
+
+            .modern-table.compact-table .mud-table-row:hover {
+                background-color: #f9fafb;
+            }
+
+        .modern-table.compact-table .mud-table-cell {
+            padding: 2px 6px !important;
+            font-size: 0.8rem;
+        }
+
+    .modern-alert {
+        border-radius: 4px;
+        padding: 8px;
+        background: #e8f0fe;
+        color: #1e88e5;
+        font-size: 0.85rem;
+    }
+
+    .compact-field {
+        width: 100% !important;
+        max-width: 200px;
+    }
+
+    .modern-title-container {
+        border-radius: 8px;
+        border: 1px solid #e8ecef;
+        background: var(--mud-palette-primary); /* Blue header background */
+
+        background: linear-gradient(180deg, #ffffff, #f8f9fa);
+        transition: box-shadow 0.2s ease;
+    }
+
+        .modern-title-container:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+    .title-icon {
+        transition: transform 0.3s ease;
+    }
+
+        .title-icon:hover {
+            transform: scale(1.1);
+        }
+
+    .title-text {
+        color: #1976d2;; /* Blue color for Role Management heading */
+        font-weight: 700;
+        transition: color 0.3s ease; /* Smooth color transition on hover */
+    }
+}
+</style>

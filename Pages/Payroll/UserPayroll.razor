@@ -1,0 +1,693 @@
+@page "/UserPayroll"
+@layout HomeLayout
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject MudBlazor.ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using iTextSharp.text
+@using iTextSharp.text.pdf
+@using System.IO
+
+<style>
+    .container {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .search-section {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .dropdown {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .search-button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .search-button:hover {
+        background-color: #0056b3;
+    }
+
+    .loader {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid #007bff;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        margin-bottom: 15px;
+    }
+
+    .card-title {
+        margin: 0;
+        font-size: 1.5em;
+    }
+
+    .form-group {
+        margin-bottom: 10px;
+    }
+
+    .form-label {
+        font-weight: bold;
+    }
+
+    .table-like {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table-like th, .table-like td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    .table-like th {
+        background-color: #f2f2f2;
+    }
+
+    .download-button {
+        padding: 10px 20px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .download-button:hover {
+        background-color: #218838;
+    }
+</style>
+
+<div class="container">
+    <div class="search-section">
+        <select class="dropdown" @bind="selectedMonth">
+            @foreach (var month in months)
+            {
+                <option value="@month.Key">@month.Value</option>
+            }
+        </select>
+        <select class="dropdown" @bind="selectedYear">
+            @for (int year = 2020; year <= DateTime.Now.Year; year++)
+            {
+                <option value="@year">@year</option>
+            }
+        </select>
+        <button class="search-button" @onclick="SearchEmployee">Search</button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loader">
+            <div class="spinner"></div>
+            <span>Loading...</span>
+        </div>
+    }
+    else if (hasError)
+    {
+        <div class="alert-danger">Failed to load employee data. @errorMessage</div>
+    }
+    else if (employeePayroll == null)
+    {
+        <div class="alert-danger">No employee data found.</div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Payroll Details for @employeePayroll.FullName (@employeePayroll.EmployeeID)</h3>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Month: @months[employeePayroll.Month]</label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Year: @employeePayroll.Year</label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Designation: @employeePayroll.Designation</label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email: @employeePayroll.CurrentEmail</label>
+            </div>
+            @if (!string.IsNullOrEmpty(userRole))
+            {
+                <div class="form-group">
+                    <label class="form-label">Role: @userRole</label>
+                </div>
+            }
+            <div class="form-group">
+                <label class="form-label">Yearly CTC: @employeePayroll.CTC_Amount</label>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Earnings</h3>
+            </div>
+            <table class="table-like">
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Monthly Amount</th>
+                        <th>Yearly Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Basic Salary</td>
+                        <td>@employeePayroll.BasicSalary</td>
+                        <td>@(employeePayroll.BasicSalary * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>HRA</td>
+                        <td>@employeePayroll.HRA_Amount</td>
+                        <td>@(employeePayroll.HRA_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>Special Allowance</td>
+                        <td>@employeePayroll.SpecialAllowance_Amount</td>
+                        <td>@(employeePayroll.SpecialAllowance_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>Arrears</td>
+                        <td>@employeePayroll.Arrears_Amount</td>
+                        <td>@(employeePayroll.Arrears_Amount * 12)</td>
+                    </tr>
+                    @foreach (var other in employeePayroll.Others.Where(o => o.Value > 0))
+                    {
+                        <tr>
+                            <td>@other.Key</td>
+                            <td>@(other.Value / 12m)</td>
+                            <td>@other.Value</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Deductions</h3>
+            </div>
+            <table class="table-like">
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Monthly Amount</th>
+                        <th>Yearly Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Employer PF</td>
+                        <td>@employeePayroll.EmployerPF_Amount</td>
+                        <td>@(employeePayroll.EmployerPF_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>Employee PF</td>
+                        <td>@employeePayroll.EmployeePF_Amount</td>
+                        <td>@(employeePayroll.EmployeePF_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>Employer ESIC</td>
+                        <td>@employeePayroll.EmployerESIC_Amount</td>
+                        <td>@(employeePayroll.EmployerESIC_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>Employee ESIC</td>
+                        <td>@employeePayroll.EmployeeESIC_Amount</td>
+                        <td>@(employeePayroll.EmployeeESIC_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>Gratuity</td>
+                        <td>@employeePayroll.Gratuity_Amount</td>
+                        <td>@(employeePayroll.Gratuity_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>Income Tax</td>
+                        <td>@employeePayroll.IncomeTax_Amount</td>
+                        <td>@(employeePayroll.IncomeTax_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>Professional Tax</td>
+                        <td>@employeePayroll.ProfessionalTax_Amount</td>
+                        <td>@(employeePayroll.ProfessionalTax_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>Loans</td>
+                        <td>@employeePayroll.Loans_Amount</td>
+                        <td>@(employeePayroll.Loans_Amount * 12)</td>
+                    </tr>
+                    <tr>
+                        <td>LOP</td>
+                        <td>@employeePayroll.LOP_Amount</td>
+                        <td>@(employeePayroll.LOP_Amount * 12)</td>
+                    </tr>
+                    @foreach (var other in employeePayroll.Others.Where(o => o.Value < 0))
+                    {
+                        <tr>
+                            <td>@other.Key</td>
+                            <td>@(Math.Abs(other.Value) / 12m)</td>
+                            <td>@Math.Abs(other.Value)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Summary</h3>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Monthly Gross Salary: @employeePayroll.GrossSalary</label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Yearly Gross Salary: @(employeePayroll.GrossSalary * 12)</label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Monthly Total Deductions: @employeePayroll.TotalDeductions</label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Yearly Total Deductions: @(employeePayroll.TotalDeductions * 12)</label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Monthly Net Pay: @employeePayroll.NetPay</label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Yearly Net Pay: @(employeePayroll.NetPay * 12)</label>
+            </div>
+        </div>
+
+        <button class="download-button" @onclick="DownloadPdf">Download PDF</button>
+    }
+</div>
+
+<script>
+    function downloadFile(filename, base64Data) {
+        const link = document.createElement('a');
+        link.href = 'data:application/octet-stream;base64,' + base64Data;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+@code {
+    private bool isLoading = false;
+    private bool hasError = false;
+    private string errorMessage = string.Empty;
+    private string? employeeId;
+    private string? email;
+    private string? userRole;
+    private int selectedMonth = DateTime.Now.Month;
+    private int selectedYear = DateTime.Now.Year;
+    private EmployeePayroll? employeePayroll = null;
+
+    private readonly Dictionary<int, string> months = new()
+    {
+        { 1, "January" }, { 2, "February" }, { 3, "March" }, { 4, "April" },
+        { 5, "May" }, { 6, "June" }, { 7, "July" }, { 8, "August" },
+        { 9, "September" }, { 10, "October" }, { 11, "November" }, { 12, "December" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            employeeId = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "EmpId");
+            email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email");
+            userRole = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userRole");
+
+            if (string.IsNullOrEmpty(employeeId))
+            {
+                hasError = true;
+                errorMessage = "Employee ID not found in session storage.";
+                Snackbar.Add(errorMessage, MudBlazor.Severity.Error);
+            }
+            else
+            {
+                await SearchEmployee();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching session storage data: {ex.Message}");
+            hasError = true;
+            errorMessage = "Failed to retrieve session storage data.";
+            Snackbar.Add(errorMessage, MudBlazor.Severity.Error);
+        }
+    }
+
+    private class EmployeePayroll
+    {
+        [Required(ErrorMessage = "Employee ID is required")]
+        [JsonPropertyName("employeeID")]
+        public string EmployeeID { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Full Name is required")]
+        [MaxLength(100, ErrorMessage = "Full Name cannot exceed 100 characters")]
+        [JsonPropertyName("fullName")]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        [MaxLength(100, ErrorMessage = "Email cannot exceed 100 characters")]
+        [JsonPropertyName("currentEmail")]
+        public string CurrentEmail { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Designation is required")]
+        [MaxLength(50, ErrorMessage = "Designation cannot exceed 50 characters")]
+        [JsonPropertyName("designation")]
+        public string Designation { get; set; } = string.Empty;
+
+        [Range(1, 12, ErrorMessage = "Month must be between 1 and 12")]
+        [JsonPropertyName("month")]
+        public int Month { get; set; }
+
+        [Range(1900, 2100, ErrorMessage = "Year must be between 1900 and 2100")]
+        [JsonPropertyName("year")]
+        public int Year { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "CTC Amount cannot be negative")]
+        [JsonPropertyName("ctC_Amount")]
+        public decimal CTC_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Basic Salary cannot be negative")]
+        [JsonPropertyName("basicSalary")]
+        public decimal BasicSalary { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "HRA cannot be negative")]
+        [JsonPropertyName("hrA_Amount")]
+        public decimal HRA_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Special Allowance cannot be negative")]
+        [JsonPropertyName("specialAllowance_Amount")]
+        public decimal SpecialAllowance_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Arrears cannot be negative")]
+        [JsonPropertyName("arrears_Amount")]
+        public decimal Arrears_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Employer PF cannot be negative")]
+        [JsonPropertyName("employerPF_Amount")]
+        public decimal EmployerPF_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Employee PF cannot be negative")]
+        [JsonPropertyName("employeePF_Amount")]
+        public decimal EmployeePF_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Employer ESIC cannot be negative")]
+        [JsonPropertyName("employerESIC_Amount")]
+        public decimal EmployerESIC_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Employee ESIC cannot be negative")]
+        [JsonPropertyName("employeeESIC_Amount")]
+        public decimal EmployeeESIC_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Gratuity cannot be negative")]
+        [JsonPropertyName("gratuity_Amount")]
+        public decimal Gratuity_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Income Tax cannot be negative")]
+        [JsonPropertyName("incomeTax_Amount")]
+        public decimal IncomeTax_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Professional Tax cannot be negative")]
+        [JsonPropertyName("professionalTax_Amount")]
+        public decimal ProfessionalTax_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Loans cannot be negative")]
+        [JsonPropertyName("loans_Amount")]
+        public decimal Loans_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "LOP Amount cannot be negative")]
+        [JsonPropertyName("loP_Amount")]
+        public decimal LOP_Amount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Gross Salary cannot be negative")]
+        [JsonPropertyName("grossSalary")]
+        public decimal GrossSalary { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Total Deductions cannot be negative")]
+        [JsonPropertyName("totalDeductions")]
+        public decimal TotalDeductions { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Net Pay cannot be negative")]
+        [JsonPropertyName("netPay")]
+        public decimal NetPay { get; set; }
+
+        [JsonPropertyName("Others")]
+        public Dictionary<string, decimal> Others { get; set; } = new();
+    }
+
+    private async Task SearchEmployee()
+    {
+        if (string.IsNullOrEmpty(employeeId))
+        {
+            Snackbar.Add("Employee ID not found in session storage.", MudBlazor.Severity.Error);
+            return;
+        }
+
+        isLoading = true;
+        hasError = false;
+        errorMessage = string.Empty;
+        employeePayroll = null;
+        StateHasChanged();
+
+        try
+        {
+            var response = await HttpClient.GetAsync($"https://localhost:7021/api/PayrollMonthlyDetails/{employeeId}/{selectedMonth}/{selectedYear}");
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals
+            };
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Received JSON: {jsonContent}");
+
+                try
+                {
+                    // Deserialize as a single EmployeePayroll object instead of a list
+                    employeePayroll = JsonSerializer.Deserialize<EmployeePayroll>(jsonContent, options);
+
+                    if (employeePayroll == null)
+                    {
+                        hasError = true;
+                        errorMessage = "No employee data found.";
+                        Snackbar.Add(errorMessage, MudBlazor.Severity.Error);
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"Deserialization error: {ex.Message}\nJSON: {jsonContent}");
+                    hasError = true;
+                    errorMessage = "Invalid data format received from server.";
+                    Snackbar.Add(errorMessage, MudBlazor.Severity.Error);
+                }
+            }
+            else
+            {
+                hasError = true;
+                errorMessage = $"Server returned status: {response.StatusCode}";
+                Snackbar.Add("Failed to load employee data.", MudBlazor.Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employee data: {ex.Message}");
+            hasError = true;
+            errorMessage = "An unexpected error occurred.";
+            Snackbar.Add("An error occurred while loading employee data.", MudBlazor.Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DownloadPdf()
+    {
+        if (employeePayroll == null)
+        {
+            Snackbar.Add("No employee data found to generate PDF.", MudBlazor.Severity.Error);
+            return;
+        }
+
+        try
+        {
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                Document document = new Document();
+                PdfWriter writer = PdfWriter.GetInstance(document, memoryStream);
+                document.Open();
+
+                // Add content to the PDF
+                document.Add(new Paragraph($"Payroll Details for {employeePayroll.FullName} ({employeePayroll.EmployeeID})"));
+                document.Add(new Paragraph($"Month: {months[employeePayroll.Month]}"));
+                document.Add(new Paragraph($"Year: {employeePayroll.Year}"));
+                document.Add(new Paragraph($"Designation: {employeePayroll.Designation}"));
+                document.Add(new Paragraph($"Email: {employeePayroll.CurrentEmail}"));
+                if (!string.IsNullOrEmpty(userRole))
+                {
+                    document.Add(new Paragraph($"Role: {userRole}"));
+                }
+                document.Add(new Paragraph($"Yearly CTC: {employeePayroll.CTC_Amount}"));
+
+                document.Add(new Paragraph("\nEarnings:"));
+                PdfPTable earningsTable = new PdfPTable(3);
+                earningsTable.AddCell("Component");
+                earningsTable.AddCell("Monthly Amount");
+                earningsTable.AddCell("Yearly Amount");
+
+                earningsTable.AddCell("Basic Salary");
+                earningsTable.AddCell(employeePayroll.BasicSalary.ToString());
+                earningsTable.AddCell((employeePayroll.BasicSalary * 12).ToString());
+
+                earningsTable.AddCell("HRA");
+                earningsTable.AddCell(employeePayroll.HRA_Amount.ToString());
+                earningsTable.AddCell((employeePayroll.HRA_Amount * 12).ToString());
+
+                earningsTable.AddCell("Special Allowance");
+                earningsTable.AddCell(employeePayroll.SpecialAllowance_Amount.ToString());
+                earningsTable.AddCell((employeePayroll.SpecialAllowance_Amount * 12).ToString());
+
+                earningsTable.AddCell("Arrears");
+                earningsTable.AddCell(employeePayroll.Arrears_Amount.ToString());
+                earningsTable.AddCell((employeePayroll.Arrears_Amount * 12).ToString());
+
+                foreach (var other in employeePayroll.Others.Where(o => o.Value > 0))
+                {
+                    earningsTable.AddCell(other.Key);
+                    earningsTable.AddCell((other.Value / 12m).ToString());
+                    earningsTable.AddCell(other.Value.ToString());
+                }
+
+                document.Add(earningsTable);
+
+                document.Add(new Paragraph("\nDeductions:"));
+                PdfPTable deductionsTable = new PdfPTable(3);
+                deductionsTable.AddCell("Component");
+                deductionsTable.AddCell("Monthly Amount");
+                deductionsTable.AddCell("Yearly Amount");
+
+                deductionsTable.AddCell("Employer PF");
+                deductionsTable.AddCell(employeePayroll.EmployerPF_Amount.ToString());
+                deductionsTable.AddCell((employeePayroll.EmployerPF_Amount * 12).ToString());
+
+                deductionsTable.AddCell("Employee PF");
+                deductionsTable.AddCell(employeePayroll.EmployeePF_Amount.ToString());
+                deductionsTable.AddCell((employeePayroll.EmployeePF_Amount * 12).ToString());
+
+                deductionsTable.AddCell("Employer ESIC");
+                deductionsTable.AddCell(employeePayroll.EmployerESIC_Amount.ToString());
+                deductionsTable.AddCell((employeePayroll.EmployerESIC_Amount * 12).ToString());
+
+                deductionsTable.AddCell("Employee ESIC");
+                deductionsTable.AddCell(employeePayroll.EmployeeESIC_Amount.ToString());
+                deductionsTable.AddCell((employeePayroll.EmployeeESIC_Amount * 12).ToString());
+
+                deductionsTable.AddCell("Gratuity");
+                deductionsTable.AddCell(employeePayroll.Gratuity_Amount.ToString());
+                deductionsTable.AddCell((employeePayroll.Gratuity_Amount * 12).ToString());
+
+                deductionsTable.AddCell("Income Tax");
+                deductionsTable.AddCell(employeePayroll.IncomeTax_Amount.ToString());
+                deductionsTable.AddCell((employeePayroll.IncomeTax_Amount * 12).ToString());
+
+                deductionsTable.AddCell("Professional Tax");
+                deductionsTable.AddCell(employeePayroll.ProfessionalTax_Amount.ToString());
+                deductionsTable.AddCell((employeePayroll.ProfessionalTax_Amount * 12).ToString());
+
+                deductionsTable.AddCell("Loans");
+                deductionsTable.AddCell(employeePayroll.Loans_Amount.ToString());
+                deductionsTable.AddCell((employeePayroll.Loans_Amount * 12).ToString());
+
+                deductionsTable.AddCell("LOP");
+                deductionsTable.AddCell(employeePayroll.LOP_Amount.ToString());
+                deductionsTable.AddCell((employeePayroll.LOP_Amount * 12).ToString());
+
+                foreach (var other in employeePayroll.Others.Where(o => o.Value < 0))
+                {
+                    deductionsTable.AddCell(other.Key);
+                    deductionsTable.AddCell((Math.Abs(other.Value) / 12m).ToString());
+                    deductionsTable.AddCell(Math.Abs(other.Value).ToString());
+                }
+
+                document.Add(deductionsTable);
+
+                document.Add(new Paragraph("\nSummary:"));
+                document.Add(new Paragraph($"Monthly Gross Salary: {employeePayroll.GrossSalary}"));
+                document.Add(new Paragraph($"Yearly Gross Salary: {employeePayroll.GrossSalary * 12}"));
+                document.Add(new Paragraph($"Monthly Total Deductions: {employeePayroll.TotalDeductions}"));
+                document.Add(new Paragraph($"Yearly Total Deductions: {employeePayroll.TotalDeductions * 12}"));
+                document.Add(new Paragraph($"Monthly Net Pay: {employeePayroll.NetPay}"));
+                document.Add(new Paragraph($"Yearly Net Pay: {employeePayroll.NetPay * 12}"));
+
+                document.Close();
+
+                // Download the PDF
+                byte[] pdfBytes = memoryStream.ToArray();
+                await JSRuntime.InvokeVoidAsync("downloadFile", "Payslip.pdf", Convert.ToBase64String(pdfBytes));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error generating PDF: {ex.Message}");
+            Snackbar.Add("An error occurred while generating the PDF.", MudBlazor.Severity.Error);
+        }
+    }
+}

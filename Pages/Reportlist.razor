@@ -1,0 +1,757 @@
+﻿@page "/reportlist"
+@using System.Globalization
+@using MudBlazor
+@using WiseHR.Models
+@using WiseHR.Pages.Form
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@inject ReportService ReportService
+@inject EmployeeService EmployeeService
+@inject IJSRuntime JSRuntime
+@inject IDialogService DialogService
+@layout WiseHR.Components.sidebar.HomeLayout
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="py-2">
+    <MudText Typo="Typo.h6" Class="mb-1 d-flex align-center">
+        <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-1" Size="Size.Small" />
+        @pageTitle
+    </MudText>
+    <!-- Buttons for Admin -->
+    <div class="d-flex justify-space-between align-center mb-2">
+        @if (currentUserRole == "Admin" || currentUserRole == "Hr")
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => NavigationManager.NavigateTo("/reports"))"
+                       Size="Size.Small"
+                       Margin="Margin.Dense"
+                       Class="admin-button">
+                Add Report
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Success"
+                   OnClick="@ExportAllToExcel"
+                   StartIcon="@Icons.Material.Filled.Download"
+                   Size="Size.Small"
+                   Margin="Margin.Dense"
+                   Class="admin-button">
+            Export to Excel
+        </MudButton>
+    </div>
+
+    <!-- Filter Controls -->
+    <MudPaper Class="pa-2 mb-2" Elevation="1">
+        <MudGrid Spacing="1">
+            <MudItem xs="12" sm="4" md="3">
+                <MudSelect T="int?"
+                           Label="Year"
+                           Value="selectedYear"
+                           ValueChanged="@OnYearChanged"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="small-select">
+                    @foreach (var year in availableYears)
+                    {
+                        <MudSelectItem T="int?" Value="@year">@year</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="4" md="3">
+                <MudSelect T="int?"
+                           Label="Month"
+                           Value="selectedMonth"
+                           ValueChanged="@OnMonthChanged"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="small-select">
+                    @foreach (var month in Enumerable.Range(1, 12))
+                    {
+                        <MudSelectItem T="int?" Value="@month">
+                            @CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="8" md="5" Class="d-flex align-end">
+                <MudTextField @bind-Value="searchQuery"
+                              Label="Search"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Dense="true"
+                              Placeholder="ID, mentee, mentor, project"
+                              Immediate="false"
+                              OnKeyDown="@OnSearchKeyDown"
+                              Class="flex-grow-1 small-textfield">
+                    <Adornment>
+                        <MudIconButton Icon="@Icons.Material.Filled.Search"
+                                       OnClick="@ApplySearch"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"/>
+                    </Adornment>
+                </MudTextField>
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Primary"
+                           OnClick="@ClearFilters"
+                           Class="ml-1"
+                           EndIcon="@Icons.Material.Filled.Clear"
+                           Size="Size.Small"
+                           Margin="Margin.Dense">
+                    Clear
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (isLoading)
+    {
+        <MudPaper Class="pa-4 text-center" Elevation="0">
+            <MudProgressCircular Indeterminate Color="Color.Primary" Size="Size.Small" />
+            <MudText Typo="Typo.body2" Class="mt-2">Loading reports...</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Elevation="2" Class="pa-2" Style="min-height: 300px;">
+            <div class="table-container">
+                <MudTable Class="reports-table"
+                          Items="@currentPageReports"
+                          Hover="true"
+                          Dense="true"
+                          Striped="true"
+                          Loading="@isLoading">
+                    <HeaderContent>
+                        <MudTh Class="col-id">ID</MudTh>
+                        @if (currentUserRole != "Employee")
+                        {
+                            <MudTh Class="col-mentee-id">Mentee ID</MudTh>
+                        }
+                        <MudTh Class="col-mentee">Mentee</MudTh>
+                        <MudTh Class="col-mentor">Mentor</MudTh>
+                        <MudTh Class="col-projects">Projects</MudTh>
+                        <MudTh Class="col-perf">Perf 1</MudTh>
+                        <MudTh Class="col-feedback">Feedback 1</MudTh>
+                        <MudTh Class="col-st1">StoryPoint 1</MudTh>
+                        <MudTh Class="col-perf">Perf 2</MudTh>
+                        <MudTh Class="col-feedback">Feedback 2</MudTh>
+                        <MudTh Class="col-st2">StoryPoint 2</MudTh>
+                        <MudTh Class="col-tot">Total</MudTh>
+                        <MudTh Class="col-date">Date</MudTh>
+                        <MudTh Class="col-actions">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd Class="col-id">
+                            <div class="cell-content">@context.Id</div>
+                        </MudTd>
+                        @if (currentUserRole != "Employee")
+                        {
+                            <MudTd Class="col-mentee-id">
+                                <div class="cell-content" title="@context.MenteeEmployeeID">
+                                    @context.MenteeEmployeeID
+                                </div>
+                            </MudTd>
+                        }
+                        <MudTd Class="col-mentee">
+                            <div class="cell-content" title="@context.MenteeName">
+                                @context.MenteeName
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-mentor">
+                            <div class="cell-content" title="@context.MentorName">
+                                @context.MentorName
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-projects">
+                            <div class="cell-content" title="@context.ProjectsWorkedOn">
+                                @(!string.IsNullOrEmpty(context.ProjectsWorkedOn) ? context.ProjectsWorkedOn : "-")
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-perf">
+                            <div class="cell-content" title="@context.Performance1">
+                                @(!string.IsNullOrEmpty(context.Performance1) ? context.Performance1 : "-")
+                            </div>
+                        </MudTd>
+                        <MudTd class="col-feedback">
+                            <div class="cell-content" title="@context.Feedback1">
+                                @(!string.IsNullOrEmpty(context.Feedback1) ? context.Feedback1 : "-")
+                            </div>
+                        </MudTd> 
+                        <MudTd class="col-st1">
+                            <div class="cell-content" title="@(context.CompletedStoryPoints1?.ToString() ?? "-")">
+                                @(context.CompletedStoryPoints1.HasValue ? context.CompletedStoryPoints1.Value.ToString() : "-")
+                            </div>
+                        </MudTd>
+
+                        <MudTd Class="col-perf">
+                            <div class="cell-content" title="@context.Performance2">
+                                @(!string.IsNullOrEmpty(context.Performance2) ? context.Performance2 : "-")
+                            </div>
+                        </MudTd>
+                        <MudTd class="col-feedback">
+                            <div class="cell-content" title="@context.Feedback2">
+                                @(!string.IsNullOrEmpty(context.Feedback2) ? context.Feedback2 : "-")
+                            </div>
+                        </MudTd>
+                        <MudTd class="col-st1">
+                            <div class="cell-content" title="@(context.CompletedStoryPoints2?.ToString() ?? "-")">
+                                @(context.CompletedStoryPoints2.HasValue ? context.CompletedStoryPoints2.Value.ToString() : "-")
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-tot">
+                            <div class="cell-content">
+                                @{
+                                    int total = (context.CompletedStoryPoints1 ?? 0) + (context.CompletedStoryPoints2 ?? 0);
+                                    @total
+                                }
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-date">
+                            <div class="cell-content">
+                                @context.SubmittedOn.ToString("dd MMM yyyy")
+                            </div>
+                        </MudTd>
+                        <MudTd Class="col-actions">
+                            <div class="d-flex">
+                                <MudTooltip Text="Download">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                                   OnClick="@(() => DownloadReport(context.Id, context.ProjectsWorkedOn))"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"/>
+                                </MudTooltip>
+
+                                @if (CanEditReport(context))
+                                {
+                                    <MudTooltip Text="Edit">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       OnClick="@(() => EditReport(context.Id))"
+                                                       Color="Color.Info"
+                                                       Size="Size.Small"
+                                                       Class="ml-1"/>
+                                    </MudTooltip>
+                                }
+                                @if (CanDeleteReport())
+                                {
+                                    <MudTooltip Text="Delete">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       OnClick="@(() => ShowDeleteConfirmation(context.Id, context.MenteeName, context.ProjectsWorkedOn))"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       Class="ml-1"/>
+                                    </MudTooltip>
+                                }
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="my-4" Typo="Typo.body2">No reports found for @GetMonthName(selectedMonth) @selectedYear</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </div>
+            <div class="d-flex justify-space-between align-center mt-2">
+                <MudText Typo="Typo.caption">Showing @((currentPage - 1) * pageSize + 1) to @Math.Min(currentPage * pageSize, totalItems) of @totalItems reports</MudText>
+                <MudPagination Count="@totalPages"
+                               Selected="@currentPage"
+                               BoundaryCount="1"
+                               SelectedColor="Color.Primary"
+                               Variant="Variant.Text"
+                               Size="Size.Small"
+                               SelectedChanged="@OnPageChanged"/>
+            </div>
+        </MudPaper>
+    }
+</MudContainer>
+
+<style>
+    .table-container {
+        overflow-x: auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        max-height: 70vh; /* Limit vertical scroll */
+    }
+    .reports-table {
+        min-width: @(currentUserRole != "Employee" ? "1000px" : "900px");
+        width: 100%;
+        font-size: 0.75rem; /* Smaller font for table */
+    }
+    .col-id { width: 60px; min-width: 60px; }
+    .col-mentee-id { width: 80px; min-width: 80px; }
+    .col-mentee { width: 120px; min-width: 120px; }
+    .col-mentor { width: 120px; min-width: 120px; }
+    .col-projects { width: 150px; min-width: 150px; }
+    .col-perf { width: 100px; min-width: 100px; }
+    .col-feedback { width: 150px; min-width: 150px; }
+    .col-date { width: 100px; min-width: 100px; }
+    .col-actions { width: 100px; min-width: 100px; }
+    .mud-table-cell {
+        padding: 4px 8px;
+        vertical-align: middle;
+        line-height: 1.2;
+    }
+    .cell-content {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        display: block;
+    }
+    .mud-table-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: var(--mud-palette-surface);
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+    .mud-table-row:hover {
+        background-color: rgba(105, 198, 207, 0.05) !important;
+    }
+    .table-container::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 2px;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+        background: #c5c5c5;
+        border-radius: 2px;
+    }
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: #9d9d9d;
+    }
+    .mud-icon-button {
+        padding: 2px;
+    }
+    .small-select {
+        font-size: 0.75rem;
+    }
+    .small-textfield {
+        font-size: 0.75rem;
+    }
+    .mud-input-label {
+        font-size: 0.7rem !important;
+    }
+</style>
+
+@code {
+    private bool isLoading;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalItems;
+    private int totalPages => (int)Math.Ceiling((double)totalItems / pageSize);
+
+    private int selectedYear = DateTime.UtcNow.Year;
+    private int selectedMonth = DateTime.UtcNow.Month;
+    private string searchQuery = string.Empty;
+    private List<int> availableYears = [];
+    private List<ReportModel> allReports = [];
+    private List<ReportModel> filteredReports = [];
+    private List<ReportModel> currentPageReports = [];
+
+    private string pageTitle = "Monthly Reports";
+    private string currentUserRole = string.Empty;
+    private string currentUserEmpId = string.Empty;
+    private string currentUserEmail = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetCurrentUserInfo();
+        await LoadAllReports();
+        await InitializeAvailableYears();
+        ApplyFilters();
+    }
+
+    private async Task GetCurrentUserInfo()
+    {
+        try
+        {
+            currentUserRole = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userRole") ?? string.Empty;
+            currentUserEmail = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "email") ?? string.Empty;
+            currentUserEmpId = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "EmpId") ?? string.Empty;
+
+            if (string.IsNullOrEmpty(currentUserEmail))
+            {
+                Snackbar.Add("User email not found in session", Severity.Error);
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(currentUserEmpId) && (currentUserRole == "Employee" || currentUserRole == "Manager"))
+            {
+                var employeeDetails = await EmployeeService.GetEmployeeDetailsByEmail(currentUserEmail);
+                if (employeeDetails == null || string.IsNullOrEmpty(employeeDetails.EmployeeID))
+                {
+                    Snackbar.Add("Could not find Employee ID for your email", Severity.Error);
+                    NavigationManager.NavigateTo("/");
+                    return;
+                }
+                currentUserEmpId = employeeDetails.EmployeeID;
+                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "EmpId", currentUserEmpId);
+            }
+
+            pageTitle = currentUserRole switch
+            {
+                "Employee" => "My Reports",
+                "Manager" => "My Reports",
+                "Admin" => "Monthly Reports",
+                "HR" => "Monthly Reports",
+                _ => "Monthly Reports"
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading user info: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task LoadAllReports()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var reports = (await ReportService.GetReportsAsync(1, int.MaxValue))
+                .OrderByDescending(r => r.SubmittedOn)
+                .ToList();
+
+            allReports = currentUserRole switch
+            {
+                "Admin" or "HR" => reports,
+                "Employee" or "Manager" => reports
+                    .Where(r => !string.IsNullOrEmpty(r.MenteeEmployeeID) &&
+                                r.MenteeEmployeeID.Equals(currentUserEmpId, StringComparison.OrdinalIgnoreCase))
+                    .ToList(),
+                _ => []
+            };
+
+            if (!allReports.Any())
+            {
+                var message = currentUserRole is "Admin" or "HR" ? "No reports available in the system" : "No reports found for your account";
+                Snackbar.Add(message, Severity.Info);
+            }
+            else
+            {
+                selectedYear = allReports.Max(r => r.SubmittedOn.Year);
+                selectedMonth = allReports
+                    .Where(r => r.SubmittedOn.Year == selectedYear)
+                    .Max(r => r.SubmittedOn.Month);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading reports: {ex.Message}", Severity.Error);
+            allReports = [];
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool CanEditReport(ReportModel report)
+    {
+        return currentUserRole is "Admin" or "HR";
+    }
+
+    private bool CanDeleteReport()
+    {
+        return currentUserRole is "Admin" or "HR";
+    }
+
+    private async Task ExportAllToExcel()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            var exportData = filteredReports.Select(r => new
+            {
+                Report_ID = r.Id,
+                Mentee_ID = r.MenteeEmployeeID,
+                Mentee_Name = r.MenteeName,
+                Mentor_Name = r.MentorName,
+                Projects = r.ProjectsWorkedOn,
+                Performance_1 = r.Performance1,
+                Feedback_1 = r.Feedback1,
+                Performance_2 = r.Performance2,
+                Feedback_2 = r.Feedback2,
+                Submitted_On = r.SubmittedOn.ToString("yyyy-MM-dd")
+            }).ToList();
+
+            var fileName = $"Reports_{GetMonthName(selectedMonth)}_{selectedYear}.xlsx";
+            var result = await JSRuntime.InvokeAsync<bool>("exportToExcel", exportData, fileName);
+            if (result)
+            {
+                Snackbar.Add("Excel file exported successfully", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Failed to export Excel file", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error exporting to Excel: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DownloadReport(int reportId, string fileName)
+    {
+        try
+        {
+            var report = await ReportService.GetReportByIdAsync(reportId);
+            if (report != null)
+            {
+                var exportData = new List<object>
+                {
+                    new
+                    {
+                        Report_ID = report.Id,
+                        Mentee_ID = report.MenteeEmployeeID,
+                        Mentee_Name = report.MenteeName,
+                        Mentor_Name = report.MentorName,
+                        Projects = report.ProjectsWorkedOn,
+                        Performance_1 = report.Performance1,
+                        Feedback_1 = report.Feedback1,
+                        Performance_2 = report.Performance2,
+                        Feedback_2 = report.Feedback2,
+                        Submitted_On = report.SubmittedOn.ToString("yyyy-MM-dd")
+                    }
+                };
+
+                var safeFileName = $"{SanitizeFileName(fileName)}_{report.Id}.xlsx";
+                var result = await JSRuntime.InvokeAsync<bool>("exportToExcel", exportData, safeFileName);
+                if (result)
+                {
+                    Snackbar.Add($"Downloading {safeFileName}", Severity.Info);
+                }
+                else
+                {
+                    Snackbar.Add($"Failed to download report {safeFileName}", Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Report not found", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error downloading report: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private string SanitizeFileName(string fileName)
+    {
+        var invalidChars = System.IO.Path.GetInvalidFileNameChars();
+        return string.Join("_", fileName.Split(invalidChars));
+    }
+
+    private async Task EditReport(int reportId)
+    {
+        Console.WriteLine($"Navigating to edit report with ID: {reportId}");
+        var parameters = new DialogParameters
+        {
+            { nameof(FortnightReportForm.ReportId), reportId }
+        };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true,
+        };
+        var dialog = await DialogService.ShowAsync<FortnightReportForm>("Edit Report", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled && result.Data is bool success && success)
+        {
+            await LoadAllReports();
+            ApplyFilters();
+        }
+    }
+
+    private async Task ShowDeleteConfirmation(int reportId, string menteeName, string projectName)
+    {
+        if (reportId <= 0 || string.IsNullOrEmpty(menteeName))
+            return;
+
+        bool? confirmed = await DialogService.ShowMessageBox(
+            title: "Confirm Delete",
+            message: $"Are you sure you want to delete report {reportId} for {menteeName} (Project: {projectName ?? "N/A"})? This action cannot be undone.",
+            yesText: "Delete",
+            cancelText: "Cancel",
+            options: new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }
+        );
+
+        if (confirmed == true)
+        {
+            await DeleteReport(reportId);
+        }
+    }
+
+    private async Task DeleteReport(int reportId)
+    {
+        if (currentUserRole is not ("Admin" or "HR"))
+        {
+            Snackbar.Add("You don't have permission to delete reports", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            var success = await ReportService.DeleteReportAsync(reportId);
+            if (success)
+            {
+                Snackbar.Add($"Report {reportId} deleted successfully", Severity.Success);
+                await LoadAllReports();
+                ApplyFilters();
+            }
+            else
+            {
+                Snackbar.Add("Failed to delete report", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting report {reportId}: {ex.Message}");
+            Snackbar.Add($"Error deleting report {reportId}: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task InitializeAvailableYears()
+    {
+        try
+        {
+            var reportYears = allReports
+                .Select(r => r.SubmittedOn.Year)
+                .Distinct()
+                .ToList();
+
+            if (!reportYears.Contains(DateTime.UtcNow.Year))
+            {
+                reportYears.Add(DateTime.UtcNow.Year);
+            }
+
+            var minYear = reportYears.Any() ? reportYears.Min() : DateTime.UtcNow.Year;
+            for (int year = DateTime.UtcNow.Year - 1; year >= minYear - 5; year--)
+            {
+                if (!reportYears.Contains(year))
+                {
+                    reportYears.Add(year);
+                }
+            }
+
+            availableYears = reportYears
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading years: {ex.Message}", Severity.Error);
+            availableYears = [DateTime.UtcNow.Year, DateTime.UtcNow.Year - 1, DateTime.UtcNow.Year - 2];
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredReports = allReports
+            .Where(r => r.SubmittedOn.Year == selectedYear && r.SubmittedOn.Month == selectedMonth)
+            .ToList();
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            var query = searchQuery.Trim().ToLower();
+            filteredReports = filteredReports
+                .Where(r =>
+                    (r.MenteeEmployeeID?.ToLower().Contains(query) ?? false) ||
+                    (r.MenteeName?.ToLower().Contains(query) ?? false) ||
+                    (r.MentorName?.ToLower().Contains(query) ?? false) ||
+                    (r.ProjectsWorkedOn?.ToLower().Contains(query) ?? false) ||
+                    (r.Performance1?.ToLower().Contains(query) ?? false) ||
+                    (r.Feedback1?.ToLower().Contains(query) ?? false) ||
+                    (r.Performance2?.ToLower().Contains(query) ?? false) ||
+                    (r.Feedback2?.ToLower().Contains(query) ?? false) ||
+                    r.Id.ToString().ToLower().Contains(query))
+                .ToList();
+        }
+
+        totalItems = filteredReports.Count;
+        UpdatePageData();
+    }
+
+    private void UpdatePageData()
+    {
+        currentPageReports = filteredReports
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+        StateHasChanged();
+    }
+
+    private async Task OnYearChanged(int? year)
+    {
+        if (year.HasValue)
+        {
+            selectedYear = year.Value;
+            currentPage = 1;
+            ApplyFilters();
+        }
+    }
+
+    private async Task OnMonthChanged(int? month)
+    {
+        if (month.HasValue)
+        {
+            selectedMonth = month.Value;
+            currentPage = 1;
+            ApplyFilters();
+        }
+    }
+
+    private void ApplySearch()
+    {
+        currentPage = 1;
+        ApplyFilters();
+    }
+
+    private void OnSearchKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            ApplySearch();
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        selectedYear = DateTime.UtcNow.Year;
+        selectedMonth = DateTime.UtcNow.Month;
+        searchQuery = string.Empty;
+        currentPage = 1;
+        ApplyFilters();
+    }
+
+    private void OnPageChanged(int page)
+    {
+        currentPage = page;
+        UpdatePageData();
+    }
+
+    private string GetMonthName(int month)
+    {
+        return CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month);
+    }
+}
