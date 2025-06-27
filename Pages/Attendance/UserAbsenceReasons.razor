@@ -12,20 +12,7 @@
     </div>
 }
 
-<!-- Reasons Table -->
-<div class="reasons-container">
-    <div class="table-header">
-        Absence Requests
-    </div>
-    @if (isLoading)
-    {
-        <div class="loading-spinner"></div>
-    }
-    else if (!absenceReasons.Any())
-    {
-        <p style="text-align: center; color: #1e40af; font-size: 16px;">No absence reasons found.</p>
-    }
-    else
+<!-- Reasons
     {
         <div class="table-row table-header-row">
             <div>Date</div>

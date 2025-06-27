@@ -1,27 +1,4 @@
-@page "/AdminAbsenceReasons"
-@using System.Net.Http.Json
-@using FingerFrontend.AdminAttendanceViewModel
-@inject HttpClient Http
-@inject NavigationManager Nav
-@layout HomeLayout
 
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-<button">Dismiss</button>
-    </div>
-}
-iv>
-            <div>Reason</div>
-            <div>Action</div>
-        </div>
-        @foreach (var request in filteredRequests)
-        {
-            <div class="request-row">
-                <div>@request.UserId</div>
-                <div>@request.Name</div>
-                <div>@request.Date.ToString("dd MMM yyyy") (@request.StartTime.ToString("hh:mm tt") - @request.EndTime.ToString("hh:mm tt"))</div>
-                <div class="reason-display">@request.Reason</div>
-                <div>
-                    @if (!request.IsApproved)
                     {
                         <button @onclick="() => ApproveRequest(request.Id)" class="action-button primary-button">
                             <i class="fas fa-check"></i> Approve
