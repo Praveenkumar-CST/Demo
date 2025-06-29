@@ -91,10 +91,6 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXR0ZW5kYW5jZS9Vc2VyQWJzZW5jZVJlYXNvbnMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Attendance/UserAttendanceView.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXR0ZW5kYW5jZS9Vc2VyQXR0ZW5kYW5jZVZpZXcucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
 [/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/Calendar/Admin Calendar.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ2FsZW5kYXIvQWRtaW4gQ2FsZW5kYXIucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -241,6 +237,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/RoleMangement.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUm9sZU1hbmdlbWVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/Pages/SubmitSuccessDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU3VibWl0U3VjY2Vzc0RpYWxvZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/praveenkumar/Desktop/WiseHR-Frontend- Latest/_Imports.razor]
